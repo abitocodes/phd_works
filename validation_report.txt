@@ -1,0 +1,27 @@
+﻿Proposal formatting cleanup validation
+=====================================
+
+Source DOCX:
+D:\Github\phd_works\Proposal\Proposal-Final_Taehong Kwon.docx
+
+Generated LaTeX project:
+D:\Github\phd_works\Proposal\latex_fidelity\main.tex
+
+Formatting changes applied:
+- Paragraph style is standardized as block paragraphs: no first-line indentation and compact paragraph spacing.
+- Internal subheadings below TOC-level headings are rendered with \proposalSubheading or \proposalResultHeading, not as TOC-level \subsection* entries.
+- Section 2.3 Expected Results now renders ER1-ER5 as consistent result headings with regular block paragraphs beneath each heading.
+- Bullet and dash list labels are normalized to \textbullet and \textendash, with shared enumitem margins and spacing.
+- The manual Table of Contents numbering and order are unchanged.
+
+Validation results:
+- XeLaTeX 2-pass build: PASS.
+- Output PDF: D:\Github\phd_works\Proposal\latex_fidelity\main.pdf
+- Output page count: 44 pages. The original DOCX has 43 pages; the 1-page increase is from the block-paragraph formatting and internal subheading normalization.
+- TOC title and numbering: PASS. The manual TOC still uses the existing 1, 2, 2.1, 2.2, 2.3 numbering sequence.
+- TOC link target mechanism: PASS. \TOCentry remains hyperref-based and the section labels remain present.
+- Structure diff: PASS. compare_docx_latex.py reports Critical 0 / Major 0 / Minor 0.
+
+Notes:
+- The LaTeX log contains only layout warnings such as overfull hboxes and the local MiKTeX update warning. No fatal LaTeX error was reported.
+- The build script now changes to its own directory before running XeLaTeX, so it can be launched from outside the latex_fidelity folder.

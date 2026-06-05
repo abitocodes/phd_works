@@ -1,0 +1,55 @@
+% !TEX root = ../main.tex
+\clearpage
+\phantomsection
+\section*{6 \textbf{Limitations}}
+\label{sec:limitations}
+\addcontentsline{toc}{section}{6 Limitations}
+
+While this study is designed to rigorously evaluate EndorseRank against Adaptive Weighted PageRank, we acknowledge several inherent limitations and potential threats to validity:
+
+
+\proposalSubheading{1. Data Coverage and Quality}
+
+\begin{itemize}
+\item[\textbullet] \textbf{Event Completeness: We rely on public event logs (Approve, Permit, Transfer) from Ethereum archives or BigQuery. Some missing or misindexed events (e.g., due to chain reorganizations or node sync issues) may bias graph construction.}
+\item[\textbullet] \textbf{Label Noise}: Default labels are derived from Aave V3 liquidation events; wallets that become underwater without on-chain liquidation (e.g., off- chain settlements) will be misclassified.
+\end{itemize}
+\proposalSubheading{2. Temporal Scope}
+
+\begin{itemize}
+\item[\textbullet] \textbf{Fixed Window}: Limiting analysis to a single six-month window may not capture longer-term reputation dynamics or market regime shifts. Results may differ for other periods, especially during high volatility or protocol upgrades.
+\end{itemize}
+\proposalSubheading{3. Graph Modeling Assumptions}
+
+\begin{itemize}
+\item[\textbullet] \textbf{Approval Semantics}: We assume that any nonzero approve/permit rep- resents a substantive trust endorsement. In practice, users may issue
+\end{itemize}
+``spend-all'' approvals by default or interact via custodial services, which dilute the trust signal.
+
+
+\begin{itemize}
+\item[\textbullet] \textbf{Edge Weight Aggregation}: Summing all transfers or using only the latest allowance ignores the provenance of funds and may obscure multi- token or multi-chain interactions.
+\end{itemize}
+\proposalSubheading{4. Algorithmic Simplifications}
+
+\begin{itemize}
+\item[\textbullet] \textbf{Fixed Damping Factor}: We apply a single damping factor (d = 0.85) uniformly; in reality, the optimal factor may vary by token, wallet type, or network segment.
+\item[\textbullet] \textbf{Unmodeled Attributes}: EndorseRank ignores off-chain factors (e.g., KYC status, IP geolocation) and non-ERC-20 relationships (e.g., NFT approvals, cross-chain bridges), which may also influence trust.
+\end{itemize}
+\proposalSubheading{5. Generalizability}
+
+\begin{itemize}
+\item[\textbullet] \textbf{Protocol Specificity}: We focus on Aave V3 for default labels. EndorseRank's predictive power may differ for other lending protocols (Compound, MakerDAO) or non-lending use cases.
+\item[\textbullet] \textbf{Asset Bias}: High-volume tokens (e.g., USDC, WETH) dominate graph structure; smaller or emerging tokens may yield sparse endorsement net- works less amenable to PageRank.
+\end{itemize}
+\proposalSubheading{6. Adversarial Manipulation and Sybil Attacks}
+
+\begin{itemize}
+\item[\textbullet] \textbf{Gaming the Graph}: Malicious actors could issue dummy approvals or orchestrate circular allowance patterns to inflate their EndorseRank score. Detecting and mitigating such Sybil strategies require additional safe- guards beyond the scope of this study.
+\end{itemize}
+\proposalSubheading{7. Computational Constraints}
+
+\begin{itemize}
+\item[\textbullet] \textbf{Scalability Limitations}: Although EndorseRank is more efficient than AWP on our sample, real-time computation on the full Ethereum graph
+\end{itemize}
+(millions of wallets) may still demand distributed computing or approximation techniques.

@@ -1,0 +1,49 @@
+% !TEX root = ../main.tex
+\clearpage
+\phantomsection
+\section*{1 \textbf{Introduction and background}}
+\label{sec:introduction-and-background}
+\addcontentsline{toc}{section}{1 Introduction and background}
+
+Decentralized Finance (DeFi) has expanded lending and borrowing activity on public blockchains, yet most lending remains highly collateralized because protocols cannot rely on traditional off-chain identity, employment, or credit histories. In a pseudonymous setting, the core challenge is not merely allocating capital, but allocating it safely: identifying which wallets are likely to behave reliably in credit-like interactions (e.g., repeated borrowing, repayment, and delegation of spending rights), while limiting exposure to opportunistic or malicious actors (e.g., defaulting, griefing, Sybil-style account creation, and rapid reputation farming).
+
+
+In this study, on-chain wallet reputation scoring refers to the process of computing a quantitative score for a blockchain address using observable on-chain behavior and relationships, with the goal of approximating trustworthiness or credit-related reliability without relying on off-chain personal data. In DeFi, such scores can support (i) more accurate assessment of on-chain financial risk(e.g., default or liquidation events), (ii) improved risk controls for lending protocols, and (iii) potential pathways toward more capital-efficient credit (e.g., reduced collateral requirements for low-risk participants).
+
+
+To avoid ambiguity, the key concepts used throughout this proposal are defined as follows:
+
+
+\begin{itemize}
+\item[\textbullet] \textbf{DeFi (Decentralized Finance): }Financial services (e.g., lending, borrowing, exchanges) implemented via smart contracts on public blockchains.
+\item[\textbullet] \textbf{Wallet / Address: }A blockchain account that can hold assets and interact with smart contracts (used as the unit of analysis).
+\item[\textbullet] \textbf{On-chain reputation / reputation score: }A numerical indicator computed from on-chain signals intended to represent a wallet's reliability in financial interactions.
+\item[\textbullet] \textbf{On-chain credit risk / default event: }Observable adverse outcomes such as loan default, liquidation, or protocol-defined delinquency signals.
+\item[\textbullet] \textbf{PageRank / Weighted PageRank: }Graph-based ranking methods that propagate influence through directed edges, optionally weighted by edge strength.
+\item[\textbullet] \textbf{ERC-20 allowance: }A state variable recording how much a token owner permits a spender to transfer on the owner's behalf.
+\item[\textbullet] \textbf{Approve / Permit: }ERC-20 mechanisms that set allowances; permit (e.g., EIP-2612-style) enables allowance updates via signed messages.
+\item[\textbullet] \textbf{Endorsement graph: }A directed graph where an edge represents an explicit delegation/endorsement signal rather than a mere transfer.
+\end{itemize}
+Reputation scoring is critical in credit-based lending to distinguish reliable participants from potential bad actors. Recent examples of on-chain wallet reputation scoring inspired by PageRank include the AWP algorithm proposed by Do et al. (2023), which assigns reputation scores based on transaction volume (greater inflows imply greater trust) and activeness (recent transactions receive higher weight via a logistic time-decay function). While this approach captures both economic magnitude and temporal relevance, it does not directly model explicit spending authorization as a trust signal.
+
+
+The ERC-20 token standard, however, includes two explicit allowance mechanisms---approve and permit---by which a token holder grants another address per- mission to spend up to a specified amount on its behalf. Each approval event inherently represents an endorsement, where the approved amount directly quantifies the granularity of trust. By extracting only the latest allowance for each owner \(\to\) spender pair, we can build a directed, weighted endorsement graph $G_{\text{approve}}$, in which each edge's weight equals the most recent approved token amount. This de- sign eliminates the need for any time-based decay---since newer approvals override older ones---and focuses computation on the most salient, up-to-date trust signals.
+
+
+Clarifying the importance in DeFi, enhancing on-chain wallet reputation scoring can provide concrete benefits:
+
+
+\begin{itemize}
+\item[\textbullet] \textbf{Risk management and protocol safety: }Better identification of risky wallets can reduce bad debt and improve the stability of lending markets.
+\item[\textbullet] \textbf{Capital efficiency: }More informative trust signals can support differentiated risk parameters (e.g., borrowing limits or collateral requirements) instead of one-size-fits-all constraints.
+\item[\textbullet] \textbf{Access and inclusion without off-chain data: }On-chain scoring can enable participation for users who lack conventional credit records, while preserving the DeFi principle of permissionless access.
+\item[\textbullet] \textbf{Composable trust for DeFi applications: }A reusable reputation layer can be consumed by multiple protocols (e.g., lenders, insurers, and DAOs) to make consistent, explainable decisions.
+\end{itemize}
+Despite the clear endorsement semantics and sparser graph structure of approval-based relationships, no existing study has systematically leveraged ERC-20 allowances as primary edge weights for PageRank. This methodological gap motivates EndorseRank, our proposed on-chain reputation algorithm that applies to a standard Weighted PageRank to $G_{\text{approve}}$. We hypothesize that EndorseRank will achieve comparable or superior predictive power for financial risk (e.g., default events) while significantly reducing data-processing complexity compared to transaction- value-- and time-decay--based methods. To ensure a clear alignment between this motivation and what the study will deliver, the proposal specifies objective-linked expected results:
+
+
+\begin{itemize}
+\item[\textbullet] A reproducible pipeline and latest-allowance endorsement graph derived from ERC-20 approve/permit states;
+\item[\textbullet] An optimized, scalable Weighted PageRank implementation (EndorseRank) operating on this sparse, trust-semantic graph; and
+\item[\textbullet] Empirical evidence using transactions of the DeFi lending platform such as Aave and standard metrics that EndorseRank matches or improves risk-prediction performance relative to transaction-based baselines while reducing computational overhead.
+\end{itemize}
