@@ -1,6 +1,0 @@
-raw/**/*.parquet
-processed/*.parquet
-__pycache__/
-*.pyc
-.venv/
-.env
