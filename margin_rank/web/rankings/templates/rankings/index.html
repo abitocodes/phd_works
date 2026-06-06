@@ -100,6 +100,8 @@
           <th>종료</th>
           <th>승</th>
           <th>패</th>
+          <th>EndorseRank</th>
+          <th>AWP</th>
         </tr>
       </thead>
       <tbody>
@@ -113,6 +115,8 @@
           <td>{{ row.total_closes }}</td>
           <td class="wins">{{ row.wins }}</td>
           <td class="losses">{{ row.losses }}</td>
+          <td class="rank">{% if row.endorserank_rank %}{{ row.endorserank_rank }}{% else %}—{% endif %}</td>
+          <td class="rank">{% if row.awp_rank %}{{ row.awp_rank }}{% else %}—{% endif %}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -122,7 +126,8 @@
     {% endif %}
 
     <footer>
-      GMX V2 Arbitrum · PositionDecrease 실현 PnL 기준 · 종료 3건 이상 · 정적 스냅샷 (실시간 갱신 없음)
+      GMX V2 Arbitrum · PositionDecrease 실현 PnL 기준 · 종료 3건 이상 · 정적 스냅샷 (실시간 갱신 없음)<br>
+      EndorseRank / AWP: Arbitrum ERC-20 Approval·Transfer 기반 · 관측 종료 2026-05-31
     </footer>
   </div>
 </body>

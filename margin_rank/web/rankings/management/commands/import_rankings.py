@@ -66,6 +66,10 @@ class Command(BaseCommand):
                     period_start=_to_date(r["period_start"]),
                     period_end=_to_date(r["period_end"]),
                     protocol=str(r["protocol"]),
+                    endorserank_rank=_optional_int(r, "endorserank_rank"),
+                    awp_rank=_optional_int(r, "awp_rank"),
+                    endorserank_score=_optional_float(r, "endorserank_score"),
+                    awp_score=_optional_float(r, "awp_score"),
                 )
             )
         WalletRanking.objects.bulk_create(rows)
@@ -92,3 +96,15 @@ def _to_date(val) -> date:
     if isinstance(val, date):
         return val
     return pd.to_datetime(val).date()
+
+
+def _optional_int(row, col: str):
+    if col not in row.index or pd.isna(row[col]):
+        return None
+    return int(row[col])
+
+
+def _optional_float(row, col: str):
+    if col not in row.index or pd.isna(row[col]):
+        return None
+    return float(row[col])

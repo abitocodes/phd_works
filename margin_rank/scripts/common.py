@@ -30,6 +30,10 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
     for key, val in cfg.get("paths", {}).items():
         if isinstance(val, str):
             cfg["paths"][key] = str(_resolve_path(val))
+    rep = cfg.get("reputation", {})
+    for key, val in rep.get("paths", {}).items():
+        if isinstance(val, str):
+            rep["paths"][key] = str(_resolve_path(val))
     return cfg
 
 
@@ -44,6 +48,24 @@ def _enrich_config(cfg: dict[str, Any]) -> None:
 
 def read_sql(name: str) -> str:
     return (SQL_DIR / name).read_text(encoding="utf-8")
+
+
+def parse_token_amount(val) -> float:
+    """Parse ERC-20 uint256 amounts (string or numeric) to float for graph weights."""
+    import math
+
+    if val is None:
+        return 0.0
+    if isinstance(val, float) and math.isnan(val):
+        return 0.0
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        pass
+    try:
+        return float(int(str(val).strip()))
+    except (ValueError, OverflowError):
+        return 0.0
 
 
 def normalize_address(addr: str | None) -> str | None:

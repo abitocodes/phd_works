@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-06-06T07:26:05.724119+00:00",
+  "created_at": "2026-06-06T12:37:35.494966+00:00",
   "synthetic": false,
   "period": {
     "start_date": "2026-05-25",
@@ -8,9 +8,94 @@
     "end_ts": "2026-06-01 00:00:00 UTC"
   },
   "protocol": "gmx_v2_arbitrum",
-  "dry_run_bytes": 25361089044,
-  "extracted_at": "2026-06-06T07:26:57.247725+00:00",
+  "dry_run_bytes": 25205729080,
+  "extracted_at": "2026-06-06T12:38:26.950733+00:00",
   "rows": 13391,
   "bytes_processed": 25085218568,
-  "output": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/margin_rank/data/raw/gmx_event_logs_2026-05-last-week.parquet"
+  "output": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/margin_rank/data/raw/gmx_event_logs_2026-05-last-week.parquet",
+  "decode": {
+    "at": "2026-06-06T12:39:13.375074+00:00",
+    "input_rows": 13391,
+    "decoded_rows": 13391,
+    "decode_errors": 0,
+    "output": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/margin_rank/data/processed/gmx_decoded_events.parquet"
+  },
+  "rankings": {
+    "at": "2026-06-06T12:39:14.020353+00:00",
+    "wallets_ranked": 571,
+    "min_closes": 3,
+    "output": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/margin_rank/data/processed/wallet_rankings.parquet"
+  },
+  "reputation_extract": {
+    "at": "2026-06-06T12:40:55.507158+00:00",
+    "wallet_count": 571,
+    "dry_run_bytes_total": 1451216715648,
+    "months": [
+      {
+        "label": "2025-12",
+        "start_ts": "2025-12-01 00:00:00 UTC",
+        "end_ts": "2026-01-01 00:00:00 UTC",
+        "bytes_approvals": 138725790316,
+        "bytes_transfers": 138725790316
+      },
+      {
+        "label": "2026-01",
+        "start_ts": "2026-01-01 00:00:00 UTC",
+        "end_ts": "2026-02-01 00:00:00 UTC",
+        "bytes_approvals": 147755865600,
+        "bytes_transfers": 147755865600
+      },
+      {
+        "label": "2026-02",
+        "start_ts": "2026-02-01 00:00:00 UTC",
+        "end_ts": "2026-03-01 00:00:00 UTC",
+        "bytes_approvals": 119232794136,
+        "bytes_transfers": 119232794136
+      },
+      {
+        "label": "2026-03",
+        "start_ts": "2026-03-01 00:00:00 UTC",
+        "end_ts": "2026-04-01 00:00:00 UTC",
+        "bytes_approvals": 112560918052,
+        "bytes_transfers": 112560918052
+      },
+      {
+        "label": "2026-04",
+        "start_ts": "2026-04-01 00:00:00 UTC",
+        "end_ts": "2026-05-01 00:00:00 UTC",
+        "bytes_approvals": 92043994828,
+        "bytes_transfers": 92043994828
+      },
+      {
+        "label": "2026-05",
+        "start_ts": "2026-05-01 00:00:00 UTC",
+        "end_ts": "2026-06-01 00:00:00 UTC",
+        "bytes_approvals": 115288994892,
+        "bytes_transfers": 115288994892
+      }
+    ],
+    "observation": {
+      "start": "2025-12-01 00:00:00 UTC",
+      "end": "2026-06-01 00:00:00 UTC"
+    }
+  },
+  "preprocess_arbitrum_allowances": {
+    "at": "2026-06-06T12:45:51.342590+00:00",
+    "input_rows": 86361,
+    "output_rows": 1691,
+    "output_path": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/margin_rank/data/processed/reputation/latest_allowances.parquet"
+  },
+  "preprocess_arbitrum_transfers": {
+    "at": "2026-06-06T12:45:52.971332+00:00",
+    "input_rows": 491807,
+    "output_rows": 491807,
+    "output_path": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/margin_rank/data/processed/reputation/transfer_events.parquet"
+  },
+  "reputation_ranks": {
+    "at": "2026-06-06T12:45:53.920733+00:00",
+    "wallets": 571,
+    "endorse_edges": 1041,
+    "awp_edges": 12652,
+    "output": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/margin_rank/data/processed/wallet_rankings.parquet"
+  }
 }

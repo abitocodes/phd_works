@@ -26,6 +26,10 @@ class WalletRanking(models.Model):
     period_start = models.DateField()
     period_end = models.DateField()
     protocol = models.CharField(max_length=64)
+    endorserank_rank = models.PositiveIntegerField(null=True, blank=True)
+    awp_rank = models.PositiveIntegerField(null=True, blank=True)
+    endorserank_score = models.FloatField(null=True, blank=True)
+    awp_score = models.FloatField(null=True, blank=True)
 
     class Meta:
         ordering = ["rank"]
