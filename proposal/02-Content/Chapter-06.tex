@@ -12,7 +12,7 @@ While this study is designed to rigorously evaluate EndorseRank against Adaptive
 
 \begin{itemize}
 \item[\textbullet] \textbf{Event Completeness:} We rely on public event logs (Approve, Permit, Transfer, GMX \textbf{PositionDecrease}) from Arbitrum One archives or BigQuery. Some missing or misindexed events (e.g., due to chain reorganizations or node sync issues) may bias graph construction or GMX outcome aggregation.
-\item[\textbullet] \textbf{Proxy Limitations:} Trading-success proxies (close-success count, realized gain proxy) are domain-intuition measures, not external ground-truth credit labels. High correlation does not by itself establish predictive validity for unrelated lending outcomes (e.g., Aave-style loan default studied in Wolf et al., 2022).
+\item[\textbullet] \textbf{Proxy Limitations:} Trading-success proxies (close-success count, realized gain proxy) are domain-intuition measures, not external ground-truth credit labels. High correlation does not by itself establish predictive validity for unrelated under-collateralized lending outcomes studied in prior lending-focused scoring work (e.g., Ghosh et al., 2024).
 \end{itemize}
 \proposalSubheading{2. Temporal Scope}
 

@@ -67,6 +67,15 @@ Approval/permit-derived authorizations: all ERC-20 Approval(owner, spender, valu
 GMX V2 perpetual swap outcomes: \textbf{PositionDecrease} logs from the GMX V2 \textbf{EventEmitter} contract (\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}), decoded to extract \textbf{account}, \textbf{basePnlUsd}, \textbf{orderType}, and liquidation flags. Profitable closes satisfy \textbf{basePnlUsd} $> 0$ and are not position liquidations (\texttt{orderType} $\neq 7$).
 
 
+\textbf{Empirical Validation Choice}
+
+
+Theoretically, the strongest validation target for on-chain credit reputation would be a binary default or liquidation label drawn from under-collateralized lending (e.g., loan liquidation after health-factor breach). Such labels directly encode credit failure on-chain. In practice, however, the Arbitrum One ecosystem targeted by this study lacks sufficient active, publicly observable unsecured or under-collateralized lending volume to construct a large, reproducible wallet-level default dataset within the observation window. Collecting comparable labels from other chains would break the single-chain design and inflate data-engineering cost without improving endorsement-graph semantics.
+
+
+Accordingly, this dissertation adopts \textbf{GMX V2 perpetual long/short position outcomes} as the primary empirical validation frame. Collateralized perpetual trading on GMX produces high-frequency, wallet-attributed \textbf{PositionDecrease} events with realized PnL, enabling measurable proxies---close-success count, realized gain proxy, and close success rate---for credit-like risk management on the same chain as the endorsement graph. These measures are interpreted as \textbf{domain-intuition proxies}, not ground-truth loan-repayment labels; limitations are discussed in Section~6.
+
+
 \textbf{Trading-Success Proxies (Validation Targets)}
 
 
