@@ -5,7 +5,7 @@
 \label{sec:theoretical-framework}
 \addcontentsline{toc}{section}{4 Theoretical Framework}
 
-This study is grounded in hyperlink-citation theory, predictive validity, and computational complexity theory to compare EndorseRank against Adaptive Weighted PageRank (AWP) across three core constructs: Reputation Structure, Risk Predictive Validity, and Computational Efficiency. Each construct links directly to the parameter definitions introduced earlier in the research objectives and expected-results framework and supports testable hypotheses.
+This study is grounded in hyperlink-citation theory, construct (domain) alignment, and computational complexity theory to compare EndorseRank against Adaptive Weighted PageRank (AWP) across three core constructs: Reputation Structure, Trading Success Alignment, and Computational Efficiency. Each construct links directly to the parameter definitions introduced earlier in the research objectives and expected-results framework and supports testable hypotheses.
 
 
 \phantomsection
@@ -20,7 +20,7 @@ This study is grounded in hyperlink-citation theory, predictive validity, and co
 \midrule
 Reputation Structure & EndorseRank score, AWP score, rank ordering, rank divergence & Spearman's rho, Kendall's tau, top-k overlap \\
 \addlinespace
-Risk Predictive Validity & Default/liquidation label and score-based prediction features & AUC, precision, recall, F1-score, calibration \\
+Trading Success Alignment & GMX close-success count, realized gain proxy, close success rate, reputation scores & Spearman's rho, Kendall's tau vs.\ each proxy \\
 \addlinespace
 Computational Efficiency & Graph build time, PageRank convergence time, memory usage, iteration count & Runtime, peak memory, iterations to tolerance \\
 \addlinespace
@@ -42,7 +42,7 @@ Computational Efficiency & Graph build time, PageRank convergence time, memory u
 \textbf{H1 (Divergence): }EndorseRank and AWP will yield significantly different wallet orderings, demonstrating that an approve/permit--based endorsement graph creates a distinct reputation structure.
 
 
-\textbf{H2 (Predictive Validity): }EndorseRank's scores will correlate more strongly with actual default events than AWP's scores, indicating superior predictive power.
+\textbf{H2 (Trading Success Alignment): }EndorseRank's scores will correlate more strongly with GMX V2 trading-success proxies (close-success count and realized gain proxy) than AWP's scores, indicating superior domain-intuition alignment.
 
 
 \textbf{H3 (Computational Efficiency): }EndorseRank will require less runtime, memory, and fewer iterations to converge than AWP, demonstrating practical scalability advantages.
@@ -56,10 +56,7 @@ Computational Efficiency & Graph build time, PageRank convergence time, memory u
 \textbf{Hyperlink--Citation Semantics: }The original PageRank algorithm (Page et al., 1998) evaluates a webpage's importance by the structure of inbound hyperlinks, treating each link like a citation in an academic paper: pages that are linked to by many important pages receive higher rank. ERC- 20 approve/permit edges can be interpreted similarly, where an approval from wallet A to wallet B functions as a trust citation, justifying the use of PageRank on an approval graph.
 
 
-\textbf{Predictive Validity Framework: }In credit scoring and psychometrics, predictive validity assesses how well a metric forecasts real-world outcomes.
-
-
-By treating EndorseRank and AWP scores as assessment scales, we employ standard metrics (AUC, Precision, Recall, F1-score) to compare their ability to predict defaults.
+\textbf{Leveraged Exposure and Trading Success Alignment: }GMX V2 perpetual swap positions represent collateralized leveraged exposure: the trader posts margin and takes directional risk on an underlying asset through long or short positions. A profitable \textbf{PositionDecrease} close (positive \textbf{basePnlUsd}, excluding position liquidation) functionally resembles successfully managing borrowed or leveraged exposure---analogous to borrowing and fulfilling obligations in a credit context. Following Do et al.\ (2023), who validated PageRank rankings against in-degree and in-value, we treat \textbf{close-success count} (many profitable closes) and \textbf{realized gain proxy} (large cumulative positive \textbf{basePnlUsd}) as observable domain proxies. Reputation scores that align with these proxies therefore satisfy the study's domain-intuition requirement without claiming external ground-truth credit labels.
 
 
 \textbf{Computational Complexity Theory: }PageRank's time complexity per iteration is O(---E---). Approve/permit graphs are sparser than transfer- based graphs (fewer edges ---E---), leading to lower per-iteration cost, faster convergence, and reduced memory usage.
@@ -70,7 +67,7 @@ By treating EndorseRank and AWP scores as assessment scales, we employ standard 
 \label{sec:implications-for-research-design}
 \addcontentsline{toc}{subsection}{4.4 Implications for Research Design}
 
-\textbf{Measurement: }Compute EndorseRank and AWP scores for a matched sample of Aave wallets, record default outcomes over a defined period, and profile each algorithm's runtime, memory usage, and iterations to convergence.
+\textbf{Measurement: }Compute EndorseRank and AWP scores for a matched sample of GMX V2--active wallets on Arbitrum One, derive close-success count, realized gain proxy, and close success rate from \textbf{PositionDecrease} events over a defined observation window, and profile each algorithm's runtime, memory usage, and iterations to convergence.
 
 
 \proposalSubheading{Analysis:}
@@ -78,10 +75,10 @@ By treating EndorseRank and AWP scores as assessment scales, we employ standard 
 \textbf{H1 }via rank correlation (Spearman's \emph{\(\rho\)}, Kendall's \emph{\(\tau\)})
 
 
-\textbf{H2 }via predictive metrics (AUC, Precision, Recall, F1-score)
+\textbf{H2 }via rank correlation between reputation scores and GMX trading-success proxy rankings (Spearman's \emph{\(\rho\)}, Kendall's \emph{\(\tau\)})
 
 
 \textbf{H3 }via paired benchmarks of runtime, peak memory, and iteration counts
 
 
-\textbf{Contribution: }By anchoring our hypotheses in established theories, this framework ensures that empirical results will offer both scholarly rigor and practical relevance, demonstrating EndorseRank's advantages in producing a semantically meaningful, predictive, and efficient on-chain reputation metric.
+\textbf{Contribution: }By anchoring our hypotheses in established theories, this framework ensures that empirical results will offer both scholarly rigor and practical relevance, demonstrating EndorseRank's advantages in producing a semantically meaningful, domain-aligned, and efficient on-chain reputation metric.

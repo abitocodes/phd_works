@@ -14,13 +14,13 @@ Ethics clearance process: before starting the empirical data collection and anal
 \proposalSubheading{1. Privacy and Anonymity}
 
 \begin{itemize}
-\item[\textbullet] \textbf{Pseudonymity Respect}: Ethereum addresses are pseudonymous, not inherently linked to real-world identities. We will not attempt to deanonymize addresses or correlate them with personally identifying information.
-\item[\textbullet] \textbf{No Sensitive Data Collection}: We will restrict data collection to on- chain events (approve, permit, transfer, liquidation) and avoid scraping or integrating off-chain data such as IP addresses or KYC records.
+\item[\textbullet] \textbf{Pseudonymity Respect}: Arbitrum One addresses are pseudonymous, not inherently linked to real-world identities. We will not attempt to deanonymize addresses or correlate them with personally identifying information.
+\item[\textbullet] \textbf{No Sensitive Data Collection}: We will restrict data collection to on- chain events (approve, permit, transfer, GMX \textbf{PositionDecrease}) and avoid scraping or integrating off-chain data such as IP addresses or KYC records.
 \end{itemize}
 \proposalSubheading{2. Data Usage and Compliance}
 
 \begin{itemize}
-\item[\textbullet] \textbf{Open Data Sources}: All queries will target public datasets (e.g., Google BigQuery, The Graph) in accordance with their terms of service and rate limits.
+\item[\textbullet] \textbf{Open Data Sources}: All queries will target public datasets (e.g., Google BigQuery \texttt{goog\_blockchain\_arbitrum\_one\_us}) in accordance with their terms of service and rate limits.
 \item[\textbullet] \textbf{No Malicious Interaction}: We will not broadcast transactions or otherwise interact with smart contracts in ways that could disrupt network operations or degrade performance.
 \end{itemize}
 \proposalSubheading{3. Fairness and Bias Mitigation}
@@ -37,7 +37,7 @@ Ethics clearance process: before starting the empirical data collection and anal
 \proposalSubheading{5. Social and Financial Impact}
 
 \begin{itemize}
-\item[\textbullet] \textbf{No Financial Advice}: Although EndorseRank may inform risk assessment, we will explicitly disclaim that it is not financial advice and highlight the need for human oversight in lending decisions.
+\item[\textbullet] \textbf{No Financial Advice}: Although EndorseRank may inform risk assessment, we will explicitly disclaim that it is not financial advice and highlight the need for human oversight in lending and trading decisions.
 \item[\textbullet] \textbf{Avoiding Misuse}: We will discuss potential adversarial manipulation (e.g., Sybil attacks) and recommend safeguards so that our methodology is not misused to target or disadvantage specific users.
 \end{itemize}
 By adhering to these practices, we ensure that our research advances on-chain reputation modeling ethically, respects user privacy, and contributes responsibly to the DeFi ecosystem.
