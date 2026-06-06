@@ -1,0 +1,7 @@
+data/raw/**/*.parquet
+data/processed/*.parquet
+__pycache__/
+*.pyc
+.venv/
+.env
+web/db.sqlite3

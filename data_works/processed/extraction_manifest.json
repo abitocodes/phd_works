@@ -1,0 +1,237 @@
+{
+  "created_at": "2026-06-06T03:28:10.341479+00:00",
+  "synthetic": true,
+  "budget_plan": {
+    "created_at": "2026-06-06T03:28:09.814465+00:00",
+    "synthetic": true,
+    "note": "Generated offline; re-run with GCP credentials for real data.",
+    "budget_bytes_limit": 966367641600,
+    "budget_bytes_planned": 500000000000,
+    "feature_window": {
+      "start_date": "2025-02-01",
+      "end_date": "2026-05-31",
+      "months_included": 16,
+      "month_labels": [
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05"
+      ]
+    },
+    "months_included_detail": [
+      {
+        "label": "2025-02",
+        "start_ts": "2025-02-01 00:00:00 UTC",
+        "end_ts": "2025-03-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2025-03",
+        "start_ts": "2025-03-01 00:00:00 UTC",
+        "end_ts": "2025-04-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2025-04",
+        "start_ts": "2025-04-01 00:00:00 UTC",
+        "end_ts": "2025-05-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2025-05",
+        "start_ts": "2025-05-01 00:00:00 UTC",
+        "end_ts": "2025-06-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2025-06",
+        "start_ts": "2025-06-01 00:00:00 UTC",
+        "end_ts": "2025-07-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2025-07",
+        "start_ts": "2025-07-01 00:00:00 UTC",
+        "end_ts": "2025-08-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2025-08",
+        "start_ts": "2025-08-01 00:00:00 UTC",
+        "end_ts": "2025-09-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2025-09",
+        "start_ts": "2025-09-01 00:00:00 UTC",
+        "end_ts": "2025-10-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2025-10",
+        "start_ts": "2025-10-01 00:00:00 UTC",
+        "end_ts": "2025-11-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2025-11",
+        "start_ts": "2025-11-01 00:00:00 UTC",
+        "end_ts": "2025-12-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2025-12",
+        "start_ts": "2025-12-01 00:00:00 UTC",
+        "end_ts": "2026-01-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2026-01",
+        "start_ts": "2026-01-01 00:00:00 UTC",
+        "end_ts": "2026-02-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2026-02",
+        "start_ts": "2026-02-01 00:00:00 UTC",
+        "end_ts": "2026-03-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2026-03",
+        "start_ts": "2026-03-01 00:00:00 UTC",
+        "end_ts": "2026-04-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2026-04",
+        "start_ts": "2026-04-01 00:00:00 UTC",
+        "end_ts": "2026-05-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      },
+      {
+        "label": "2026-05",
+        "start_ts": "2026-05-01 00:00:00 UTC",
+        "end_ts": "2026-06-01 00:00:00 UTC",
+        "start_block": 22000000,
+        "end_block": 25218600
+      }
+    ]
+  },
+  "total_bytes_processed": 0,
+  "total_rows": 2083,
+  "feature_window": {
+    "start_date": "2025-02-01",
+    "end_date": "2026-05-31",
+    "months_included": 16,
+    "month_labels": [
+      "2025-02",
+      "2025-03",
+      "2025-04",
+      "2025-05",
+      "2025-06",
+      "2025-07",
+      "2025-08",
+      "2025-09",
+      "2025-10",
+      "2025-11",
+      "2025-12",
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05"
+    ]
+  },
+  "outcome_window": {
+    "start_date": "2026-06-01",
+    "end_date": "2026-12-31"
+  },
+  "extractions": [
+    {
+      "note": "synthetic offline data"
+    }
+  ],
+  "preprocess_latest_allowances": {
+    "at": "2026-06-06T03:28:11.911722+00:00",
+    "input_files": 16,
+    "input_rows": 800,
+    "output_rows": 4,
+    "output_path": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/processed/latest_allowances.parquet"
+  },
+  "preprocess_transfer_graph": {
+    "at": "2026-06-06T03:28:12.249917+00:00",
+    "input_files": 16,
+    "input_rows": 1280,
+    "output_edges": 4,
+    "output_path": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/processed/transfer_edges.parquet"
+  },
+  "preprocess_default_labels": {
+    "at": "2026-06-06T03:28:12.613374+00:00",
+    "feature_wallets": 4,
+    "defaulted_wallets": 2,
+    "outcome_liquidation_rows": 2,
+    "output_path": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/processed/default_labels.parquet"
+  },
+  "samples": {
+    "samples": [
+      {
+        "file": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/samples/approvals_sample.csv",
+        "rows": 50,
+        "source": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/raw/approvals/approvals_2025-02.parquet"
+      },
+      {
+        "file": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/samples/transfers_sample.csv",
+        "rows": 80,
+        "source": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/raw/token_transfers/transfers_2025-02.parquet"
+      },
+      {
+        "file": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/samples/liquidations_sample.csv",
+        "rows": 2,
+        "source": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/raw/aave_liquidations/liquidations_outcome_2026-H2.parquet"
+      },
+      {
+        "file": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/samples/latest_allowances_sample.csv",
+        "rows": 4,
+        "source": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/processed/latest_allowances.parquet"
+      },
+      {
+        "file": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/samples/transfer_edges_sample.csv",
+        "rows": 4,
+        "source": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/processed/transfer_edges.parquet"
+      },
+      {
+        "file": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/samples/default_labels_sample.csv",
+        "rows": 4,
+        "source": "/Users/abitocodes/Documents/GitHub/dissertation_proposal/data_works/processed/default_labels.parquet"
+      }
+    ]
+  }
+}

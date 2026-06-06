@@ -1,0 +1,43 @@
+# GMX V2 margin trading wallet ranking — last week of May 2026
+
+protocol: gmx_v2_arbitrum
+chain_id: 42161
+chain_name: Arbitrum One
+
+period:
+  start_date: "2026-05-25"
+  end_date: "2026-06-01"  # exclusive end (through 2026-05-31 23:59:59 UTC)
+  start_ts: "2026-05-25 00:00:00 UTC"
+  end_ts: "2026-06-01 00:00:00 UTC"
+
+bigquery:
+  project_id: null  # uses GOOGLE_CLOUD_PROJECT or ADC default
+  # crypto_arbitrum is deprecated; use goog_blockchain_arbitrum_one_us
+  logs_fqn: bigquery-public-data.goog_blockchain_arbitrum_one_us.logs
+  transactions_fqn: bigquery-public-data.goog_blockchain_arbitrum_one_us.transactions
+
+gmx_arbitrum:
+  event_emitter: "0xC8ee91A54287DB53897056e12D9819156D3822Fb"
+  liquidation_handler: "0xaf157Eb8e2398A8E1Fc1dA929974652b9ba9BC25"
+  exchange_router: "0x1C3fa76e6E1088bCE750f23a5BFcffa1efEF6A41"
+  # Order.OrderType.Liquidation enum value
+  order_type_liquidation: 7
+
+events:
+  position_increase: PositionIncrease
+  position_decrease: PositionDecrease
+  # EventLog1 topic0 — verified on-chain (goog_blockchain_arbitrum_one_us)
+  event_log1_topic0: "0x137a44067c8961cd7e1d876f4754a5a3a75989b4552f1843fc69c3b372def160"
+
+ranking:
+  min_closes: 3
+  success_field: basePnlUsd
+
+paths:
+  manifest: data/processed/extraction_manifest.json
+  raw_logs: data/raw/gmx_event_logs_2026-05-last-week.parquet
+  decoded_events: data/processed/gmx_decoded_events.parquet
+  wallet_rankings: data/processed/wallet_rankings.parquet
+
+budget:
+  max_bytes_per_query: 161061273600  # 150 GiB
