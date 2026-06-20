@@ -9,7 +9,7 @@ PhD dissertation proposal on **EndorseRank**: on-chain reputation ranking via Ad
 | `proposal/` | Active LaTeX dissertation proposal (canonical source) |
 | `papers/` | Reference PDFs |
 | `scripts/` | Utility scripts (DOCX merge, etc.) |
-| `sources/professor-feedback/` | Professor-reviewed DOCX input |
+| `sources/professor-feedback/` | Professor-commented DOCX (read-only reference; edit in `proposal/`) |
 | `archive/` | Past work — DOCX conversion tools, snapshots, section fixes |
 | `presentations/` | Talks and slides |
 
@@ -21,6 +21,11 @@ cd proposal
 ```
 
 Output: `proposal/main.pdf`
+
+## Professor comments
+
+- **Word (reference):** `sources/professor-feedback/dissertation-proposal-commented.docx` — open to view comment anchors.
+- **LaTeX (edit):** `proposal/` — apply all revisions here, then run `build.ps1`.
 
 ## Git remote
 

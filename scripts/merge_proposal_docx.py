@@ -11,7 +11,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parent.parent
-DOCX = ROOT / "sources" / "professor-feedback" / "28576810 Proposal_2.docx"
+DOCX = ROOT / "sources" / "professor-feedback" / "dissertation-proposal-commented.docx"
 AUTHOR = "Taehong Kwon"
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 

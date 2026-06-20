@@ -5,7 +5,7 @@ Merged output:
   D:\Github\phd_works\proposal\main.pdf
 
 Source inputs:
-  professor-feedback: D:\Github\phd_works\sources\professor-feedback\28576810 Proposal_2.docx
+  professor-feedback: D:\Github\phd_works\sources\professor-feedback\dissertation-proposal-commented.docx
   research baseline: D:\Github\phd_works\archive\snapshots\proposal-0-research-baseline\
 
 Merge strategy:
@@ -55,4 +55,4 @@ Key changes:
 
 DOCX merge script:
   D:\Github\phd_works\scripts\merge_proposal_docx.py
-  Backup: sources/professor-feedback/28576810 Proposal_2.pre-merge.docx
+  Backup: sources/professor-feedback/dissertation-proposal-commented.pre-merge.docx
