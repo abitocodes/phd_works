@@ -87,3 +87,13 @@ Optional polish (2026-06-20, post-commit)
 Build:
   XeLaTeX 2-pass: PASS
   Output: proposal/main.pdf
+
+DOCX export (2026-06-20)
+========================
+
+  - proposal/build-docx.ps1: pdf2docx from main.pdf (PDF layout preserved)
+  - scripts/build_proposal_docx_from_pdf.py: converter + content verification
+  - Output: proposal/main.docx (~113 KB, 52 pages, Times New Roman inline)
+  - Content checks: June 2026, versus AWP, Lin et al., EndorseRank, Figure 1; Yang et al. absent
+  - Zip integrity: testzip() OK
+  - Note: pandoc export removed (Word styles diverged from PDF); use PDF-first path after build.ps1

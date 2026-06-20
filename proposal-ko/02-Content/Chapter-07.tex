@@ -1,0 +1,43 @@
+% !TEX root = ../main.tex
+\clearpage
+\phantomsection
+\section*{7 \textbf{윤리적 고려사항}}
+\label{sec:ethics-considerations}
+\addcontentsline{toc}{section}{7 윤리적 고려사항}
+
+본 연구는 전적으로 공개 블록체인 데이터에 의존하지만, 책임 있는 수행을 위해 다음 윤리 원칙을 준수할 것이다. 연구는 비개인적 공개 원장 데이터를 사용하고 인간 참여자에 개입하지 않으므로, UNISA 연구 윤리 원칙---개인정보, 기밀, 책임 있는 데이터 관리, 필요 시 사전 윤리 심의---에 부합할 것이다.
+
+
+윤리 심의 절차: 실증 데이터 수집 및 분석 단계 시작 전, 연구자는 계획서, 데이터 관리 계획, 공개 데이터 정당화를 관련 UNISA 학과 윤리 절차에 제출할 것이다. 공개 가명 블록체인 데이터를 사용하고 인간 참여자 개입이 없어 면제 또는 저위험으로 분류되면, 면제 또는 승인 확인을 연구 기록의 일부로 보관한다. 지갑 소유자 탈익명화, 지갑 주소와 오프체인 개인 데이터 결합, 개인 식별이 합리적으로 가능한 방식의 주소 수준 결과 공개는 시도하지 않는다.
+
+
+\proposalSubheading{1. 프라이버시 및 익명성}
+
+\begin{itemize}
+\item[\textbullet] \textbf{가명성 존중:} Arbitrum One 주소는 가명이며 본질적으로 실세계 신원과 연결되지 않는다. 주소 탈익명화 또는 개인 식별 정보와의 상관 시도를 하지 않는다.
+\item[\textbullet] \textbf{민감 데이터 수집 없음:} 데이터 수집을 온체인 이벤트(approve, permit, transfer, GMX \textbf{PositionDecrease})로 제한하고 IP 주소 또는 KYC 기록 등 오프체인 데이터 스크래핑·통합을 피한다.
+\end{itemize}
+\proposalSubheading{2. 데이터 사용 및 준수}
+
+\begin{itemize}
+\item[\textbullet] \textbf{공개 데이터 소스:} 모든 쿼리는 해당 이용 약관 및 속도 제한에 따라 공개 데이터셋(예: Google BigQuery \texttt{goog\_blockchain\_arbitrum\_one\_us})을 대상으로 한다.
+\item[\textbullet] \textbf{악의적 상호작용 없음:} 네트워크 운영을 방해하거나 성능을 저하시킬 수 있는 방식으로 거래를 브로드캐스트하거나 스마트 계약과 상호작용하지 않는다.
+\end{itemize}
+\proposalSubheading{3. 공정성 및 편향 완화}
+
+\begin{itemize}
+\item[\textbullet] \textbf{알고리즘 공정성:} EndorseRank와 AWP의 의도치 않은 편향---예: 신규 참여자 또는 저거래량 참여자의 체계적 과소평가---을 감사하고 분석에서 이러한 한계를 논의한다.
+\item[\textbullet] \textbf{투명성:} 모든 코드, 파라미터 선택, 평가 지표를 문서화하고 공개하여 동료 검토 및 독립 재현을 가능하게 한다.
+\end{itemize}
+\proposalSubheading{4. 책임 있는 공개}
+
+\begin{itemize}
+\item[\textbullet] \textbf{취약점 보고:} 분석에서 스마트 계약 잠재 취약점(예: 악용 가능한 예상치 못한 승인 패턴)을 발견하면 공개 전 책임 프로토콜 팀에 기밀로 통지한다.
+\end{itemize}
+\proposalSubheading{5. 사회적·금융적 영향}
+
+\begin{itemize}
+\item[\textbullet] \textbf{투자 조언 아님:} EndorseRank가 리스크 평가에 정보를 제공할 수 있으나, 금융 조언이 아님을 명시하고 대출·거래 결정에 인간 감독의 필요성을 강조한다.
+\item[\textbullet] \textbf{오용 방지:} 적대적 조작(예: Sybil 공격) 가능성을 논의하고, 방법론이 특정 사용자를 표적으로 하거나 불이익을 주는 데 오용되지 않도록 안전장치를 권고한다.
+\end{itemize}
+온체인 평판 모델링을 윤리적으로 발전시키고, 사용자 프라이버시를 존중하며, DeFi 생태계에 책임 있게 기여하기 위해 이러한 관행을 준수한다.

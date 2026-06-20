@@ -1,0 +1,207 @@
+% !TEX root = ../main.tex
+\clearpage
+\phantomsection
+\section*{2 \textbf{연구 문제}}
+\label{sec:research-problem}
+\addcontentsline{toc}{section}{2 연구 문제}
+
+PageRank를 사용하는 현재의 온체인 평판 방법은 주로 거래 가치에 의존하여 지갑 간 경제적 연결을 추론한다. AWP 알고리즘은 유망함을 보였으나(Do et al., 2023), 범용 온체인 평판 신호로 사용할 때 두 가지 실질적 한계를 드러낸다. 첫째, 대규모 체인에서 거래 기반 PageRank를 재현하려면 일반적으로 과거 송금의 전수 파싱 및 집계가 필요하여, 데이터 처리 비용, 메모리 사용량, 수렴 반복 시간이 증가한다. 평판이 Arbitrum One의 DeFi 리스크 모니터링을 위해 반복적으로 또는 거의 실시간으로 계산되어야 할 때 이 계산 부담은 특히 문제가 된다.
+
+
+둘째, 거래 가치는 ``신뢰''에 대한 간접적이고 때로는 모호한 대리변수이다. 지갑은 보증을 표현하거나 지출 권한을 위임하지 않고도 다양한 이유(예: 거래, 차익거래, 에어드rop, 자동화된 계약 활동)로 토큰을 교환할 수 있다. 그러나 위임된 권한은 DeFi의 신용 노출에서 핵심적이다(Ghosh et al., 2024). 대조적으로 ERC-20 승인 메커니즘은 승인(및 지원되는 경우 permit) 갱신을 통해 소유자를 대신하여 토큰을 이체할 수 있도록 지출자를 승인함으로써 위임을 명시적으로 인코딩한다(Ethereum Improvement Proposals, 2015; Ethereum Improvement Proposals, 2020). 승인은 변경될 때까지 유효하므로, 각 소유자--지출자 쌍의 최신 승인 상태는 희소 방향 그래프로 표현할 수 있는 직접적이고 현재의 보증 신호를 제공하며, 관련 그래프 기반 모델에서 사용되는 네트워크 전파식 리스크 점수와 정렬된다(Lin et al., 2024).
+
+
+따라서 핵심 연구 문제는 다음과 같다: Arbitrum One에서 ERC-20 approve/permit 관계를 사용하여 온체인 평판 점수를 구성할 수 있는가? 그리고 그것이 계산 비용을 줄이고, 보증 의미론을 더 충실히 나타내며, 거래 기반 PageRank 방법과 비교하여 관찰 가능한 GMX V2 무기한 거래 성공과 동등하거나 우수한 정렬을 제공하는가?
+
+
+이 문제를 해결하기 위해 ERC-20 approve 및 permit 호출을 사용하여 희소하고 방향성 있으며 가중된 보증 그래프를 구성하는 EndorseRank 알고리즘을 설계, 구현, 평가할 것이다. 주요 과제에는 각 소유자--지출자 쌍에 대해 가장 최근 approve/permit 상태를 정확히 추출하여 오래된 승인이 그래프를 왜곡하지 않도록 하는 것; 대규모이지만 희소한 보증 그래프에서 PageRank 알고리즘의 빠른 수렴 보장; \textbf{PositionDecrease} 이벤트에서 파생된 GMX V2 거래 성공 대리변수(청산 성공 횟수, 실현 이익 대리변수, 청산 성공률)와 EndorseRank가 얼마나 효과적으로 상관되는지 평가하는 것이 포함된다.
+
+
+\phantomsection
+\subsection*{2.1 연구 질문}
+\label{sec:research-questions}
+\addcontentsline{toc}{subsection}{2.1 연구 질문}
+
+Arbitrum One 기반 GMX V2 무기한 스왑 포지션 거래 맥락에서, 설명 가능한 지갑 수준 리스크 지표가 필요한 DeFi 프로토콜, 리스크 분석가, 지갑 사용자, 연구자의 관점에서, ERC-20 승인/permit에서 파생된 allowance 관계로 구축된 Weighted PageRank 지표인 EndorseRank가 순위 발산, 거래 성공 정렬, 런타임, 메모리 사용, 수렴 안정성으로 측정될 때 Adaptive Weighted PageRank 및 송금 기반 PageRank 기준선과 동등하거나 우수한 성능을 보일 수 있는가?
+
+
+아래 하위 질문은 4절의 평가 구성개념을 반영하는 네 가지 주제 영역으로 그룹화되어 있다.
+
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.27\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
+\caption{주요 연구 질문에 대한 SPICE 틀}\\
+\toprule
+\textbf{SPICE 요소} & 설명 \\
+\midrule
+\textbf{Setting(설정)} & Arbitrum One GMX V2 무기한 스왑 포지션 거래 및 온체인 평판 점수 산출 \\
+\addlinespace
+\textbf{Perspective(관점)} & 설명 가능한 지갑 수준 리스크 지표가 필요한 DeFi 프로토콜, 리스크 분석가, 지갑 사용자, 연구자 \\
+\addlinespace
+\textbf{Intervention(개입)} & ERC-20 승인/permit에서 파생된 allowance 관계로 구축된 Weighted PageRank 지표 EndorseRank \\
+\addlinespace
+\textbf{Comparison(비교)} & 과거 거래 흐름에 의존하는 Adaptive Weighted PageRank 및 송금 기반 PageRank 모델 \\
+\addlinespace
+\textbf{Evaluation(평가)} & 순위 발산, 거래 성공 정렬(GMX 대리변수 대비 Spearman's rho, Kendall's tau), 런타임, 메모리 사용, 수렴 안정성 \\
+\addlinespace
+\bottomrule
+\end{longtable}
+
+다음 하위 질문은 각 SPICE 요소를 운영화하며 평가 주제별로 그룹화되어 있다.
+
+\proposalSubheading{• 그래프 구성 및 충실도}
+
+\begin{itemize}
+\item[\textendash] RQ1.1: Arbitrum One에서 ERC-20 approve 및 permit 이벤트를 전처리하여 현재 토큰 승인을 반영하는 신뢰할 수 있고 최신의 가중 보증 그래프를 어떻게 구성할 수 있는가?
+\item[\textendash] RQ1.2: approve/permit 엣지 기반 그래프가 거래 가치 그래프에 비해 충분한 신뢰 신호를 보존하는가?
+\end{itemize}
+\proposalSubheading{• 순위 비교}
+
+\begin{itemize}
+\item[\textendash] RQ2.1: EndorseRank의 순위 출력은 AWP 및 전통적 거래 기반 PageRank 점수와 지갑의 상대적 순서 측면에서 어떻게 다른가?
+\item[\textendash] RQ2.2: EndorseRank 점수는 AWP 점수와 어느 정도 상관되며, 어디에서 발산하는가?
+\end{itemize}
+\proposalSubheading{• 거래 성공 정렬}
+
+\begin{itemize}
+\item[\textendash] RQ3.1: EndorseRank 점수와 GMX V2 거래 성공 대리변수(청산 성공 횟수, 실현 이익 대리변수, 청산 성공률) 간 통계적 상관(Spearman's rho, Kendall's tau)은 무엇인가?
+\item[\textendash] RQ3.2: EndorseRank의 이러한 대리변수와의 정렬은 AWP 및 송금 기반 PageRank의 정렬과 비교하여 어떠한가?
+\end{itemize}
+\proposalSubheading{• 계산 효율성}
+
+\begin{itemize}
+\item[\textendash] RQ4.1: 고정된 지갑 집합에 대해 EndorseRank와 AWP를 계산하는 데 필요한 실행 시간 및 자원 사용량(CPU, 메모리)은 무엇인가?
+\item[\textendash] RQ4.2: 그래프 희소성(approve/permit 대 송금 엣지)이 PageRank 반복에서 수렴 속도와 부동소수점 안정성에 어떤 영향을 미치는가?
+\end{itemize}
+\phantomsection
+\subsection*{2.2 연구 목표}
+\label{sec:objectives}
+\addcontentsline{toc}{subsection}{2.2 연구 목표}
+
+본 연구의 총괄적 목표는 시간 감쇠 인자 없이 ERC-20 approve/permit 승인을 엣지 가중치로 활용하는 EndorseRank 알고리즘을 설계, 구현, 평가하여 계산 효율적이고 신뢰를 반영하는 온체인 평판 점수를 산출하는 것이다. 구체적으로 다음을 목표로 한다.
+
+
+아래 다섯 목표 그룹은 이 목표를 2.1절의 연구 질문과 정렬된 구체적 산출물로 변환한다.
+
+
+\proposalSubheading{1. 그래프 구성}
+
+\begin{itemize}
+\item[\textbullet] \textbf{O1.1: }\textbf{Arbitrum One}에서 ERC-20 \textbf{Approve} 및 \textbf{Permit} 이벤트를 스캔하고, 각 소유자\(\to\)지출자 쌍에 대해 가장 최근 승인 금액을 분리하여 저장하는 데이터 추출 파이프라인을 구축한다.
+\begin{itemize}
+\item[\textendash] \emph{근거: }각 새 approve/permit 거래가 동일 소유자\(\to\)지출자에 대한 이전 승인을 덮어쓰므로, 쌍당 최신 승인만 보존하면 된다.
+\end{itemize}
+\item[\textbullet] \textbf{O1.2: }각 노드가 ERC-20 지갑을 나타내고, 각 엣지(u\(\to\)v)가 지갑 u(소유자)에서 지갑 v(지출자)로의 \textbf{최신 승인 금액}(예: ETH 또는 토큰 단위)을 가중치로 갖는 방향성 가중 그래프 $G_{\text{approve}}$를 구성한다.
+\begin{itemize}
+\item[\textendash] \emph{세부: }시간 기반 감쇠나 이력 집계를 \textbf{적용하지 않는다}; 모든 이전 승인은 가장 최근 이벤트에 의해 대체된다.
+\end{itemize}
+\end{itemize}
+\proposalSubheading{2. EndorseRank 알고리즘 구현}
+
+\begin{itemize}
+\item[\textbullet] \textbf{O2.1: }$G_{\text{approve}}$에 \textbf{Weighted PageRank} 알고리즘을 구현한다. 각 노드의 ``점수''는 PageRank 질량을 승인 가중치에 비례하여 나가는 엣지로 분배하여 계산한다.
+\begin{itemize}
+\item[\textendash] \emph{명세:}
+\begin{enumerate}
+\item[(a)] 각 노드의 나가는 엣지를 정규화하여 노드 u에 대해 이웃 v로 전이할 확률은 다음과 같다:
+\end{enumerate}
+\end{itemize}
+\end{itemize}
+\[P_{u\to v} = \frac{w_{u\to v}}{\sum _{x\in N^{+}(u)}w_{u\to x}}\]
+
+여기서 N\textsuperscript{+}(u)는 u의 나가는 이웃 집합(u가 승인하는 모든 노드 x)이며, $W_{u\to v}$는 지갑 u에서 v로의 최신 승인 금액이다.
+
+
+\begin{enumerate}
+\item[(b)] 위 식은 EndorseRank가 사용하는 전이 확률을 명시한다: $P_{u\to v}$는 Wu\(\to\)v를 지갑 u의 모든 나가는 승인 금액 합으로 나눈 값과 같으며, 각 $W_{u\to v}$는 엣지 u\(\to\)v의 최신 승인 금액을 나타낸다. 따라서 각 지갑은 현재 활성 승인 관계에만 PageRank 질량을 분배하며, 정규화된 승인 강도에 비례한다.
+\item[(c)] 표준 감쇠 인자(예: 0.85)를 사용하되, 원시 승인을 넘어 추가 시간 가중치나 가치 감쇠를 포함하지 않는다. 이는 PageRank식 수렴 보장과 일관된 전이 모델을 유지하고, 실증적 정당화 없이 추가 하이퍼파라미터 튜닝을 피하며, 시간 조정 점수가 아닌 원시 승인 가중치로 정의된 기준선과의 비교 가능성을 보존한다.
+\end{enumerate}
+\begin{itemize}
+\item[\textbullet] \textbf{O2.2: }희소 행렬 표현과 효율적 반복 솔버를 사용하여 대규모 희소 그래프에 맞게 EndorseRank 구현을 최적화하고, 최소 메모리 부담과 빠른 런타임으로 수렴이 달성되도록 한다.
+\end{itemize}
+\proposalSubheading{3. 기준선 재현 및 데이터 일관성}
+
+\begin{itemize}
+\item[\textbullet] \textbf{O3.1: }동일 기간 동안 \textbf{Arbitrum One의 GMX V2 활성 트레이더 집단}에서 추출한 동일 지갑 집합에 대해 두 가지 기준 순위 접근법을 재현한다:
+\end{itemize}
+\begin{enumerate}
+\item[(a)] Adaptive Weighted PageRank(AWP): 송금에 시간 감쇠 인자를 적용하는 거래 가치 가중 PageRank.
+\item[(b)] 송금 기반 Weighted PageRank: 시간 감쇠 없이 원시 ERC-20 송금 금액을 엣지 가중치로 사용하는 더 단순한 모델.
+\end{enumerate}
+\begin{itemize}
+\item[\textbullet] \textbf{O3.2: }EndorseRank, AWP, 송금 기반 PageRank가 모두 동일 지갑 집합과 동일 기간의 이벤트에서 동작하도록 통일된 데이터 처리 파이프라인을 유지하여, 결과 차이가 데이터 불일치가 아닌 순위 로직에만 기인하도록 한다.
+\end{itemize}
+\proposalSubheading{4. 성능 평가}
+
+\begin{itemize}
+\item[\textbullet] \textbf{O4.1: }EndorseRank 점수와 두 기준선(AWP 및 송금 기반 PageRank) 각각 간 Spearman's rho 및 Kendall's tau를 계산하여 지갑 순서가 얼마나 유사하거나 다른지 정량화한다. Spearman's rho는 단조적 순위 일치를, Kendall's tau는 쌍별 순서 일치를 측정한다.
+\item[\textbullet] \textbf{O4.2:}\textbf{ }EndorseRank와 기준선의 점수 분포(예: 평균, 중앙값, 사분위 범위)를 비교하고, 승인 기반 가중치는 높지만 송금 기반 가중치는 낮은(또는 그 반대) 지갑 등 이상치를 식별한다.
+\item[\textbullet] \textbf{O4.3: 거래 성공 정렬}
+\begin{itemize}
+\item[\textendash] Arbitrum One의 GMX V2 \textbf{EventEmitter}에서 GMX V2 \textbf{PositionDecrease} 이벤트를 추출하고, 이벤트 \textbf{account} 필드(\texttt{tx.from} 아님)로 트레이더를 식별한다.
+\item[\textendash] 각 지갑에 대한 거래 성공 대리변수를 계산한다: \textbf{청산 성공 횟수}(수익성 청산), \textbf{실현 이익 대리변수}($\sum \max(\text{basePnlUsd}, 0)$), \textbf{청산 성공률}(승/전체 청산, $\text{total\_closes} \geq 3$).
+\item[\textendash] EndorseRank, AWP, 송금 기반 PageRank 점수와 각 대리변수 순위 간 Spearman's rho 및 Kendall's tau를 계산한다(Do et al.\ (2023)의 in-degree 및 in-value에 대한 도메인 정렬 접근을 따름).
+\item[\textendash] 상관 크기를 해석한다: 1에 너무 가까운 값은 단순 대리변수 순위와의 중복을 나타내고, 약 0.2 미만은 PageRank 전파로부터의 도메인 통찰 부족을 시사한다.
+\end{itemize}
+\end{itemize}
+\proposalSubheading{5. 계산 효율성 및 확장성 분석}
+
+\begin{itemize}
+\item[\textbullet] \textbf{O5.1 런타임 벤치마킹: }고정 지갑 집합(예: 100,000 노드)에 대해 EndorseRank, AWP, 송금 기반 PageRank의 총 소요 시간(데이터 추출 + 그래프 구성 + PageRank 수렴)을 측정·비교한다.
+\item[\textbullet] \textbf{O5.2 메모리 프로파일링: }각 방법의 최대 메모리 사용량을 기록하고, EndorseRank가 최신 승인 금액만 사용함으로써 거래 기반 그래프보다 더 희소한 그래프와 더 낮은 메모리 사용량을 갖는 점을 강조한다.
+\item[\textbullet] \textbf{O5.3 수렴 안정성}\textbf{: }다양한 감쇠 인자 및 토큰 공급 규모에서 각 알고리즘이 사전 정의된 수렴 허용오차(예: 10\textsuperscript{-}\textsuperscript{6})에 도달하는 데 필요한 반복 횟수를 분석하고, 잠재적으로 큰 승인 값에도 EndorseRank가 수치적으로 안정적인지 검증한다.
+\end{itemize}
+SMART 정렬
+
+
+목표는 각각 데이터 파이프라인, 그래프 구성, 알고리즘 구현, 기준선 재현, 거래 성공 정렬 평가, 확장성 벤치마킹 등 구체적 연구 산출물을 대상으로 하므로 구체적(specific)이다. Spearman's rho, Kendall's tau, 런타임, 메모리, 수렴 허용오차를 통해 측정 가능(measurable)하다. 공개 Arbitrum One 블록체인 로그, GMX V2 \textbf{PositionDecrease} 이벤트, 재현 가능한 Python 기반 도구, 고정 계산 자원을 사용하므로 달성 가능하고 현실적(attainable, realistic)이다. 승인 후 일정을 통해 2026년 6월부터 2028년 1월 사이 데이터 추출, 구현, 평가, 집필, 출판 마일스톤을 배분하므로 시간 제약(time-bound)이 있다.
+
+
+이러한 목표를 달성함으로써, PageRank에 대한 최신 승인 가중 접근이 시간 감쇠 부담 없이 GMX 거래 성공 정렬에서 기존 거래 가치 기반 방법과 동등하거나 우수한 성능을 내는 확장 가능하고 신뢰에 정렬된 평판 점수 모델 EndorseRank를 산출할 수 있음을 보일 것이다.
+
+
+\phantomsection
+\subsection*{2.3 기대 결과}
+\label{sec:expected-results}
+\addcontentsline{toc}{subsection}{2.3 기대 결과}
+
+본 절은 연구의 기대 결과를 명시하고 위 목표와 명시적으로 정렬한다.
+
+
+이 기대 결과는 목표 O1--O5에 직접 대응하며, 배경에서 소개한 세 가지 주제---보증 기반 신뢰 구조, GMX 거래 성공 정렬, 송금 기반 기준선 대비 계산 효율성---를 반영한다.
+
+
+\proposalResultHeading{ER1: 재현 가능한 승인 데이터셋 및 보증 그래프(O1.1--O1.2)}
+
+Arbitrum One에서 정의된 기간 동안 각 소유자--지출자 쌍에 대한 최신 ERC-20 approve/permit 승인 상태를 출력하는 문서화되고 재현 가능한 데이터 추출 파이프라인.
+
+
+이 최신 승인 상태로부터 구성된 방향성 가중 보증 그래프 $G_{\text{approve}}$, 송금 그래프 대비 의도된 희소성을 입증하는 요약 통계(예: 노드/엣지 수, 희소성, 차수 분포)를 수반.
+
+
+\proposalResultHeading{ER2: 확장 가능한 EndorseRank 구현(O2.1--O2.2)}
+
+최신 승인 금액을 엣지 가중치로 사용하는(감쇠 인자 및 수렴 허용오차가 명확히 명시된) 정확한 Weighted PageRank 구현, 대규모 희소 그래프에 최적화.
+
+
+큰 승인 값 하에서의 수치 안정성 및 증가하는 그래프 크기에서의 실용적 수렴 행동(허용오차까지의 반복)에 대한 증거.
+
+
+\proposalResultHeading{ER3: 기준선 재현 및 순위 차이 증거(O3.1--O4.2)}
+
+EndorseRank와 동일 지갑 집합 및 동일 관찰 기간에서 계산된 재현된 기준 순위(AWP 및 송금 기반 가중 PageRank).
+
+
+Spearman's *\(\rho\)* 및 Kendall's *\(\tau\)*를 통한 지갑 순서의 정량화된 일치 및 발산, 승인 보증으로는 높지만 송금량으로는 낮은(또는 그 반대) 지갑에 대한 표적 사례 분석을 수반.
+
+
+\proposalResultHeading{ER4: 거래 성공 정렬 결과(O4.3)}
+
+매칭된 지갑에 대한 청산 성공 횟수, 실현 이익 대리변수, 청산 성공률을 계산한 GMX V2 \textbf{PositionDecrease} 데이터셋, EndorseRank가 AWP 및 송금 기반 PageRank 대비 이러한 대리변수와 동등하거나 우수한 정렬을 제공하는지 보여주는 비교 순위 상관 결과(Spearman's rho 및 Kendall's tau).
+
+
+\proposalResultHeading{ER5: 종단 간 효율성 및 확장성 벤치마크(O5.1--O5.3)}
+
+(데이터 추출 + 그래프 구성 + PageRank 수렴)에 대한 런타임 및 메모리 프로파일링 결과, 최신 승인 상태만 사용하는 것 대 전수 송금 이력 파싱의 계산적 이점을 입증.
+
+
+그래프 희소성이 방법 간 수렴 속도 및 자원 소비에 미치는 영향을 보고하는 확장성 분석.
