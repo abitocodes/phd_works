@@ -22,12 +22,7 @@ While this study is designed to rigorously evaluate EndorseRank against Adaptive
 \proposalSubheading{3. Graph Modeling Assumptions}
 
 \begin{itemize}
-\item[\textbullet] \textbf{Approval Semantics}: We assume that any nonzero approve/permit represents a substantive trust endorsement. In practice, users may issue
-\end{itemize}
-``spend-all'' approvals by default or interact via custodial services, which dilute the trust signal.
-
-
-\begin{itemize}
+\item[\textbullet] \textbf{Approval Semantics}: We assume that any nonzero approve/permit represents a substantive trust endorsement. In practice, users may issue ``spend-all'' approvals by default or interact via custodial services, which dilute the trust signal.
 \item[\textbullet] \textbf{Edge Weight Aggregation}: Summing all transfers or using only the latest allowance ignores the provenance of funds and may obscure multi-token or multi-chain interactions.
 \item[\textbullet] \textbf{GMX Trading Semantics}: Profitable \textbf{PositionDecrease} closes reflect realized PnL on perpetual swap positions, not loan repayment. The credit analogy is interpretive; wash trading, copy trading, and automated strategies may inflate proxies without reflecting genuine trustworthiness.
 \end{itemize}
@@ -52,6 +47,5 @@ While this study is designed to rigorously evaluate EndorseRank against Adaptive
 \proposalSubheading{7. Computational Constraints}
 
 \begin{itemize}
-\item[\textbullet] \textbf{Scalability Limitations}: Although EndorseRank is more efficient than AWP on our sample, real-time computation on the full Arbitrum transfer graph
+\item[\textbullet] \textbf{Scalability Limitations}: Although EndorseRank is more efficient than AWP on our sample, real-time computation on the full Arbitrum transfer graph (millions of wallets) may still demand distributed computing or approximation techniques.
 \end{itemize}
-(millions of wallets) may still demand distributed computing or approximation techniques.

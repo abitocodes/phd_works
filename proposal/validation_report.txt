@@ -56,3 +56,24 @@ Key changes:
 DOCX merge script:
   D:\Github\phd_works\scripts\merge_proposal_docx.py
   Backup: sources/professor-feedback/dissertation-proposal-commented.pre-merge.docx
+
+Pre-submission review fixes (2026-06-20)
+=========================================
+
+Applied fixes from 8-axis submission review:
+
+  - Ch6: fixed broken itemize in Limitations SS3 and SS7
+  - Title: June 2025 -> June 2026 (align with Ch2 schedule)
+  - bibliography: Lin moved to alphabetical order (after Kotb); Packin SSRN DOI added
+  - Ch3: removed duplicate Packin paragraph; novel -> distinctive
+  - Abstract: novel -> an on-chain reputation metric
+
+Term grep (proposal/*.tex):
+  confront: 0
+  AbitoRank: 0
+  Yang et al.: 0
+  novel: 0
+
+Build:
+  XeLaTeX 2-pass: PASS
+  Output: proposal/main.pdf (52 pages)

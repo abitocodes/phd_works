@@ -19,7 +19,7 @@ To avoid ambiguity, the key concepts used throughout this proposal are defined a
 \item[\textbullet] \textbf{Smart contract: }Self-executing program code deployed on a blockchain that automatically enforces the terms of an agreement when predefined conditions are met, without a trusted intermediary (Buterin, 2014; Szabo, 1997).
 \item[\textbullet] \textbf{Wallet / Address: }A blockchain account that can hold assets and interact with smart contracts (used as the unit of analysis) (Buterin, 2014; Ethereum Improvement Proposals, 2015).
 \item[\textbullet] \textbf{On-chain reputation score: }A numerical indicator computed from on-chain signals intended to represent a wallet's reliability in financial interactions (Do et al., 2023).
-\item[\textbullet] \textbf{On-chain credit risk: }Observable adverse outcomes such as position liquidation, repeated trading losses, or protocol-defined delinquency signals on public blockchains (Yang et al., 2024).
+\item[\textbullet] \textbf{On-chain credit risk: }Observable adverse outcomes such as position liquidation, repeated trading losses, or protocol-defined delinquency signals on public blockchains (Lin et al., 2024).
 \item[\textbullet] \textbf{GMX V2 perpetual swap position: }A collateralized long or short exposure on GMX V2, opened via \textbf{PositionIncrease} and closed via \textbf{PositionDecrease} events emitted by the GMX V2 \textbf{EventEmitter} on Arbitrum One (GMX, n.d.; Arbitrum Foundation, n.d.).
 \item[\textbullet] \textbf{Profitable close / close-success: }A \textbf{PositionDecrease} with positive realized PnL (\textbf{basePnlUsd} $> 0$) that is not a position liquidation (\texttt{orderType} $\neq 7$) (GMX, n.d.).
 \item[\textbullet] \textbf{Close-success count: }The number of profitable \textbf{PositionDecrease} events for a wallet within the observation window (analogous to in-degree in transfer-based PageRank validation) (GMX, n.d.; Do et al., 2023).
@@ -42,7 +42,7 @@ Clarifying the importance in DeFi, enhancing on-chain reputation score computati
 
 
 \begin{itemize}
-\item[\textbullet] \textbf{Risk management and protocol safety: }Better identification of risky wallets can reduce bad debt and improve the stability of lending and perpetual trading markets (Yang et al., 2024).
+\item[\textbullet] \textbf{Risk management and protocol safety: }Better identification of risky wallets can reduce bad debt and improve the stability of lending and perpetual trading markets (Lin et al., 2024).
 \item[\textbullet] \textbf{Capital efficiency: }More informative trust signals can support differentiated risk parameters (e.g., borrowing limits or collateral requirements) instead of one-size-fits-all constraints (Packin \& Lev-Aretz, 2024).
 \item[\textbullet] \textbf{Access and inclusion without off-chain data: }On-chain scoring can enable participation for users who lack conventional credit records, while preserving the DeFi principle of permissionless access (Sch\"{a}r, 2021).
 \item[\textbullet] \textbf{Composable trust for DeFi applications: }A reusable reputation layer can be consumed by multiple protocols (e.g., lenders, perpetual exchanges, insurers, and DAOs) to make consistent, explainable decisions (Packin \& Lev-Aretz, 2024).
