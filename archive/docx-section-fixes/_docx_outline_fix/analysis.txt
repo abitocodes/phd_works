@@ -1,0 +1,88 @@
+=== TOC (style 1 or similar) ===
+[63] style=None num=('44', '0') | 'Literature Review9'
+[79] style=None num=('44', '0') | 'Dissertation/Thesis Outline36'
+[80] style=None num=('44', '1') | 'References37'
+[81] style=None num=('44', '0') | 'Appendices37'
+[214] style=None num=None | 'Literature Review'
+[550] style=None num=None | 'Dissertation/Thesis Outline'
+[558] style=1 num=('32', '1') | 'References'
+[579] style=None num=None | 'Appendices'
+
+=== DISSERTATION OUTLINE BODY ===
+[79] style=None num=('44', '0') | Dissertation/Thesis Outline36
+[80] style=None num=('44', '1') | References37
+[81] style=None num=('44', '0') | Appendices37
+[82] style=None num=None | Introduction and background
+[83] style=None num=None | 
+[84] style=None num=None | Decentralized Finance (DeFi) has expanded lending and borrowing activity on public blockchains, yet most lending remains highly collateralized because protocols cannot rely on traditional off-chain id
+[85] style=None num=None | 
+[86] style=None num=None | In this study, on-chain wallet reputation scoring refers to the process of computing a quantitative score for a blockchain address using observable on-chain behavior and relationships, with the goal o
+[87] style=None num=None | 
+[88] style=None num=None | To avoid ambiguity, the key concepts used throughout this proposal are defined as follows:
+[89] style=None num=('33', '0') | DeFi (Decentralized Finance): Financial services (e.g., lending, borrowing, exchanges) implemented via smart contracts on public blockchains.
+[90] style=None num=('33', '0') | Wallet / Address: A blockchain account that can hold assets and interact with smart contracts (used as the unit of analysis).
+[91] style=None num=('33', '0') | On-chain reputation / reputation score: A numerical indicator computed from on-chain signals intended to represent a wallet's reliability in financial interactions.
+[92] style=None num=('33', '0') | On-chain credit risk / default event: Observable adverse outcomes such as loan default, liquidation, or protocol-defined delinquency signals.
+[93] style=None num=('33', '0') | PageRank / Weighted PageRank: Graph-based ranking methods that propagate influence through directed edges, optionally weighted by edge strength.
+[94] style=None num=('33', '0') | ERC-20 allowance: A state variable recording how much a token owner permits a spender to transfer on the owner's behalf.
+[95] style=None num=('33', '0') | Approve / Permit: ERC-20 mechanisms that set allowances; permit (e.g., EIP-2612-style) enables allowance updates via signed messages.
+[96] style=None num=('33', '0') | Endorsement graph: A directed graph where an edge represents an explicit delegation/endorsement signal rather than a mere transfer.
+[97] style=None num=None | 
+[98] style=None num=None | Reputation scoring is critical in credit-based lending to distinguish reliable participants from potential bad actors. Recent examples of on-chain wallet reputation scoring inspired by PageRank includ
+[99] style=None num=None | 
+[100] style=None num=None | The ERC-20 token standard, however, includes two explicit allowance mecha- nisms—approve and permit—by which a token holder grants another address per- mission to spend up to a specified amount on its
+[101] style=None num=None | 
+[102] style=None num=None | Clarifying the importance in DeFi, enhancing on-chain wallet reputation scoring can provide concrete benefits:
+[103] style=None num=None | 
+[104] style=None num=('33', '0') | Risk management and protocol safety: Better identification of risky wallets can reduce bad debt and improve the stability of lending markets.
+[105] style=None num=('33', '0') | Capital efficiency: More informative trust signals can support differentiated risk parameters (e.g., borrowing limits or collateral requirements) instead of one-size-fits-all constraints.
+[106] style=None num=('33', '0') | Access and inclusion without off-chain data: On-chain scoring can enable participation for users who lack conventional credit records, while preserving the DeFi principle of permissionless access.
+[107] style=None num=('33', '0') | Composable trust for DeFi applications: A reusable reputation layer can be consumed by multiple protocols (e.g., lenders, insurers, and DAOs) to make consistent, explainable decisions.
+[108] style=None num=None | 
+[109] style=None num=None | Despite the clear endorsement semantics and sparser graph structure of approval-based relationships, no existing study has systematically leveraged ERC-20 allowances as primary edge weights for PageRa
+[110] style=None num=('33', '0') | A reproducible pipeline and latest-allowance endorsement graph derived from ERC-20 approve/permit states;
+[111] style=None num=('33', '0') | An optimized, scalable Weighted PageRank implementation (EndorseRank) operating on this sparse, trust-semantic graph; and
+[112] style=None num=('33', '0') | Empirical evidence using transactions of the DeFi lending platform such as Aave and standard metrics that EndorseRank matches or improves risk-prediction performance relative to transaction-based base
+[113] style=None num=None | 
+[114] style=None num=None | 
+[115] style=None num=None | 
+[116] style=None num=None | Research Problem
+[117] style=None num=None | 
+[118] style=None num=None | Current on-chain reputation methods using PageRank rely primarily on transaction values to infer economic ties among wallets. While AWP algorithm has shown promise (Do et al., 2023), it exposes two pr
+[119] style=None num=None | 
+[120] style=None num=None | Second, transaction value is an indirect and sometimes ambiguous proxy for "trust." Wallets may exchange tokens for many reasons (e.g., trading, arbitrage, airdrops, or automated contract activity) wi
+[121] style=None num=None | 
+[122] style=None num=None | Thus, the central research problem is: Can we construct an on-chain wallet reputation metric using ERC-20 approve/permit relationships that reduces computational cost, more faithfully represents endor
+[123] style=None num=None | 
+[124] style=None num=None | To address this issue, we will design, implement, and evaluate the EndorseRank algorithm, which constructs a sparse, directed, weighted endorsement graph using ERC-20 approve and permit calls. The key
+[125] style=None num=None | 
+[126] style=1 num=('32', '1') | Research Questions
+[127] style=None num=None | 
+[128] style=None num=None | In the setting of Ethereum-based DeFi lending, from the perspective of DeFi protocols, risk analysts, wallet users, and researchers who need explainable wallet-level risk indicators, can EndorseRank—a
+[129] style=None num=None | 
+[130] style=ad num=None | Table 1: SPICE framework for the main research question
+[131] style=None num=None | SPICE Element
+
+=== REFERENCES BODY (first 20) ===
+[558] HEAD | References
+[559] none ind=None | 3Jane Protocol. (n.d.). Jane Score documentation.
+[560] none ind=None | Blockchain Bureau. (n.d.). Providence score documentation.
+[561] none ind=None | Cred Protocol. (n.d.). Cred Score documentation.
+[562] none ind=None | Do, H. D., et al. (2023). PageRank and HodgeRank on Ethereum transactions: A measure for social credit. International Journal of Software Innovation, 11(1).
+[563] none ind=None | Ethereum Improvement Proposals. (2015). ERC-20 token standard (EIP-20). https://eips.ethereum.org/EIPS/eip-20
+[564] none ind=None | Ethereum Improvement Proposals. (2020). ERC-20 permit extension (EIP-2612). https://eips.ethereum.org/EIPS/eip-2612
+[565] none ind=None | Ghosh, R., et al. (2024). On-chain credit risk score in decentralized finance. arXiv. https://arxiv.org/abs/2412.00710
+[566] none ind=None | Hassija, V., et al. (2020). Secure lending: Blockchain and prospect theory-based decentralized credit scoring model. IEEE Transactions on Network Science and Engineering, 7(4).
+[567] none ind=None | Imig, S. (2023). Trustworthiness and PageRank on the Ethereum blockchain. SSRN.
+[568] none ind=None | Jain, D., et al. (2019). Bit-Score: A blockchain-based distributed network for secure credit scoring. In Proceedings of ICCCA.
+[569] none ind=None | Page, L., Brin, S., Motwani, R., & Winograd, T. (1998). The PageRank citation ranking: Bringing order to the web. Stanford Digital Library Technologies Project.
+[570] none ind=None | Wolf, W., et al. (2022). Scoring Aave accounts for creditworthiness. arXiv. https://arxiv.org/abs/2207.07008
+[571] none ind=None | Yang, F., et al. (2024). RiskProp: Account risk rating on Ethereum via de-anonymous score and network propagation. IEEE Transactions on Dependable and Secure Computing.
+[572] none ind={'left': '85', 'right': '4704'} | 
+[573] none ind={'left': '85', 'right': '4704'} | 
+[574] none ind={'left': '85', 'right': '4704'} | 
+[575] none ind={'left': '85', 'right': '4704'} | 
+[576] none ind={'left': '85', 'right': '4704'} | 
+[577] none ind={'left': '85', 'right': '4704'} | 
+[578] none ind={'left': '85', 'right': '4704'} | 
+[579] END | Appendices

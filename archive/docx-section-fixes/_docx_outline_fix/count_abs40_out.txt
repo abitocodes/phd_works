@@ -1,0 +1,10 @@
+numIds on abstract 40: ['35', '47']
+
+BEFORE first outline chapter:
+  numId 35: {'0': 1}
+  numId 47: {'1': 1}
+  total ilvl0 on abs40 nums: 1
+
+AT References and appendices:
+  numId 35: {'0': 6}
+  numId 47: {'1': 1, '0': 1}

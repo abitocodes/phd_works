@@ -1,0 +1,15 @@
+0: style=2 num=48/0 | Introduction and research problem. This chapter will refine the propos
+1: style=2 num=48/0 | Literature review and theoretical framework. This chapter will expand 
+2: style=2 num=48/0 | Research methodology. This chapter will specify the philosophical posi
+3: style=2 num=48/0 | Implementation and empirical results. This chapter will report the dat
+4: style=2 num=48/0 | Discussion. This chapter will interpret the findings against each rese
+5: style=2 num=48/0 | Conclusion and future work. This chapter will synthesize the study, st
+6: style=2 num=49/0 | References and appendices
+7: style=2 num=49/1 | References
+8: style=None num=None/None | 3Jane Protocol. (n.d.). Jane Score documentation.
+9: style=None num=None/None | Blockchain Bureau. (n.d.). Providence score documentation.
+10: style=None num=None/None | Cred Protocol. (n.d.). Cred Score documentation.
+11: style=None num=None/None | Do, H. D., et al. (2023). PageRank and HodgeRank on Ethereum transacti
+12: style=None num=None/None | Ethereum Improvement Proposals. (2015). ERC-20 token standard (EIP-20)
+13: style=None num=None/None | Ethereum Improvement Proposals. (2020). ERC-20 permit extension (EIP-2
+14: style=None num=None/None | Ghosh, R., et al. (2024). On-chain credit risk score in decentralized 

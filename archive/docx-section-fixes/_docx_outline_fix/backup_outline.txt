@@ -1,0 +1,30 @@
+﻿HEADING Dissertation/Thesis Outline
+style None num None None | Chapter 1: Introduction and research problem. This chapter will refine
+style None num None None | Chapter 2: Literature review and theoretical framework. This chapter w
+style None num None None | Chapter 3: Research methodology. This chapter will specify the philoso
+style None num None None | Chapter 4: Implementation and empirical results. This chapter will rep
+style None num None None | Chapter 5: Discussion. This chapter will interpret the findings agains
+style None num None None | Chapter 6: Conclusion and future work. This chapter will synthesize th
+style None num None None | 
+style 1 num 32 1 | References
+style None num None None | 3Jane Protocol. (n.d.). Jane Score documentation.
+style None num None None | Blockchain Bureau. (n.d.). Providence score documentation.
+style None num None None | Cred Protocol. (n.d.). Cred Score documentation.
+style None num None None | Do, H. D., et al. (2023). PageRank and HodgeRank on Ethereum transacti
+style None num None None | Ethereum Improvement Proposals. (2015). ERC-20 token standard (EIP-20)
+style None num None None | Ethereum Improvement Proposals. (2020). ERC-20 permit extension (EIP-2
+style None num None None | Ghosh, R., et al. (2024). On-chain credit risk score in decentralized 
+style None num None None | Hassija, V., et al. (2020). Secure lending: Blockchain and prospect th
+style None num None None | Imig, S. (2023). Trustworthiness and PageRank on the Ethereum blockcha
+style None num None None | Jain, D., et al. (2019). Bit-Score: A blockchain-based distributed net
+style None num None None | Page, L., Brin, S., Motwani, R., & Winograd, T. (1998). The PageRank c
+style None num None None | Wolf, W., et al. (2022). Scoring Aave accounts for creditworthiness. a
+style None num None None | Yang, F., et al. (2024). RiskProp: Account risk rating on Ethereum via
+style None num None None | 
+style None num None None | 
+style None num None None | 
+style None num None None | 
+style None num None None | 
+style None num None None | 
+style None num None None | 
+style None num None None | Appendices

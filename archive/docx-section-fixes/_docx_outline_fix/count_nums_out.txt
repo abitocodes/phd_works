@@ -1,0 +1,7 @@
+numId 44 -> abstract 39
+numId 35 -> abstract 40
+numId 32 -> abstract 19
+numId 47 -> abstract 40
+AT [Dissertation/Thesis Outline] counts: {('44', '0'): 9, ('35', '0'): 0, ('47', '0'): 0, ('47', '1'): 0}
+AT [Dissertation/Thesis Outline] counts: {('44', '0'): 11, ('35', '0'): 0, ('47', '0'): 0, ('47', '1'): 1}
+AT [Introduction and research problem] counts: {('44', '0'): 11, ('35', '0'): 0, ('47', '0'): 0, ('47', '1'): 1}

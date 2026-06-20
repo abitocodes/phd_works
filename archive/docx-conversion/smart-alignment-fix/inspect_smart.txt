@@ -1,0 +1,17 @@
+[141] style=2 num=32/2 | Computational Efficiency
+[147] style=2 num=None/None | SMART Alignment
+[176] style=2 num=31/0 | Computational Efficiency and Scalability Analysis
+[235] style=None num=None/None | This study is grounded in hyperlink-citation theory, predictive validity, and computational complexity theory to compare
+[243] style=None num=None/None | H1: DivergenceReputation StructureH3: EfficiencyH2: PredictiveEndorseRank vs. AWPComputational EfficiencyRisk Predictive
+[248] style=None num=27/2 | H3 (Computational Efficiency): EndorseRank will require less runtime, memory, and fewer iterations to converge than AWP,
+[324] style=None num=21/1 | Computational Efficiency
+[340] style=2 num=20/1 | H3 (Computational Efficiency)
+
+--- num 18 ilvl 0 near Objectives ---
+[149] num=31/0 | Graph Construction
+[154] num=31/0 | EndorseRank Algorithm Implementation
+[163] num=31/0 | Reproduction of Baselines and Data Consistency
+[165] num=30/0 | Adaptive Weighted PageRank (AWP): a transaction-value–weighted PageRank that applies time-
+[166] num=30/0 | Transfer-Based Weighted PageRank: a simpler model that uses raw ERC-20 transfer amounts as
+[169] num=31/0 | Performance Evaluation
+[176] num=31/0 | Computational Efficiency and Scalability Analysis

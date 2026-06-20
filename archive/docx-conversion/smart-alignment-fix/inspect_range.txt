@@ -1,0 +1,45 @@
+[140] style=None num=None/None | 
+[141] style=2 num=32/2 | Computational Efficiency
+[142] style=None num=32/3 | RQ4.1: What is the execution time and resource usage (CPU, memory) required to compute EndorseR
+[143] style=None num=32/3 | RQ4.2: How does graph sparsity (approve/permit vs. transfer edges) affect convergence speed and
+[144] style=None num=None/None | 
+[145] style=1 num=32/1 | Objectives
+[146] style=None num=None/None | The overarching goal of this study is to design, implement, and evaluate an EndorseRank algorit
+[147] style=2 num=31/0 | Graph Construction
+[148] style=None num=31/1 | O1.1: Build a data-extraction pipeline that scans the Ethereum blockchain for ERC-20 Approve an
+[149] style=None num=31/2 | Rationale: Since each new approve/permit transaction overrides previous allowances for the same
+[150] style=None num=31/1 | O1.2: Construct a directed, weighted graph Gapprove in which each node represents an ERC-20 wal
+[151] style=None num=31/2 | Detail: We do not apply any time-based decay or history aggregation; all older approvals are su
+[152] style=2 num=31/0 | EndorseRank Algorithm Implementation
+[153] style=None num=None/None | 
+[154] style=None num=31/1 | O2.1: Implement a Weighted PageRank algorithm on Gapprove, where each node’s “score” is compute
+[155] style=None num=31/2 | Specifications:
+[156] style=None num=31/3 | Normalize each node’s outgoing edges so that for node u, the probability of transitioning to ne
+[157] style=None num=None/None | 
+[158] style=None num=None/None | where N+(u) is the set of out-neighbors of u (all nodes x that u approves), x is an element of 
+[159] style=None num=31/3 | Use a standard damping factor (e.g., 0.85), but do not incorporate any additional time-weightin
+[160] style=None num=31/1 | O2.2: Optimize the EndorseRank implementation for large, sparse graphs by using sparse-matrix r
+[161] style=2 num=31/0 | Reproduction of Baselines and Data Consistency
+[162] style=None num=31/1 | O3.1: Reproduce two baseline ranking approaches on an identical wallet set drawn from the Aave 
+[163] style=None num=30/0 | Adaptive Weighted PageRank (AWP): a transaction-value–weighted PageRank that applies time-decay
+[164] style=None num=30/0 | Transfer-Based Weighted PageRank: a simpler model that uses raw ERC-20 transfer amounts as edge
+[165] style=None num=31/1 | O3.2: Maintain a uniform data-processing pipeline so that EndorseRank, AWP, and Transfer-Based 
+[166] style=None num=None/None | 
+[167] style=2 num=31/0 | Performance Evaluation
+[168] style=None num=31/1 | O4.1: Compute Spearman's rho and Kendall's tau between EndorseRank scores and each of the two b
+[169] style=None num=31/1 | O4.2: Compare the distribution of scores (e.g., mean, median, interquartile range) for EndorseR
+[170] style=None num=31/1 | O4.3: Risk Prediction Performance
+[171] style=None num=31/2 | Label wallets as “defaulted” or “not defaulted” based on their on- chain liquidation events in 
+[172] style=None num=31/2 | Using each ranking score as a predictive feature, train simple classifiers (e.g., logistic regr
+[173] style=None num=31/2 | Evaluate AUC, precision, recall, F1-score, and calibration for each ranking method, determining
+[174] style=2 num=31/0 | Computational Efficiency and Scalability Analysis
+[175] style=None num=31/1 | O5.1 Runtime Benchmarking: Measure and compare the total time required (data extraction + graph
+[176] style=None num=31/1 | O5.2 Memory Profiling: Record peak memory usage for each method, highlighting how EndorseRank’s
+[177] style=None num=31/1 | O5.3 Convergence Stability: Analyze the number of iterations needed for each algorithm to reach
+[178] style=2 num=None/None | SMART Alignment
+[179] style=None num=None/None | The objectives are specific because each one targets a concrete research output: data pipeline,
+[180] style=None num=None/None | By accomplishing these objectives, we will demonstrate how a latest-allowance-weighted approach
+[181] style=None num=None/None | 
+[182] style=1 num=32/1 | Expected Results
+[183] style=None num=None/None | This section states the expected outcomes of the study and explicitly aligns them with the obje
+[184] style=2 num=42/0 | These expected results map directly onto Objectives O1-O5 and mirror the three themes introduce

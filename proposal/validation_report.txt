@@ -1,16 +1,16 @@
-Proposal merge validation (proposal-1 + proposal-0)
-===================================================
+Proposal merge validation (professor-feedback + research baseline)
+===================================================================
 
 Merged output:
-  D:\Github\phd_works\Proposal\dissertation_proposal\proposal\main.pdf
+  D:\Github\phd_works\proposal\main.pdf
 
 Source inputs:
-  proposal-1: D:\Github\phd_works\Proposal\dissertation_proposal\proposal-1\28576810 Proposal_2.docx
-  proposal-0: D:\Github\phd_works\Proposal\dissertation_proposal\proposal-0\
+  professor-feedback: D:\Github\phd_works\sources\professor-feedback\28576810 Proposal_2.docx
+  research baseline: D:\Github\phd_works\archive\snapshots\proposal-0-research-baseline\
 
 Merge strategy:
-  - Base structure and professor feedback from proposal-1 DOCX
-  - Research direction (EndorseRank, Arbitrum One, GMX V2) from proposal-0
+  - Base structure and professor feedback from professor-feedback DOCX
+  - Research direction (EndorseRank, Arbitrum One, GMX V2) from research baseline
   - LaTeX canonical output in proposal/
 
 Term consistency (proposal/*.tex grep):
@@ -54,5 +54,5 @@ Key changes:
 
 
 DOCX merge script:
-  D:\Github\phd_works\Proposal\dissertation_proposal\scripts\merge_proposal_docx.py
-  Backup: proposal-1/28576810 Proposal_2.pre-merge.docx
+  D:\Github\phd_works\scripts\merge_proposal_docx.py
+  Backup: sources/professor-feedback/28576810 Proposal_2.pre-merge.docx

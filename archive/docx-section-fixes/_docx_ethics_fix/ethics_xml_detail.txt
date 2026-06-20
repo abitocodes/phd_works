@@ -1,0 +1,60 @@
+=== para 449 style=None num=None ===
+Ethics Considerations
+
+=== para 450 style=None num=None ===
+
+
+=== para 451 style=2 num=('18', '0') ===
+Although this research relies exclusively on publicly available blockchain data, we will observe the following ethical principles to ensure responsible conduct. Because the study uses non-personal, public ledger data and does not intervene with human participants, it will align with UNISA's research
+
+=== para 452 style=None num=None ===
+Ethics clearance process: before starting the empirical data collection and analysis phase, the researcher will submit the proposal, data-management plan, and public-data justification to the relevant UNISA School ethics process. If the study is classified as exempt or low risk because it uses publi
+
+=== para 453 style=None num=('18', '1') ===
+Privacy and Anonymity
+
+=== para 454 style=None num=('18', '1') ===
+Pseudonymity Respect: Ethereum addresses are pseudonymous, not inherently linked to real-world identities. We will not attempt to deanonymize addresses or correlate them with personally identifying information.
+
+=== para 455 style=None num=('18', '1') ===
+No Sensitive Data Collection: We will restrict data collection to on- chain events (approve, permit, transfer, liquidation) and avoid scraping or integrating off-chain data such as IP addresses or KYC records.
+
+=== para 456 style=2 num=('18', '0') ===
+Data Usage and Compliance
+
+=== para 457 style=None num=('18', '1') ===
+Open Data Sources: All queries will target public datasets (e.g., Google BigQuery, The Graph) in accordance with their terms of service and rate limits.
+
+=== para 458 style=None num=('18', '1') ===
+No Malicious Interaction: We will not broadcast transactions or otherwise interact with smart contracts in ways that could disrupt network operations or degrade performance.
+
+=== para 459 style=2 num=('18', '0') ===
+Fairness and Bias Mitigation
+
+=== para 460 style=None num=None ===
+
+
+=== para 461 style=None num=None ===
+
+
+=== para 462 style=None num=('18', '1') ===
+Algorithmic Fairness: We will audit EndorseRank and AWP for un- intended biases—e.g., systematically undervaluing new entrants or low- volume participants—and discuss these limitations in our analysis.
+
+=== para 463 style=None num=('18', '1') ===
+Transparency: All code, parameter choices, and evaluation metrics will be documented and published, enabling peer review and independent replication.
+
+=== para 464 style=2 num=('18', '0') ===
+Responsible Disclosure
+
+=== para 465 style=None num=('18', '1') ===
+Vulnerability Reporting: If our analysis uncovers potential vulnerabilities in smart contracts (e.g., unexpected approval patterns that could be exploited), we will confidentially notify the responsible protocol teams before public disclosure.
+
+=== para 466 style=2 num=('18', '0') ===
+Social and Financial Impact
+
+=== para 467 style=None num=('18', '1') ===
+No Financial Advice: Although EndorseRank may inform risk assessment, we will explicitly disclaim that it is not financial advice and highlight the need for human oversight in lending decisions.
+
+=== para 468 style=None num=('18', '1') ===
+Avoiding Misuse: We will discuss potential adversarial manipulation (e.g., Sybil attacks) and recommend safeguards so that our methodology is not misused to target or disadvantage specific users.
+

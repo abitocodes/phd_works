@@ -1,0 +1,22 @@
+﻿---
+num=48/0 style=2 | Introduction and research problem. This chapter will re
+num=48/0 style=2 | Literature review and theoretical framework. This chapt
+num=48/0 style=2 | Research methodology. This chapter will specify the phi
+num=48/0 style=2 | Implementation and empirical results. This chapter will
+num=48/0 style=2 | Discussion. This chapter will interpret the findings ag
+num=48/0 style=2 | Conclusion and future work. This chapter will synthesiz
+num=49/0 style=2 | References and appendices
+num=49/1 style=2 | References
+num=None/None style=None | 3Jane Protocol. (n.d.). Jane Score documentation.
+num=None/None style=None | Blockchain Bureau. (n.d.). Providence score documentati
+num=None/None style=None | Cred Protocol. (n.d.). Cred Score documentation.
+num=None/None style=None | Do, H. D., et al. (2023). PageRank and HodgeRank on Eth
+num=None/None style=None | Ethereum Improvement Proposals. (2015). ERC-20 token st
+num=None/None style=None | Ethereum Improvement Proposals. (2020). ERC-20 permit e
+num=None/None style=None | Ghosh, R., et al. (2024). On-chain credit risk score in
+num=None/None style=None | Hassija, V., et al. (2020). Secure lending: Blockchain 
+num=None/None style=None | Imig, S. (2023). Trustworthiness and PageRank on the Et
+num=None/None style=None | Jain, D., et al. (2019). Bit-Score: A blockchain-based 
+num=None/None style=None | Page, L., Brin, S., Motwani, R., & Winograd, T. (1998).
+num=None/None style=None | Wolf, W., et al. (2022). Scoring Aave accounts for cred
+num=None/None style=None | Yang, F., et al. (2024). RiskProp: Account risk rating 

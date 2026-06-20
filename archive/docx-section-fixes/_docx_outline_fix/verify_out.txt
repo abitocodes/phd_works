@@ -1,0 +1,30 @@
+[550] num=None | Dissertation/Thesis Outline
+[551] num=('35', '0') | Introduction and research problem. This chapter will refine the proposal into the thesis introduction by presenting the 
+[552] num=('35', '0') | Literature review and theoretical framework. This chapter will expand the proposal literature review into a comprehensiv
+[553] num=('35', '0') | Research methodology. This chapter will specify the philosophical position, research design, data sources, sampling logi
+[554] num=('35', '0') | Implementation and empirical results. This chapter will report the data pipeline, EndorseRank implementation, baseline i
+[555] num=('35', '0') | Discussion. This chapter will interpret the findings against each research question and objective, explain the theoretic
+[556] num=('35', '0') | Conclusion and future work. This chapter will synthesize the study, state the original contribution to knowledge, revisi
+[557] num=('47', '0') | References and appendices
+[558] num=None | 
+[559] num=('47', '1') | References
+[560] num=None | 3Jane Protocol. (n.d.). Jane Score documentation.
+[561] num=None | Blockchain Bureau. (n.d.). Providence score documentation.
+[562] num=None | Cred Protocol. (n.d.). Cred Score documentation.
+[563] num=None | Do, H. D., et al. (2023). PageRank and HodgeRank on Ethereum transactions: A measure for social credit. International Jo
+[564] num=None | Ethereum Improvement Proposals. (2015). ERC-20 token standard (EIP-20). https://eips.ethereum.org/EIPS/eip-20
+[565] num=None | Ethereum Improvement Proposals. (2020). ERC-20 permit extension (EIP-2612). https://eips.ethereum.org/EIPS/eip-2612
+[566] num=None | Ghosh, R., et al. (2024). On-chain credit risk score in decentralized finance. arXiv. https://arxiv.org/abs/2412.00710
+[567] num=None | Hassija, V., et al. (2020). Secure lending: Blockchain and prospect theory-based decentralized credit scoring model. IEE
+[568] num=None | Imig, S. (2023). Trustworthiness and PageRank on the Ethereum blockchain. SSRN.
+[569] num=None | Jain, D., et al. (2019). Bit-Score: A blockchain-based distributed network for secure credit scoring. In Proceedings of 
+[570] num=None | Page, L., Brin, S., Motwani, R., & Winograd, T. (1998). The PageRank citation ranking: Bringing order to the web. Stanfo
+[571] num=None | Wolf, W., et al. (2022). Scoring Aave accounts for creditworthiness. arXiv. https://arxiv.org/abs/2207.07008
+[572] num=None | Yang, F., et al. (2024). RiskProp: Account risk rating on Ethereum via de-anonymous score and network propagation. IEEE 
+[573] num=None | Appendices
+
+--- REFS ---
+HEAD num=('47', '1')
+  [ok] hang=360 | 3Jane Protocol. (n.d.). Jane Score documentation.
+  [ok] hang=360 | Blockchain Bureau. (n.d.). Providence score documentation.
+  [ok] hang=360 | Cred Protocol. (n.d.). Cred Score documentation.

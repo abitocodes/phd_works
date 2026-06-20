@@ -1,0 +1,24 @@
+[60] style=None num=('44', '1') | Research Questions4
+[61] style=None num=('44', '1') | Objectives5
+[62] style=None num=('44', '1') | Expected Results6
+[63] style=None num=('44', '0') | Literature Review9
+[64] style=None num=('44', '1') | Graph-Based On-Chain Reputation Scoring9
+[65] style=None num=('44', '1') | Predictive Modeling for On-Chain Credit Risk11
+[66] style=None num=('44', '1') | Industry Initiatives and Non-Scholarly Perspectives12
+[67] style=None num=('44', '0') | Theoretical Framework17
+[68] style=None num=('44', '1') | Constructs and Variable Mapping17
+[69] style=None num=('44', '1') | Conceptual Model18
+[70] style=None num=('44', '1') | Theoretical Justification19
+[71] style=None num=('44', '1') | Implications for Research Design20
+[72] style=None num=('44', '0') | Research Methodology21
+[73] style=None num=('44', '1') | Research Design and Method21
+[74] style=None num=('44', '1') | Data Analysis23
+[75] style=None num=('44', '0') | Limitations24
+[76] style=None num=('44', '0') | Ethics Considerations27
+[77] style=None num=('44', '0') | Significance of Research29
+[78] style=None num=('44', '0') | Schedule31
+[79] style=None num=('44', '0') | Dissertation/Thesis Outline36
+[80] style=None num=('44', '1') | References37
+[81] style=None num=('44', '0') | Appendices37
+[82] style=None num=None | Introduction and background
+[84] style=None num=None | Decentralized Finance (DeFi) has expanded lending and borrowing activity on public blockchains, yet most lending remains highly collateralized because protocols cannot rely on traditional off-chain identity, employment, or credit histories. In a pseudonymous setting, the core challenge is not merely allocating capital, but allocating it safely: identifying which wallets are likely to behave reliably in credit-like interactions (e.g., repeated borrowing, repayment, and delegation of spending rights), while limiting exposure to opportunistic or malicious actors (e.g., defaulting, griefing, Sybil-style account creation, and rapid reputation farming).

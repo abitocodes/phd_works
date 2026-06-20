@@ -1,0 +1,9 @@
+Source: D:\Github\phd_works\Proposal\Proposal-Final_Taehong Kwon.docx
+Output: D:\Github\phd_works\Proposal\latex_direct_conversion\Proposal-Final_Taehong Kwon.direct.tex
+Fidelity project: D:\Github\phd_works\Proposal\latex_fidelity\main.tex
+Method: direct OOXML parsing with Word numbering fidelity.
+Title paragraphs: 12
+Body paragraphs emitted: 291
+Tables emitted: 3
+Manual TOC entries: 24
+Relationships parsed: 16

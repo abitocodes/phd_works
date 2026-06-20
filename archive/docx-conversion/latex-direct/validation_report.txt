@@ -1,0 +1,36 @@
+docx-LaTeX fidelity validation
+===============================
+
+Date: 2026-06-05
+Source docx: D:\Github\phd_works\Proposal\Proposal-Final_Taehong Kwon.docx
+Output tex:  D:\Github\phd_works\Proposal\latex_direct_conversion\Proposal-Final_Taehong Kwon.direct.tex
+Output pdf:  D:\Github\phd_works\Proposal\latex_direct_conversion\Proposal-Final_Taehong Kwon.direct.pdf
+
+Diff report (compare_docx_latex.py)
+-----------------------------------
+Critical: 0
+Major:    0
+Minor:    0
+
+XeLaTeX build (build.ps1, 2-pass)
+---------------------------------
+Status: SUCCESS
+Pages:  31
+Warnings: overfull/underfull hbox (URLs, long lines) — acceptable per plan Minor category
+Undefined references: none after second pass (sec:data-analysis-2 mapped to outline section)
+
+Checklist
+---------
+[x] TOC title = Table of Contents (manual TOC, not \tableofcontents)
+[x] TOC 24 entries with Word numId 44 numbering (1, 2, 2.1 … 11)
+[x] Body section/subsection numbering from numbering.xml counters
+[x] Research Questions / Objectives hierarchy (numId 32)
+[x] List markers: bullets (•) and en-dashes (–) preserved
+[x] 3 tables with captions
+[x] References section preserved
+
+Tools added
+-----------
+- numbering_engine.py   — Word numbering.xml counter simulator
+- docx_extractor.py     — docx structure extraction for compare/convert
+- compare_docx_latex.py — diff_report.md / diff_report.json generator

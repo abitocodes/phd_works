@@ -1,0 +1,88 @@
+--- 42 ---
+Ethics Considerations27
+
+--- 323 ---
+Ethics Considerations
+
+--- 324 ---
+Although this research relies exclusively on publicly available blockchain data, we will observe the following ethical principles to ensure responsible conduct. Because the study uses non-personal, public ledger data and does not intervene with human participants, it will align with UNISA's research ethics principles on privacy, confidentiality, responsible data management, and prior ethics reviews where required.
+
+--- 325 ---
+Ethics clearance process: before starting the empirical data collection and analysis phase, the researcher will submit the proposal, data-management plan, and public-data justification to the relevant UNISA School ethics process. If the study is classified as exempt or low risk because it uses public pseudonymous blockchain data and no human-participant intervention, the exemption or clearance confirmation will be retained as part of the research record. No attempt will be made to deanonymize wallet owners, combine wallet addresses with off-chain personal data, or publish address-level findings in a way that could reasonably identify individuals.
+
+--- 329 ---
+Data Usage and Compliance
+
+--- 335 ---
+Responsible Disclosure
+
+--- 340 ---
+By adhering to these practices, we ensure that our research advances on-chain reputation modeling ethically, respects user privacy, and contributes responsibly to the DeFi ecosystem.
+
+--- 349 ---
+Reproducible Framework: We provide a fully specified, open-source pipeline—from blockchain data extraction to PageRank implementation and evaluation metrics—enabling other researchers and practitioners to validate, extend, and apply the EndorseRank methodology across different protocols and ecosystems.
+
+[ctx 41] Limitations24
+
+[ctx 42] Ethics Considerations27
+
+[ctx 43] Significance of Research29
+
+[ctx 44] Schedule31
+
+[ctx 45] Dissertation/Thesis Outline36
+
+[ctx 46] References37
+
+[ctx 47] Appendices37
+
+[ctx 48] Introduction and background
+
+[ctx 49] Decentralized Finance (DeFi) has expanded lending and borrowing activity on public blockchains, yet most lending remains highly collateralized because protocols cannot rely on traditional off-chain identity, employment, or credit histories. In a pseudonymous setting, the core challenge is not merely allocating capital, but allocating it safely: identifying which wallets are likely to behave reliably in credit-like interactions (e.g., repeated borrowing, repayment, and delegation of spending rights), while limiting exposure to opportunistic or malicious actors (e.g., defaulting, griefing, Sybil-style account creation, and rapid reputation farming).
+
+[ctx 50] In this study, on-chain wallet reputation scoring refers to the process of computing a quantitative score for a blockchain address using observable on-chain behavior and relationships, with the goal of approximating trustworthiness or credit-related reliability without relying on off-chain personal data. In DeFi, such scores can support (i) more accurate assessment of on-chain financial risk(e.g., default or liquidation events), (ii) improved risk controls for lending protocols, and (iii) potential pathways toward more capital-efficient credit (e.g., reduced collateral requirements for low-risk participants).
+
+[ctx 51] To avoid ambiguity, the key concepts used throughout this proposal are defined as follows:
+
+[ctx 52] DeFi (Decentralized Finance): Financial services (e.g., lending, borrowing, exchanges) implemented via smart contracts on public blockchains.
+
+[ctx 53] Wallet / Address: A blockchain account that can hold assets and interact with smart contracts (used as the unit of analysis).
+
+[ctx 54] On-chain reputation / reputation score: A numerical indicator computed from on-chain signals intended to represent a wallet's reliability in financial interactions.
+
+[ctx 55] On-chain credit risk / default event: Observable adverse outcomes such as loan default, liquidation, or protocol-defined delinquency signals.
+
+[ctx 56] PageRank / Weighted PageRank: Graph-based ranking methods that propagate influence through directed edges, optionally weighted by edge strength.
+
+[ctx 322] (millions of wallets) may still demand distributed computing or approximation techniques.
+
+[ctx 323] Ethics Considerations
+
+[ctx 324] Although this research relies exclusively on publicly available blockchain data, we will observe the following ethical principles to ensure responsible conduct. Because the study uses non-personal, public ledger data and does not intervene with human participants, it will align with UNISA's research ethics principles on privacy, confidentiality, responsible data management, and prior ethics reviews where required.
+
+[ctx 325] Ethics clearance process: before starting the empirical data collection and analysis phase, the researcher will submit the proposal, data-management plan, and public-data justification to the relevant UNISA School ethics process. If the study is classified as exempt or low risk because it uses public pseudonymous blockchain data and no human-participant intervention, the exemption or clearance confirmation will be retained as part of the research record. No attempt will be made to deanonymize wallet owners, combine wallet addresses with off-chain personal data, or publish address-level findings in a way that could reasonably identify individuals.
+
+[ctx 326] Privacy and Anonymity
+
+[ctx 327] Pseudonymity Respect: Ethereum addresses are pseudonymous, not inherently linked to real-world identities. We will not attempt to deanonymize addresses or correlate them with personally identifying information.
+
+[ctx 328] No Sensitive Data Collection: We will restrict data collection to on- chain events (approve, permit, transfer, liquidation) and avoid scraping or integrating off-chain data such as IP addresses or KYC records.
+
+[ctx 329] Data Usage and Compliance
+
+[ctx 330] Open Data Sources: All queries will target public datasets (e.g., Google BigQuery, The Graph) in accordance with their terms of service and rate limits.
+
+[ctx 331] No Malicious Interaction: We will not broadcast transactions or otherwise interact with smart contracts in ways that could disrupt network operations or degrade performance.
+
+[ctx 332] Fairness and Bias Mitigation
+
+[ctx 333] Algorithmic Fairness: We will audit EndorseRank and AWP for un- intended biases—e.g., systematically undervaluing new entrants or low- volume participants—and discuss these limitations in our analysis.
+
+[ctx 334] Transparency: All code, parameter choices, and evaluation metrics will be documented and published, enabling peer review and independent replication.
+
+[ctx 335] Responsible Disclosure
+
+[ctx 336] Vulnerability Reporting: If our analysis uncovers potential vulnerabilities in smart contracts (e.g., unexpected approval patterns that could be exploited), we will confidentially notify the responsible protocol teams before public disclosure.
+
+[ctx 337] Social and Financial Impact
+
