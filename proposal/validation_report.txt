@@ -1,27 +1,58 @@
-﻿Proposal formatting cleanup validation
-=====================================
+Proposal merge validation (proposal-1 + proposal-0)
+===================================================
 
-Source DOCX:
-D:\Github\phd_works\Proposal\Proposal-Final_Taehong Kwon.docx
+Merged output:
+  D:\Github\phd_works\Proposal\dissertation_proposal\proposal\main.pdf
 
-Generated LaTeX project:
-D:\Github\phd_works\Proposal\latex_fidelity\main.tex
+Source inputs:
+  proposal-1: D:\Github\phd_works\Proposal\dissertation_proposal\proposal-1\28576810 Proposal_2.docx
+  proposal-0: D:\Github\phd_works\Proposal\dissertation_proposal\proposal-0\
 
-Formatting changes applied:
-- Paragraph style is standardized as block paragraphs: no first-line indentation and compact paragraph spacing.
-- Internal subheadings below TOC-level headings are rendered with \proposalSubheading or \proposalResultHeading, not as TOC-level \subsection* entries.
-- Section 2.3 Expected Results now renders ER1-ER5 as consistent result headings with regular block paragraphs beneath each heading.
-- Bullet and dash list labels are normalized to \textbullet and \textendash, with shared enumitem margins and spacing.
-- The manual Table of Contents numbering and order are unchanged.
+Merge strategy:
+  - Base structure and professor feedback from proposal-1 DOCX
+  - Research direction (EndorseRank, Arbitrum One, GMX V2) from proposal-0
+  - LaTeX canonical output in proposal/
 
-Validation results:
-- XeLaTeX 2-pass build: PASS.
-- Output PDF: D:\Github\phd_works\Proposal\latex_fidelity\main.pdf
-- Output page count: 44 pages. The original DOCX has 43 pages; the 1-page increase is from the block-paragraph formatting and internal subheading normalization.
-- TOC title and numbering: PASS. The manual TOC still uses the existing 1, 2, 2.1, 2.2, 2.3 numbering sequence.
-- TOC link target mechanism: PASS. \TOCentry remains hyperref-based and the section labels remain present.
-- Structure diff: PASS. compare_docx_latex.py reports Critical 0 / Major 0 / Minor 0.
+Term consistency (proposal/*.tex grep):
+  AbitoRank: 0
+  Aave: 0
+  AUC: 0
+  EndorseRank: present throughout
+  GMX / Arbitrum One: present in methodology and validation sections
 
-Notes:
-- The LaTeX log contains only layout warnings such as overfull hboxes and the local MiKTeX update warning. No fatal LaTeX error was reported.
-- The build script now changes to its own directory before running XeLaTeX, so it can be launched from outside the latex_fidelity folder.
+Build:
+  XeLaTeX 2-pass: PASS (51 pages)
+  Fatal LaTeX errors: 0
+
+Professor comment remediation (second pass)
+============================================
+
+Applied fixes for remaining partial/no items from professor comment audit.
+
+Term grep (proposal/*.tex):
+  confront: 0
+  AbitoRank: 0
+  Aave: 0
+  Colendi: 0
+  Do et al. (2019): 0
+  on-chain wallet reputation: 0
+  predictive power: 0
+  Imig: 0
+
+Build:
+  XeLaTeX 2-pass: PASS
+  Output: proposal/main.pdf
+
+Key changes:
+  - Abstract: confront -> encounter; Schär (2021) citation
+  - Ch1: on-chain reputation score terminology; definition citations; acronym note
+  - Ch2: SPICE setting terminology; §2.1 intro sentence; Yang-only risk propagation
+  - Ch3: removed Do (2019), Colendi, Imig; risk ranking performance wording
+  - Ch4: Imig removed; DeFi-informed learning future-work sentence
+  - Ch5: directed (one-way) relationships
+  - Bibliography: Schär (2021) added; Imig (2023) removed
+
+
+DOCX merge script:
+  D:\Github\phd_works\Proposal\dissertation_proposal\scripts\merge_proposal_docx.py
+  Backup: proposal-1/28576810 Proposal_2.pre-merge.docx

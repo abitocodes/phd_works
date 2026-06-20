@@ -22,13 +22,13 @@ While this study is designed to rigorously evaluate EndorseRank against Adaptive
 \proposalSubheading{3. Graph Modeling Assumptions}
 
 \begin{itemize}
-\item[\textbullet] \textbf{Approval Semantics}: We assume that any nonzero approve/permit rep- resents a substantive trust endorsement. In practice, users may issue
+\item[\textbullet] \textbf{Approval Semantics}: We assume that any nonzero approve/permit represents a substantive trust endorsement. In practice, users may issue
 \end{itemize}
 ``spend-all'' approvals by default or interact via custodial services, which dilute the trust signal.
 
 
 \begin{itemize}
-\item[\textbullet] \textbf{Edge Weight Aggregation}: Summing all transfers or using only the latest allowance ignores the provenance of funds and may obscure multi- token or multi-chain interactions.
+\item[\textbullet] \textbf{Edge Weight Aggregation}: Summing all transfers or using only the latest allowance ignores the provenance of funds and may obscure multi-token or multi-chain interactions.
 \item[\textbullet] \textbf{GMX Trading Semantics}: Profitable \textbf{PositionDecrease} closes reflect realized PnL on perpetual swap positions, not loan repayment. The credit analogy is interpretive; wash trading, copy trading, and automated strategies may inflate proxies without reflecting genuine trustworthiness.
 \end{itemize}
 \proposalSubheading{4. Algorithmic Simplifications}
@@ -42,12 +42,12 @@ While this study is designed to rigorously evaluate EndorseRank against Adaptive
 
 \begin{itemize}
 \item[\textbullet] \textbf{Protocol Specificity}: We focus on GMX V2 perpetual swap outcomes on Arbitrum One. EndorseRank's alignment may differ for other perpetual exchanges (e.g., dYdX, Hyperliquid) or non-trading use cases.
-\item[\textbullet] \textbf{Asset Bias}: High-volume tokens (e.g., USDC, WETH) dominate graph structure; smaller or emerging tokens may yield sparse endorsement net- works less amenable to PageRank.
+\item[\textbullet] \textbf{Asset Bias}: High-volume tokens (e.g., USDC, WETH) dominate graph structure; smaller or emerging tokens may yield sparse endorsement networks less amenable to PageRank.
 \end{itemize}
 \proposalSubheading{6. Adversarial Manipulation and Sybil Attacks}
 
 \begin{itemize}
-\item[\textbullet] \textbf{Gaming the Graph}: Malicious actors could issue dummy approvals or orchestrate circular allowance patterns to inflate their EndorseRank score. Similarly, coordinated small profitable closes could inflate close-success count. Detecting and mitigating such Sybil strategies require additional safe- guards beyond the scope of this study.
+\item[\textbullet] \textbf{Gaming the Graph}: Malicious actors could issue dummy approvals or orchestrate circular allowance patterns to inflate their EndorseRank score. Similarly, coordinated small profitable closes could inflate close-success count. Detecting and mitigating such Sybil strategies require additional safeguards beyond the scope of this study.
 \end{itemize}
 \proposalSubheading{7. Computational Constraints}
 

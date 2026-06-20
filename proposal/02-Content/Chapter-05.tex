@@ -22,7 +22,7 @@ This study uses public, on-chain event logs as the primary dataset. The raw data
 \textbf{Core unit of analysis}
 
 
-Wallet addresses and directed relationships between wallets (owner \(\to\) spender), later represented as a sparse graph. GMX V2 trading outcomes are aggregated at the same wallet level using the \textbf{account} field from \textbf{PositionDecrease} events.
+Wallet addresses and directed (one-way) relationships from owner to spender, later represented as a sparse graph. GMX V2 trading outcomes are aggregated at the same wallet level using the \textbf{account} field from \textbf{PositionDecrease} events.
 
 
 \textbf{Primary signals}
@@ -98,7 +98,7 @@ The alignment analysis uses the intersection of wallets present in the reputatio
 \toprule
 \textbf{Construct} & \textbf{Definition} & \textbf{Associated Variables} \\
 \midrule
-Reputation\newline Structure & The pattern and relative ordering\newline of wallet reputations produced by\newline a ranking algorithm. & (1) EndorseRank score;\newline AWP score;\newline Rank correlation(Spear- man's \emph{\(\rho\) }/ Kendall's \emph{\(\tau\) }) between EndorseRank and AWP \\
+Reputation\newline Structure & The pattern and relative ordering\newline of wallet reputations produced by\newline a ranking algorithm. & (1) EndorseRank score;\newline AWP score;\newline Rank correlation (Spearman's \emph{\(\rho\)} / Kendall's \emph{\(\tau\)}) between EndorseRank and AWP \\
 \addlinespace
 Trading Success\newline Alignment & The extent to which a reputation score aligns with GMX V2 trading-success proxy rankings. & Close-success count;\newline Realized gain proxy;\newline Close success rate;\newline Spearman's \emph{\(\rho\) }/ Kendall's \emph{\(\tau\) } for each ranking method vs.\ each proxy \\
 \addlinespace

@@ -13,6 +13,8 @@ This study is grounded in hyperlink-citation theory, construct (domain) alignmen
 \label{sec:constructs-and-variable-mapping}
 \addcontentsline{toc}{subsection}{4.1 Constructs and Variable Mapping}
 
+Table~1 maps each evaluation construct to its variables and operational measures.
+
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.25\linewidth}>{\raggedright\arraybackslash}p{0.36\linewidth}>{\raggedright\arraybackslash}p{0.29\linewidth}}
 \caption{Evaluation Constructs and Associated Variables}\\
 \toprule
@@ -31,6 +33,9 @@ Computational Efficiency & Graph build time, PageRank convergence time, memory u
 \subsection*{4.2 Conceptual Model}
 \label{sec:conceptual-model}
 \addcontentsline{toc}{subsection}{4.2 Conceptual Model}
+
+Figure~1 presents the conceptual model linking EndorseRank and AWP to the three evaluation constructs (Reputation Structure, Trading Success Alignment, and Computational Efficiency) and the corresponding hypotheses H1--H3.
+
 
 \begin{center}
 \input{Figures/conceptual-model.tex}
@@ -53,13 +58,19 @@ Computational Efficiency & Graph build time, PageRank convergence time, memory u
 \label{sec:theoretical-justification}
 \addcontentsline{toc}{subsection}{4.3 Theoretical Justification}
 
-\textbf{Hyperlink--Citation Semantics: }The original PageRank algorithm (Page et al., 1998) evaluates a webpage's importance by the structure of inbound hyperlinks, treating each link like a citation in an academic paper: pages that are linked to by many important pages receive higher rank. ERC- 20 approve/permit edges can be interpreted similarly, where an approval from wallet A to wallet B functions as a trust citation, justifying the use of PageRank on an approval graph.
+\textbf{Hyperlink--Citation Semantics: }The original PageRank algorithm (Page et al., 1998) evaluates a webpage's importance by the structure of inbound hyperlinks, treating each link as a citation and modeling a random surfer who follows links with a damping probability. Do et al.\ (2023) apply this propagation logic to Ethereum transaction graphs, weighting edges by transfer value and time-decay so that reputation flows along observed economic ties. This study extends the same citation-based propagation to ERC-20 approve/permit edges because allowances are explicit, on-chain delegations of spending authority (Ethereum Improvement Proposals, 2015; Ethereum Improvement Proposals, 2020). Unlike token transfers, which may reflect trading or automated routing without trust intent, an allowance records a durable authorization state until revoked. Graph-based risk models on Ethereum (Yang et al., 2024) further show that network structure carries risk-relevant information beyond raw activity counts, supporting the use of a directed endorsement graph rather than transfer volume alone.
 
 
-\textbf{Leveraged Exposure and Trading Success Alignment: }GMX V2 perpetual swap positions represent collateralized leveraged exposure: the trader posts margin and takes directional risk on an underlying asset through long or short positions. A profitable \textbf{PositionDecrease} close (positive \textbf{basePnlUsd}, excluding position liquidation) functionally resembles successfully managing borrowed or leveraged exposure---analogous to borrowing and fulfilling obligations in a credit context. Following Do et al.\ (2023), who validated PageRank rankings against in-degree and in-value, we treat \textbf{close-success count} (many profitable closes) and \textbf{realized gain proxy} (large cumulative positive \textbf{basePnlUsd}) as observable domain proxies. Reputation scores that align with these proxies therefore satisfy the study's domain-intuition requirement without claiming external ground-truth credit labels.
+\textbf{Domain Alignment Framework: }In measurement theory, construct alignment assesses how well an indicator tracks an observable outcome of interest (Cronbach \& Meehl, 1955). For rank-based reputation scoring, Spearman's rho and Kendall's tau are appropriate because they evaluate monotonic and pairwise ordering agreement between reputation scores and domain proxies without assuming a classification threshold (Do et al., 2023). Following Do et al.\ (2023), who validated PageRank against in-degree and in-value, we treat GMX V2 \textbf{close-success count} and \textbf{realized gain proxy} as observable trading-success measures on Arbitrum One. Reputation scores that align with these proxies therefore satisfy the study's domain-intuition requirement without claiming external ground-truth loan-repayment labels.
 
 
-\textbf{Computational Complexity Theory: }PageRank's time complexity per iteration is O(---E---). Approve/permit graphs are sparser than transfer- based graphs (fewer edges ---E---), leading to lower per-iteration cost, faster convergence, and reduced memory usage.
+\textbf{Leveraged Exposure and Trading Success Alignment: }GMX V2 perpetual swap positions represent collateralized leveraged exposure: the trader posts margin and takes directional risk on an underlying asset through long or short positions. A profitable \textbf{PositionDecrease} close (positive \textbf{basePnlUsd}, excluding position liquidation) functionally resembles successfully managing borrowed or leveraged exposure---analogous to borrowing and fulfilling obligations in a credit context.
+
+
+\textbf{Computational Complexity Theory: }PageRank's time complexity per iteration is $O(|E|)$ (Page et al., 1998). Approve/permit graphs are sparser than transfer-based graphs (fewer edges $|E|$), leading to lower per-iteration cost, faster convergence, and reduced memory usage.
+
+
+\textbf{Scope and Future Extensions: }This proposal prioritizes interpretable graph propagation with verifiable on-chain signals over black-box predictive models. Supervised and representation-learning approaches to DeFi credit scoring (Ghosh et al., 2024; Kotb, 2023) can improve ranking performance but often sacrifice transparency and auditability under pseudonymity constraints emphasized by Packin and Lev-Aretz (2024). EndorseRank therefore stays within the PageRank family so that each score remains traceable to explicit allowance edges. Future work may combine endorsement-graph features with DeFi-informed representation learning, but such extensions are outside the present study's scope.
 
 
 \phantomsection
@@ -67,7 +78,12 @@ Computational Efficiency & Graph build time, PageRank convergence time, memory u
 \label{sec:implications-for-research-design}
 \addcontentsline{toc}{subsection}{4.4 Implications for Research Design}
 
+The research design applies the constructs above through the following measurement and analysis steps.
+
 \textbf{Measurement: }Compute EndorseRank and AWP scores for a matched sample of GMX V2--active wallets on Arbitrum One, derive close-success count, realized gain proxy, and close success rate from \textbf{PositionDecrease} events over a defined observation window, and profile each algorithm's runtime, memory usage, and iterations to convergence.
+
+
+Hypothesis testing and interpretation follow the measurement steps above and are organized as follows.
 
 
 \proposalSubheading{Analysis:}
@@ -75,7 +91,7 @@ Computational Efficiency & Graph build time, PageRank convergence time, memory u
 \textbf{H1 }via rank correlation (Spearman's \emph{\(\rho\)}, Kendall's \emph{\(\tau\)})
 
 
-\textbf{H2 }via rank correlation between reputation scores and GMX trading-success proxy rankings (Spearman's \emph{\(\rho\)}, Kendall's \emph{\(\tau\)})
+\textbf{H2 }via rank correlation between reputation scores and GMX trading-success proxy rankings (Spearman's \emph{\(\rho\)}, Kendall's \emph{\(\tau\)}). Spearman's rho captures monotonic rank agreement; Kendall's tau measures pairwise ordering agreement. These metrics are justified because reputation scores and trading-success proxies are continuous rank variables rather than binary default labels, following the domain-alignment approach in Do et al.\ (2023).
 
 
 \textbf{H3 }via paired benchmarks of runtime, peak memory, and iteration counts
