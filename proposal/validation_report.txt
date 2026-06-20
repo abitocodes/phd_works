@@ -77,3 +77,13 @@ Term grep (proposal/*.tex):
 Build:
   XeLaTeX 2-pass: PASS
   Output: proposal/main.pdf (52 pages)
+
+Optional polish (2026-06-20, post-commit)
+==========================================
+
+  - Abstract O3: explicit EndorseRank vs AWP comparison in GMX proxy alignment objective
+  - bibliography: shortened href display text (doi:..., arXiv:..., docs.*) to reduce overfull hbox in References
+
+Build:
+  XeLaTeX 2-pass: PASS
+  Output: proposal/main.pdf
