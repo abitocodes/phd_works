@@ -1,8 +1,0 @@
-data/raw/**/*.parquet
-data/processed/*.parquet
-data/processed/reputation/*.parquet
-__pycache__/
-*.pyc
-.venv/
-.env
-web/db.sqlite3

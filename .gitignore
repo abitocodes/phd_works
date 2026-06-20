@@ -1,0 +1,8 @@
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.dvi
+*.toc
+__pycache__/
+_p1_sections.txt
