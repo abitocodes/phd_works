@@ -6,3 +6,5 @@
 *.toc
 __pycache__/
 _p1_sections.txt
+.DS_Store
+A-Skill-Programs/
