@@ -1,19 +1,23 @@
 Proposal merge validation (professor-feedback + research baseline)
 ===================================================================
 
+Historical note: paths below before 2026-06-21 used the pre-restructure layout
+(proposal/, sources/, scripts/ at repo root). Current canonical paths are under
+1-Proposal/.
+
 Merged output:
-  D:\Github\phd_works\proposal\main.pdf
+  1-Proposal/proposal/main.pdf
 
 Source inputs:
-  professor-feedback: D:\Github\phd_works\sources\professor-feedback\dissertation-proposal-commented.docx
-  research baseline: D:\Github\phd_works\archive\snapshots\proposal-0-research-baseline\
+  professor-feedback: 1-Proposal/sources/professor-feedback/dissertation-proposal-commented.docx
+  research baseline: 1-Proposal/archive/snapshots/proposal-0-research-baseline/
 
 Merge strategy:
   - Base structure and professor feedback from professor-feedback DOCX
   - Research direction (EndorseRank, Arbitrum One, GMX V2) from research baseline
-  - LaTeX canonical output in proposal/
+  - LaTeX canonical output in 1-Proposal/proposal/
 
-Term consistency (proposal/*.tex grep):
+Term consistency (1-Proposal/proposal/*.tex grep):
   AbitoRank: 0
   Aave: 0
   AUC: 0
@@ -29,7 +33,7 @@ Professor comment remediation (second pass)
 
 Applied fixes for remaining partial/no items from professor comment audit.
 
-Term grep (proposal/*.tex):
+Term grep (1-Proposal/proposal/*.tex):
   confront: 0
   AbitoRank: 0
   Aave: 0
@@ -41,7 +45,7 @@ Term grep (proposal/*.tex):
 
 Build:
   XeLaTeX 2-pass: PASS
-  Output: proposal/main.pdf
+  Output: 1-Proposal/proposal/main.pdf
 
 Key changes:
   - Abstract: confront -> encounter; Schär (2021) citation
@@ -54,8 +58,8 @@ Key changes:
 
 
 DOCX merge script:
-  D:\Github\phd_works\scripts\merge_proposal_docx.py
-  Backup: sources/professor-feedback/dissertation-proposal-commented.pre-merge.docx
+  1-Proposal/scripts/merge_proposal_docx.py
+  Backup: 1-Proposal/sources/professor-feedback/dissertation-proposal-commented.pre-merge.docx
 
 Pre-submission review fixes (2026-06-20)
 =========================================
@@ -68,7 +72,7 @@ Applied fixes from 8-axis submission review:
   - Ch3: removed duplicate Packin paragraph; novel -> distinctive
   - Abstract: novel -> an on-chain reputation metric
 
-Term grep (proposal/*.tex):
+Term grep (1-Proposal/proposal/*.tex):
   confront: 0
   AbitoRank: 0
   Yang et al.: 0
@@ -76,7 +80,7 @@ Term grep (proposal/*.tex):
 
 Build:
   XeLaTeX 2-pass: PASS
-  Output: proposal/main.pdf (52 pages)
+  Output: 1-Proposal/proposal/main.pdf (52 pages)
 
 Optional polish (2026-06-20, post-commit)
 ==========================================
@@ -86,4 +90,11 @@ Optional polish (2026-06-20, post-commit)
 
 Build:
   XeLaTeX 2-pass: PASS
-  Output: proposal/main.pdf
+  Output: 1-Proposal/proposal/main.pdf
+
+Repository restructure (2026-06-21)
+====================================
+
+  - Proposal assets moved to 1-Proposal/
+  - Dissertation draft scaffold created at 2-Dissertation-Draft/
+  - Git remote: https://github.com/abitocodes/phd_works.git
