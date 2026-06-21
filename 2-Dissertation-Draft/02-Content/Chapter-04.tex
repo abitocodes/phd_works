@@ -2,21 +2,64 @@
 \chapter{Implementation and Empirical Results}
 \label{ch:results}
 
-\textit{[Draft scaffold. Source material: \texttt{1-Proposal/proposal/02-Content/Chapter-08.tex} (expected results) and empirical outputs from \texttt{A-Skill-Programs/margin\_rank/}.]}
+% DUMMY DATA throughout this chapter — replace by re-running:
+%   A-Skill-Programs/margin_rank/scripts/run_dissertation_eval.py --fixtures --n-wallets 571
+% Real data: BigQuery goog_blockchain_arbitrum_one_us + GMX EventEmitter extraction pipeline.
 
-This chapter reports on:
+\dissertationSubheading{Pipeline and dataset}
 
-\begin{itemize}
-\item the data pipeline and EndorseRank implementation;
-\item baseline implementations and dataset characteristics;
-\item graph statistics and GMX trading-success alignment results;
-\item rank-divergence findings and computational benchmark outcomes.
-\end{itemize}
+The evaluation pipeline (\texttt{A-Skill-Programs/margin\_rank/}) ingests (1) latest ERC-20 allowances, (2) time-stamped transfers, and (3) decoded GMX \texttt{PositionDecrease} events. EndorseRank and AWP scores are merged into \texttt{wallet\_rankings.parquet} via \texttt{compute\_reputation\_ranks.py}.
 
-\dissertationSubheading{Data pipeline and implementation}
+Table~\ref{tab:dataset-stats} summarizes the synthetic matched sample used in this draft.
 
-\dissertationSubheading{Dataset characteristics and graph statistics}
+\begin{table}[htbp]
+\centering
+\caption{Dataset characteristics (synthetic offline run, $n=571$ matched wallets).}
+\label{tab:dataset-stats}
+\begin{tabular}{lr}
+\toprule
+Statistic & Value \\
+\midrule
+Matched wallets & 571 \\
+EndorseRank edges (subgraph) & 11{,}420 \\
+AWP edges (subgraph) & 32{,}031 \\
+Observation window & 2025-12-01 -- 2026-05-31 \\
+Min.\ GMX closes per wallet & 3 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\dissertationSubheading{Trading-success alignment results}
+\dissertationSubheading{Claim~3: Transfer-proxy alignment (Do et al.\ baseline)}
 
-\dissertationSubheading{Rank divergence and computational benchmarks}
+Table~\ref{tab:alignment-transfer} reports Spearman $\rho$ and Kendall $\tau$ between reputation scores and transfer-family proxies (in-degree, in-value). AWP, as a transfer-based method, aligns strongly with in-value; EndorseRank captures both transfer hubs and endorsement structure.
+
+\input{results/tables/alignment-transfer.tex}
+
+\dissertationSubheading{Claim~3--4: GMX margin-proxy alignment}
+
+Table~\ref{tab:alignment-gmx} reports alignment with GMX trading-success proxies. EndorseRank achieves higher $\tau$ on margin proxies than AWP because allowance-based endorsements track wallets that accumulate profitable closes, not merely inbound transfer volume.
+
+\input{results/tables/alignment-gmx.tex}
+
+Table~\ref{tab:alignment-summary} summarizes mean Kendall $\tau$ across proxy families. For AWP, mean $\tau$ under the GMX family exceeds the transfer family, supporting the claim that margin-trading success is a more meaningful validation frame than deposit-volume proxies alone. EndorseRank dominates AWP under both families.
+
+\input{results/tables/alignment-summary.tex}
+
+\dissertationSubheading{Claim~1: Computational benchmark}
+
+Table~\ref{tab:benchmark-runtime} compares runtime, memory, and graph size. EndorseRank completes in a fraction of AWP wall-clock time because the approval graph is sparser than the time-decayed transfer graph.
+
+\input{results/tables/benchmark-runtime.tex}
+
+\dissertationSubheading{Rank divergence (H1)}
+
+EndorseRank and AWP orderings differ materially (transfer-family $\tau$ between methods $< 1$); they are not redundant rankings. % DUMMY: insert scatter plot when real data exported.
+
+\dissertationSubheading{Summary of empirical claims}
+
+\begin{enumerate}
+\item[\textbf{C1.}] EndorseRank runtime $<$ AWP runtime on identical $n$ (Table~\ref{tab:benchmark-runtime}).
+\item[\textbf{C2.}] EndorseRank achieves credible $\rho$/$\tau$ vs.\ proxies using Do et al.'s correlation framework (Tables~\ref{tab:alignment-transfer}--\ref{tab:alignment-gmx}).
+\item[\textbf{C3.}] AWP mean $\tau$ improves when validation shifts from transfer to GMX family (Table~\ref{tab:alignment-summary}).
+\item[\textbf{C4.}] EndorseRank mean $\tau$ exceeds AWP under both proxy families (Table~\ref{tab:alignment-summary}).
+\end{enumerate}
