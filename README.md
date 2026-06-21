@@ -1,55 +1,55 @@
-# phd_works — EndorseRank PhD Research
+# phd_works — EndorseRank 박사 연구
 
-PhD research on **EndorseRank**: on-chain reputation ranking via Adaptive Weighted PageRank on Arbitrum One, validated against GMX V2 trading-success proxies.
+**EndorseRank**에 관한 박사 연구: Arbitrum One에서 Adaptive Weighted PageRank를 이용한 온체인 평판 순위, GMX V2 거래 성공 프록시와의 검증.
 
-This repository holds the **completed dissertation proposal** (frozen reference), the **active dissertation draft** (6-chapter LaTeX), **empirical evaluation code**, and shared reference papers.
+이 저장소에는 **완료된 논문 제안서**(고정 참조), **작업 중인 논문 초안**(6장 LaTeX), **실증 평가 코드**, 공유 참고 논문이 포함되어 있습니다.
 
-**Rule of thumb for contributors and AI agents:** edit `2-Dissertation-Draft/` and `A-Skill-Programs/`; treat `1-Proposal/` as read-only baseline unless explicitly asked to change the proposal.
-
----
-
-## Development status
-
-How this repo evolved and what is active today:
-
-| Phase | Status | Location |
-|-------|--------|----------|
-| Dissertation proposal | **Complete · frozen** | `1-Proposal/proposal/` |
-| Repo restructure (`phd_works`) | Done | `1-Proposal/`, `2-Dissertation-Draft/`, `A-Skill-Programs/` |
-| Dissertation draft (6 chapters) | **Active** | `2-Dissertation-Draft/` — Ch1–6 LaTeX + `\input` result tables |
-| Empirical pipeline | **Active (offline)** | `A-Skill-Programs/margin_rank/` — synthetic fixtures, no GCP |
-| BigQuery real extraction | **Not yet run** | `extract_*.py` ready; requires ADC + `GOOGLE_CLOUD_PROJECT` |
-
-The dissertation draft currently reports **synthetic dummy numbers** in Chapter 4. Every numeric table and `% DUMMY` comment marks data that must be replaced after BigQuery extraction.
+**기여자 및 AI 에이전트를 위한 원칙:** `2-Dissertation-Draft/`와 `A-Skill-Programs/`를 편집하고, 제안서를 명시적으로 변경하라는 요청이 없는 한 `1-Proposal/`은 읽기 전용 기준선으로 취급합니다.
 
 ---
 
-## Research claims
+## 개발 현황
 
-The dissertation must support five empirical claims. Use this table to find where each claim lives in LaTeX and code.
+저장소의 진화 과정과 현재 활성 영역:
 
-| # | Claim | Hypothesis / focus | Dissertation | Code / output |
-|---|-------|-------------------|--------------|---------------|
-| 1 | EndorseRank is **faster** than AWP on the same wallet sample | H3 (efficiency) | Ch4–5, [`results/tables/benchmark-runtime.tex`](2-Dissertation-Draft/results/tables/benchmark-runtime.tex) | `benchmark_runtime.py` |
-| 2 | **Spearman ρ / Kendall τ** show EndorseRank is credible; higher GMX alignment than AWP | H2 (alignment) | Ch4, `alignment-transfer.tex`, `alignment-gmx.tex` | `evaluate_alignment.py` |
-| 3 | AWP **τ improves** when validation shifts from transfer proxies (in-degree/in-value) to **GMX margin** proxies | Domain frame | Ch4–5, [`alignment-summary.tex`](2-Dissertation-Draft/results/tables/alignment-summary.tex) | cross-proxy mean τ in `eval_summary.json` |
-| 4 | EndorseRank beats AWP on mean τ under **both** proxy families (transfer + GMX) | H2 extended | Ch4–5 summary table | same as #3 |
-| 5 | Conclusions follow from Claims 1–4 | — | Ch6 | — |
+| 단계 | 상태 | 위치 |
+|------|------|------|
+| 논문 제안서 | **완료 · 고정** | `1-Proposal/proposal/` |
+| 저장소 재구조화 (`phd_works`) | 완료 | `1-Proposal/`, `2-Dissertation-Draft/`, `A-Skill-Programs/` |
+| 논문 초안 (6장) | **활성** | `2-Dissertation-Draft/` — Ch1–6 LaTeX + `\input` 결과 표 |
+| 실증 파이프라인 | **활성 (오프라인)** | `A-Skill-Programs/margin_rank/` — 합성 픽스처, GCP 없음 |
+| BigQuery 실데이터 추출 | **아직 미실행** | `extract_*.py` 준비됨; ADC + `GOOGLE_CLOUD_PROJECT` 필요 |
 
-**Proxy families** (from Do et al. 2023 + proposal Ch5):
-
-- **Transfer (AWP paper baseline):** in-degree, in-value (inbound ERC-20 transfers).
-- **GMX margin:** close-success count, realized gain proxy, close success rate (min 3 closes).
+논문 초안은 현재 4장에서 **합성 더미 수치**를 보고합니다. 모든 수치 표와 `% DUMMY` 주석은 BigQuery 추출 후 교체해야 할 데이터를 표시합니다.
 
 ---
 
-## Architecture — LaTeX and code
+## 연구 주장
+
+논문은 다섯 가지 실증 주장을 뒷받침해야 합니다. 각 주장이 LaTeX와 코드에서 어디에 있는지 아래 표를 참고하세요.
+
+| # | 주장 | 가설 / 초점 | 논문 | 코드 / 출력 |
+|---|------|-------------|------|-------------|
+| 1 | EndorseRank가 동일 지갑 샘플에서 AWP보다 **빠르다** | H3 (효율) | Ch4–5, [`results/tables/benchmark-runtime.tex`](2-Dissertation-Draft/results/tables/benchmark-runtime.tex) | `benchmark_runtime.py` |
+| 2 | **Spearman ρ / Kendall τ**로 EndorseRank의 신뢰성 입증; GMX 정렬에서 AWP보다 우수 | H2 (정렬) | Ch4, `alignment-transfer.tex`, `alignment-gmx.tex` | `evaluate_alignment.py` |
+| 3 | 검증이 transfer 프록시(in-degree/in-value)에서 **GMX margin** 프록시로 바뀌면 AWP **τ가 개선**된다 | 도메인 프레임 | Ch4–5, [`alignment-summary.tex`](2-Dissertation-Draft/results/tables/alignment-summary.tex) | `eval_summary.json`의 cross-proxy mean τ |
+| 4 | EndorseRank가 transfer + GMX **양쪽** 프록시 계열에서 AWP보다 mean τ가 높다 | H2 확장 | Ch4–5 요약 표 | #3과 동일 |
+| 5 | 결론은 주장 1–4에서 도출된다 | — | Ch6 | — |
+
+**프록시 계열** (Do et al. 2023 + 제안서 Ch5):
+
+- **Transfer (AWP 논문 기준선):** in-degree, in-value (유입 ERC-20 transfer).
+- **GMX margin:** close-success count, realized gain proxy, close success rate (최소 3회 close).
+
+---
+
+## 아키텍처 — LaTeX와 코드
 
 ```mermaid
 flowchart TB
-  subgraph proposal [1-Proposal frozen reference]
+  subgraph proposal [1-Proposal 고정 참조]
     propLaTeX[proposal LaTeX/PDF]
-    ch10[Chapter-10 outline]
+    ch10[Chapter-10 개요]
   end
   subgraph code [A-Skill-Programs/margin_rank]
     synth[generate_synthetic_*.py]
@@ -58,7 +58,7 @@ flowchart TB
     export[export_latex_results.py]
     json[eval_summary.json]
   end
-  subgraph draft [2-Dissertation-Draft active]
+  subgraph draft [2-Dissertation-Draft 활성]
     ch4[Chapter-04.tex]
     tables[results/tables/*.tex]
     pdf[main.pdf]
@@ -71,73 +71,73 @@ flowchart TB
   ch4 --> pdf
 ```
 
-**Critical rule:** do **not** hand-edit numbers in Chapter 4 tables. Regenerate via:
+**핵심 규칙:** 4장 표의 수치를 **수동으로 편집하지 마세요.** 아래 파이프라인으로 재생성합니다:
 
-`run_dissertation_eval.py` → `export_latex_results.py` → `\input{results/tables/...}` in [`Chapter-04.tex`](2-Dissertation-Draft/02-Content/Chapter-04.tex).
+`run_dissertation_eval.py` → `export_latex_results.py` → [`Chapter-04.tex`](2-Dissertation-Draft/02-Content/Chapter-04.tex)의 `\input{results/tables/...}`
 
 ---
 
-## Folder layout
+## 폴더 구조
 
-| Path | Role |
+| 경로 | 역할 |
 |------|------|
-| `1-Proposal/` | Completed proposal (canonical LaTeX: `1-Proposal/proposal/`) |
-| `2-Dissertation-Draft/` | **Active** dissertation draft (6-chapter thesis) |
-| `A-Skill-Programs/` | Empirical code (`margin_rank/`) |
-| `papers/` | Shared reference PDFs |
+| `1-Proposal/` | 완료된 제안서 (정본 LaTeX: `1-Proposal/proposal/`) |
+| `2-Dissertation-Draft/` | **활성** 논문 초안 (6장 학위논문) |
+| `A-Skill-Programs/` | 실증 코드 (`margin_rank/`) |
+| `papers/` | 공유 참고 PDF |
 
-### Inside `1-Proposal/`
+### `1-Proposal/` 내부
 
-| Path | Role |
+| 경로 | 역할 |
 |------|------|
-| `1-Proposal/proposal/` | Approved proposal LaTeX |
-| `1-Proposal/sources/professor-feedback/` | Professor-commented DOCX (read-only) |
-| `1-Proposal/archive/` | DOCX tools, snapshots |
-| `1-Proposal/presentations/` | Talks and slides |
-| `1-Proposal/scripts/` | DOCX merge utilities |
+| `1-Proposal/proposal/` | 승인된 제안서 LaTeX |
+| `1-Proposal/sources/professor-feedback/` | 교수 코멘트 DOCX (읽기 전용) |
+| `1-Proposal/archive/` | DOCX 도구, 스냅샷 |
+| `1-Proposal/presentations/` | 발표 자료 및 슬라이드 |
+| `1-Proposal/scripts/` | DOCX 병합 유틸리티 |
 
-### Inside `2-Dissertation-Draft/`
+### `2-Dissertation-Draft/` 내부
 
-| Path | Role |
+| 경로 | 역할 |
 |------|------|
-| `02-Content/Chapter-01.tex` … `Chapter-06.tex` | Six dissertation chapters |
-| `results/tables/*.tex` | **Generated** LaTeX table fragments (from eval pipeline) |
-| `Config/preamble.tex` | Report class, fonts, `booktabs`, `siunitx` |
-| `build.ps1` | XeLaTeX two-pass build |
+| `02-Content/Chapter-01.tex` … `Chapter-06.tex` | 논문 6개 장 |
+| `results/tables/*.tex` | **생성된** LaTeX 표 조각 (eval 파이프라인 출력) |
+| `Config/preamble.tex` | Report 클래스, 폰트, `booktabs`, `siunitx` |
+| `build.ps1` | XeLaTeX 2회 빌드 |
 
 ### `A-Skill-Programs/margin_rank/scripts/`
 
-| Script | Role |
-|--------|------|
-| `generate_synthetic_rankings.py` | Offline GMX-like close events → `wallet_rankings.parquet` |
-| `generate_synthetic_reputation.py` | Offline approvals/transfers → preprocess → ranks |
-| `extract_margin_week.py` | BigQuery GMX EventEmitter logs (**GCP**) |
+| 스크립트 | 역할 |
+|----------|------|
+| `generate_synthetic_rankings.py` | 오프라인 GMX 유사 close 이벤트 → `wallet_rankings.parquet` |
+| `generate_synthetic_reputation.py` | 오프라인 approvals/transfers → 전처리 → 순위 |
+| `extract_margin_week.py` | BigQuery GMX EventEmitter 로그 (**GCP**) |
 | `extract_reputation_data.py` | BigQuery ERC-20 approvals/transfers (**GCP**) |
-| `decode_gmx_events.py` | Decode `PositionDecrease` events |
-| `preprocess_arbitrum_allowances.py` | Latest allowances parquet |
-| `preprocess_arbitrum_transfers.py` | Transfer events parquet |
-| `compute_rankings.py` | GMX success-rate rankings |
-| `compute_reputation_ranks.py` | EndorseRank + AWP scores |
-| `pagerank.py` | Weighted PageRank, AWP edge builders |
-| `proxy_metrics.py` | in-degree, in-value, GMX proxies per wallet |
-| `evaluate_alignment.py` | Spearman ρ, Kendall τ vs proxies |
-| `benchmark_runtime.py` | Runtime, memory, iterations |
-| `run_dissertation_eval.py` | **Master** offline/real eval → JSON |
+| `decode_gmx_events.py` | `PositionDecrease` 이벤트 디코딩 |
+| `preprocess_arbitrum_allowances.py` | 최신 allowances parquet |
+| `preprocess_arbitrum_transfers.py` | Transfer 이벤트 parquet |
+| `compute_rankings.py` | GMX success-rate 순위 |
+| `compute_reputation_ranks.py` | EndorseRank + AWP 점수 |
+| `pagerank.py` | Weighted PageRank, AWP edge builder |
+| `proxy_metrics.py` | 지갑별 in-degree, in-value, GMX 프록시 |
+| `evaluate_alignment.py` | 프록시 대비 Spearman ρ, Kendall τ |
+| `benchmark_runtime.py` | 실행 시간, 메모리, 반복 횟수 |
+| `run_dissertation_eval.py` | **마스터** 오프라인/실데이터 eval → JSON |
 | `export_latex_results.py` | JSON → `2-Dissertation-Draft/results/tables/*.tex` |
 
-SQL templates: `A-Skill-Programs/margin_rank/sql/`. Config: `config/margin_config.yaml`.
+SQL 템플릿: `A-Skill-Programs/margin_rank/sql/`. 설정: `config/margin_config.yaml`.
 
 ---
 
-## Workflows
+## 워크플로
 
-### A. Edit dissertation prose only
+### A. 논문 본문만 편집
 
-1. Read the matching section in `1-Proposal/proposal/02-Content/`.
-2. Edit only `2-Dissertation-Draft/02-Content/Chapter-*.tex`.
-3. Build: `cd 2-Dissertation-Draft && ./build.ps1`
+1. `1-Proposal/proposal/02-Content/`에서 해당 섹션을 읽습니다.
+2. `2-Dissertation-Draft/02-Content/Chapter-*.tex`만 편집합니다.
+3. 빌드: `cd 2-Dissertation-Draft && ./build.ps1`
 
-### B. Refresh empirical tables (synthetic — current default)
+### B. 실증 표 갱신 (합성 — 현재 기본값)
 
 ```bash
 cd A-Skill-Programs/margin_rank
@@ -147,104 +147,104 @@ python scripts/run_dissertation_eval.py --fixtures --n-wallets 571 --export-late
 cd ../../2-Dissertation-Draft && ./build.ps1
 ```
 
-Outputs:
+출력:
 
 - `A-Skill-Programs/margin_rank/data/processed/eval_summary.json`
 - `2-Dissertation-Draft/results/tables/*.tex`
 
-### C. Switch to real BigQuery data (future)
+### C. 실제 BigQuery 데이터로 전환 (향후)
 
-1. Follow extract steps in [`A-Skill-Programs/margin_rank/README.md`](A-Skill-Programs/margin_rank/README.md).
+1. [`A-Skill-Programs/margin_rank/README.md`](A-Skill-Programs/margin_rank/README.md)의 추출 단계를 따릅니다.
 2. `python scripts/run_dissertation_eval.py --real --export-latex`
-3. Rebuild dissertation PDF; review and remove `% DUMMY` comments in Ch4, Abstract, Discussion.
+3. 논문 PDF를 다시 빌드하고, Ch4, Abstract, Discussion의 `% DUMMY` 주석을 검토·제거합니다.
 
-### D. Proposal changes (rare)
+### D. 제안서 변경 (드묾)
 
-Professor feedback and proposal edits stay in `1-Proposal/proposal/`. Do not mix proposal edits into `2-Dissertation-Draft/`.
-
----
-
-## DUMMY data policy
-
-| Item | Policy |
-|------|--------|
-| `% DUMMY DATA` in `.tex` | Marks BigQuery-replaceable content; remove only after real pipeline run |
-| `data/processed/`, `data/raw/` | Local only (`.gitignore`); regenerate with scripts |
-| `results/tables/*.tex` | Generated by `export_latex_results.py`; safe to commit after export |
-| Commit | LaTeX sources, scripts, exported tables — not `.venv/`, not raw parquet |
+교수 피드백과 제안서 편집은 `1-Proposal/proposal/`에 유지합니다. 제안서 편집을 `2-Dissertation-Draft/`에 섞지 마세요.
 
 ---
 
-## AI agent guide
+## DUMMY 데이터 정책
 
-### Reference paths (read before editing draft)
-
-| Reference | Path |
-|-----------|------|
-| Canonical proposal LaTeX | `1-Proposal/proposal/` |
-| Built proposal PDF | `1-Proposal/proposal/main.pdf` |
-| Professor comments (read-only) | `1-Proposal/sources/professor-feedback/dissertation-proposal-commented.docx` |
-| Research baseline snapshot | `1-Proposal/archive/snapshots/proposal-0-research-baseline/` |
-| Dissertation 6-chapter outline | `1-Proposal/proposal/02-Content/Chapter-10.tex` |
-| Empirical tooling | `A-Skill-Programs/margin_rank/` |
-| Shared PDFs | `papers/` |
-
-### Proposal → dissertation chapter mapping
-
-| Dissertation chapter | Primary proposal sources |
-|----------------------|--------------------------|
-| Ch 1 Introduction | `Chapter-01`, `Chapter-02`, `Chapter-03` |
-| Ch 2 Literature review | `Chapter-02`, `Chapter-04` |
-| Ch 3 Methodology | `Chapter-05`–`Chapter-07` |
-| Ch 4 Implementation & results | `Chapter-08`, `A-Skill-Programs/margin_rank/` |
-| Ch 5 Discussion | `Chapter-08`, `Chapter-09` |
-| Ch 6 Conclusion | `Chapter-09`, `Chapter-10` outline |
-
-### DO
-
-- Confirm terminology against the proposal: EndorseRank, AWP, in-degree, in-value, GMX proxies.
-- Change Chapter 4 **numbers** only by re-running the eval pipeline (Workflow B).
-- Keep dissertation body in **English**; README may be Korean.
-- Use `/git-commit` skill (or explicit commit request) when committing; follow repo commit message style.
-
-### DON'T
-
-- Paste arbitrary table values into `results/tables/` or Chapter 4 from memory.
-- Copy the full proposal into draft without adapting to the 6-chapter structure.
-- Remove `% DUMMY` markers before real BigQuery data is in place.
-- Restructure `1-Proposal/` or move draft files back to repo root.
-- Edit `export_latex_results.py` output by hand unless export is broken.
+| 항목 | 정책 |
+|------|------|
+| `.tex`의 `% DUMMY DATA` | BigQuery로 교체 가능한 내용 표시; 실제 파이프라인 실행 후에만 제거 |
+| `data/processed/`, `data/raw/` | 로컬 전용 (`.gitignore`); 스크립트로 재생성 |
+| `results/tables/*.tex` | `export_latex_results.py`로 생성; export 후 커밋 가능 |
+| 커밋 | LaTeX 소스, 스크립트, export된 표 — `.venv/`, raw parquet는 제외 |
 
 ---
 
-## Build
+## AI 에이전트 가이드
 
-**Proposal (completed):**
+### 참조 경로 (초안 편집 전에 읽기)
+
+| 참조 | 경로 |
+|------|------|
+| 정본 제안서 LaTeX | `1-Proposal/proposal/` |
+| 빌드된 제안서 PDF | `1-Proposal/proposal/main.pdf` |
+| 교수 코멘트 (읽기 전용) | `1-Proposal/sources/professor-feedback/dissertation-proposal-commented.docx` |
+| 연구 기준선 스냅샷 | `1-Proposal/archive/snapshots/proposal-0-research-baseline/` |
+| 논문 6장 개요 | `1-Proposal/proposal/02-Content/Chapter-10.tex` |
+| 실증 도구 | `A-Skill-Programs/margin_rank/` |
+| 공유 PDF | `papers/` |
+
+### 제안서 → 논문 장 매핑
+
+| 논문 장 | 주요 제안서 출처 |
+|---------|------------------|
+| Ch 1 서론 | `Chapter-01`, `Chapter-02`, `Chapter-03` |
+| Ch 2 문헌 검토 | `Chapter-02`, `Chapter-04` |
+| Ch 3 방법론 | `Chapter-05`–`Chapter-07` |
+| Ch 4 구현 및 결과 | `Chapter-08`, `A-Skill-Programs/margin_rank/` |
+| Ch 5 논의 | `Chapter-08`, `Chapter-09` |
+| Ch 6 결론 | `Chapter-09`, `Chapter-10` 개요 |
+
+### 해야 할 것 (DO)
+
+- 제안서와 용어를 맞출 것: EndorseRank, AWP, in-degree, in-value, GMX proxies.
+- 4장 **수치**는 eval 파이프라인 재실행(워크플로 B)으로만 변경.
+- 논문 본문은 **영어**로 유지; README는 한국어 가능.
+- 커밋 시 `/git-commit` 스킬(또는 명시적 커밋 요청) 사용; 저장소 커밋 메시지 스타일 준수.
+
+### 하지 말 것 (DON'T)
+
+- `results/tables/`나 4장에 임의 표 수치를 기억에 의존해 붙여넣기.
+- 6장 구조에 맞게 조정하지 않고 제안서 전체를 초안에 복사.
+- 실제 BigQuery 데이터가 준비되기 전 `% DUMMY` 마커 제거.
+- `1-Proposal/` 재구조화 또는 초안 파일을 저장소 루트로 되돌리기.
+- export가 깨지지 않은 한 `export_latex_results.py` 출력을 수동 편집.
+
+---
+
+## 빌드
+
+**제안서 (완료):**
 
 ```powershell
 cd 1-Proposal/proposal
 .\build.ps1
 ```
 
-Output: `1-Proposal/proposal/main.pdf`
+출력: `1-Proposal/proposal/main.pdf`
 
-**Dissertation draft (active):**
+**논문 초안 (활성):**
 
 ```powershell
 cd 2-Dissertation-Draft
 .\build.ps1
 ```
 
-Output: `2-Dissertation-Draft/main.pdf`
+출력: `2-Dissertation-Draft/main.pdf`
 
-Requires XeLaTeX (Times New Roman via `fontspec`).
+XeLaTeX 필요 (`fontspec`으로 Times New Roman).
 
 ---
 
-## Related docs
+## 관련 문서
 
-- [`2-Dissertation-Draft/results/README.md`](2-Dissertation-Draft/results/README.md) — regenerating result tables
-- [`A-Skill-Programs/margin_rank/README.md`](A-Skill-Programs/margin_rank/README.md) — CLI details, BigQuery extraction
+- [`2-Dissertation-Draft/results/README.md`](2-Dissertation-Draft/results/README.md) — 결과 표 재생성
+- [`A-Skill-Programs/margin_rank/README.md`](A-Skill-Programs/margin_rank/README.md) — CLI 상세, BigQuery 추출
 
 ## Git remote
 
