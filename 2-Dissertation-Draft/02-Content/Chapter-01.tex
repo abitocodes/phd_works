@@ -1,0 +1,29 @@
+% !TEX root = ../main.tex
+\chapter{Introduction and Research Problem}
+\label{ch:introduction}
+
+Decentralized Finance (DeFi) has expanded lending, borrowing, and leveraged trading on public blockchains, yet most credit-like interactions remain highly collateralized because protocols cannot rely on traditional off-chain identity or credit histories (Sch\"{a}r, 2021; Packin \& Lev-Aretz, 2024). In a pseudonymous setting, the central challenge is to allocate capital safely: distinguishing wallets that manage leveraged exposure reliably from those exhibiting repeated losses or liquidation.
+
+This dissertation proposes \textbf{EndorseRank}, an on-chain reputation metric that applies Weighted PageRank to a directed endorsement graph built from ERC-20 \texttt{approve}/\texttt{permit} allowances on \textbf{Arbitrum One}. Empirical validation uses \textbf{GMX V2 perpetual swap position} outcomes as domain-intuition proxies for trading success, following the rank-correlation framework used by Do et al.\ (2023) for in-degree and in-value on Ethereum transfers.
+
+\dissertationSubheading{Research problem}
+
+Existing Adaptive Weighted PageRank (AWP) methods infer trust from transfer volume and logistic time-decay over transaction history (Do et al., 2023). While economically interpretable, they (i) require expensive historical transfer aggregation, (ii) treat inbound transfer volume as a proxy for ``valuable wallet,'' and (iii) do not model explicit spending authorization. EndorseRank instead uses the latest allowance per owner--spender pair, yielding a sparser graph and a semantically distinct trust signal.
+
+\dissertationSubheading{Research questions}
+
+\begin{enumerate}
+\item[\textbf{RQ1.}] Do EndorseRank and AWP produce meaningfully different wallet orderings on an identical Arbitrum wallet sample?
+\item[\textbf{RQ2.}] Do EndorseRank scores align more strongly than AWP with GMX V2 trading-success proxies (Spearman's $\rho$, Kendall's $\tau$)?
+\item[\textbf{RQ3.}] Is EndorseRank computationally more efficient than AWP on the same matched sample (runtime, memory, iterations)?
+\item[\textbf{RQ4.}] Is margin-trading success a more meaningful validation frame than transfer in-degree/in-value for reputation scoring on this chain?
+\item[\textbf{RQ5.}] Does EndorseRank outperform AWP under \emph{both} validation families---transfer proxies (Do et al.\ baseline) and GMX margin proxies?
+\end{enumerate}
+
+\dissertationSubheading{Contributions}
+
+The study contributes: (1) allowance-based endorsement graph modeling; (2) dual-proxy domain alignment evaluation; (3) an open reproducible pipeline under \texttt{A-Skill-Programs/margin\_rank/}; and (4) empirical comparison against an AWP reproduction on Arbitrum One.
+
+\dissertationSubheading{Scope and limitations}
+
+The approved proposal in \texttt{1-Proposal/proposal/} defines constructs, ethics, and schedule. This dissertation focuses on Arbitrum One and GMX V2; unsecured lending default labels are out of scope. % DUMMY: Chapter~4 reports synthetic offline results; replace with BigQuery-derived parquet before submission.

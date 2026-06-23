@@ -1,0 +1,49 @@
+% !TEX root = ../main.tex
+\chapter{Research Methodology}
+\label{ch:methodology}
+
+\dissertationSubheading{Data sources and sampling}
+
+\textbf{Primary chain:} Arbitrum One (chain ID 42161).
+
+\textbf{Reputation events:} ERC-20 \texttt{Approval} logs and \texttt{Transfer} logs from \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us} (SQL templates in \texttt{A-Skill-Programs/margin\_rank/sql/}).
+
+\textbf{GMX events:} \texttt{PositionDecrease} from GMX V2 \texttt{EventEmitter} (\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}), identifying traders via the event \texttt{account} field.
+
+\textbf{Sample:} Intersection of wallets with $\geq 3$ GMX closes in the observation window and non-zero reputation subgraph connectivity. % DUMMY: $n=571$ synthetic wallets; replace after BigQuery extraction.
+
+\dissertationSubheading{Graph construction}
+
+\textbf{EndorseRank graph} $G_{\text{approve}}$: nodes are wallets; directed edges owner $\to$ spender weighted by latest decimal-adjusted allowance sum per pair; PageRank damping $d=0.85$.
+
+\textbf{AWP graph} $G_{\text{transfer}}$: directed transfer edges with logistic time-decay $\sigma(\Delta t) = 1/(1+\exp(k(\Delta t - t_0)))$ on edge weights (Do et al., 2023); $k=0.01$, $t_0=180$ days, observation end 2026-05-31 UTC.
+
+Both methods operate on the \emph{same} wallet seed set; differences in results are attributable to ranking logic, not sampling inconsistency.
+
+\dissertationSubheading{Dual-proxy evaluation design}
+
+For each method $M \in \{\text{EndorseRank}, \text{AWP}\}$ and proxy $P$:
+
+\begin{enumerate}
+\item Compute reputation score vector $\mathbf{s}_M$ and proxy value vector $\mathbf{p}_P$ over matched wallets.
+\item Rank wallets by $\mathbf{s}_M$ and by $\mathbf{p}_P$ separately.
+\item Report Spearman's $\rho$ and Kendall's $\tau$ between the two rankings.
+\end{enumerate}
+
+\textbf{Claim~3 test:} Compare AWP mean Kendall $\tau$ under transfer family vs.\ GMX family. Improvement ($\tau_{\text{GMX}} > \tau_{\text{transfer}}$) indicates that margin-success validation is more semantically aligned than deposit-volume validation for this domain.
+
+\textbf{Claim~4 test:} EndorseRank must exceed AWP on mean $\tau$ within \emph{both} families.
+
+\dissertationSubheading{Computational benchmark (Claim~1)}
+
+On identical inputs, measure over five runs: wall-clock runtime (graph build + PageRank), peak memory (tracemalloc), PageRank iterations to convergence, and edge counts. Implementation: \texttt{scripts/benchmark\_runtime.py}.
+
+\dissertationSubheading{Reproducibility and offline workflow}
+
+The pipeline \texttt{scripts/run\_dissertation\_eval.py --fixtures} generates synthetic parquet inputs when BigQuery is unavailable. % DUMMY: dissertation draft uses synthetic fixtures; re-run with --real after GCP extraction.
+
+Outputs: \texttt{data/processed/eval\_summary.json} and LaTeX fragments under \texttt{2-Dissertation-Draft/results/tables/}.
+
+\dissertationSubheading{Ethics}
+
+Only public on-chain data are used; no off-chain identity linkage. See approved proposal \texttt{1-Proposal/proposal/02-Content/Chapter-07.tex} for ethics clearance details.

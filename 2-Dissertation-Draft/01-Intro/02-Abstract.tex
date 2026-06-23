@@ -1,0 +1,10 @@
+% !TEX root = ../main.tex
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\label{ch:abstract}
+
+DeFi protocols require wallet reputation signals that are computationally scalable, semantically interpretable, and aligned with meaningful financial outcomes. This dissertation proposes \textbf{EndorseRank}, applying Weighted PageRank to ERC-20 allowance edges on Arbitrum One, and compares it against Adaptive Weighted PageRank (AWP) on transfer graphs.
+
+Validation uses two proxy families following Do et al.\ (2023): transfer in-degree/in-value and GMX V2 margin-trading success metrics (close-success count, realized gain proxy, close success rate). % DUMMY: On synthetic offline data ($n=571$), EndorseRank achieved lower runtime than AWP and higher mean Kendall $\tau$ under both proxy families; AWP alignment improved when validation shifted from transfer to GMX proxies. Replace with BigQuery-derived results before submission.
+
+\textbf{\emph{Keywords---}} DeFi, EndorseRank, Adaptive Weighted PageRank, On-Chain Reputation, GMX V2, Arbitrum One, Domain Alignment, Spearman's rho, Kendall's tau

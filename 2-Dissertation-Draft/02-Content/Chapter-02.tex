@@ -1,0 +1,37 @@
+% !TEX root = ../main.tex
+\chapter{Literature Review and Theoretical Framework}
+\label{ch:literature}
+
+\dissertationSubheading{Graph-based on-chain reputation}
+
+PageRank and variants rank nodes by propagated influence through directed edges (Page et al., 1998). Do et al.\ (2023) apply Adaptive Weighted PageRank (AWP) to Ethereum transaction graphs, weighting edges by transfer value and logistic time-decay. They validate scores against \textbf{in-degree} and \textbf{in-value}---count and sum of inbound transfers---as domain-intuition proxies for economic importance.
+
+\dissertationSubheading{ERC-20 allowances as endorsement}
+
+ERC-20 \texttt{approve} and EIP-2612 \texttt{permit} record explicit spending authorization (Ethereum Improvement Proposals, 2015, 2020). EndorseRank treats the latest allowance per owner--spender pair as a durable endorsement edge, eliminating historical time-decay because newer approvals override older ones.
+
+\dissertationSubheading{GMX V2 as validation frame}
+
+On Arbitrum One, dense wallet-attributed \textbf{PositionDecrease} events with realized PnL (\textbf{basePnlUsd}) provide trading-success proxies: close-success count, realized gain proxy, and close success rate (GMX, n.d.). These parallel Do et al.'s in-degree/in-value logic but target collateralized perpetual trading rather than raw inflows.
+
+\dissertationSubheading{Theoretical framework}
+
+Figure~\ref{fig:conceptual-model} maps EndorseRank against AWP across three constructs: reputation structure (H1), trading-success alignment (H2), and computational efficiency (H3).
+
+\begin{figure}[htbp]
+\centering
+\input{Figures/conceptual-model.tex}
+\caption{Conceptual model: EndorseRank vs.\ AWP across reputation structure, trading-success alignment, and computational efficiency.}
+\label{fig:conceptual-model}
+\end{figure}
+
+\dissertationSubheading{Domain alignment metrics}
+
+Following Do et al.\ (2023) and Cronbach \& Meehl (1955), construct alignment for rank-based scores uses Spearman's $\rho$ and Kendall's $\tau$ between reputation scores and proxy rankings. The dissertation evaluates \textbf{two proxy families}:
+
+\begin{itemize}
+\item \textbf{Transfer family (AWP paper baseline):} in-degree, in-value.
+\item \textbf{GMX margin family:} close-success count, realized gain proxy, close success rate.
+\end{itemize}
+
+This dual-proxy design supports the claim that margin-trading success is a more meaningful validation target for leveraged DeFi than deposit volume alone.

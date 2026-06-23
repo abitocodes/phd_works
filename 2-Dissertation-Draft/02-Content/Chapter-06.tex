@@ -1,0 +1,30 @@
+% !TEX root = ../main.tex
+\chapter{Conclusion and Future Work}
+\label{ch:conclusion}
+
+\dissertationSubheading{Summary of findings}
+
+This dissertation formulated EndorseRank, an allowance-based Weighted PageRank reputation metric on Arbitrum One, and compared it against an AWP reproduction on an identical wallet sample validated against GMX V2 trading-success proxies.
+
+On synthetic offline data (to be replaced with BigQuery extraction): % DUMMY
+\begin{itemize}
+\item EndorseRank required less wall-clock time and operated on a sparser graph than AWP (Claim~1).
+\item Spearman $\rho$ and Kendall $\tau$ demonstrated credible domain alignment under Do et al.'s correlation framework (Claim~2).
+\item AWP alignment improved when validation shifted from transfer in-degree/in-value to GMX margin proxies (Claim~3).
+\item EndorseRank outperformed AWP on mean $\tau$ under both proxy families (Claim~4).
+\end{itemize}
+
+\dissertationSubheading{Original contribution to knowledge}
+
+The study contributes allowance-based endorsement graph modeling for on-chain reputation, a dual-proxy validation methodology for leveraged DeFi, and a reproducible open-source evaluation pipeline linking LaTeX results to \texttt{eval\_summary.json}.
+
+\dissertationSubheading{Future work}
+
+\begin{itemize}
+\item Replace synthetic fixtures with full BigQuery extraction (\texttt{extract\_reputation\_data.py}, \texttt{extract\_margin\_week.py}).
+\item Cross-protocol validation (Aave, GMX cross-chain, other L2s).
+\item Adversarial manipulation detection and Sybil clustering on $G_{\text{approve}}$.
+\item Integration with live risk oracles and governance tooling.
+\end{itemize}
+
+The approved proposal outline in \texttt{1-Proposal/proposal/02-Content/Chapter-10.tex} remains the structural reference; this six-chapter dissertation supersedes the proposal format with empirical chapters reporting Claims~1--5.

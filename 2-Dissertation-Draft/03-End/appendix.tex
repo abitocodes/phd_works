@@ -1,0 +1,30 @@
+% !TEX root = ../main.tex
+\clearpage
+\appendix
+\chapter{Evaluation Pipeline Commands}
+\label{ch:appendix-eval}
+
+Offline synthetic evaluation (no Google Cloud):
+
+\begin{verbatim}
+cd A-Skill-Programs/margin_rank
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/run_dissertation_eval.py --fixtures --n-wallets 571 --export-latex
+cd ../../2-Dissertation-Draft && ./build.ps1
+\end{verbatim}
+
+Real BigQuery extraction (requires ADC and \texttt{GOOGLE\_CLOUD\_PROJECT}):
+
+\begin{verbatim}
+python scripts/extract_margin_week.py --extract --yes
+python scripts/decode_gmx_events.py
+python scripts/compute_rankings.py
+python scripts/extract_reputation_data.py --extract --yes
+python scripts/preprocess_arbitrum_allowances.py
+python scripts/preprocess_arbitrum_transfers.py
+python scripts/compute_reputation_ranks.py
+python scripts/run_dissertation_eval.py --real --export-latex
+\end{verbatim}
+
+% DUMMY: Appendix numerics mirror synthetic eval_summary.json until BigQuery rerun.
