@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -68,7 +69,12 @@ def _extract_fields(event_data: dict) -> dict[str, object]:
     }
 
 
-def decode_log_row(row: pd.Series, liquidation_handler: str, liq_order_type: int) -> dict | None:
+def decode_log_row(
+    row: pd.Series,
+    liquidation_handler: str,
+    liq_order_type: int,
+    codec,
+) -> dict | None:
     raw_topics = row.get("topics")
     if raw_topics is None:
         return None
@@ -93,7 +99,7 @@ def decode_log_row(row: pd.Series, liquidation_handler: str, liq_order_type: int
     }
 
     try:
-        decoded = get_event_data(Web3().codec, _get_event_abi(), log_entry)
+        decoded = get_event_data(codec, _get_event_abi(), log_entry)
     except (DecodingError, ValueError, TypeError):
         return None
 
@@ -132,6 +138,24 @@ def decode_log_row(row: pd.Series, liquidation_handler: str, liq_order_type: int
     }
 
 
+def _decode_records(rows: list[dict], liquidation_handler: str, liq_order_type: int) -> tuple[list[dict], int]:
+    codec = Web3().codec
+    decoded: list[dict] = []
+    errors = 0
+    for row_dict in rows:
+        rec = decode_log_row(
+            pd.Series(row_dict),
+            liquidation_handler,
+            liq_order_type,
+            codec,
+        )
+        if rec:
+            decoded.append(rec)
+        else:
+            errors += 1
+    return decoded, errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, help="Raw logs parquet")
@@ -149,18 +173,32 @@ def main() -> int:
         return 1
 
     df = pd.read_parquet(in_path)
+    row_dicts = df.to_dict(orient="records")
+    total = len(row_dicts)
+    chunk_size = 10000
+    chunks = [row_dicts[i : i + chunk_size] for i in range(0, total, chunk_size)]
     decoded: list[dict] = []
     errors = 0
-    for _, row in df.iterrows():
-        rec = decode_log_row(
-            row,
-            gmx["liquidation_handler"],
-            gmx["order_type_liquidation"],
-        )
-        if rec:
-            decoded.append(rec)
-        else:
-            errors += 1
+    workers = min(8, max(1, len(chunks)))
+    print(f"Decoding {total} logs in {len(chunks)} chunks ({workers} workers)...")
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        futures = {
+            pool.submit(
+                _decode_records,
+                chunk,
+                gmx["liquidation_handler"],
+                gmx["order_type_liquidation"],
+            ): idx
+            for idx, chunk in enumerate(chunks)
+        }
+        done = 0
+        for fut in as_completed(futures):
+            part, err = fut.result()
+            decoded.extend(part)
+            errors += err
+            done += 1
+            if done % 5 == 0 or done == len(chunks):
+                print(f"  chunks {done}/{len(chunks)} ({len(decoded)} decoded)")
 
     out_df = pd.DataFrame(decoded)
     out_path.parent.mkdir(parents=True, exist_ok=True)

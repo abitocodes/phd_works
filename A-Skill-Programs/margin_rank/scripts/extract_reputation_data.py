@@ -128,6 +128,11 @@ def main() -> int:
         action="store_true",
         help="Extract reputation for GMX-qualified wallets only (skip benchmark seed merge)",
     )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Skip month/event files that already exist on disk",
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--extract", action="store_true")
     parser.add_argument("--yes", action="store_true")
@@ -233,23 +238,33 @@ def main() -> int:
 
     for mo in month_plans:
         label = mo["label"]
+        app_month_path = approvals_dir / f"approvals_{label}.parquet"
+        tx_month_path = transfers_dir / f"transfers_{label}.parquet"
         params = query_params(config, wallets, mo["start_ts"], mo["end_ts"])
         print(f"Extracting {label}...")
 
-        df_app = run_query(client, sql_approvals, params)
-        df_app = normalize_approvals(df_app)
-        app_month_path = approvals_dir / f"approvals_{label}.parquet"
-        df_app.to_parquet(app_month_path, index=False)
+        if args.resume and app_month_path.exists():
+            print(f"  approvals: skip (exists)")
+            df_app = pd.read_parquet(app_month_path)
+        else:
+            df_app = run_query(client, sql_approvals, params)
+            df_app = normalize_approvals(df_app)
+            df_app.to_parquet(app_month_path, index=False)
+            print(f"  approvals: {len(df_app)} rows")
         approval_frames.append(df_app)
 
-        df_tx = run_query(client, sql_transfers, params)
-        df_tx = normalize_transfers(df_tx)
-        tx_month_path = transfers_dir / f"transfers_{label}.parquet"
-        df_tx.to_parquet(tx_month_path, index=False)
+        if args.resume and tx_month_path.exists():
+            print(f"  transfers: skip (exists)")
+            df_tx = pd.read_parquet(tx_month_path)
+        else:
+            df_tx = run_query(client, sql_transfers, params)
+            df_tx = normalize_transfers(df_tx)
+            df_tx.to_parquet(tx_month_path, index=False)
+            print(f"  transfers: {len(df_tx)} rows")
         transfer_frames.append(df_tx)
 
         bytes_processed += mo["bytes_approvals"] + mo["bytes_transfers"]
-        print(f"  {label}: {len(df_app)} approvals, {len(df_tx)} transfers")
+        print(f"  {label} done")
 
     df_app_all = pd.concat(approval_frames, ignore_index=True) if approval_frames else pd.DataFrame()
     df_tx_all = pd.concat(transfer_frames, ignore_index=True) if transfer_frames else pd.DataFrame()
