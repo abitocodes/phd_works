@@ -12,6 +12,12 @@ python scripts/run_dissertation_eval.py --fixtures --n-wallets 571 --export-late
 
 ## Regenerate (real BigQuery)
 
-After running the BigQuery extraction pipeline, use `--real` instead of `--fixtures`.
+After Tier 1 extraction (GMX 6-month window + wallet-filtered Approval/Transfer), use `--real` instead of `--fixtures`:
+
+```bash
+# Phase 1–2: see docs/bigquery_data_plan.md and 03-End/appendix.tex
+python scripts/run_dissertation_eval.py --real --export-latex
+python scripts/benchmark_runtime.py  # 10k / 50k / 100k from cached parquet
+```
 
 Each file begins with `% DUMMY DATA` comments until replaced by real pipeline output.

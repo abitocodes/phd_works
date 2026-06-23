@@ -6,11 +6,25 @@
 
 \textbf{Primary chain:} Arbitrum One (chain ID 42161).
 
-\textbf{Reputation events:} ERC-20 \texttt{Approval} logs and \texttt{Transfer} logs from \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us} (SQL templates in \texttt{A-Skill-Programs/margin\_rank/sql/}).
+\textbf{Observation window:} 2025-12-01 00:00 UTC through 2026-05-31 23:59:59 UTC (six months).
 
-\textbf{GMX events:} \texttt{PositionDecrease} from GMX V2 \texttt{EventEmitter} (\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}), identifying traders via the event \texttt{account} field.
+\textbf{BigQuery source:} \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us.logs} (SQL templates in \texttt{A-Skill-Programs/margin\_rank/sql/}; acquisition plan in \texttt{docs/bigquery\_data\_plan.md}).
 
-\textbf{Sample:} Intersection of wallets with $\geq 3$ GMX closes in the observation window and non-zero reputation subgraph connectivity. % DUMMY: $n=571$ synthetic wallets; replace after BigQuery extraction.
+\textbf{Reputation events:} ERC-20 \texttt{Approval} logs (EndorseRank) and \texttt{Transfer} logs (AWP), extracted in six monthly batches for the Phase~1 wallet cohort.
+
+\textbf{GMX events:} \texttt{PositionDecrease} from GMX V2 \texttt{EventEmitter} (\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}) over the full observation window, identifying traders via the event \texttt{account} field.
+
+\dissertationSubheading{Three-phase collection strategy}
+
+\textbf{Phase 1 (Stream A):} Extract and decode all GMX \texttt{PositionDecrease} logs; retain wallets with $\geq 3$ closes (Tier~1 alignment cohort; expected $n \approx 500$--3,000, confirmed after extraction).
+
+\textbf{Phase 2 (Streams B \& C):} Wallet-filtered ERC-20 \texttt{Approval} and \texttt{Transfer} events for the Tier~1 cohort (plus benchmark seed addresses); preprocess to latest allowances and time-decayed transfer edges.
+
+\textbf{Phase 3 (local):} Alignment evaluation and staged computational benchmarks (10k $\to$ 50k $\to$ 100k wallets) by subsampling cached parquet subgraphs---no additional BigQuery scans for benchmark scaling.
+
+\textbf{Sample (current draft):} Intersection of wallets with $\geq 3$ GMX closes and non-zero reputation subgraph connectivity. % DUMMY: $n=571$ synthetic placeholder; replace with Tier~1 BigQuery extraction before final submission.
+
+\textbf{Cost guardrails:} Mandatory \texttt{--dry-run} before extraction; 150 GiB per-query cap; target $\leq$1 TiB/month (BigQuery free tier, \$0). Bytes logged in \texttt{data/processed/extraction\_manifest.json}.
 
 \dissertationSubheading{Graph construction}
 
@@ -36,11 +50,11 @@ For each method $M \in \{\text{EndorseRank}, \text{AWP}\}$ and proxy $P$:
 
 \dissertationSubheading{Computational benchmark (Claim~1)}
 
-On identical inputs, measure over five runs: wall-clock runtime (graph build + PageRank), peak memory (tracemalloc), PageRank iterations to convergence, and edge counts. Implementation: \texttt{scripts/benchmark\_runtime.py}.
+On identical inputs, measure over five runs: wall-clock runtime (graph build + PageRank), peak memory (tracemalloc), PageRank iterations to convergence, and edge counts. Benchmark wallet counts expand in stages (10k, 50k, 100k) from locally cached graphs after Tier~1 extraction. Implementation: \texttt{scripts/benchmark\_runtime.py}.
 
 \dissertationSubheading{Reproducibility and offline workflow}
 
-The pipeline \texttt{scripts/run\_dissertation\_eval.py --fixtures} generates synthetic parquet inputs when BigQuery is unavailable. % DUMMY: dissertation draft uses synthetic fixtures; re-run with --real after GCP extraction.
+The pipeline \texttt{scripts/run\_dissertation\_eval.py --fixtures} generates synthetic parquet inputs when BigQuery is unavailable. % DUMMY: dissertation draft uses synthetic fixtures; re-run with --real after GCP Tier~1 extraction.
 
 Outputs: \texttt{data/processed/eval\_summary.json} and LaTeX fragments under \texttt{2-Dissertation-Draft/results/tables/}.
 

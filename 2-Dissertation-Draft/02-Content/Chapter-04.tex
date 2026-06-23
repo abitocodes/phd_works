@@ -10,7 +10,7 @@
 
 The evaluation pipeline (\texttt{A-Skill-Programs/margin\_rank/}) ingests (1) latest ERC-20 allowances, (2) time-stamped transfers, and (3) decoded GMX \texttt{PositionDecrease} events. EndorseRank and AWP scores are merged into \texttt{wallet\_rankings.parquet} via \texttt{compute\_reputation\_ranks.py}.
 
-Table~\ref{tab:dataset-stats} summarizes the synthetic matched sample used in this draft.
+Table~\ref{tab:dataset-stats} summarizes the synthetic matched sample used in this draft. Planned BigQuery Tier~1 collection targets all GMX-qualified wallets ($\geq 3$ closes; expected $n \approx 500$--3,000) over the six-month observation window; numerics below remain synthetic until \texttt{run\_dissertation\_eval.py --real} completes.
 
 \begin{table}[htbp]
 \centering
@@ -20,11 +20,13 @@ Table~\ref{tab:dataset-stats} summarizes the synthetic matched sample used in th
 \toprule
 Statistic & Value \\
 \midrule
-Matched wallets & 571 \\
+Matched wallets (current draft) & 571 \\
+Planned Tier~1 wallets (BigQuery) & 500--3,000 (TBD after extraction) \\
 EndorseRank edges (subgraph) & 11{,}420 \\
 AWP edges (subgraph) & 32{,}031 \\
 Observation window & 2025-12-01 -- 2026-05-31 \\
 Min.\ GMX closes per wallet & 3 \\
+Benchmark stages (local) & 10k / 50k / 100k wallets \\
 \bottomrule
 \end{tabular}
 \end{table}

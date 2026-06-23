@@ -17,7 +17,7 @@
 | 트레이더 식별 | `PositionDecrease` / `PositionIncrease`의 `EventLog1` **topic2** = `bytes32(account)`; `eventData.addressItems["account"]`와 동일 |
 | PnL | `eventData.intItems["basePnlUsd"]` |
 | 청산 | `orderType == 7` (Liquidation) 또는 `msgSender == LiquidationHandler` (`0xaf157Eb8...`) |
-| BigQuery | `bigquery-public-data.crypto_arbitrum.logs` |
+| BigQuery | `bigquery-public-data.goog_blockchain_arbitrum_one_us.logs` |
 
 `msgSender`는 OrderHandler·LiquidationHandler일 수 있으므로 순위 집계에 **사용하지 않음**.
 

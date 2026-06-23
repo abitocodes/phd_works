@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Extract GMX PositionDecrease logs from BigQuery for the analysis week."""
+"""Extract GMX PositionDecrease logs from BigQuery for the observation window.
+
+Uses ``period`` in margin_config.yaml (default: 2025-12-01 through 2026-05-31).
+Run ``--dry-run`` before ``--extract``; bytes are recorded in extraction_manifest.json.
+"""
 
 from __future__ import annotations
 

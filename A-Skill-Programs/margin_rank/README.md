@@ -30,7 +30,11 @@ Outputs:
 - `data/processed/eval_summary.json`
 - `2-Dissertation-Draft/results/tables/*.tex` (LaTeX table fragments)
 
-## Real BigQuery pipeline (stub — requires GCP)
+## Real BigQuery pipeline (3 phases)
+
+See [docs/bigquery_data_plan.md](docs/bigquery_data_plan.md) for streams, tiers, and cost guardrails.
+
+**Phase 1 — GMX validation labels (6-month observation window)**
 
 ```bash
 export GOOGLE_CLOUD_PROJECT=your-project-id
@@ -39,16 +43,27 @@ python scripts/extract_margin_week.py --dry-run
 python scripts/extract_margin_week.py --extract --yes
 python scripts/decode_gmx_events.py
 python scripts/compute_rankings.py
+```
 
+**Phase 2 — Reputation subgraph (wallet-filtered, monthly batches)**
+
+```bash
 python scripts/extract_reputation_data.py --dry-run
 python scripts/extract_reputation_data.py --extract --yes
 python scripts/preprocess_arbitrum_allowances.py
 python scripts/preprocess_arbitrum_transfers.py
 python scripts/compute_reputation_ranks.py
+```
 
+**Phase 3 — Evaluation and benchmark (local; no extra BQ cost)**
+
+```bash
 python scripts/run_dissertation_eval.py --real
 python scripts/export_latex_results.py
+python scripts/benchmark_runtime.py  # 10k / 50k / 100k subgraph from parquet
 ```
+
+Dry-run bytes and extraction metadata are written to `data/processed/extraction_manifest.json`. Per-query scan must stay under 150 GiB (`config/margin_config.yaml`).
 
 ## Scripts
 
@@ -58,6 +73,8 @@ python scripts/export_latex_results.py
 | `benchmark_runtime.py` | EndorseRank vs AWP runtime/memory |
 | `evaluate_alignment.py` | Spearman ρ / Kendall τ vs proxies |
 | `export_latex_results.py` | JSON → dissertation LaTeX tables |
+| `extract_margin_week.py` | GMX PositionDecrease BigQuery extraction |
+| `extract_reputation_data.py` | Approval/Transfer BigQuery extraction |
 | `generate_synthetic_*.py` | Offline fixture data |
 
 See [docs/contract_wallet_exposure.md](docs/contract_wallet_exposure.md) for GMX wallet attribution rationale.

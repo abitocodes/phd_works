@@ -14,7 +14,15 @@ from google.cloud.bigquery import ArrayQueryParameter, QueryJobConfig, ScalarQue
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from common import format_bytes, load_config, load_json, read_sql, save_json  # noqa: E402
+from common import (  # noqa: E402
+    format_bytes,
+    load_config,
+    load_json,
+    merge_extraction_wallets,
+    read_sql,
+    save_extraction_wallet_set,
+    save_json,
+)
 
 OBSERVATION_MONTHS = [
     ("2025-12", "2025-12-01 00:00:00 UTC", "2026-01-01 00:00:00 UTC"),
@@ -115,6 +123,11 @@ def run_query(client: bigquery.Client, sql: str, params: list) -> pd.DataFrame:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--wallets", type=Path, help="Parquet with wallet column")
+    parser.add_argument(
+        "--gmx-only",
+        action="store_true",
+        help="Extract reputation for GMX-qualified wallets only (skip benchmark seed merge)",
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--extract", action="store_true")
     parser.add_argument("--yes", action="store_true")
@@ -124,8 +137,21 @@ def main() -> int:
         parser.error("Specify --dry-run or --extract")
 
     config = load_config()
-    wallets = load_wallet_addresses(config, args.wallets)
-    print(f"Wallet set: {len(wallets)} addresses")
+    gmx_wallets = load_wallet_addresses(config, args.wallets)
+    wallets, wallet_meta = merge_extraction_wallets(
+        gmx_wallets,
+        config,
+        include_benchmark=not args.gmx_only,
+    )
+    print(
+        f"Wallet set: {len(wallets)} addresses "
+        f"(GMX {wallet_meta['gmx_wallet_count']}, "
+        f"supplemental {wallet_meta.get('supplemental_count', 0)}, "
+        f"source={wallet_meta.get('supplemental_source', 'none')})"
+    )
+    wallet_set_path = save_extraction_wallet_set(wallets, config)
+    if wallet_set_path:
+        print(f"Saved extraction wallet set -> {wallet_set_path}")
 
     logs_fqn = config["bigquery"]["logs_fqn"]
     sql_approvals = read_sql("arbitrum_approvals.sql").replace("__LOGS_FQN__", logs_fqn)
@@ -178,6 +204,8 @@ def main() -> int:
     manifest["reputation_extract"] = {
         "at": datetime.now(timezone.utc).isoformat(),
         "wallet_count": len(wallets),
+        "wallet_meta": wallet_meta,
+        "extraction_wallet_set_path": str(wallet_set_path) if wallet_set_path else None,
         "dry_run_bytes_total": total_bytes,
         "months": month_plans,
         "observation": {

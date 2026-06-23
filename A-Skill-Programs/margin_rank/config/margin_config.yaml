@@ -1,13 +1,13 @@
-# GMX V2 margin trading wallet ranking — last week of May 2026
+# GMX V2 margin trading wallet ranking — full dissertation observation window
 
 protocol: gmx_v2_arbitrum
 chain_id: 42161
 chain_name: Arbitrum One
 
 period:
-  start_date: "2026-05-25"
+  start_date: "2025-12-01"
   end_date: "2026-06-01"  # exclusive end (through 2026-05-31 23:59:59 UTC)
-  start_ts: "2026-05-25 00:00:00 UTC"
+  start_ts: "2025-12-01 00:00:00 UTC"
   end_ts: "2026-06-01 00:00:00 UTC"
 
 bigquery:
@@ -36,7 +36,7 @@ ranking:
 paths:
   manifest: data/processed/extraction_manifest.json
   eval_summary: data/processed/eval_summary.json
-  raw_logs: data/raw/gmx_event_logs_2026-05-last-week.parquet
+  raw_logs: data/raw/gmx_event_logs_2025-12_to_2026-05.parquet
   decoded_events: data/processed/gmx_decoded_events.parquet
   wallet_rankings: data/processed/wallet_rankings.parquet
 
@@ -58,4 +58,16 @@ reputation:
     transfer_events: data/processed/reputation/transfer_events.parquet
 
 budget:
-  max_bytes_per_query: 161061273600  # 150 GiB
+  max_bytes_per_query: 161061273600  # 150 GiB per query; abort if dry-run exceeds
+  # Target cumulative scan: <= 1 TiB/month (BigQuery free tier) for Tier 1+2
+  # Tier 1 alignment (~80-350 GiB est.): GMX 6mo + monthly Approval/Transfer
+  # Tier 2 benchmark (10k/50k/100k): subgraph from parquet; no extra BQ scans
+
+benchmark:
+  seed: "endorserank-benchmark-v1"
+  target_wallets: 100000
+  stages: [10000, 50000, 100000]
+  # Optional parquet with wallet column (BQ-sampled active addresses); if absent,
+  # deterministic SHA256(seed:i) addresses pad the GMX set to target_wallets.
+  supplemental_path: null
+  wallet_set_path: data/processed/extraction_wallet_set.parquet

@@ -14,17 +14,31 @@ python scripts/run_dissertation_eval.py --fixtures --n-wallets 571 --export-late
 cd ../../2-Dissertation-Draft && ./build.ps1
 \end{verbatim}
 
-Real BigQuery extraction (requires ADC and \texttt{GOOGLE\_CLOUD\_PROJECT}):
+Real BigQuery extraction (requires ADC and \texttt{GOOGLE\_CLOUD\_PROJECT}).
+See \texttt{docs/bigquery\_data\_plan.md} for tiers and cost guardrails.
 
 \begin{verbatim}
+export GOOGLE_CLOUD_PROJECT=your-project-id
+
+# Phase 1 — GMX validation labels (6-month window)
+python scripts/extract_margin_week.py --dry-run
 python scripts/extract_margin_week.py --extract --yes
 python scripts/decode_gmx_events.py
 python scripts/compute_rankings.py
+
+# Phase 2 — Reputation subgraph (monthly batches)
+python scripts/extract_reputation_data.py --dry-run
 python scripts/extract_reputation_data.py --extract --yes
 python scripts/preprocess_arbitrum_allowances.py
 python scripts/preprocess_arbitrum_transfers.py
 python scripts/compute_reputation_ranks.py
+
+# Phase 3 — Evaluation and benchmark (local)
 python scripts/run_dissertation_eval.py --real --export-latex
+python scripts/benchmark_runtime.py
 \end{verbatim}
+
+Extraction metadata (bytes processed, row counts) is written to
+\texttt{data/processed/extraction\_manifest.json}.
 
 % DUMMY: Appendix numerics mirror synthetic eval_summary.json until BigQuery rerun.

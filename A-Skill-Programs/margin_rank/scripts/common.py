@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import yaml
 from eth_utils import keccak, to_hex
 
@@ -34,6 +36,11 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
     for key, val in rep.get("paths", {}).items():
         if isinstance(val, str):
             rep["paths"][key] = str(_resolve_path(val))
+    bench = cfg.get("benchmark", {})
+    for key in ("supplemental_path", "wallet_set_path"):
+        val = bench.get(key)
+        if isinstance(val, str):
+            bench[key] = str(_resolve_path(val))
     return cfg
 
 
@@ -146,3 +153,74 @@ def save_json(path: Path, data: dict[str, Any]) -> None:
 def bq_table_fqn(cfg: dict[str, Any], table: str) -> str:
     bq = cfg["bigquery"]
     return f"`{bq['dataset']}.{table}`"
+
+
+def seeded_benchmark_address(seed: str, index: int) -> str:
+    """Deterministic address from SHA256(seed:index); used to pad benchmark pool offline."""
+    digest = hashlib.sha256(f"{seed}:{index}".encode()).hexdigest()
+    return "0x" + digest[-40:]
+
+
+def merge_extraction_wallets(
+    gmx_wallets: list[str],
+    config: dict[str, Any],
+    supplemental_path: Path | None = None,
+    *,
+    include_benchmark: bool = True,
+) -> tuple[list[str], dict[str, Any]]:
+    """Union GMX-qualified wallets with benchmark seed addresses up to target_wallets."""
+    gmx_sorted = sorted({w.lower() for w in gmx_wallets})
+    bench = config.get("benchmark") or {}
+    target = int(bench.get("target_wallets", 0)) if include_benchmark else 0
+    meta: dict[str, Any] = {
+        "gmx_wallet_count": len(gmx_sorted),
+        "target_wallets": target,
+        "benchmark_seed": bench.get("seed"),
+    }
+
+    if not include_benchmark or target <= 0 or len(gmx_sorted) >= target:
+        meta["extraction_wallet_count"] = len(gmx_sorted)
+        meta["supplemental_source"] = "none"
+        meta["supplemental_count"] = 0
+        return gmx_sorted, meta
+
+    merged_set = set(gmx_sorted)
+    supplemental_source = ""
+
+    path = supplemental_path
+    if path is None and bench.get("supplemental_path"):
+        path = Path(bench["supplemental_path"])
+
+    if path and Path(path).exists():
+        supplemental_source = str(path)
+        df = pd.read_parquet(path)
+        if "wallet" not in df.columns:
+            raise ValueError(f"Missing wallet column in {path}")
+        for wallet in df["wallet"].astype(str).str.lower():
+            if len(merged_set) >= target:
+                break
+            merged_set.add(wallet)
+    else:
+        seed = str(bench.get("seed", "endorserank-benchmark-v1"))
+        supplemental_source = f"sha256:{seed}"
+        i = 0
+        while len(merged_set) < target:
+            merged_set.add(seeded_benchmark_address(seed, i))
+            i += 1
+
+    merged = sorted(merged_set)[:target]
+    meta["supplemental_source"] = supplemental_source
+    meta["supplemental_count"] = max(0, len(merged) - len(gmx_sorted))
+    meta["extraction_wallet_count"] = len(merged)
+    return merged, meta
+
+
+def save_extraction_wallet_set(wallets: list[str], config: dict[str, Any]) -> Path | None:
+    bench = config.get("benchmark") or {}
+    out = bench.get("wallet_set_path")
+    if not out:
+        return None
+    path = Path(out)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({"wallet": wallets}).to_parquet(path, index=False)
+    return path

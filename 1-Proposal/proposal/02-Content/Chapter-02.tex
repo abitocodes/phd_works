@@ -146,7 +146,7 @@ where N\textsuperscript{+}(u) is the set of out-neighbors of u (all nodes x that
 \proposalSubheading{5. Computational Efficiency and Scalability Analysis}
 
 \begin{itemize}
-\item[\textbullet] \textbf{O5.1 Runtime Benchmarking: }Measure and compare the total time required (data extraction + graph construction + PageRank convergence) for EndorseRank, AWP, and Transfer-Based PageRank on a fixed wallet set (e.g., 100,000 nodes).
+\item[\textbullet] \textbf{O5.1 Runtime Benchmarking: }Measure and compare the total time required (data extraction + graph construction + PageRank convergence) for EndorseRank, AWP, and Transfer-Based PageRank on a fixed wallet set, with staged expansion to 100,000 nodes (10,000 pilot $\to$ 50,000 $\to$ 100,000) after dry-run cost checks, subsampled from locally cached parquet graphs.
 \item[\textbullet] \textbf{O5.2 Memory Profiling: }Record peak memory usage for each method, highlighting how EndorseRank's use of only the latest approval amounts results in a sparser graph and lower memory footprint than transaction-based graphs.
 \item[\textbullet] \textbf{O5.3 Convergence Stability}\textbf{: }Analyze the number of iterations needed for each algorithm to reach a predefined convergence tolerance (e.g., 10\textsuperscript{-}\textsuperscript{6}) under different damping factors and token supply scales, verifying that EndorseRank remains numerically stable despite potentially large allowance values.
 \end{itemize}
