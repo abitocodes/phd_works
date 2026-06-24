@@ -1,6 +1,6 @@
 # Margin Rank — EndorseRank vs AWP evaluation pipeline
 
-Arbitrum One ERC-20 allowance (EndorseRank) and transfer (AWP) reputation ranks, validated against transfer proxies (in-degree, in-value) and GMX V2 margin-trading success proxies.
+Arbitrum One ERC-20 allowance (EndorseRank) and transfer (AWP) reputation ranks, validated against **six proxy families**: transfer, allowance, GMX default/liquidation, inverse risk, Sybil-adjusted stability, and GMX trading success (see `config/margin_config.yaml` → `proxies`).
 
 BigQuery source (when online): `bigquery-public-data.goog_blockchain_arbitrum_one_us.logs`
 
@@ -78,3 +78,7 @@ Dry-run bytes and extraction metadata are written to `data/processed/extraction_
 | `generate_synthetic_*.py` | Offline fixture data |
 
 See [docs/contract_wallet_exposure.md](docs/contract_wallet_exposure.md) for GMX wallet attribution rationale.
+
+## Research log
+
+실측 결과·가설 대비 판단·7-method baseline 탐색: [docs/research_log.md](docs/research_log.md).
