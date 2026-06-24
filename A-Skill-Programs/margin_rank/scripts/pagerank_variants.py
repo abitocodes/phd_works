@@ -1,8 +1,8 @@
-"""PageRank variants: GF-PR, LP-PR, CW-AWP, LF-PR, RiskProp."""
+"""PageRank variants: GF-PR, LP-PR, CW-AWP, LF-PR, RiskProp, six-Aave W↔W methods."""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import pandas as pd
 
@@ -11,11 +11,26 @@ from pagerank import (
     build_endorserank_edges,
     build_weighted_edges,
     filter_subgraph_edges,
+    logistic_time_decay,
     weighted_pagerank,
 )
 
 GMX_POOL_NODE = "__gmx_profit_pool__"
 GMX_SINK_NODE = "__gmx_loss_sink__"
+
+SIX_AAVE_METHOD_IDS = (
+    "endorserank",
+    "awp",
+    "liq_pr",
+    "borrow_pr",
+    "repay_pr",
+    "delegation_pr",
+)
+
+SIX_AAVE_DIAGNOSTIC_IDS = (
+    "borrow_pr_pool",
+    "repay_pr_pool",
+)
 
 
 def _wallet_liquidation_rates(decoded: pd.DataFrame, wallets: list[str]) -> dict[str, float]:
@@ -171,6 +186,303 @@ def build_lf_pr_edges(
         return pd.DataFrame(columns=["from_node", "to_node", "weight"])
     df = pd.DataFrame(rows)
     return build_weighted_edges(df, "from_node", "to_node", "weight")
+
+
+def _pool_address_set(config: dict[str, Any]) -> set[str]:
+    pools = config.get("aave_arbitrum", {}).get("pool_addresses", [])
+    return {str(p).lower() for p in pools}
+
+
+def _decayed_aave_rows(
+    aave_events: pd.DataFrame,
+    observation_end: pd.Timestamp,
+    k: float,
+    t0_days: float,
+    event_types: set[str] | None = None,
+) -> pd.DataFrame:
+    if aave_events.empty:
+        return pd.DataFrame()
+
+    work = aave_events.copy()
+    work["block_timestamp"] = pd.to_datetime(work["block_timestamp"], utc=True)
+    work["amount"] = pd.to_numeric(work["amount"], errors="coerce").fillna(0)
+    work = work[work["amount"] > 0]
+    if event_types is not None:
+        work = work[work["event_type"].astype(str).str.lower().isin(event_types)]
+    if work.empty:
+        return work
+
+    delta = (observation_end - work["block_timestamp"]).dt.total_seconds() / 86400.0
+    work["weight"] = work["amount"] * logistic_time_decay(delta, k, t0_days)
+    return work[work["weight"] > 0]
+
+
+def _is_wallet(addr: str | None, pool_addrs: set[str]) -> bool:
+    if not addr or pd.isna(addr):
+        return False
+    a = str(addr).lower()
+    if a in pool_addrs or a == "0x0000000000000000000000000000000000000000":
+        return False
+    return True
+
+
+def build_liq_pr_edges(
+    aave_events: pd.DataFrame,
+    config: dict[str, Any],
+    observation_end: pd.Timestamp,
+    k: float,
+    t0_days: float,
+) -> pd.DataFrame:
+    """liquidator -> user from Aave LiquidationCall events."""
+    pool_addrs = _pool_address_set(config)
+    work = _decayed_aave_rows(
+        aave_events, observation_end, k, t0_days, {"liquidation_call"}
+    )
+    if work.empty:
+        return pd.DataFrame(columns=["from_node", "to_node", "weight"])
+
+    rows: list[dict[str, Any]] = []
+    for _, row in work.iterrows():
+        liquidator = row.get("liquidator")
+        user = row.get("user")
+        if not _is_wallet(liquidator, pool_addrs) or not _is_wallet(user, pool_addrs):
+            continue
+        if str(liquidator).lower() == str(user).lower():
+            continue
+        rows.append(
+            {
+                "from_node": str(liquidator).lower(),
+                "to_node": str(user).lower(),
+                "weight": float(row["weight"]),
+            }
+        )
+    if not rows:
+        return pd.DataFrame(columns=["from_node", "to_node", "weight"])
+    return build_weighted_edges(pd.DataFrame(rows), "from_node", "to_node", "weight")
+
+
+def build_borrow_pr_edges(
+    aave_events: pd.DataFrame,
+    config: dict[str, Any],
+    observation_end: pd.Timestamp,
+    k: float,
+    t0_days: float,
+    mode: Literal["ww", "pool"] = "ww",
+) -> pd.DataFrame:
+    """W↔W: initiator -> onBehalfOf; pool-leg: pool -> onBehalfOf."""
+    pool_addrs = _pool_address_set(config)
+    work = _decayed_aave_rows(aave_events, observation_end, k, t0_days, {"borrow"})
+    if work.empty:
+        return pd.DataFrame(columns=["from_node", "to_node", "weight"])
+
+    rows: list[dict[str, Any]] = []
+    for _, row in work.iterrows():
+        on_behalf = row.get("on_behalf_of") or row.get("user")
+        if not _is_wallet(on_behalf, pool_addrs):
+            continue
+        if mode == "pool":
+            pool = row.get("pool")
+            if not pool:
+                continue
+            rows.append(
+                {
+                    "from_node": str(pool).lower(),
+                    "to_node": str(on_behalf).lower(),
+                    "weight": float(row["weight"]),
+                }
+            )
+        else:
+            initiator = row.get("initiator")
+            if not _is_wallet(initiator, pool_addrs):
+                continue
+            if str(initiator).lower() == str(on_behalf).lower():
+                continue
+            rows.append(
+                {
+                    "from_node": str(initiator).lower(),
+                    "to_node": str(on_behalf).lower(),
+                    "weight": float(row["weight"]),
+                }
+            )
+    if not rows:
+        return pd.DataFrame(columns=["from_node", "to_node", "weight"])
+    return build_weighted_edges(pd.DataFrame(rows), "from_node", "to_node", "weight")
+
+
+def build_repay_pr_edges(
+    aave_events: pd.DataFrame,
+    config: dict[str, Any],
+    observation_end: pd.Timestamp,
+    k: float,
+    t0_days: float,
+    mode: Literal["ww", "pool"] = "ww",
+) -> pd.DataFrame:
+    """W↔W: repayer -> user; pool-leg: repayer -> pool."""
+    pool_addrs = _pool_address_set(config)
+    work = _decayed_aave_rows(aave_events, observation_end, k, t0_days, {"repay"})
+    if work.empty:
+        return pd.DataFrame(columns=["from_node", "to_node", "weight"])
+
+    rows: list[dict[str, Any]] = []
+    for _, row in work.iterrows():
+        user = row.get("user")
+        repayer = row.get("repayer")
+        if mode == "pool":
+            pool = row.get("pool")
+            if not _is_wallet(repayer, pool_addrs) or not pool:
+                continue
+            rows.append(
+                {
+                    "from_node": str(repayer).lower(),
+                    "to_node": str(pool).lower(),
+                    "weight": float(row["weight"]),
+                }
+            )
+        else:
+            if not _is_wallet(repayer, pool_addrs) or not _is_wallet(user, pool_addrs):
+                continue
+            if str(repayer).lower() == str(user).lower():
+                continue
+            rows.append(
+                {
+                    "from_node": str(repayer).lower(),
+                    "to_node": str(user).lower(),
+                    "weight": float(row["weight"]),
+                }
+            )
+    if not rows:
+        return pd.DataFrame(columns=["from_node", "to_node", "weight"])
+    return build_weighted_edges(pd.DataFrame(rows), "from_node", "to_node", "weight")
+
+
+def build_delegation_pr_edges(
+    delegation_events: pd.DataFrame,
+    observation_end: pd.Timestamp,
+    k: float,
+    t0_days: float,
+) -> pd.DataFrame:
+    """delegator (from_user) -> delegatee (to_user) from BorrowAllowanceDelegated."""
+    if delegation_events.empty:
+        return pd.DataFrame(columns=["from_node", "to_node", "weight"])
+
+    work = delegation_events.copy()
+    work["block_timestamp"] = pd.to_datetime(work["block_timestamp"], utc=True)
+    work["amount"] = pd.to_numeric(work["amount"], errors="coerce").fillna(0)
+    work = work[work["amount"] > 0]
+    if work.empty:
+        return pd.DataFrame(columns=["from_node", "to_node", "weight"])
+
+    delta = (observation_end - work["block_timestamp"]).dt.total_seconds() / 86400.0
+    work["weight"] = work["amount"] * logistic_time_decay(delta, k, t0_days)
+    work = work[work["weight"] > 0]
+
+    rows: list[dict[str, Any]] = []
+    for _, row in work.iterrows():
+        delegator = row.get("from_user") or row.get("delegator")
+        delegatee = row.get("to_user") or row.get("delegatee")
+        if not delegator or not delegatee:
+            continue
+        if str(delegator).lower() == str(delegatee).lower():
+            continue
+        rows.append(
+            {
+                "from_node": str(delegator).lower(),
+                "to_node": str(delegatee).lower(),
+                "weight": float(row["weight"]),
+            }
+        )
+    if not rows:
+        return pd.DataFrame(columns=["from_node", "to_node", "weight"])
+    return build_weighted_edges(pd.DataFrame(rows), "from_node", "to_node", "weight")
+
+
+def collect_six_aave_edges(
+    wallets: list[str],
+    config: dict[str, Any],
+    allowances: pd.DataFrame,
+    transfers: pd.DataFrame,
+    aave_events: pd.DataFrame | None,
+    delegation_events: pd.DataFrame | None,
+) -> dict[str, pd.DataFrame]:
+    """Edge lists for six-Aave PageRank preset (+ pool-leg diagnostics)."""
+    rep = config["reputation"]
+    seed = set(w.lower() for w in wallets)
+    observation_end = pd.Timestamp(rep["observation_end"], tz="UTC")
+    k = float(rep["awp_decay_k"])
+    t0 = float(rep["awp_decay_t0_days"])
+
+    edges: dict[str, pd.DataFrame] = {}
+    edges["endorserank"] = filter_subgraph_edges(build_endorserank_edges(allowances), seed)
+    edges["awp"] = filter_subgraph_edges(
+        build_awp_edges(transfers, observation_end, k, t0), seed
+    )
+
+    empty = pd.DataFrame(columns=["from_node", "to_node", "weight"])
+    aave = aave_events if aave_events is not None else pd.DataFrame()
+
+    if not aave.empty:
+        edges["liq_pr"] = filter_subgraph_edges(
+            build_liq_pr_edges(aave, config, observation_end, k, t0), seed
+        )
+        edges["borrow_pr"] = filter_subgraph_edges(
+            build_borrow_pr_edges(aave, config, observation_end, k, t0, mode="ww"), seed
+        )
+        edges["repay_pr"] = filter_subgraph_edges(
+            build_repay_pr_edges(aave, config, observation_end, k, t0, mode="ww"), seed
+        )
+        edges["borrow_pr_pool"] = filter_subgraph_edges(
+            build_borrow_pr_edges(aave, config, observation_end, k, t0, mode="pool"), seed
+        )
+        edges["repay_pr_pool"] = filter_subgraph_edges(
+            build_repay_pr_edges(aave, config, observation_end, k, t0, mode="pool"), seed
+        )
+    else:
+        for mid in ("liq_pr", "borrow_pr", "repay_pr", "borrow_pr_pool", "repay_pr_pool"):
+            edges[mid] = empty.copy()
+
+    delegation = delegation_events if delegation_events is not None else pd.DataFrame()
+    if not delegation.empty:
+        edges["delegation_pr"] = filter_subgraph_edges(
+            build_delegation_pr_edges(delegation, observation_end, k, t0), seed
+        )
+    else:
+        edges["delegation_pr"] = empty.copy()
+
+    return edges
+
+
+def compute_six_aave_scores(
+    wallets: list[str],
+    config: dict[str, Any],
+    allowances: pd.DataFrame,
+    transfers: pd.DataFrame,
+    aave_events: pd.DataFrame | None,
+    delegation_events: pd.DataFrame | None = None,
+) -> tuple[dict[str, dict[str, float]], dict[str, int]]:
+    """Compute six-Aave preset scores and edge counts."""
+    rep = config["reputation"]
+    seed = set(w.lower() for w in wallets)
+
+    edge_map = collect_six_aave_edges(
+        wallets, config, allowances, transfers, aave_events, delegation_events
+    )
+
+    scores: dict[str, dict[str, float]] = {}
+    edge_counts: dict[str, int] = {}
+
+    for method_id in SIX_AAVE_METHOD_IDS:
+        edges = edge_map.get(method_id, pd.DataFrame())
+        scores[method_id], edge_counts[method_id] = _run_pagerank_on_edges(
+            edges, wallets, seed, rep
+        )
+
+    for diag_id in SIX_AAVE_DIAGNOSTIC_IDS:
+        edges = edge_map.get(diag_id, pd.DataFrame())
+        scores[diag_id], edge_counts[diag_id] = _run_pagerank_on_edges(
+            edges, wallets, seed, rep
+        )
+
+    return scores, edge_counts
 
 
 def collect_method_edges(

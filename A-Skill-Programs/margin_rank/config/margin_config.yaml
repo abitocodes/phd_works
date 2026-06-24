@@ -41,6 +41,7 @@ paths:
   wallet_rankings: data/processed/wallet_rankings.parquet
   raw_lending_dir: data/raw/lending
   aave_events: data/processed/lending/aave_events.parquet
+  aave_delegation_events: data/processed/lending/aave_delegation_events.parquet
 
 methods:
   gf_pr: { enabled: true }
@@ -62,6 +63,8 @@ aave_arbitrum:
     borrow: "0xb3d084820fb1a9decffb176436bd02558d15fac9b0ddfed8c465bc7359d7dce0"
     repay: "0xa534c8dbe71f871f9f3530e97a74601fea17b426cae02e1c5aee42c96c784051"
     liquidation_call: "0xe413a321e8681d831f4dbccbca790d2952b56f977908e45be37335533e005286"
+    # Credit Delegation BQ extract deferred; synthetic fixtures use processed parquet
+    borrow_allowance_delegated: "0x0bfe1282206440d8e50a51e6ba542ca826a536a2e4b1ce4d084792bf7d86e935"
 
 reputation:
   observation_start_ts: "2025-12-01 00:00:00 UTC"

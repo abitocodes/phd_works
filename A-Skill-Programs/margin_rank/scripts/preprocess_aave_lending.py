@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Decode Aave V3 lending logs into user-pool events for LF-PR."""
+"""Decode Aave V3 lending logs into user-pool events for LF-PR and W↔W PageRank."""
 
 from __future__ import annotations
 
@@ -34,25 +34,60 @@ def _data_word(data: str | None, index: int) -> str:
         return "0"
 
 
+def _data_addr(data: str | None, index: int) -> str | None:
+    word = _data_word(data, index)
+    if word == "0":
+        return None
+    hex_addr = format(int(word), "040x")[-40:]
+    return normalize_address("0x" + hex_addr)
+
+
 def decode_row(row: pd.Series, topics: dict[str, str]) -> dict | None:
+    """Decode Aave V3 Pool Borrow / Repay / LiquidationCall logs."""
     topic0 = str(row.get("topic0", "")).lower()
     pool = normalize_address(row.get("pool_address"))
+    event_data = row.get("event_data")
 
     if topic0 == topics["borrow"].lower():
-        user = _topic_addr(row.get("topic2"))  # onBehalfOf
-        amount = parse_token_amount(_data_word(row.get("event_data"), 1))
-        return {"user": user, "pool": pool, "amount": amount, "event_type": "borrow"}
+        on_behalf_of = _topic_addr(row.get("topic2"))
+        initiator = _data_addr(event_data, 0)
+        amount = parse_token_amount(_data_word(event_data, 1))
+        return {
+            "user": on_behalf_of,
+            "on_behalf_of": on_behalf_of,
+            "initiator": initiator,
+            "repayer": None,
+            "liquidator": None,
+            "pool": pool,
+            "amount": amount,
+            "event_type": "borrow",
+        }
 
     if topic0 == topics["repay"].lower():
         user = _topic_addr(row.get("topic2"))
-        amount = parse_token_amount(_data_word(row.get("event_data"), 0))
-        return {"user": user, "pool": pool, "amount": amount, "event_type": "repay"}
+        repayer = _topic_addr(row.get("topic3"))
+        amount = parse_token_amount(_data_word(event_data, 0))
+        return {
+            "user": user,
+            "on_behalf_of": user,
+            "initiator": None,
+            "repayer": repayer,
+            "liquidator": None,
+            "pool": pool,
+            "amount": amount,
+            "event_type": "repay",
+        }
 
     if topic0 == topics["liquidation_call"].lower():
         user = _topic_addr(row.get("topic3"))
-        amount = parse_token_amount(_data_word(row.get("event_data"), 0))
+        liquidator = _data_addr(event_data, 2)
+        amount = parse_token_amount(_data_word(event_data, 0))
         return {
             "user": user,
+            "on_behalf_of": user,
+            "initiator": None,
+            "repayer": None,
+            "liquidator": liquidator,
             "pool": pool,
             "amount": amount,
             "event_type": "liquidation_call",
@@ -94,8 +129,11 @@ def main() -> int:
 
     out = pd.DataFrame(rows)
     if not out.empty:
-        out["user"] = out["user"].astype(str).str.lower()
-        out["pool"] = out["pool"].astype(str).str.lower()
+        for col in ("user", "on_behalf_of", "initiator", "repayer", "liquidator", "pool"):
+            if col in out.columns:
+                out[col] = out[col].map(
+                    lambda x: str(x).lower() if pd.notna(x) and x is not None else None
+                )
         out["block_timestamp"] = pd.to_datetime(out["block_timestamp"], utc=True)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
