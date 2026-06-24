@@ -8,3 +8,4 @@ __pycache__/
 _p1_sections.txt
 .DS_Store
 # margin_rank 로컬 산출물은 A-Skill-Programs/margin_rank/.gitignore 참조 (.venv, data/raw, data/processed)
+proposal-ko/_spacing_test.*
