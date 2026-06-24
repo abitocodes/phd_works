@@ -39,6 +39,29 @@ paths:
   raw_logs: data/raw/gmx_event_logs_2025-12_to_2026-05.parquet
   decoded_events: data/processed/gmx_decoded_events.parquet
   wallet_rankings: data/processed/wallet_rankings.parquet
+  raw_lending_dir: data/raw/lending
+  aave_events: data/processed/lending/aave_events.parquet
+
+methods:
+  gf_pr: { enabled: true }
+  lp_pr: { enabled: true }
+  cw_awp: { enabled: true }
+  lf_pr: { enabled: true }
+  riskprop_pr: { enabled: true }
+
+# Arbitrum collateral tokens for CW-AWP (lowercase applied at runtime)
+collateral_tokens:
+  - "0xaf88d065e77c8cc2239327c5edb3a432268e5831"   # USDC
+  - "0xff970a61a04b1ca14834a43f5de4533ebd5e8cc8"   # USDC.e
+  - "0x82af49447d8a07e3bd95bd0d56f35241523fbab1"   # WETH
+
+aave_arbitrum:
+  pool_addresses:
+    - "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
+  event_topics:
+    borrow: "0xb3d084820fb1a9decffb176436bd02558d15fac9b0ddfed8c465bc7359d7dce0"
+    repay: "0xa534c8dbe71f871f9f3530e97a74601fea17b426cae02e1c5aee42c96c784051"
+    liquidation_call: "0xe413a321e8681d831f4dbccbca790d2952b56f977908e45be37335533e005286"
 
 reputation:
   observation_start_ts: "2025-12-01 00:00:00 UTC"
@@ -62,6 +85,27 @@ budget:
   # Target cumulative scan: <= 1 TiB/month (BigQuery free tier) for Tier 1+2
   # Tier 1 alignment (~80-350 GiB est.): GMX 6mo + monthly Approval/Transfer
   # Tier 2 benchmark (10k/50k/100k): subgraph from parquet; no extra BQ scans
+
+proxies:
+  # All proxies oriented: higher value => higher expected reputation (before tau/rho).
+  transfer:
+    columns: [in_degree, in_value]
+    source: transfer_events
+  allowance:
+    columns: [in_approve_degree, in_approve_value]
+    source: latest_allowances
+  liquidation:
+    columns: [liquidation_free_rate, zero_liquidation_flag, liquidation_free_closes]
+    source: gmx_decoded_events
+  inverse_risk:
+    columns: [loss_avoidance, non_loss_close_rate, worst_close_pnl_score]
+    source: gmx_decoded_events
+  sybil_stability:
+    columns: [inbound_counterparty_ratio, transfer_tenure_days, active_months]
+    source: transfer_events
+  gmx_success:
+    columns: [close_success_count, realized_gain_proxy, close_success_rate]
+    source: gmx_decoded_events
 
 benchmark:
   seed: "endorserank-benchmark-v1"

@@ -44,3 +44,26 @@
 
 - **GF-PR**은 GMX PositionDecrease PnL의 POOL/SINK star graph로, wallet↔wallet social edge가 없다. GMX proxy family τ가 매우 높을 경우 **construct overlap(순환)** 주의.
 - LF-PR용 Aave V3 lending 로그 별도 BQ 추출 (~677 GiB dry-run, 6개월).
+
+---
+
+## 2026-06-23 — 7-method PageRank × 6-proxy matrix
+
+### 산출
+
+- `scripts/pagerank_variants.py`, `export_method_matrix.py`, Aave `extract_aave_lending.py` / `preprocess_aave_lending.py`
+- 표: `2-Dissertation-Draft/results/tables/alignment-seven-methods.tex` (우측 열: PageRank **Runtime (s)**, 5 repeats)
+
+### mean τ 열 최대 (요약)
+
+| Method | Transfer | Allowance | GMX | Runtime (s) |
+|--------|----------|-----------|-----|-------------|
+| AWP | **0.534** | | 0.179 | 23.826 |
+| EndorseRank | 0.333 | **0.355** | 0.096 | **2.809** |
+| GF-PR | | | **0.583** | 1.804 |
+| LP-PR | 0.529 | | 0.196 | 23.538 |
+| LF-PR | 0.197 | | 0.032 | 0.101 |
+
+- **RiskProp** ≈ AWP (transfer 0.534, runtime 21.0s) — liquidation-rate 가중이 미미.
+- **GF-PR** GMX τ 0.583: GMX-native star graph; social reputation baseline과 구분.
+- **EndorseRank** allowance·runtime에서 강점; transfer/GMX 계열은 AWP·LP-PR·CW-AWP가 경쟁.

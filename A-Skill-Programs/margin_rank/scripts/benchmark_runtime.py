@@ -1,4 +1,4 @@
-"""Benchmark EndorseRank vs AWP runtime, memory, and PageRank iterations."""
+"""Benchmark PageRank runtime, memory, and iterations for all seven methods."""
 
 from __future__ import annotations
 
@@ -9,12 +9,7 @@ from typing import Any
 
 import pandas as pd
 
-from pagerank import (
-    build_awp_edges,
-    build_endorserank_edges,
-    filter_subgraph_edges,
-    weighted_pagerank,
-)
+from pagerank_variants import collect_method_edges
 
 
 def _run_timed(
@@ -24,6 +19,8 @@ def _run_timed(
     max_iter: int,
     repeats: int = 5,
 ) -> dict[str, Any]:
+    from pagerank import weighted_pagerank
+
     runtimes: list[float] = []
     iterations: list[int] = []
     peak_mb = 0.0
@@ -56,13 +53,49 @@ def _run_timed(
     }
 
 
+def benchmark_all_methods(
+    wallets: list[str],
+    allowances: pd.DataFrame,
+    transfers: pd.DataFrame,
+    decoded: pd.DataFrame,
+    aave_events: pd.DataFrame | None,
+    config: dict,
+    repeats: int = 5,
+) -> dict[str, Any]:
+    """Time weighted PageRank on each method's filtered edge list."""
+    rep = config["reputation"]
+    damping = float(rep["damping"])
+    tol = float(rep["pagerank_tolerance"])
+    max_iter = int(rep["max_iterations"])
+
+    edge_map = collect_method_edges(
+        wallets, config, allowances, transfers, decoded, aave_events
+    )
+
+    results: dict[str, Any] = {"n_wallets": len(wallets)}
+    for method_id, edges in edge_map.items():
+        results[method_id] = _run_timed(edges, damping, tol, max_iter, repeats)
+
+    return results
+
+
 def benchmark_reputation(
     wallets: list[str],
     allowances: pd.DataFrame,
     transfers: pd.DataFrame,
     config: dict,
     repeats: int = 5,
+    decoded: pd.DataFrame | None = None,
+    aave_events: pd.DataFrame | None = None,
 ) -> dict[str, Any]:
+    """Backward-compatible wrapper; benchmarks all methods when decoded is provided."""
+    if decoded is not None:
+        return benchmark_all_methods(
+            wallets, allowances, transfers, decoded, aave_events, config, repeats
+        )
+
+    from pagerank import build_awp_edges, build_endorserank_edges, filter_subgraph_edges
+
     rep = config["reputation"]
     seed = set(w.lower() for w in wallets)
     observation_end = pd.Timestamp(rep["observation_end"], tz="UTC")
