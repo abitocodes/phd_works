@@ -9,7 +9,7 @@ from typing import Any
 
 import pandas as pd
 
-from pagerank_variants import collect_method_edges
+from pagerank_variants import SIX_AAVE_METHOD_IDS, collect_method_edges, collect_six_aave_edges
 
 
 def _run_timed(
@@ -79,6 +79,32 @@ def benchmark_all_methods(
     return results
 
 
+def benchmark_six_aave_methods(
+    wallets: list[str],
+    allowances: pd.DataFrame,
+    transfers: pd.DataFrame,
+    aave_events: pd.DataFrame | None,
+    delegation_events: pd.DataFrame | None,
+    config: dict,
+    repeats: int = 5,
+) -> dict[str, Any]:
+    """Time PageRank for six-Aave preset methods."""
+    rep = config["reputation"]
+    damping = float(rep["damping"])
+    tol = float(rep["pagerank_tolerance"])
+    max_iter = int(rep["max_iterations"])
+
+    edge_map = collect_six_aave_edges(
+        wallets, config, allowances, transfers, aave_events, delegation_events
+    )
+
+    results: dict[str, Any] = {"n_wallets": len(wallets)}
+    for method_id in SIX_AAVE_METHOD_IDS:
+        edges = edge_map.get(method_id, pd.DataFrame())
+        results[method_id] = _run_timed(edges, damping, tol, max_iter, repeats)
+    return results
+
+
 def benchmark_reputation(
     wallets: list[str],
     allowances: pd.DataFrame,
@@ -87,12 +113,21 @@ def benchmark_reputation(
     repeats: int = 5,
     decoded: pd.DataFrame | None = None,
     aave_events: pd.DataFrame | None = None,
+    delegation_events: pd.DataFrame | None = None,
 ) -> dict[str, Any]:
     """Backward-compatible wrapper; benchmarks all methods when decoded is provided."""
     if decoded is not None:
-        return benchmark_all_methods(
+        results = benchmark_all_methods(
             wallets, allowances, transfers, decoded, aave_events, config, repeats
         )
+        six_bench = benchmark_six_aave_methods(
+            wallets, allowances, transfers, aave_events, delegation_events, config, repeats
+        )
+        results["six_aave"] = six_bench
+        for method_id in SIX_AAVE_METHOD_IDS:
+            if method_id in six_bench:
+                results[method_id] = six_bench[method_id]
+        return results
 
     from pagerank import build_awp_edges, build_endorserank_edges, filter_subgraph_edges
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute seven reputation method scores/ranks and merge into wallet_rankings.parquet."""
+"""Compute reputation method scores/ranks and merge into wallet_rankings.parquet."""
 
 from __future__ import annotations
 
@@ -14,7 +14,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from common import load_config, load_json, save_json  # noqa: E402
 from pagerank import assign_dense_ranks  # noqa: E402
-from pagerank_variants import compute_variant_scores  # noqa: E402
+from pagerank_variants import (
+    SIX_AAVE_DIAGNOSTIC_IDS,
+    SIX_AAVE_METHOD_IDS,
+    compute_six_aave_scores,
+    compute_variant_scores,
+)
 
 METHOD_IDS = (
     "endorserank",
@@ -25,6 +30,8 @@ METHOD_IDS = (
     "lf_pr",
     "riskprop_pr",
 )
+
+SIX_AAVE_ALL_IDS = SIX_AAVE_METHOD_IDS + SIX_AAVE_DIAGNOSTIC_IDS
 
 
 def main() -> int:
@@ -39,6 +46,7 @@ def main() -> int:
     transfers_path = Path(rep["paths"]["transfer_events"])
     decoded_path = Path(config["paths"]["decoded_events"])
     aave_path = Path(config["paths"]["aave_events"])
+    delegation_path = Path(config["paths"]["aave_delegation_events"])
 
     if not rankings_path.exists():
         print(f"Missing rankings: {rankings_path}")
@@ -64,7 +72,13 @@ def main() -> int:
     if aave_path.exists():
         aave_events = pd.read_parquet(aave_path)
     else:
-        print(f"Note: {aave_path} missing; lf_pr scores will be zero.")
+        print(f"Note: {aave_path} missing; Aave PR scores will be zero.")
+
+    delegation_events = None
+    if delegation_path.exists():
+        delegation_events = pd.read_parquet(delegation_path)
+    else:
+        print(f"Note: {delegation_path} missing; delegation_pr scores will be zero.")
 
     scores, edge_counts = compute_variant_scores(
         wallets,
@@ -74,6 +88,16 @@ def main() -> int:
         decoded,
         aave_events,
     )
+
+    six_scores, six_edge_counts = compute_six_aave_scores(
+        wallets,
+        config,
+        allowances,
+        transfers,
+        aave_events,
+        delegation_events,
+    )
+    edge_counts.update(six_edge_counts)
 
     rankings = rankings.copy()
     rankings["wallet"] = rankings["wallet"].astype(str).str.lower()
@@ -90,6 +114,19 @@ def main() -> int:
             lambda w, m=method: int(rank_map.loc[w, "rank"]) if w in rank_map.index else None
         )
 
+    for method in SIX_AAVE_ALL_IDS:
+        if method not in six_scores:
+            continue
+        rank_df = assign_dense_ranks(wallets, six_scores[method])
+        rank_map = rank_df.set_index("wallet")
+        col = f"{method}_score"
+        rankings[col] = rankings["wallet"].map(
+            lambda w, m=method: rank_map.loc[w, "score"] if w in rank_map.index else 0.0
+        )
+        rankings[f"{method}_rank"] = rankings["wallet"].map(
+            lambda w, m=method: int(rank_map.loc[w, "rank"]) if w in rank_map.index else None
+        )
+
     rankings.to_parquet(rankings_path, index=False)
 
     manifest_path = Path(config["paths"]["manifest"])
@@ -98,14 +135,20 @@ def main() -> int:
         "at": datetime.now(timezone.utc).isoformat(),
         "wallets": len(wallets),
         "methods": edge_counts,
+        "six_aave_methods": list(SIX_AAVE_METHOD_IDS),
         "output": str(rankings_path),
     }
     save_json(manifest_path, manifest)
 
     for method in METHOD_IDS:
         ec = edge_counts.get(method, 0)
-        print(f"{method:14s}: {ec:>8} edges")
-    print(f"Merged 7 methods -> {rankings_path} ({len(wallets)} wallets)")
+        print(f"{method:16s}: {ec:>8} edges")
+    for method in SIX_AAVE_ALL_IDS:
+        if method in METHOD_IDS:
+            continue
+        ec = edge_counts.get(method, 0)
+        print(f"{method:16s}: {ec:>8} edges (six-aave)")
+    print(f"Merged scores -> {rankings_path} ({len(wallets)} wallets)")
     return 0
 
 

@@ -115,6 +115,49 @@ METHOD_LABELS: dict[str, str] = {
 }
 
 
+SIX_AAVE_METHODS: dict[str, str] = {
+
+    "awp": "awp_score",
+
+    "endorserank": "endorserank_score",
+
+    "liq_pr": "liq_pr_score",
+
+    "borrow_pr": "borrow_pr_score",
+
+    "repay_pr": "repay_pr_score",
+
+    "delegation_pr": "delegation_pr_score",
+
+}
+
+
+SIX_AAVE_DIAGNOSTIC_METHODS: dict[str, str] = {
+
+    "borrow_pr_pool": "borrow_pr_pool_score",
+
+    "repay_pr_pool": "repay_pr_pool_score",
+
+}
+
+
+SIX_AAVE_LABELS: dict[str, str] = {
+
+    "awp": "AWP",
+
+    "endorserank": "EndorseRank",
+
+    "liq_pr": "LiqCall-PR",
+
+    "borrow_pr": "Borrow-PR",
+
+    "repay_pr": "Repay-PR",
+
+    "delegation_pr": "Delegation-PR",
+
+}
+
+
 
 
 
@@ -268,13 +311,17 @@ def build_method_proxy_matrix(
 
     method_cross: dict[str, dict[str, float | None]],
 
+    methods: dict[str, str] | None = None,
+
 ) -> dict[str, dict[str, float | None]]:
 
     """method_id -> family -> mean_tau."""
 
+    method_ids = methods if methods is not None else METHODS
+
     matrix: dict[str, dict[str, float | None]] = {}
 
-    for method_id in METHODS:
+    for method_id in method_ids:
 
         cross = method_cross.get(method_id, {})
 
@@ -294,7 +341,11 @@ def build_family_winners(
 
     matrix: dict[str, dict[str, float | None]],
 
+    methods: dict[str, str] | None = None,
+
 ) -> dict[str, str | None]:
+
+    method_ids = methods if methods is not None else METHODS
 
     winners: dict[str, str | None] = {}
 
@@ -304,7 +355,9 @@ def build_family_winners(
 
         best_tau: float | None = None
 
-        for method_id, row in matrix.items():
+        for method_id in method_ids:
+
+            row = matrix.get(method_id, {})
 
             tau = row.get(family)
 
@@ -326,17 +379,19 @@ def build_family_winners(
 
 
 
-def build_alignment_report(merged: pd.DataFrame) -> dict[str, Any]:
+def _build_method_cross(
 
-    """Full alignment report for all methods across six proxy families."""
+    merged: pd.DataFrame,
+
+    methods: dict[str, str],
+
+) -> tuple[dict[str, dict[str, dict[str, Any]]], dict[str, dict[str, float | None]]]:
 
     method_results: dict[str, dict[str, dict[str, Any]]] = {}
 
     method_cross: dict[str, dict[str, float | None]] = {}
 
-
-
-    for method_id, score_col in METHODS.items():
+    for method_id, score_col in methods.items():
 
         if score_col not in merged.columns:
 
@@ -348,11 +403,31 @@ def build_alignment_report(merged: pd.DataFrame) -> dict[str, Any]:
 
         method_cross[method_id] = _cross_proxy_means(res)
 
+    return method_results, method_cross
 
 
-    matrix = build_method_proxy_matrix(method_cross)
 
-    family_winners = build_family_winners(matrix)
+
+
+def build_alignment_report(
+
+    merged: pd.DataFrame,
+
+    methods: dict[str, str] | None = None,
+
+) -> dict[str, Any]:
+
+    """Full alignment report for methods across six proxy families."""
+
+    methods_dict = methods if methods is not None else METHODS
+
+    method_results, method_cross = _build_method_cross(merged, methods_dict)
+
+
+
+    matrix = build_method_proxy_matrix(method_cross, methods_dict)
+
+    family_winners = build_family_winners(matrix, methods_dict)
 
 
 
@@ -366,7 +441,11 @@ def build_alignment_report(merged: pd.DataFrame) -> dict[str, Any]:
 
 
 
-    inter_method = _correlate(merged["endorserank_score"], merged["awp_score"])
+    inter_method: dict[str, Any] = {}
+
+    if "endorserank_score" in merged.columns and "awp_score" in merged.columns:
+
+        inter_method = _correlate(merged["endorserank_score"], merged["awp_score"])
 
 
 
@@ -409,6 +488,50 @@ def build_alignment_report(merged: pd.DataFrame) -> dict[str, Any]:
             "gmx_family_mean_tau": er_cross.get("gmx_success_mean_tau"),
 
         },
+
+    }
+
+
+
+
+
+def build_six_aave_alignment_report(merged: pd.DataFrame) -> dict[str, Any]:
+
+    """Six-Aave preset alignment (EndorseRank, AWP, four Aave W↔W methods)."""
+
+    all_methods = {**SIX_AAVE_METHODS, **SIX_AAVE_DIAGNOSTIC_METHODS}
+
+    method_results, method_cross = _build_method_cross(merged, all_methods)
+
+    matrix = build_method_proxy_matrix(method_cross, SIX_AAVE_METHODS)
+
+    family_winners = build_family_winners(matrix, SIX_AAVE_METHODS)
+
+    er_cross = method_cross.get("endorserank", {})
+
+    awp_cross = method_cross.get("awp", {})
+
+    return {
+
+        "methods": {k: method_results[k] for k in SIX_AAVE_METHODS if k in method_results},
+
+        "method_cross_proxy": {k: method_cross[k] for k in SIX_AAVE_METHODS if k in method_cross},
+
+        "method_proxy_matrix": matrix,
+
+        "family_winners": family_winners,
+
+        "method_comparison": _method_comparison(er_cross, awp_cross),
+
+        "diagnostic_methods": {
+
+            k: method_cross.get(k, {}) for k in SIX_AAVE_DIAGNOSTIC_METHODS
+
+        },
+
+        "diagnostic_matrix": build_method_proxy_matrix(method_cross, SIX_AAVE_DIAGNOSTIC_METHODS),
+
+        "n_wallets": len(merged),
 
     }
 
