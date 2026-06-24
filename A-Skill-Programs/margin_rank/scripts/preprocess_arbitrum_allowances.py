@@ -11,14 +11,11 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from common import load_config, load_json, normalize_address, parse_token_amount, save_json  # noqa: E402
+from common import load_config, load_json, load_raw_parquet_dir, normalize_address, parse_token_amount, save_json  # noqa: E402
 
 
 def load_approval_frames(raw_dir: Path) -> pd.DataFrame:
-    paths = sorted(raw_dir.glob("*.parquet"))
-    if not paths:
-        raise FileNotFoundError(f"No approval parquet files in {raw_dir}")
-    return pd.concat([pd.read_parquet(p) for p in paths], ignore_index=True)
+    return load_raw_parquet_dir(raw_dir, "approvals_arbitrum.parquet")
 
 
 def main() -> int:

@@ -86,8 +86,8 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if not args.dry_run and not args.extract:
-        parser.error("Specify --dry-run or --extract")
+    if not args.dry_run and not args.extract and not args.merge_only:
+        parser.error("Specify --dry-run or --extract (or --merge-only)")
 
     config = load_config()
     sql = read_sql("gmx_event_logs.sql").replace(

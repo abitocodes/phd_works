@@ -137,6 +137,20 @@ def format_bytes(n: int) -> str:
     return f"{n} B"
 
 
+def load_raw_parquet_dir(raw_dir: Path, combined_name: str | None = None) -> pd.DataFrame:
+    """Load raw parquet frames; prefer combined *_arbitrum.parquet when present."""
+    if combined_name:
+        combined = raw_dir / combined_name
+        if combined.exists():
+            return pd.read_parquet(combined)
+    paths = sorted(p for p in raw_dir.glob("*.parquet") if "synthetic" not in p.name)
+    if not paths:
+        paths = sorted(raw_dir.glob("*.parquet"))
+    if not paths:
+        raise FileNotFoundError(f"No parquet files in {raw_dir}")
+    return pd.concat([pd.read_parquet(p) for p in paths], ignore_index=True)
+
+
 def load_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
