@@ -68,6 +68,14 @@ Table~\ref{tab:alignment-gmx} reports alignment with close-success count, realiz
 
 \input{results/tables/alignment-gmx.tex}
 
+\dissertationSubheading{Non-transfer Aave W\textrightarrow W PageRank baselines}
+
+Table~\ref{tab:alignment-six-aave-methods} compares EndorseRank and AWP with four PageRank variants built on Aave V3 \emph{wallet-to-wallet} edges distinct from ERC-20 \texttt{Transfer} and \texttt{Approval}: \textbf{LiqCall-PR} (liquidator$\rightarrow$user from \texttt{LiquidationCall}), \textbf{Borrow-PR} (initiator$\rightarrow$onBehalfOf when distinct), and \textbf{Repay-PR} (repayer$\rightarrow$user when distinct). Pool-leg borrow/repay diagnostics (pool$\rightarrow$borrower, repayer$\rightarrow$pool) are recorded in \texttt{eval\_summary.json} but excluded from the main matrix because they overlap LF-PR semantics.
+
+Aave lending logs for the GMX cohort yield sparse W$\leftrightarrow$W subgraphs (LiqCall 45 edges, 0.9\% wallet coverage; Borrow-PR 484 edges, 9.1\%; Repay-PR 787 edges, 15.3\%). None of the Aave methods exceed AWP or EndorseRank on allowance proxies; Repay-PR achieves the highest non-transfer mean $\tau$ on transfer ($0.143$) and Sybil ($0.068$) among Aave variants but remains below AWP. \textbf{Delegation-PR} is omitted from alignment ($\tau$ undefined) because Credit Delegation BQ extraction is deferred---scores are degenerate on this run.
+
+\input{results/tables/alignment-six-aave-methods.tex}
+
 \dissertationSubheading{Claim~1: Computational benchmark}
 
 Table~\ref{tab:benchmark-runtime} compares runtime, memory, and graph size. EndorseRank completes in a fraction of AWP wall-clock time because the approval graph is sparser than the time-decayed transfer graph.
