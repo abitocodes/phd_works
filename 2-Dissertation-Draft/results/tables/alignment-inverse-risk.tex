@@ -4,21 +4,21 @@
 
 \begin{table}[htbp]
 \centering
-\caption{Domain alignment with GMX V2 margin-trading success proxies on Arbitrum One.}
-\label{tab:alignment-gmx}
+\caption{Domain alignment with inverse-risk proxies from GMX realized PnL (higher = lower loss).}
+\label{tab:alignment-inverse-risk}
 \begin{tabular}{lcc}
 \toprule
 Proxy & Spearman $\rho$ & Kendall $\tau$ \\
 \midrule
 \multicolumn{3}{l}{\textit{EndorseRank}} \\
-Close-success count & 0.180 & 0.149 \\
-Realized gain proxy & 0.132 & 0.107 \\
-Close success rate & 0.041 & 0.033 \\
+Loss avoidance ($-\sum\min(\text{PnL},0)$) & 0.097 & 0.079 \\
+Non-loss close rate & -0.037 & -0.031 \\
+Worst-close PnL score ($-\min\text{PnL}$) & 0.070 & 0.057 \\
 \addlinespace
 \multicolumn{3}{l}{\textit{AWP}} \\
-Close-success count & 0.319 & 0.224 \\
-Realized gain proxy & 0.349 & 0.239 \\
-Close success rate & 0.110 & 0.075 \\
+Loss avoidance ($-\sum\min(\text{PnL},0)$) & 0.243 & 0.165 \\
+Non-loss close rate & 0.028 & 0.019 \\
+Worst-close PnL score ($-\min\text{PnL}$) & 0.204 & 0.137 \\
 \bottomrule
 \end{tabular}
 \end{table}

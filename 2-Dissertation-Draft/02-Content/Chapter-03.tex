@@ -16,15 +16,15 @@
 
 \dissertationSubheading{Three-phase collection strategy}
 
-\textbf{Phase 1 (Stream A):} Extract and decode all GMX \texttt{PositionDecrease} logs; retain wallets with $\geq 3$ closes (Tier~1 alignment cohort; expected $n \approx 500$--3,000, confirmed after extraction).
+\textbf{Phase 1 (Stream A):} Extract and decode all GMX \texttt{PositionDecrease} logs; retain wallets with $\geq 3$ closes (Tier~1 alignment cohort; $n=5{,}521$ after BigQuery extraction).
 
-\textbf{Phase 2 (Streams B \& C):} Wallet-filtered ERC-20 \texttt{Approval} and \texttt{Transfer} events for the Tier~1 cohort (plus benchmark seed addresses); preprocess to latest allowances and time-decayed transfer edges.
+\textbf{Phase 2 (Streams B \& C):} Wallet-filtered ERC-20 \texttt{Approval} and \texttt{Transfer} events for the Tier~1 cohort; preprocess to latest allowances and time-decayed transfer edges.
 
-\textbf{Phase 3 (local):} Alignment evaluation and staged computational benchmarks (10k $\to$ 50k $\to$ 100k wallets) by subsampling cached parquet subgraphs---no additional BigQuery scans for benchmark scaling.
+\textbf{Phase 3 (local):} Six-proxy alignment evaluation and computational benchmarks on the full Tier~1 cohort from cached parquet---no additional BigQuery scans.
 
-\textbf{Sample (current draft):} Intersection of wallets with $\geq 3$ GMX closes and non-zero reputation subgraph connectivity. % DUMMY: $n=571$ synthetic placeholder; replace with Tier~1 BigQuery extraction before final submission.
+\textbf{Sample:} Intersection of wallets with $\geq 3$ GMX closes and non-zero reputation subgraph connectivity ($n=5{,}521$).
 
-\textbf{Cost guardrails:} Mandatory \texttt{--dry-run} before extraction; 150 GiB per-query cap; target $\leq$1 TiB/month (BigQuery free tier, \$0). Bytes logged in \texttt{data/processed/extraction\_manifest.json}.
+\textbf{Cost guardrails:} Mandatory \texttt{--dry-run} before extraction; 150 GiB per-query cap. Bytes logged in \texttt{data/processed/extraction\_manifest.json}.
 
 \dissertationSubheading{Graph construction}
 
@@ -34,29 +34,28 @@
 
 Both methods operate on the \emph{same} wallet seed set; differences in results are attributable to ranking logic, not sampling inconsistency.
 
-\dissertationSubheading{Dual-proxy evaluation design}
+\dissertationSubheading{Six-proxy evaluation design}
 
-For each method $M \in \{\text{EndorseRank}, \text{AWP}\}$ and proxy $P$:
+For each method $M \in \{\text{EndorseRank}, \text{AWP}\}$ and proxy $P$, compute reputation scores $\mathbf{s}_M$, proxy values $\mathbf{p}_P$, and report Spearman's $\rho$ and Kendall's $\tau$ between rankings. All proxies are oriented so higher values imply higher expected reputation before correlation. Six families are evaluated (definitions in \texttt{margin\_config.yaml} and \texttt{proxy\_metrics.py}):
 
 \begin{enumerate}
-\item Compute reputation score vector $\mathbf{s}_M$ and proxy value vector $\mathbf{p}_P$ over matched wallets.
-\item Rank wallets by $\mathbf{s}_M$ and by $\mathbf{p}_P$ separately.
-\item Report Spearman's $\rho$ and Kendall's $\tau$ between the two rankings.
+\item \textbf{Transfer} (Do et al.\ baseline): in-degree, in-value.
+\item \textbf{Allowance}: in-approve degree, in-approve value (wallet as spender).
+\item \textbf{Default/liquidation} (GMX): liquidation-free rate, zero-liquidation flag, liquidation-free closes.
+\item \textbf{Inverse risk} (GMX PnL): loss avoidance, non-loss close rate, worst-close PnL score.
+\item \textbf{Sybil-adjusted stability}: inbound counterparty ratio, transfer tenure, active months.
+\item \textbf{GMX success}: close-success count, realized gain proxy, close success rate.
 \end{enumerate}
 
-\textbf{Claim~3 test:} Compare AWP mean Kendall $\tau$ under transfer family vs.\ GMX family. Improvement ($\tau_{\text{GMX}} > \tau_{\text{transfer}}$) indicates that margin-success validation is more semantically aligned than deposit-volume validation for this domain.
-
-\textbf{Claim~4 test:} EndorseRank must exceed AWP on mean $\tau$ within \emph{both} families.
+Family-level mean $\tau$ summarizes construct alignment; \texttt{method\_comparison} in \texttt{eval\_summary.json} records which method aligns more strongly per family. Lending-protocol default labels are excluded due to insufficient Arbitrum volume within scope.
 
 \dissertationSubheading{Computational benchmark (Claim~1)}
 
-On identical inputs, measure over five runs: wall-clock runtime (graph build + PageRank), peak memory (tracemalloc), PageRank iterations to convergence, and edge counts. Benchmark wallet counts expand in stages (10k, 50k, 100k) from locally cached graphs after Tier~1 extraction. Implementation: \texttt{scripts/benchmark\_runtime.py}.
+On identical inputs, measure over five runs: wall-clock runtime (graph build + PageRank), peak memory (tracemalloc), PageRank iterations to convergence, and edge counts. Implementation: \texttt{scripts/benchmark\_runtime.py} (invoked from \texttt{run\_dissertation\_eval.py}).
 
-\dissertationSubheading{Reproducibility and offline workflow}
+\dissertationSubheading{Reproducibility}
 
-The pipeline \texttt{scripts/run\_dissertation\_eval.py --fixtures} generates synthetic parquet inputs when BigQuery is unavailable. % DUMMY: dissertation draft uses synthetic fixtures; re-run with --real after GCP Tier~1 extraction.
-
-Outputs: \texttt{data/processed/eval\_summary.json} and LaTeX fragments under \texttt{2-Dissertation-Draft/results/tables/}.
+\texttt{scripts/run\_dissertation\_eval.py --real} recomputes proxies, alignment, and benchmarks from cached parquet. \texttt{--fixtures} remains available for offline synthetic runs. Outputs: \texttt{data/processed/eval\_summary.json} and LaTeX fragments under \texttt{2-Dissertation-Draft/results/tables/}.
 
 \dissertationSubheading{Ethics}
 

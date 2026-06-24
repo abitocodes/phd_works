@@ -2,50 +2,71 @@
 \chapter{Implementation and Empirical Results}
 \label{ch:results}
 
-% DUMMY DATA throughout this chapter — replace by re-running:
-%   A-Skill-Programs/margin_rank/scripts/run_dissertation_eval.py --fixtures --n-wallets 571
-% Real data: BigQuery goog_blockchain_arbitrum_one_us + GMX EventEmitter extraction pipeline.
-
 \dissertationSubheading{Pipeline and dataset}
 
-The evaluation pipeline (\texttt{A-Skill-Programs/margin\_rank/}) ingests (1) latest ERC-20 allowances, (2) time-stamped transfers, and (3) decoded GMX \texttt{PositionDecrease} events. EndorseRank and AWP scores are merged into \texttt{wallet\_rankings.parquet} via \texttt{compute\_reputation\_ranks.py}.
+The evaluation pipeline (\texttt{A-Skill-Programs/margin\_rank/}) ingests (1) latest ERC-20 allowances, (2) time-stamped transfers, and (3) decoded GMX \texttt{PositionDecrease} events. EndorseRank and AWP scores are merged into \texttt{wallet\_rankings.parquet} via \texttt{compute\_reputation\_ranks.py}. Alignment uses six proxy families computed in \texttt{proxy\_metrics.py} and exported through \texttt{run\_dissertation\_eval.py --real --export-latex}.
 
-Table~\ref{tab:dataset-stats} summarizes the synthetic matched sample used in this draft. Planned BigQuery Tier~1 collection targets all GMX-qualified wallets ($\geq 3$ closes; expected $n \approx 500$--3,000) over the six-month observation window; numerics below remain synthetic until \texttt{run\_dissertation\_eval.py --real} completes.
+Table~\ref{tab:dataset-stats} summarizes the Tier~1 BigQuery cohort ($n=5{,}521$ wallets with $\geq 3$ GMX closes and non-zero reputation subgraph connectivity).
 
 \begin{table}[htbp]
 \centering
-\caption{Dataset characteristics (synthetic offline run, $n=571$ matched wallets).}
+\caption{Dataset characteristics (BigQuery Tier~1, $n=5{,}521$ matched wallets).}
 \label{tab:dataset-stats}
 \begin{tabular}{lr}
 \toprule
 Statistic & Value \\
 \midrule
-Matched wallets (current draft) & 571 \\
-Planned Tier~1 wallets (BigQuery) & 500--3,000 (TBD after extraction) \\
-EndorseRank edges (subgraph) & 11{,}420 \\
-AWP edges (subgraph) & 32{,}031 \\
+Matched wallets & 5{,}521 \\
+GMX \texttt{PositionDecrease} events (decoded) & 365{,}488 \\
+EndorseRank edges (subgraph) & 14{,}727 \\
+AWP edges (subgraph) & 137{,}087 \\
 Observation window & 2025-12-01 -- 2026-05-31 \\
 Min.\ GMX closes per wallet & 3 \\
-Benchmark stages (local) & 10k / 50k / 100k wallets \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\dissertationSubheading{Claim~3: Transfer-proxy alignment (Do et al.\ baseline)}
+\dissertationSubheading{Claim~2: Six-proxy alignment overview}
 
-Table~\ref{tab:alignment-transfer} reports Spearman $\rho$ and Kendall $\tau$ between reputation scores and transfer-family proxies (in-degree, in-value). AWP, as a transfer-based method, aligns strongly with in-value; EndorseRank captures both transfer hubs and endorsement structure.
+Table~\ref{tab:alignment-summary} reports mean Kendall $\tau$ between reputation scores and each proxy family. AWP aligns more strongly with transfer, Sybil-adjusted stability, inverse-risk, liquidation, and GMX-success proxies on this sample. EndorseRank achieves higher mean $\tau$ under the \emph{allowance} family---consistent with construct validity for allowance-based propagation---while remaining competitive on transfer proxies ($\tau=0.333$ vs.\ AWP $0.534$).
+
+\input{results/tables/alignment-summary.tex}
+
+\dissertationSubheading{Transfer proxies (Do et al.\ baseline)}
+
+Table~\ref{tab:alignment-transfer} reports alignment with inbound transfer in-degree and in-value. AWP, built on the transfer graph, achieves higher $\tau$ on both proxies.
 
 \input{results/tables/alignment-transfer.tex}
 
-\dissertationSubheading{Claim~3--4: GMX margin-proxy alignment}
+\dissertationSubheading{Allowance proxies}
 
-Table~\ref{tab:alignment-gmx} reports alignment with GMX trading-success proxies. EndorseRank achieves higher $\tau$ on margin proxies than AWP because allowance-based endorsements track wallets that accumulate profitable closes, not merely inbound transfer volume.
+Table~\ref{tab:alignment-allowance} reports alignment with spender-side in-approve degree and in-approve value. EndorseRank shows positive alignment ($\tau \approx 0.35$ on both); AWP scores are near zero, indicating transfer propagation does not track allowance delegation on this cohort.
+
+\input{results/tables/alignment-allowance.tex}
+
+\dissertationSubheading{Default and liquidation proxies}
+
+Table~\ref{tab:alignment-liquidation} uses GMX liquidation outcomes (liquidation-free rate, zero-liquidation flag, liquidation-free close count). Both methods show modest $\tau$; AWP is slightly higher on mean $\tau$. Under-collateralized lending defaults on Arbitrum are not included due to insufficient public label volume.
+
+\input{results/tables/alignment-liquidation.tex}
+
+\dissertationSubheading{Inverse-risk proxies}
+
+Table~\ref{tab:alignment-inverse-risk} measures alignment with loss-avoidance metrics derived from GMX realized PnL. Correlations are weak for EndorseRank and low-to-moderate for AWP.
+
+\input{results/tables/alignment-inverse-risk.tex}
+
+\dissertationSubheading{Sybil-adjusted stability proxies}
+
+Table~\ref{tab:alignment-sybil-stability} uses inbound counterparty ratio, transfer tenure, and active months (self-transfers excluded). AWP aligns somewhat more strongly than EndorseRank, but neither method dominates.
+
+\input{results/tables/alignment-sybil-stability.tex}
+
+\dissertationSubheading{GMX trading-success proxies}
+
+Table~\ref{tab:alignment-gmx} reports alignment with close-success count, realized gain proxy, and close success rate. AWP achieves higher $\tau$ on all three; both methods show modest alignment with leveraged trading outcomes.
 
 \input{results/tables/alignment-gmx.tex}
-
-Table~\ref{tab:alignment-summary} summarizes mean Kendall $\tau$ across proxy families. For AWP, mean $\tau$ under the GMX family exceeds the transfer family, supporting the claim that margin-trading success is a more meaningful validation frame than deposit-volume proxies alone. EndorseRank dominates AWP under both families.
-
-\input{results/tables/alignment-summary.tex}
 
 \dissertationSubheading{Claim~1: Computational benchmark}
 
@@ -55,13 +76,13 @@ Table~\ref{tab:benchmark-runtime} compares runtime, memory, and graph size. Endo
 
 \dissertationSubheading{Rank divergence (H1)}
 
-EndorseRank and AWP orderings differ materially (transfer-family $\tau$ between methods $< 1$); they are not redundant rankings. % DUMMY: insert scatter plot when real data exported.
+EndorseRank and AWP produce non-redundant orderings: inter-method Kendall $\tau$ between the two score vectors is $0.316$ on the matched cohort ($n=5{,}521$), confirming distinct reputation structures (RQ1).
 
 \dissertationSubheading{Summary of empirical claims}
 
 \begin{enumerate}
 \item[\textbf{C1.}] EndorseRank runtime $<$ AWP runtime on identical $n$ (Table~\ref{tab:benchmark-runtime}).
-\item[\textbf{C2.}] EndorseRank achieves credible $\rho$/$\tau$ vs.\ proxies using Do et al.'s correlation framework (Tables~\ref{tab:alignment-transfer}--\ref{tab:alignment-gmx}).
-\item[\textbf{C3.}] AWP mean $\tau$ improves when validation shifts from transfer to GMX family (Table~\ref{tab:alignment-summary}).
-\item[\textbf{C4.}] EndorseRank mean $\tau$ exceeds AWP under both proxy families (Table~\ref{tab:alignment-summary}).
+\item[\textbf{C2.}] Both methods achieve credible Spearman $\rho$/Kendall $\tau$ on selected proxies under Do et al.'s framework; family-level alignment varies by construct (Tables~\ref{tab:alignment-transfer}--\ref{tab:alignment-gmx}).
+\item[\textbf{C3.}] \textbf{Construct-specific alignment:} EndorseRank exceeds AWP on allowance proxies; AWP exceeds EndorseRank on transfer and most outcome-based families (Table~\ref{tab:alignment-summary}).
+\item[\textbf{C4.}] \textbf{Efficiency--alignment trade-off:} EndorseRank offers $\approx 8\times$ lower runtime and a sparser graph while maintaining moderate transfer alignment ($\tau \approx 0.33$) and stronger allowance alignment ($\tau \approx 0.35$).
 \end{enumerate}

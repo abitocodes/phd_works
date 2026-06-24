@@ -33,12 +33,10 @@ python scripts/preprocess_arbitrum_allowances.py
 python scripts/preprocess_arbitrum_transfers.py
 python scripts/compute_reputation_ranks.py
 
-# Phase 3 — Evaluation and benchmark (local)
+# Phase 3 — Six-proxy evaluation (local; no extra BQ)
 python scripts/run_dissertation_eval.py --real --export-latex
-python scripts/benchmark_runtime.py
 \end{verbatim}
 
 Extraction metadata (bytes processed, row counts) is written to
-\texttt{data/processed/extraction\_manifest.json}.
-
-% DUMMY: Appendix numerics mirror synthetic eval_summary.json until BigQuery rerun.
+\texttt{data/processed/extraction\_manifest.json}. Alignment numerics are in
+\texttt{data/processed/eval\_summary.json} (six proxy families; $n=5{,}521$ Tier~1 cohort).

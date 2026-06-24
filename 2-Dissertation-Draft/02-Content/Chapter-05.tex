@@ -4,33 +4,32 @@
 
 \dissertationSubheading{Findings by research question}
 
-\textbf{RQ1 (reputation structure):} EndorseRank and AWP produce divergent orderings because allowances encode authorization intent while transfers encode economic flow. The sparser $G_{\text{approve}}$ graph yields a distinct centrality structure from $G_{\text{transfer}}$.
+\textbf{RQ1 (reputation structure):} EndorseRank and AWP produce divergent orderings (inter-method Kendall $\tau = 0.316$). Allowances encode authorization intent while transfers encode economic flow; the sparser $G_{\text{approve}}$ graph yields distinct centrality from $G_{\text{transfer}}$.
 
-\textbf{RQ2 (trading-success alignment):} On GMX proxies, EndorseRank achieves higher Kendall $\tau$ than AWP (Table~\ref{tab:alignment-gmx}). Allowance endorsements from peers and protocols concentrate on wallets whose on-chain delegation patterns co-occur with profitable perpetual closes.
+\textbf{RQ2 (trading-success alignment):} On GMX success proxies, AWP achieves higher mean $\tau$ than EndorseRank ($0.179$ vs.\ $0.096$; Table~\ref{tab:alignment-gmx}). Allowance-based propagation does not align more strongly with profitable perpetual closes on this cohort than transfer-based AWP.
 
-\textbf{RQ3 (efficiency):} EndorseRank's runtime advantage (Table~\ref{tab:benchmark-runtime}) follows from using latest-allowance snapshots instead of aggregating full transfer history with decay. This supports near-real-time reputation refresh for DeFi risk dashboards.
+\textbf{RQ3 (efficiency):} EndorseRank's runtime advantage (Table~\ref{tab:benchmark-runtime}; $\approx 2.9$\,s vs.\ $\approx 24$\,s) follows from latest-allowance snapshots instead of aggregating full transfer history with decay. This supports near-real-time reputation refresh for DeFi risk dashboards.
 
-\textbf{RQ4 (validation frame):} AWP's mean $\tau$ is higher under GMX proxies than under transfer proxies (Table~\ref{tab:alignment-summary}). Interpreting reputation against margin success therefore yields stronger domain alignment than validating against ``wallets that receive large deposits,'' which may reflect exchange routing or liquidity provision rather than trading skill.
+\textbf{RQ4 (validation frame):} Transfer proxies yield higher mean $\tau$ than GMX success for both methods (Table~\ref{tab:alignment-summary}). Margin-trading outcomes and liquidation metrics show weak-to-modest alignment overall, suggesting that no single proxy family fully captures ``reputation'' on this sample.
 
-\textbf{RQ5 (dual-proxy dominance):} EndorseRank exceeds AWP on both transfer and GMX families in mean $\tau$, indicating that endorsement graphs capture transfer-hub importance \emph{and} margin-trading success better than transfer-only AWP on this sample.
+\textbf{RQ5 (cross-family comparison):} EndorseRank outperforms AWP on \emph{allowance} proxies ($\tau=0.355$ vs.\ $-0.030$) but not on transfer or most outcome families. Results support construct-specific validity rather than universal dominance of either method.
 
 \dissertationSubheading{Theoretical implications}
 
-The dual-proxy framework extends Do et al.'s validation logic from Ethereum inflows to leveraged trading outcomes on L2. EndorseRank demonstrates that explicit trust delegation (allowances) can propagate reputation signals aligned with both classical graph centrality proxies and DeFi-native success metrics.
+The six-proxy framework extends Do et al.'s validation logic by separating transfer centrality, allowance delegation, leveraged outcomes, liquidation stress, and Sybil-adjusted activity. EndorseRank aligns with its native allowance construct; AWP aligns with transfer and several outcome proxies derived from the same wallet activity.
 
 \dissertationSubheading{Practical implications}
 
-Protocols may consume EndorseRank scores for differentiated margin parameters, referral tiers, or oracle inputs. The open pipeline enables cross-protocol replication on any ERC-20 chain with allowance logs.
+Protocols requiring transfer-hub detection may prefer AWP despite higher cost. Protocols emphasizing explicit spending authorization or low-latency refresh may prefer EndorseRank, accepting lower transfer-proxy alignment. The open pipeline enables cross-protocol replication on any ERC-20 chain with allowance logs.
 
 \dissertationSubheading{Threats to validity}
 
 \begin{itemize}
-\item \textbf{Synthetic data:} % DUMMY — all Chapter~4 numerics are fixture-generated; BigQuery replication required before final submission.
-\item \textbf{Proxy not ground truth:} GMX close-success is a domain-intuition proxy, not loan repayment.
-\item \textbf{Sybil and wash trading:} Adversarial allowance or transfer patterns may manipulate rankings; robustness checks are future work.
-\item \textbf{Single protocol:} Generalization to other perpetual or lending protocols requires cross-protocol validation.
+\item \textbf{Proxy not ground truth:} No under-collateralized lending default labels; GMX liquidation and PnL are domain-intuition proxies, not loan repayment.
+\item \textbf{Sybil and wash trading:} Adversarial allowance or transfer patterns may manipulate rankings; Sybil-adjusted proxies partially address but do not eliminate this risk.
+\item \textbf{Single protocol and chain:} Generalization to other perpetual or lending protocols requires cross-protocol validation.
 \end{itemize}
 
 \dissertationSubheading{Limitations}
 
-Results reflect one observation window on Arbitrum One. Token-decimal normalization, USD price oracles, and permit-vs-approve coverage may affect edge weights. Professor-approved scope and ethics constraints from \texttt{1-Proposal/proposal/} apply unchanged.
+Results reflect one six-month window on Arbitrum One. Token-decimal normalization, USD price oracles, and permit-vs-approve coverage may affect edge weights. Professor-approved scope and ethics constraints from \texttt{1-Proposal/proposal/} apply unchanged.

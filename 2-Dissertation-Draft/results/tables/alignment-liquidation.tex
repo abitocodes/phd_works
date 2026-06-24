@@ -4,21 +4,21 @@
 
 \begin{table}[htbp]
 \centering
-\caption{Domain alignment with GMX V2 margin-trading success proxies on Arbitrum One.}
-\label{tab:alignment-gmx}
+\caption{Domain alignment with GMX default/liquidation proxies (higher = fewer liquidations).}
+\label{tab:alignment-liquidation}
 \begin{tabular}{lcc}
 \toprule
 Proxy & Spearman $\rho$ & Kendall $\tau$ \\
 \midrule
 \multicolumn{3}{l}{\textit{EndorseRank}} \\
-Close-success count & 0.180 & 0.149 \\
-Realized gain proxy & 0.132 & 0.107 \\
-Close success rate & 0.041 & 0.033 \\
+Liquidation-free rate & 0.085 & 0.075 \\
+Zero liquidation flag & 0.033 & 0.033 \\
+Liquidation-free closes & 0.208 & 0.170 \\
 \addlinespace
 \multicolumn{3}{l}{\textit{AWP}} \\
-Close-success count & 0.319 & 0.224 \\
-Realized gain proxy & 0.349 & 0.239 \\
-Close success rate & 0.110 & 0.075 \\
+Liquidation-free rate & 0.112 & 0.083 \\
+Zero liquidation flag & 0.032 & 0.026 \\
+Liquidation-free closes & 0.331 & 0.230 \\
 \bottomrule
 \end{tabular}
 \end{table}

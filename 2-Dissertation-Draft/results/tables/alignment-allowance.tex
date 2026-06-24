@@ -4,21 +4,19 @@
 
 \begin{table}[htbp]
 \centering
-\caption{Domain alignment with GMX V2 margin-trading success proxies on Arbitrum One.}
-\label{tab:alignment-gmx}
+\caption{Domain alignment with allowance proxies (spender-side in-approve degree and value).}
+\label{tab:alignment-allowance}
 \begin{tabular}{lcc}
 \toprule
 Proxy & Spearman $\rho$ & Kendall $\tau$ \\
 \midrule
 \multicolumn{3}{l}{\textit{EndorseRank}} \\
-Close-success count & 0.180 & 0.149 \\
-Realized gain proxy & 0.132 & 0.107 \\
-Close success rate & 0.041 & 0.033 \\
+In-approve degree & 0.360 & 0.356 \\
+In-approve value (sum) & 0.360 & 0.354 \\
 \addlinespace
 \multicolumn{3}{l}{\textit{AWP}} \\
-Close-success count & 0.319 & 0.224 \\
-Realized gain proxy & 0.349 & 0.239 \\
-Close success rate & 0.110 & 0.075 \\
+In-approve degree & -0.037 & -0.030 \\
+In-approve value (sum) & -0.037 & -0.030 \\
 \bottomrule
 \end{tabular}
 \end{table}

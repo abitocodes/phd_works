@@ -4,21 +4,21 @@
 
 \begin{table}[htbp]
 \centering
-\caption{Domain alignment with GMX V2 margin-trading success proxies on Arbitrum One.}
-\label{tab:alignment-gmx}
+\caption{Domain alignment with Sybil-adjusted stability proxies from transfer activity.}
+\label{tab:alignment-sybil-stability}
 \begin{tabular}{lcc}
 \toprule
 Proxy & Spearman $\rho$ & Kendall $\tau$ \\
 \midrule
 \multicolumn{3}{l}{\textit{EndorseRank}} \\
-Close-success count & 0.180 & 0.149 \\
-Realized gain proxy & 0.132 & 0.107 \\
-Close success rate & 0.041 & 0.033 \\
+Inbound counterparty ratio & 0.093 & 0.073 \\
+Transfer tenure (days) & 0.366 & 0.297 \\
+Active months & 0.381 & 0.330 \\
 \addlinespace
 \multicolumn{3}{l}{\textit{AWP}} \\
-Close-success count & 0.319 & 0.224 \\
-Realized gain proxy & 0.349 & 0.239 \\
-Close success rate & 0.110 & 0.075 \\
+Inbound counterparty ratio & -0.063 & -0.061 \\
+Transfer tenure (days) & 0.602 & 0.436 \\
+Active months & 0.622 & 0.482 \\
 \bottomrule
 \end{tabular}
 \end{table}
