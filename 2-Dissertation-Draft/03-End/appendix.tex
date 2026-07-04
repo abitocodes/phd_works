@@ -18,66 +18,41 @@
 \section{Evaluation Pipeline and Reproducibility}
 \label{ch:appendix-eval}
 
-This appendix documents the open evaluation pipeline used to reproduce Chapter~\ref{ch:results} numerics, including repository layout, offline synthetic evaluation, real BigQuery extraction procedures, parameter summaries, proxy formulas, and a glossary.
+This appendix documents the evaluation pipeline that produced the numerics in Chapter~\ref{ch:results}: data sources, processing stages, default parameters, proxy formulas, and a glossary. All quantities cited here also appear in the main-text tables and figures; no external files are required to interpret the claims.
 
-\dissertationSubheading[sec:repo-layout]{Repository layout}
+\dissertationSubheading[sec:pipeline-stages]{Pipeline stages}
 
-The evaluation pipeline lives in \texttt{A-Skill-Programs/margin\_rank/}. It ingests (1) latest ERC-20 allowances, (2) time-stamped transfers, and (3) decoded GMX \texttt{PositionDecrease} events. EndorseRank, AWP, and GF-PR scores are merged into \texttt{wallet\_rankings.parquet} via \texttt{compute\_reputation\_ranks.py}. Five proxy families are computed in \texttt{proxy\_metrics.py}; alignment and benchmarks run through \texttt{run\_dissertation\_eval.py}. Figures are produced by \texttt{generate\_dissertation\_figures.py}.
+The evaluation proceeds in three stages on Arbitrum One over the observation window 2025-12-01 to 2026-05-31 (UTC, inclusive).
 
-Key outputs: \texttt{data/processed/eval\_summary.json} (numerics), LaTeX fragments under \texttt{2-Dissertation-Draft/results/tables/}, and PDFs under \texttt{2-Dissertation-Draft/Figures/generated/}. Extended baselines (7-method, 6-Aave) export to \texttt{2-Dissertation-Draft/archive/extended-baselines/}.
+\begin{enumerate}
+\item \textbf{Trading-success labels.} Decode GMX V2 \texttt{PositionDecrease} events from the public BigQuery log table, recover wallet identity, realized PnL, position-size change, and liquidation flags, and retain wallets with at least three closes as the matched cohort ($n=5{,}521$; $365{,}488$ decoded closes).
+\item \textbf{Reputation graphs and scores.} Extract ERC-20 \texttt{Approval} and \texttt{Transfer} logs for cohort wallets in monthly batches (per-query dry-run and a $150$\,GiB abort cap). Build the latest-allowance endorsement graph and the time-decayed transfer graph, then compute EndorseRank, AWP, and supplementary GF-PR scores by power iteration (damping $d=0.85$, tolerance $10^{-8}$, at most $300$ iterations).
+\item \textbf{Proxies, alignment, and benchmarks.} Compute the five proxy families defined in Chapter~\ref{ch:methodology}, report Spearman $\rho$ and Kendall $\tau$ against each score vector, time PageRank solves on pre-built edges (three-run averages), and run robustness sweeps over damping, top tokens, and sample size.
+\end{enumerate}
 
-\dissertationSubheading[sec:offline-eval]{Offline synthetic evaluation (no Google Cloud)}
+Offline synthetic checks use the same scoring and alignment logic on fixture graphs (no cloud access) to validate implementation before real extraction. Real extraction requires Google Cloud credentials and a billing project; scans target only the public Arbitrum One log dataset.
 
-\begin{verbatim}
-cd A-Skill-Programs/margin_rank
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python scripts/run_dissertation_eval.py --fixtures --n-wallets 571 --export-latex
-python scripts/generate_dissertation_figures.py
-cd ../../2-Dissertation-Draft && ./build.ps1
-\end{verbatim}
+\dissertationSubheading[sec:bq-extraction]{BigQuery extraction design}
 
-\dissertationSubheading[sec:bq-extraction]{Real BigQuery extraction}
+ERC-20 \texttt{Approval} and \texttt{Transfer} events are identified by their standard topic-$0$ hashes and restricted to logs whose owner/spender or from/to address lies in the evaluation wallet list, so scan cost scales with the cohort rather than the full chain. Monthly batching keeps each query under the operational byte cap. GMX V2 events are read from the \texttt{EventEmitter} contract at
+\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}
+and decoded to key--value fields for \texttt{account}, \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, and liquidation flags. Representative SQL patterns appear in Appendix~\ref{ch:appendix-sql}.
 
-Requires Application Default Credentials and \texttt{GOOGLE\_CLOUD\_PROJECT}. See \texttt{docs/bigquery\_data\_plan.md} for cost guardrails.
-
-\begin{verbatim}
-export GOOGLE_CLOUD_PROJECT=your-project-id
-
-# Phase 1 — trading-success label extraction (GMX V2) (6-month window)
-python scripts/extract_margin_week.py --dry-run
-python scripts/extract_margin_week.py --extract --yes
-python scripts/decode_gmx_events.py
-python scripts/compute_rankings.py
-
-# Phase 2 — Reputation subgraph (monthly batches)
-python scripts/extract_reputation_data.py --dry-run
-python scripts/extract_reputation_data.py --extract --yes
-python scripts/preprocess_arbitrum_allowances.py
-python scripts/preprocess_arbitrum_transfers.py
-python scripts/compute_reputation_ranks.py
-
-# Phase 3 — Five-proxy evaluation + robustness (local)
-python scripts/sample_active_wallets.py --from-parquet --extract
-python scripts/run_dissertation_eval.py --real --robustness --export-latex
-python scripts/generate_dissertation_figures.py
-\end{verbatim}
-
-Extraction metadata (bytes processed, row counts) is written to \texttt{data/processed/extraction\_manifest.json}.
+Extraction records (bytes processed, row counts, timestamps) are retained in the study's acquisition log for auditability; the dissertation reports the resulting cohort sizes and edge counts rather than those operational logs.
 
 \dissertationSubheading[sec:scaling-appendix]{Scaling tables}
 
-Table~\ref{tab:benchmark-scaling-incohort} retains in-cohort runtime scaling ($n \leq 5{,}521$). Robustness tables appear in Chapter~\ref{ch:results}; they are regenerated with \texttt{run\_dissertation\_eval.py --real --robustness --export-latex}.
+Table~\ref{tab:benchmark-scaling-incohort} reports in-cohort runtime scaling for $n \leq 5{,}521$. Robustness tables in Chapter~\ref{ch:results} use the same solver settings and cohort definitions as the primary evaluation.
 
 \input{results/tables/benchmark-scaling-incohort.tex}
 
-\dissertationSubheading[sec:delegation-deferred]{Credit Delegation extract (deferred)}
+\dissertationSubheading[sec:delegation-deferred]{Credit-delegation extract (deferred)}
 
-Aave V3 \texttt{BorrowAllowanceDelegated} logs are configured in \texttt{margin\_config.yaml} but were not extracted in this study (\texttt{aave\_delegation\_events.parquet} absent). The archived six-Aave baseline (\texttt{Delegation-PR}) therefore reports degenerate alignment ($\tau = \text{---}$). Re-enable via a dedicated delegation SQL template and \texttt{extract\_aave\_lending.py --include-delegation} in a follow-on extract pass.
+Aave V3 \texttt{BorrowAllowanceDelegated} events were not extracted in this study. Any exploratory ranking that depends on credit-delegation edges is therefore undefined on the present sample and is reported as non-interpretable ($\tau = \text{---}$) in the archived Aave-oriented matrix (Appendix~\ref{ch:appendix-archive}). Extending the study to delegation-based reputation would require a dedicated extract of those events and a fresh alignment evaluation; it is left to future work.
 
 \dissertationSubheading[sec:supplementary-summary]{Supplementary alignment summary table}
 
-Table~\ref{tab:alignment-summary} duplicates family-level mean $\tau$ from Table~\ref{tab:alignment-three-methods} in columnar form (EndorseRank / AWP / GF-PR / highest-alignment label). It is retained for CSV-oriented reproducibility; the main text uses Table~\ref{tab:alignment-three-methods} only.
+Table~\ref{tab:alignment-summary} restates family-level mean $\tau$ from Table~\ref{tab:alignment-three-methods} in columnar form (EndorseRank / AWP / GF-PR / highest-alignment label). The main narrative uses Table~\ref{tab:alignment-three-methods}; the columnar form is retained here for side-by-side reading.
 
 \input{results/tables/alignment-summary.tex}
 
@@ -101,7 +76,7 @@ Min.\ GMX closes & $3$ & Cohort eligibility \\
 Observation window & 2025-12-01 -- 2026-05-31 & UTC inclusive \\
 GF-PR loss $\varepsilon_{\mathrm{loss}}$ & $0.1$ & Ordinary loss edge boost \\
 GF-PR liquidation $\varepsilon_{\mathrm{liq}}$ & $1.0$ & Liquidation edge boost \\
-Expanded pool seed & \texttt{benchmark-tier2-v1} & SHA256 subsample seed \\
+Expanded pool subsample seed & \texttt{benchmark-tier2-v1} & Deterministic SHA256 seed \\
 \bottomrule
 \end{tabular}
 }
@@ -109,7 +84,7 @@ Expanded pool seed & \texttt{benchmark-tier2-v1} & SHA256 subsample seed \\
 
 \dissertationSubheading[sec:proxy-appendix]{Proxy operational definitions (reference)}
 
-The following formulas match Chapter~\ref{ch:methodology} and \texttt{proxy\_metrics.py}.
+The following formulas match Chapter~\ref{ch:methodology}.
 
 \textbf{Transfer.} $\mathrm{in\_degree}(w)=|\{u:\exists u\to w\}|$; $\mathrm{in\_value}(w)=\sum_{e:u\to w}\mathrm{value}(e)$.
 

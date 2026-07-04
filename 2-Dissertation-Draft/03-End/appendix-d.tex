@@ -32,7 +32,7 @@ These matrices motivate future work on credit-delegation edges and cross-protoco
 Focusing the dissertation on EndorseRank, AWP, and supplementary GF-PR serves three goals:
 
 \begin{enumerate}
-\item \textbf{Clarity of contribution.} The novel construct is allowance-based endorsement. Comparing it to the established transfer baseline \cend{10} isolates the research question.
+\item \textbf{Clarity of contribution.} The novel construct is allowance-based endorsement. Comparing it to the established transfer baseline \cend{16} isolates the research question.
 \item \textbf{Avoiding baseline sprawl.} Additional variants that share transfer edges with AWP add rows without adding independent constructs.
 \item \textbf{Honest use of GF-PR.} Keeping GF-PR supplementary prevents readers from treating an outcome-native ceiling as a social reputation competitor.
 \end{enumerate}
@@ -61,7 +61,7 @@ The following identifiers appear in archive tables and CSV exports. They documen
 \item[LP-PR] A transfer-graph variant with alternative loss-penalized or liquidity-oriented weighting explored during development. Empirically it tracks AWP closely on transfer families (Table~\ref{tab:alignment-seven-methods}), indicating shared payment-flow structure.
 \item[CW-AWP] A counterparty-weighted AWP variant that down-weights repeated transfers between the same pair. It slightly reduces transfer $\tau$ relative to AWP while remaining in the same construct family.
 \item[LF-PR] A low-frequency or lightly filtered graph with very small edge counts and near-zero runtimes; rankings are not comparable to full AWP and are retained only to document a failed sparse baseline.
-\item[RiskProp] A risk-propagation style ranking on transfer-like edges inspired by Lin et al.\cend{26}. On this cohort it numerically mirrors AWP on several families, suggesting that the implemented risk signal did not diverge strongly from transfer centrality under the study's parameterization.
+\item[RiskProp] A risk-propagation style ranking on transfer-like edges inspired by Lin et al.\cend{44}. On this cohort it numerically mirrors AWP on several families, suggesting that the implemented risk signal did not diverge strongly from transfer centrality under the study's parameterization.
 \item[LiqCall-PR / Borrow-PR / Repay-PR] Aave-oriented wallet-to-wallet graphs built from liquidation calls, borrows, and repays when those events are present. On Arbitrum in the study window, edge counts are small (tens to hundreds), so alignment is weak and runtimes are negligible.
 \item[Delegation-PR] Intended to use credit-delegation allowances; with zero delegation edges extracted, scores are degenerate and $\tau$ is not interpretable.
 \end{description}

@@ -74,7 +74,7 @@ def fig_score_distributions(rankings: pd.DataFrame) -> None:
         ax.hist(np.log10(s), bins=40, color="#5a4a7a", edgecolor="white", linewidth=0.3)
         ax.set_xlabel(r"$\log_{10}$(score)")
         ax.set_ylabel("Wallets")
-        ax.text(0.02, 0.95, panel, transform=ax.transAxes, va="top", fontsize=10)
+        ax.text(0.98, 0.95, panel, transform=ax.transAxes, va="top", ha="right", fontsize=10)
     fig.tight_layout()
     _save(fig, "score-distributions.pdf")
 
@@ -156,7 +156,14 @@ def fig_runtime_scaling(summary: dict) -> None:
         ax.set_xlim(min(all_n) * 0.9, max(all_n) * 1.1)
     ax.set_xlabel("Number of wallets $n$ (log scale)")
     ax.set_ylabel("PageRank wall time (s)")
-    ax.legend(frameon=False, fontsize=8)
+    # Legend above the axes so it does not overlap the runtime curves.
+    ax.legend(
+        frameon=False,
+        fontsize=8,
+        loc="lower center",
+        bbox_to_anchor=(0.5, 1.02),
+        ncol=2,
+    )
     _save(fig, "runtime-scaling.pdf")
 
 

@@ -2,7 +2,7 @@
 \section{Elementary Properties of PageRank and Rank Correlation}
 \label{ch:appendix-theory}
 
-This appendix records elementary properties used implicitly in Chapters~\ref{ch:literature}--\ref{ch:results}. The material is standard \cend{30,25,33,22} and is included for self-contained reading.
+This appendix records elementary properties used implicitly in Chapters~\ref{ch:literature}--\ref{ch:results}. The material is standard \cend{49,40,55,36} and is included for self-contained reading.
 
 \dissertationSubheading[sec:pr-existence]{Existence and uniqueness of PageRank}
 
@@ -10,13 +10,13 @@ Let $P$ be a row-stochastic matrix on $n$ nodes, possibly after dangling-node re
 \[
 G_{\mathrm{PR}}=d P^{\top}+\frac{1-d}{n}\mathbf{1}\mathbf{1}^{\top}
 \]
-is positive and column-stochastic (up to the transpose convention in Equation~\eqref{eq:google-matrix}). By the Perron--Frobenius theorem for positive matrices, $G_{\mathrm{PR}}$ has a unique eigenvalue of modulus one with a strictly positive eigenvector $\boldsymbol{\pi}$ normalized so that $\sum_i\pi_i=1$. Hence PageRank scores exist and are unique for any directed graph once damping and dangling-node rules are fixed \cend{25}.
+is positive and column-stochastic (up to the transpose convention in Equation~\eqref{eq:google-matrix}). By the Perron--Frobenius theorem for positive matrices, $G_{\mathrm{PR}}$ has a unique eigenvalue of modulus one with a strictly positive eigenvector $\boldsymbol{\pi}$ normalized so that $\sum_i\pi_i=1$. Hence PageRank scores exist and are unique for any directed graph once damping and dangling-node rules are fixed \cend{40}.
 
 This uniqueness underpins comparisons between EndorseRank and AWP: given fixed parameters, each method induces a single score vector on a given edge set. Differences between $\mathbf{s}_{\mathrm{ER}}$ and $\mathbf{s}_{\mathrm{AWP}}$ are therefore attributable to edge semantics and weights, not to solver multiplicity.
 
 \dissertationSubheading[sec:pr-continuity]{Continuity in edge weights}
 
-PageRank is a continuous function of the entries of $P$ for fixed $d\in(0,1)$. Small perturbations of allowance or transfer weights therefore induce small perturbations of scores in the $\|\cdot\|_1$ norm, with Lipschitz constants depending on $d$ and $n$ \cend{25}. Continuity justifies robustness checks that vary damping or restrict to top tokens: if alignment were knife-edge fragile, small hyperparameter changes would scramble family-level $\tau$. Empirically, EndorseRank allowance $\tau$ remains $\approx 0.355$ across $d\in\{0.75,0.85,0.95\}$ (Table~\ref{tab:robustness-damping}), consistent with a stable ranking geometry.
+PageRank is a continuous function of the entries of $P$ for fixed $d\in(0,1)$. Small perturbations of allowance or transfer weights therefore induce small perturbations of scores in the $\|\cdot\|_1$ norm, with Lipschitz constants depending on $d$ and $n$ \cend{40}. Continuity justifies robustness checks that vary damping or restrict to top tokens: if alignment were knife-edge fragile, small hyperparameter changes would scramble family-level $\tau$. Empirically, EndorseRank allowance $\tau$ remains $\approx 0.355$ across $d\in\{0.75,0.85,0.95\}$ (Table~\ref{tab:robustness-damping}), consistent with a stable ranking geometry.
 
 \dissertationSubheading[sec:pr-sparsity]{Sparsity and per-iteration cost}
 
@@ -24,17 +24,17 @@ A sparse matrix--vector product $P^{\top}\mathbf{x}$ costs $O(m)$ arithmetic ope
 
 \dissertationSubheading[sec:spearman-properties]{Properties of Spearman's $\rho$}
 
-Spearman's $\rho$ is Pearson's correlation applied to ranks. It is invariant to strictly increasing transformations of either variable and lies in $[-1,1]$. Perfect monotone agreement yields $\rho=1$; perfect reverse agreement yields $\rho=-1$. Ties require mid-rank adjustments; the evaluation pipeline uses standard tie-aware implementations. Because reputation scores and proxies are continuous and heavy-tailed, rank-based association is more appropriate than Pearson correlation on raw values \cend{10}.
+Spearman's $\rho$ is Pearson's correlation applied to ranks. It is invariant to strictly increasing transformations of either variable and lies in $[-1,1]$. Perfect monotone agreement yields $\rho=1$; perfect reverse agreement yields $\rho=-1$. Ties require mid-rank adjustments; the evaluation pipeline uses standard tie-aware implementations. Because reputation scores and proxies are continuous and heavy-tailed, rank-based association is more appropriate than Pearson correlation on raw values \cend{16}.
 
 \dissertationSubheading[sec:kendall-properties]{Properties of Kendall's $\tau$}
 
-Kendall's $\tau$ equals the normalized difference between concordant and discordant pairwise orderings. It admits a probabilistic reading: for two random distinct wallets, $\tau$ is the probability their relative order agrees under both rankings, minus the probability it disagrees \cend{22}. This reading is useful when communicating results to practitioners: $\tau=0.355$ means a clear but imperfect tendency for allowance-proxy orderings to agree with EndorseRank orderings.
+Kendall's $\tau$ equals the normalized difference between concordant and discordant pairwise orderings. It admits a probabilistic reading: for two random distinct wallets, $\tau$ is the probability their relative order agrees under both rankings, minus the probability it disagrees \cend{36}. This reading is useful when communicating results to practitioners: $\tau=0.355$ means a clear but imperfect tendency for allowance-proxy orderings to agree with EndorseRank orderings.
 
-For large $n$, $\tau$ and $\rho$ are often similar in sign and magnitude but not identical. This dissertation reports both, following Do et al.\cend{10}, and uses family-mean $\tau$ as the primary summary.
+For large $n$, $\tau$ and $\rho$ are often similar in sign and magnitude but not identical. This dissertation reports both, following Do et al.\cend{16}, and uses family-mean $\tau$ as the primary summary.
 
 \dissertationSubheading[sec:construct-validity-note]{Construct validity note}
 
-Cronbach and Meehl\cend{8} distinguish criterion-related validity from construct validity. In the absence of a gold-standard default label, this dissertation pursues a construct-oriented strategy: each method is tested against proxies that operationalize its intended meaning (allowance receipt for EndorseRank; inbound transfer activity for AWP) and against secondary families that probe neighboring constructs (risk, stability, trading success). High within-construct $\tau$ supports interpretation; low cross-construct $\tau$ is not automatically failure---it may indicate discriminant validity. GF-PR's extreme trading-success $\tau$ is a cautionary case of \emph{contaminated} criteria, where the criterion shares inputs with the measure (SRQ1).
+Cronbach and Meehl\cend{14} distinguish criterion-related validity from construct validity. In the absence of a gold-standard default label, this dissertation pursues a construct-oriented strategy: each method is tested against proxies that operationalize its intended meaning (allowance receipt for EndorseRank; inbound transfer activity for AWP) and against secondary families that probe neighboring constructs (risk, stability, trading success). High within-construct $\tau$ supports interpretation; low cross-construct $\tau$ is not automatically failure---it may indicate discriminant validity. GF-PR's extreme trading-success $\tau$ is a cautionary case of \emph{contaminated} criteria, where the criterion shares inputs with the measure (SRQ1).
 
 \dissertationSubheading[sec:numerical-summary-sheet]{Numerical summary sheet}
 
