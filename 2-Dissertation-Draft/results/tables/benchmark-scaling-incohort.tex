@@ -6,9 +6,10 @@
 \centering
 \caption{In-cohort runtime scaling (SHA256 seed \texttt{benchmark-scale-v1}; $n \leq 5{,}521$ matched GMX cohort).}
 \label{tab:benchmark-scaling-incohort}
+\fitwidth{%
 \begin{tabular}{rrrrrr}
 \toprule
-$n$ & ER runtime (s) & AWP runtime (s) & ER speedup (AWP/ER) & ER edges & AWP edges \\
+$n$ & ER (s) & AWP (s) & Speedup & ER $|E|$ & AWP $|E|$ \\
 \midrule
 1000 & 0.393 & 3.215 & 8.2$\times$ & 2584 & 23058 \\
 2000 & 0.729 & 6.794 & 9.3$\times$ & 5147 & 47031 \\
@@ -16,4 +17,5 @@ $n$ & ER runtime (s) & AWP runtime (s) & ER speedup (AWP/ER) & ER edges & AWP ed
 5521 & 2.105 & 18.711 & 8.9$\times$ & 14727 & 137087 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}

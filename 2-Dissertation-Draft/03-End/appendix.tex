@@ -1,7 +1,21 @@
 % !TEX root = ../main.tex
 \clearpage
-\appendix
-\chapter{Evaluation Pipeline and Reproducibility}
+\chapter{Appendix}
+\label{ch:appendix}
+
+% Demote headings one level under Chapter 8 (sections become 8.1.x).
+\renewcommand{\dissertationSubheading}[2][]{%
+  \phantomsection
+  \subsection{#2}%
+  \if\relax\detokenize{#1}\relax\else\label{#1}\fi
+}
+\renewcommand{\dissertationSubsubheading}[2][]{%
+  \phantomsection
+  \subsubsection{#2}%
+  \if\relax\detokenize{#1}\relax\else\label{#1}\fi
+}
+
+\section{Evaluation Pipeline and Reproducibility}
 \label{ch:appendix-eval}
 
 This appendix documents the open evaluation pipeline used to reproduce Chapter~\ref{ch:results} numerics, including repository layout, offline synthetic evaluation, real BigQuery extraction procedures, parameter summaries, proxy formulas, and a glossary.
@@ -73,6 +87,7 @@ Table~\ref{tab:alignment-summary} duplicates family-level mean $\tau$ from Table
 \centering
 \caption{Default parameters used in the primary evaluation.}
 \label{tab:parameter-summary}
+\fitwidth{%
 \begin{tabular}{lll}
 \toprule
 Parameter & Value & Role \\
@@ -89,6 +104,7 @@ GF-PR liquidation $\varepsilon_{\mathrm{liq}}$ & $1.0$ & Liquidation edge boost 
 Expanded pool seed & \texttt{benchmark-tier2-v1} & SHA256 subsample seed \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 \dissertationSubheading[sec:proxy-appendix]{Proxy operational definitions (reference)}

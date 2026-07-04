@@ -6,13 +6,15 @@
 \centering
 \caption{Robustness: mean Kendall $\tau$ under PageRank damping $d \in \{0.75, 0.85, 0.95\}$ on matched alignment cohort ($n=5521$).}
 \label{tab:robustness-damping}
+\fitwidth{%
 \begin{tabular}{rcccccc}
 \toprule
-$d$ & ER allowance & AWP allowance & ER transfer & AWP transfer & ER runtime (s) & AWP runtime (s) \\
+$d$ & ER all. & AWP all. & ER tr. & AWP tr. & ER (s) & AWP (s) \\
 \midrule
 0.75 & 0.355 & -0.031 & 0.333 & 0.531 & 3.436 & 21.797 \\
 0.85 & 0.355 & -0.030 & 0.333 & 0.534 & 2.913 & 21.383 \\
 0.95 & 0.355 & -0.030 & 0.333 & 0.536 & 2.320 & 21.077 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}

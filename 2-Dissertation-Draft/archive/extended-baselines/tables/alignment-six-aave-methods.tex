@@ -5,6 +5,7 @@
 \centering
 \caption{Mean Kendall $\tau$ by proxy family across 6 PageRank methods ($n=5521$). Bold = column maximum. Runtime = mean PageRank wall time (s, 3 repeats). Aave W$\rightarrow$W edges: LiqCall (liquidator$\rightarrow$user), Borrow (initiator$\rightarrow$onBehalfOf), Repay (repayer$\rightarrow$user), Delegation (delegator$\rightarrow$delegatee). Credit Delegation extract deferred when parquet absent---$\tau$ may be degenerate. Edge counts: liq-pr=45, borrow-pr=484, repay-pr=787, borrow-pr-pool=262, repay-pr-pool=232, delegation-pr=0.}
 \label{tab:alignment-six-aave-methods}
+\fitwidth{%
 \begin{tabular}{lccccccr}
 \toprule
 Method & Transfer & Allowance & Liq. & Inv.risk & Sybil & GMX & Runtime (s) \\
@@ -17,4 +18,5 @@ Repay-PR & 0.143 & -0.024 & 0.016 & 0.022 & 0.068 & 0.026 & 0.131 \\
 Delegation-PR & --- & --- & --- & --- & --- & --- & 0.000 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}

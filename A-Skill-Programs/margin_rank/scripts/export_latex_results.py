@@ -20,11 +20,24 @@ from evaluate_alignment import (  # noqa: E402
 FAMILY_LABELS = {
     "transfer": "Transfer",
     "allowance": "Allowance",
-    "liquidation": "Default/Liquidation",
-    "inverse_risk": "Inverse risk",
-    "sybil_stability": "Sybil-adjusted stability",
-    "gmx_success": "GMX success",
+    "liquidation": "Liq.",
+    "inverse_risk": "Inv.risk",
+    "sybil_stability": "Sybil",
+    "gmx_success": "GMX",
 }
+
+
+def _wrap_table(caption: str, label: str, tabular_body: str) -> str:
+    """Emit a table that never exceeds \\linewidth."""
+    return f"""\\begin{{table}}[htbp]
+\\centering
+\\caption{{{caption}}}
+\\label{{{label}}}
+\\fitwidth{{%
+{tabular_body}
+}}
+\\end{{table}}
+"""
 
 PROXY_LABELS = {
     "in_degree": "In-degree",
@@ -117,22 +130,23 @@ def write_benchmark_table(summary: dict, out: Path) -> None:
             f"GF-PR & {_fmt(gf['runtime_sec_mean'])} & {_fmt(gf['peak_memory_mb'], 1)} "
             f"& {_fmt(gf['iterations_mean'], 1)} & {gf['edge_count']} \\\\\n"
         )
-    body = f"""{hdr}
-\\begin{{table}}[htbp]
-\\centering
-\\caption{{Computational benchmark on matched wallet sample ($n={n}$).}}
-\\label{{tab:benchmark-runtime}}
-\\begin{{tabular}}{{lrrrr}}
+    tabular = f"""\\begin{{tabular}}{{lrrrr}}
 \\toprule
-Method & Runtime (s) & Peak memory (MB) & Iterations & Edge count \\\\
+Method & Runtime (s) & Peak mem.\\ (MB) & Iters & Edges \\\\
 \\midrule
 EndorseRank & {_fmt(er['runtime_sec_mean'])} & {_fmt(er['peak_memory_mb'], 1)} & {_fmt(er['iterations_mean'], 1)} & {er['edge_count']} \\\\
 AWP & {_fmt(awp['runtime_sec_mean'])} & {_fmt(awp['peak_memory_mb'], 1)} & {_fmt(awp['iterations_mean'], 1)} & {awp['edge_count']} \\\\
 {gf_row}\\bottomrule
-\\end{{tabular}}
-\\end{{table}}
-"""
-    out.write_text(body, encoding="utf-8")
+\\end{{tabular}}"""
+    out.write_text(
+        hdr
+        + _wrap_table(
+            f"Computational benchmark on matched wallet sample ($n={n}$).",
+            "tab:benchmark-runtime",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
 
 
 def _alignment_rows(method: dict, proxies: tuple[str, ...]) -> str:
@@ -172,21 +186,14 @@ def write_family_alignment(summary: dict, family: str, out: Path) -> None:
     if body_blocks.endswith("\\addlinespace\n"):
         body_blocks = body_blocks[: -len("\\addlinespace\n")]
 
-    body = f"""{hdr}
-\\begin{{table}}[htbp]
-\\centering
-\\caption{{{caption}}}
-\\label{{{label}}}
-\\begin{{tabular}}{{lcc}}
+    tabular = f"""\\begin{{tabular}}{{lcc}}
 \\toprule
 Proxy & Spearman $\\rho$ & Kendall $\\tau$ \\\\
 \\midrule
 {body_blocks}
 \\bottomrule
-\\end{{tabular}}
-\\end{{table}}
-"""
-    out.write_text(body, encoding="utf-8")
+\\end{{tabular}}"""
+    out.write_text(hdr + _wrap_table(caption, label, tabular), encoding="utf-8")
 
 
 def write_benchmark_scaling_table(summary: dict, out: Path) -> None:
@@ -225,21 +232,14 @@ def write_benchmark_scaling_table(summary: dict, out: Path) -> None:
         )
         label = "tab:benchmark-scaling-incohort"
 
-    body = f"""{hdr}
-\\begin{{table}}[htbp]
-\\centering
-\\caption{{{caption}}}
-\\label{{{label}}}
-\\begin{{tabular}}{{rrrrrr}}
+    tabular = f"""\\begin{{tabular}}{{rrrrrr}}
 \\toprule
-$n$ & ER runtime (s) & AWP runtime (s) & ER speedup (AWP/ER) & ER edges & AWP edges \\\\
+$n$ & ER (s) & AWP (s) & Speedup & ER $|E|$ & AWP $|E|$ \\\\
 \\midrule
 {chr(10).join(rows_tex)}
 \\bottomrule
-\\end{{tabular}}
-\\end{{table}}
-"""
-    out.write_text(body, encoding="utf-8")
+\\end{{tabular}}"""
+    out.write_text(hdr + _wrap_table(caption, label, tabular), encoding="utf-8")
 
 
 def write_benchmark_scaling_incohort_table(summary: dict, out: Path) -> None:
@@ -261,21 +261,23 @@ def write_benchmark_scaling_incohort_table(summary: dict, out: Path) -> None:
                 f"{speedup_str} & {er['edge_count']} & {awp['edge_count']} \\\\"
             )
         seed = scaling.get("scaling_seed", "benchmark-scale-v1")
-        body = f"""{hdr}
-\\begin{{table}}[htbp]
-\\centering
-\\caption{{In-cohort runtime scaling (SHA256 seed \\texttt{{{seed}}}; $n \\leq 5{{,}}521$ matched GMX cohort).}}
-\\label{{tab:benchmark-scaling-incohort}}
-\\begin{{tabular}}{{rrrrrr}}
+        tabular = f"""\\begin{{tabular}}{{rrrrrr}}
 \\toprule
-$n$ & ER runtime (s) & AWP runtime (s) & ER speedup (AWP/ER) & ER edges & AWP edges \\\\
+$n$ & ER (s) & AWP (s) & Speedup & ER $|E|$ & AWP $|E|$ \\\\
 \\midrule
 {chr(10).join(rows_tex)}
 \\bottomrule
-\\end{{tabular}}
-\\end{{table}}
-"""
-        out.write_text(body, encoding="utf-8")
+\\end{{tabular}}"""
+        out.write_text(
+            hdr
+            + _wrap_table(
+                f"In-cohort runtime scaling (SHA256 seed \\texttt{{{seed}}}; "
+                f"$n \\leq 5{{,}}521$ matched GMX cohort).",
+                "tab:benchmark-scaling-incohort",
+                tabular,
+            ),
+            encoding="utf-8",
+        )
 
 
 def write_robustness_damping_table(summary: dict, out: Path) -> None:
@@ -298,21 +300,24 @@ def write_robustness_damping_table(summary: dict, out: Path) -> None:
             f"{_fmt(row.get('endorserank_runtime_sec'))} & {_fmt(row.get('awp_runtime_sec'))} \\\\"
         )
 
-    body = f"""{hdr}
-\\begin{{table}}[htbp]
-\\centering
-\\caption{{Robustness: mean Kendall $\\tau$ under PageRank damping $d \\in \\{{0.75, 0.85, 0.95\\}}$ on matched alignment cohort ($n={sweep.get('n_wallets', '---')}$).}}
-\\label{{tab:robustness-damping}}
-\\begin{{tabular}}{{rcccccc}}
+    tabular = f"""\\begin{{tabular}}{{rcccccc}}
 \\toprule
-$d$ & ER allowance & AWP allowance & ER transfer & AWP transfer & ER runtime (s) & AWP runtime (s) \\\\
+$d$ & ER all. & AWP all. & ER tr. & AWP tr. & ER (s) & AWP (s) \\\\
 \\midrule
 {chr(10).join(lines)}
 \\bottomrule
-\\end{{tabular}}
-\\end{{table}}
-"""
-    out.write_text(body, encoding="utf-8")
+\\end{{tabular}}"""
+    out.write_text(
+        hdr
+        + _wrap_table(
+            f"Robustness: mean Kendall $\\tau$ under PageRank damping "
+            f"$d \\in \\{{0.75, 0.85, 0.95\\}}$ on matched alignment cohort "
+            f"($n={sweep.get('n_wallets', '---')}$).",
+            "tab:robustness-damping",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
 
 
 def write_robustness_tokens_table(summary: dict, out: Path) -> None:
@@ -331,21 +336,23 @@ def write_robustness_tokens_table(summary: dict, out: Path) -> None:
         lines.append(f"{label} & {vals} \\\\")
 
     top_n = top.get("top_n_tokens", 20)
-    body = f"""{hdr}
-\\begin{{table}}[htbp]
-\\centering
-\\caption{{Robustness: mean Kendall $\\tau$ on top-{top_n} ERC-20 token subgraph (matched cohort).}}
-\\label{{tab:robustness-tokens}}
-\\begin{{tabular}}{{l{'c' * len(PROXY_FAMILIES)}}}
+    tabular = f"""\\begin{{tabular}}{{l{'c' * len(PROXY_FAMILIES)}}}
 \\toprule
 Method & {' & '.join(FAMILY_LABELS[f] for f in PROXY_FAMILIES)} \\\\
 \\midrule
 {chr(10).join(lines)}
 \\bottomrule
-\\end{{tabular}}
-\\end{{table}}
-"""
-    out.write_text(body, encoding="utf-8")
+\\end{{tabular}}"""
+    out.write_text(
+        hdr
+        + _wrap_table(
+            f"Robustness: mean Kendall $\\tau$ on top-{top_n} ERC-20 token subgraph "
+            f"(matched cohort).",
+            "tab:robustness-tokens",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
 
 
 def write_robustness_sample_size_table(summary: dict, out: Path) -> None:
@@ -366,21 +373,23 @@ def write_robustness_sample_size_table(summary: dict, out: Path) -> None:
         )
 
     pool_n = sweep.get("wallet_pool_size", "---")
-    body = f"""{hdr}
-\\begin{{table}}[htbp]
-\\centering
-\\caption{{Robustness: alignment and runtime vs.\\ subsample size from wallet pool ($N={pool_n}$; seed \\texttt{{{sweep.get('scaling_seed', 'benchmark-tier2-v1')}}}).}}
-\\label{{tab:robustness-sample-size}}
-\\begin{{tabular}}{{rccccc}}
+    tabular = f"""\\begin{{tabular}}{{rccccc}}
 \\toprule
-$n$ & ER allowance $\\tau$ & AWP allowance $\\tau$ & ER transfer $\\tau$ & AWP transfer $\\tau$ & ER speedup \\\\
+$n$ & ER all. & AWP all. & ER tr. & AWP tr. & Speedup \\\\
 \\midrule
 {chr(10).join(lines)}
 \\bottomrule
-\\end{{tabular}}
-\\end{{table}}
-"""
-    out.write_text(body, encoding="utf-8")
+\\end{{tabular}}"""
+    out.write_text(
+        hdr
+        + _wrap_table(
+            f"Robustness: alignment and runtime vs.\\ subsample size from wallet pool "
+            f"($N={pool_n}$; seed \\texttt{{{sweep.get('scaling_seed', 'benchmark-tier2-v1')}}}).",
+            "tab:robustness-sample-size",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
 
 
 def write_summary_table(summary: dict, out: Path) -> None:
@@ -401,21 +410,23 @@ def write_summary_table(summary: dict, out: Path) -> None:
         winner = METHOD_LABELS.get(winner_id, winner_id) if winner_id else "---"
         rows.append(f"{label} & {er_tau} & {awp_tau} & {gf_tau} & {winner} \\\\")
 
-    body = f"""{hdr}
-\\begin{{table}}[htbp]
-\\centering
-\\caption{{Mean Kendall $\\tau$ by proxy family: EndorseRank, AWP, and GF-PR ($n={summary.get('n_wallets', '---')}$).}}
-\\label{{tab:alignment-summary}}
-\\begin{{tabular}}{{lcccc}}
+    tabular = f"""\\begin{{tabular}}{{lcccc}}
 \\toprule
-Proxy family & EndorseRank & AWP & GF-PR & Highest alignment \\\\
+Family & EndorseRank & AWP & GF-PR & Highest \\\\
 \\midrule
 {chr(10).join(rows)}
 \\bottomrule
-\\end{{tabular}}
-\\end{{table}}
-"""
-    out.write_text(body, encoding="utf-8")
+\\end{{tabular}}"""
+    out.write_text(
+        hdr
+        + _wrap_table(
+            f"Mean Kendall $\\tau$ by proxy family: EndorseRank, AWP, and GF-PR "
+            f"($n={summary.get('n_wallets', '---')}$).",
+            "tab:alignment-summary",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
 
 
 def main() -> int:

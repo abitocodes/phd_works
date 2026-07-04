@@ -5,6 +5,7 @@
 \centering
 \caption{Mean Kendall $\tau$ by proxy family across 3 PageRank methods ($n=5521$). Bold = column maximum. Runtime = mean PageRank wall time (s, 3 repeats). EndorseRank and AWP are social reputation graphs; GF-PR is an outcome-native GMX PnL star baseline (construct overlap on GMX proxies).}
 \label{tab:alignment-three-methods}
+\fitwidth{%
 \begin{tabular}{lccccccr}
 \toprule
 Method & Transfer & Allowance & Liq. & Inv.risk & Sybil & GMX & Runtime (s) \\
@@ -14,4 +15,5 @@ AWP & \textbf{0.534} & -0.030 & 0.113 & 0.107 & \textbf{0.286} & 0.179 & 18.711 
 GF-PR & 0.246 & -0.041 & \textbf{0.132} & \textbf{0.376} & 0.093 & \textbf{0.583} & 1.461 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}

@@ -6,12 +6,14 @@
 \centering
 \caption{Robustness: mean Kendall $\tau$ on top-20 ERC-20 token subgraph (matched cohort).}
 \label{tab:robustness-tokens}
+\fitwidth{%
 \begin{tabular}{lcccccc}
 \toprule
-Method & Transfer & Allowance & Default/Liquidation & Inverse risk & Sybil-adjusted stability & GMX success \\
+Method & Transfer & Allowance & Liq. & Inv.risk & Sybil & GMX \\
 \midrule
 EndorseRank & 0.331 & 0.355 & 0.092 & 0.036 & 0.234 & 0.098 \\
 AWP & 0.532 & -0.031 & 0.119 & 0.108 & 0.283 & 0.185 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}

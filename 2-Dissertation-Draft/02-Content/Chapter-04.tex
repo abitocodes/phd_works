@@ -71,7 +71,7 @@ A fourth constraint follows from the joint reading of Figures~\ref{fig:gmx-close
 
 \dissertationSubheading[sec:benchmark-results]{EndorseRank vs.\ AWP benchmark (Claim~C1)}
 
-Claim~C1 asserts that EndorseRank is computationally cheaper than AWP on identical inputs. Table~\ref{tab:benchmark-runtime} reports PageRank solve time, peak memory, iteration count, and edge count on the full matched cohort ($n=5{,}521$). Timing excludes one-time graph construction and averages three runs at convergence tolerance $10^{-8}$.
+Claim~C1 asserts that EndorseRank is computationally cheaper than AWP on identical inputs. Table~\ref{tab:benchmark-runtime} reports PageRank solve time, peak memory, iteration count, and edge count on the full matched cohort ($n=5{,}521$). Timing excludes one-time graph construction and averages three runs at convergence tolerance $10^{-8}$.\footnote{Excluding graph construction isolates the recurring PageRank solve cost that would dominate incremental score refresh in a deployed scorer.}
 
 \input{results/tables/benchmark-runtime.tex}
 
@@ -172,11 +172,11 @@ Per-proxy detail for each family appears in Section~\ref{sec:proxy-family-detail
 
 \dissertationSubheading[sec:proxy-family-detail]{Proxy family detail}
 
-The following subsections report Spearman $\rho$ and Kendall $\tau$ for each proxy within family. Each family is interpreted first for the primary EndorseRank--AWP comparison; supplementary GF-PR notes appear where they clarify construct overlap or ceiling effects. All proxies are oriented so that higher values imply higher expected reputation before correlation, following Do et al.\ (2023) and the operational definitions in Chapter~\ref{ch:methodology}.
+The following subsections report Spearman $\rho$ and Kendall $\tau$ for each proxy within family. Each family is interpreted first for the primary EndorseRank--AWP comparison; supplementary GF-PR notes appear where they clarify construct overlap or ceiling effects. All proxies are oriented so that higher values imply higher expected reputation before correlation, following Do et al.\cend{10} and the operational definitions in Chapter~\ref{ch:methodology}.
 
 \dissertationSubsubheading[sub:transfer-family]{Transfer family (Do et al.\ baseline)}
 
-Table~\ref{tab:alignment-transfer} reports alignment with transfer in-degree and inbound transfer value---the baseline validation axis in Do et al.\ (2023).
+Table~\ref{tab:alignment-transfer} reports alignment with transfer in-degree and inbound transfer value---the baseline validation axis in Do et al.\cend{10}.
 
 \input{results/tables/alignment-transfer.tex}
 

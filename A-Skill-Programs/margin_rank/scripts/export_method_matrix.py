@@ -171,18 +171,21 @@ def write_latex(summary: dict, out: Path, preset_cfg: dict) -> None:
         rows.append(f"{label} & {' & '.join(cells)} & {rt_cell} \\\\")
 
     method_count = len(methods)
-    body = f"""{hdr}
-\\begin{{table}}[htbp]
-\\centering
-\\caption{{Mean Kendall $\\tau$ by proxy family across {method_count} PageRank methods ($n={n}$). Bold = column maximum. Runtime = mean PageRank wall time (s, 3 repeats).{preset_cfg['caption_extra']}{edge_note}}}
-\\label{{{preset_cfg['label']}}}
-\\begin{{tabular}}{{l{'c' * len(families)}r}}
+    tabular = f"""\\begin{{tabular}}{{l{'c' * len(families)}r}}
 \\toprule
 Method & {col_headers} & Runtime (s) \\\\
 \\midrule
 {chr(10).join(rows)}
 \\bottomrule
-\\end{{tabular}}
+\\end{{tabular}}"""
+    body = f"""{hdr}
+\\begin{{table}}[htbp]
+\\centering
+\\caption{{Mean Kendall $\\tau$ by proxy family across {method_count} PageRank methods ($n={n}$). Bold = column maximum. Runtime = mean PageRank wall time (s, 3 repeats).{preset_cfg['caption_extra']}{edge_note}}}
+\\label{{{preset_cfg['label']}}}
+\\fitwidth{{%
+{tabular}
+}}
 \\end{{table}}
 """
     out.parent.mkdir(parents=True, exist_ok=True)

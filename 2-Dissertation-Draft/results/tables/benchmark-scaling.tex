@@ -6,12 +6,14 @@
 \centering
 \caption{Runtime scaling on expanded wallet pool ($N=31612$; SHA256 seed \texttt{benchmark-tier2-v1}). Stages subsample the extraction wallet set; ER speedup = AWP/ER runtime ratio.}
 \label{tab:benchmark-scaling}
+\fitwidth{%
 \begin{tabular}{rrrrrr}
 \toprule
-$n$ & ER runtime (s) & AWP runtime (s) & ER speedup (AWP/ER) & ER edges & AWP edges \\
+$n$ & ER (s) & AWP (s) & Speedup & ER $|E|$ & AWP $|E|$ \\
 \midrule
 10000 & 1.178 & 12.277 & 10.4$\times$ & 7067 & 72158 \\
 31612 & 2.286 & 21.402 & 9.4$\times$ & 14727 & 137087 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}

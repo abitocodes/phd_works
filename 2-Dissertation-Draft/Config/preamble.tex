@@ -28,7 +28,16 @@
 \usepackage{algpseudocode}
 \usepackage{multirow}
 \usepackage{tabularx}
+\usepackage{adjustbox}
 \usepackage{subcaption}
+\usepackage[bottom,hang,flushmargin]{footmisc}
+% Keep tables within the text block (no right-margin overflow).
+\newcommand{\fitwidth}[1]{%
+  \begin{adjustbox}{max width=\linewidth,center}%
+  \small\setlength{\tabcolsep}{3.5pt}%
+  #1%
+  \end{adjustbox}%
+}
 \hypersetup{hidelinks}
 \def\UrlFont{\ttfamily}
 \emergencystretch=2em
@@ -74,3 +83,31 @@
   \noindent\textbf{#1}\par\nobreak\addvspace{0.06\baselineskip}%
 }
 \newcommand{\figpath}[1]{Figures/generated/#1}
+
+% Citations: superscript [n] in text, page-bottom footnote (각주) with full entry,
+% and Section 7 References (미주) for the complete numbered list.
+\input{Config/bibentries.tex}
+\makeatletter
+% Remember which reference numbers already received a footnote on the current page.
+\newcommand{\cend@one}[1]{%
+  \edef\cend@key{#1@\thepage}%
+  \ifcsname cend@done@\cend@key\endcsname
+    \textsuperscript{\hyperref[ref:#1]{[#1]}}%
+  \else
+    \global\expandafter\let\csname cend@done@\cend@key\endcsname\@empty
+    \begingroup
+      \renewcommand{\thefootnote}{\hyperref[ref:#1]{[#1]}}%
+      \footnote{\csname bibentry@#1\endcsname}%
+    \endgroup
+  \fi
+}
+\newcommand{\cend}[1]{%
+  \def\cend@sep{}%
+  \@for\cend@tmp:=#1\do{%
+    \cend@sep
+    \expandafter\cend@one\expandafter{\cend@tmp}%
+    \def\cend@sep{\textsuperscript{,}}%
+  }%
+}
+\makeatother
+

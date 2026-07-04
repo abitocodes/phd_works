@@ -5,6 +5,7 @@
 \centering
 \caption{Mean Kendall $\tau$ by proxy family across 7 PageRank methods ($n=5521$). Bold = column maximum. Runtime = mean PageRank wall time (s, 3 repeats). Edge counts: liq-pr=45, borrow-pr=484, repay-pr=787, borrow-pr-pool=262, repay-pr-pool=232, delegation-pr=0.}
 \label{tab:alignment-seven-methods}
+\fitwidth{%
 \begin{tabular}{lccccccr}
 \toprule
 Method & Transfer & Allowance & Liq. & Inv.risk & Sybil & GMX & Runtime (s) \\
@@ -18,4 +19,5 @@ LF-PR & 0.197 & -0.031 & 0.045 & 0.017 & 0.102 & 0.032 & 0.113 \\
 RiskProp & \textbf{0.534} & -0.030 & 0.113 & 0.107 & 0.286 & 0.179 & 24.301 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
