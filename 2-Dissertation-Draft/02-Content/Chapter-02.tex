@@ -2,23 +2,23 @@
 \chapter{Literature Review and Theoretical Framework}
 \label{ch:literature}
 
-This chapter reviews the conceptual and technical foundations required to interpret EndorseRank and Adaptive Weighted PageRank (AWP). It begins with blockchain and DeFi primitives for readers who may not specialize in distributed ledgers, then develops graph ranking theory, reputation-system lineage, ERC-20 allowance semantics, GMX V2 trading-success validation, and rank-correlation statistics. The chapter closes with the theoretical framework---hyperlink propagation, domain alignment, and computational complexity---that motivates the primary EndorseRank versus AWP comparison in Chapters~\ref{ch:methodology} and~\ref{ch:results}.
+This chapter reviews the conceptual and technical foundations required to interpret EndorseRank, Adaptive Weighted PageRank (AWP), and the supplementary outcome-native reference GF-PR. It begins with blockchain and DeFi primitives for readers who may not specialize in distributed ledgers, then develops graph ranking theory, reputation-system lineage, ERC-20 allowance semantics, GMX V2 trading-success validation, and rank-correlation statistics. A theoretical framework---hyperlink--citation propagation, domain alignment, and computational complexity---motivates the primary EndorseRank versus AWP comparison. Later sections supply a terminology guide, worked example, risk taxonomy, perpetual-market laboratory, AWP in depth, method comparison, and open problems that lead into Chapters~\ref{ch:methodology} and~\ref{ch:results}.
 
 \dissertationSubheading[sec:blockchain-defi-foundations]{Blockchain and DeFi foundations}
 
 A blockchain is a replicated append-only ledger in which batches of transactions (blocks) are linked by cryptographic hashes \cend{46}. Participants agree on a canonical history through a consensus mechanism; once confirmed, entries are costly to rewrite. This property enables \emph{trust-minimized} settlement: counterparties need not share a legal identity if they can verify the ledger state.
 
-Bitcoin demonstrated peer-to-peer electronic cash \cend{46}. Ethereum generalized the model to a world computer: accounts hold balances and code, and transactions invoke functions that update state according to the Ethereum Virtual Machine (EVM) \cend{9,61,3}. Smart contracts are programs stored on-chain that execute deterministically when called \cend{56}. Because execution is public and reproducible, financial logic---collateral checks, liquidations, fee accrual---can be encoded without a central operator \cend{54}.
+Bitcoin demonstrated peer-to-peer electronic cash \cend{46}. Ethereum generalized the model to a world computer: accounts hold balances and code, and transactions invoke functions that update state according to the Ethereum Virtual Machine (EVM) \cend{9,60,3}. Smart contracts are programs stored on-chain that execute deterministically when called \cend{55}. Because execution is public and reproducible, financial logic---collateral checks, liquidations, fee accrual---can be encoded without a central operator \cend{53}.
 
-Decentralized Finance (DeFi) refers to the ecosystem of such contracts offering exchange, lending, derivatives, and asset management \cend{28,60}. Composability---the ability of one protocol to call another---creates powerful products but also systemic risk pathways, including flash-loan attacks and oracle manipulation \cend{51,15}. For reputation research, the relevant implication is that \emph{wallet-level histories} on public chains are rich, machine-readable, and incomplete: they reveal actions, not legal identities \cend{48}.
+Decentralized Finance (DeFi) refers to the ecosystem of such contracts offering exchange, lending, derivatives, and asset management \cend{4,12,28,33,59}. Composability---the ability of one protocol to call another---creates powerful products but also systemic risk pathways, including flash-loan attacks and oracle manipulation \cend{51,15,58}. For reputation research, the relevant implication is that \emph{wallet-level histories} on public chains are rich, machine-readable, and incomplete: they reveal actions, not legal identities \cend{48}.
 
 \dissertationSubsubheading[sub:pseudonymity-credit]{Pseudonymity and the credit problem}
 
-Traditional credit scoring links legal persons to repayment histories. On public blockchains, the unit of analysis is an address (wallet). An address may represent an individual, a fund, a bot, or a smart contract. Multiple addresses may be controlled by one entity \cend{17}. Consequently, DeFi lending markets typically require over-collateralization: borrowers lock assets worth more than the loan, and liquidators seize collateral when health factors fall \cend{5,54}. Over-collateralization is robust but capital-inefficient. On-chain reputation scores aim to summarize behavioral reliability so that protocols---or researchers studying them---can reason about risk without off-chain KYC \cend{29,39,44}.
+Traditional credit scoring links legal persons to repayment histories. On public blockchains, the unit of analysis is an address (wallet). An address may represent an individual, a fund, a bot, or a smart contract. Multiple addresses may be controlled by one entity \cend{17}. Consequently, DeFi lending markets typically require over-collateralization: borrowers lock assets worth more than the loan, and liquidators seize collateral when health factors fall \cend{5,53}. Over-collateralization is robust but capital-inefficient. On-chain reputation scores aim to summarize behavioral reliability so that protocols---or researchers studying them---can reason about risk without off-chain KYC \cend{29,39,44}.
 
 \dissertationSubheading[sec:ethereum-l2]{Ethereum, Layer-2 rollups, and Arbitrum One}
 
-Ethereum mainnet provides security and liquidity but faces throughput and fee constraints under demand \cend{7,22}. Layer-2 (L2) protocols execute transactions off the base layer (or in a compressed form) and periodically post commitments to Ethereum, aiming to inherit security while reducing cost \cend{26}. Optimistic rollups such as Arbitrum assume correctness unless challenged during a dispute window \cend{34}.
+Ethereum mainnet provides security and liquidity but faces throughput and fee constraints under demand \cend{7,22}. Layer-2 (L2) protocols execute transactions off the base layer (or in a compressed form) and periodically post commitments to Ethereum, aiming to inherit security while reducing cost \cend{25,26}. Optimistic rollups such as Arbitrum assume correctness unless challenged during a dispute window \cend{34}.
 
 Arbitrum One is an EVM-compatible optimistic rollup widely used for DeFi activity, including GMX V2 perpetual markets \cend{23}. For this dissertation, Arbitrum One is the empirical setting because (i) ERC-20 \texttt{Approval} and \texttt{Transfer} logs are available in public BigQuery datasets, (ii) GMX V2 emits wallet-attributed \texttt{PositionDecrease} events with realized PnL, and (iii) fee levels permit dense retail and professional trading activity within a six-month window. Results should not be assumed to transfer automatically to other L2s or to Ethereum mainnet without re-validation, but the methodological template---allowance graph versus transfer graph, proxy families, rank correlation---is chain-agnostic wherever equivalent logs exist.
 
@@ -57,7 +57,7 @@ Figure~\ref{fig:allowance-sequence} illustrates the lifecycle. Critically, an al
 % Message 3: revoke (owner -> token), dashed
 \draw[msg, dashed] (0,-4.4) -- node[above,font=\scriptsize] {\texttt{approve(spender,$0$)} (revoke)} (5.5,-4.4);
 \end{tikzpicture}
-\caption{ERC-20 allowance lifecycle: approve (or permit), optional \texttt{transferFrom}, and revoke. EndorseRank edges reflect the latest non-historical allowance snapshot per owner--spender pair.}
+\caption{ERC-20 allowance lifecycle: approve (or permit), optional \texttt{transferFrom}, and revoke. EndorseRank edges reflect the latest live allowance snapshot per owner--spender pair (historical approvals superseded, not time-decayed).}
 \label{fig:allowance-sequence}
 \end{figure}
 
@@ -124,7 +124,7 @@ In practice $\boldsymbol{\pi}$ is computed by power iteration:
 \boldsymbol{\pi}^{(t+1)} = G_{\mathrm{PR}}\boldsymbol{\pi}^{(t)},
 \label{eq:power-iteration}
 \end{equation}
-until $\|\boldsymbol{\pi}^{(t+1)}-\boldsymbol{\pi}^{(t)}\|_1 < \varepsilon$ or a maximum iteration count is reached. Each iteration costs $O(|E|)$ arithmetic operations for sparse graphs. Therefore, methods that induce fewer edges---such as latest-allowance snapshots versus full transfer histories---reduce per-iteration cost and often memory. This complexity observation grounds hypothesis H3.
+until $\|\boldsymbol{\pi}^{(t+1)}-\boldsymbol{\pi}^{(t)}\|_1 < \varepsilon$ or a maximum iteration count is reached. Each iteration costs $O(|E|)$ arithmetic operations for sparse graphs \cend{42}. Therefore, methods that induce fewer edges---such as latest-allowance snapshots versus full transfer histories---reduce per-iteration cost and often memory. This complexity observation grounds hypothesis H3.
 
 Default parameters in this dissertation use damping $d=0.85$ following common practice \cend{49}, with convergence tolerance $\varepsilon=10^{-8}$ and a maximum of $300$ iterations as study-specific solver settings.\footnote{Tolerance and iteration caps are implementation choices for reproducible timing; they are not claimed as part of the classical PageRank formulation.} Robustness checks vary $d\in\{0.75,0.85,0.95\}$.
 
@@ -146,9 +146,9 @@ The endorsement interpretation is intentional but imperfect. Users approve route
 
 \dissertationSubheading[sec:gmx-validation]{Trading success validation frame (GMX V2)}
 
-On Arbitrum One, dense wallet-attributed \textbf{PositionDecrease} events with realized PnL (\textbf{basePnlUsd}) provide trading-success proxies: close-success count, realized gain proxy, and close success rate \cend{23,54}. Under-collateralized lending default labels are sparse on this chain; GMX V2 perpetual closes offer dense, wallet-level realized outcomes for domain-intuition validation. These proxies parallel Do et al.'s in-degree/in-value logic but target collateralized perpetual trading rather than raw inflows.
+On Arbitrum One, dense wallet-attributed \texttt{PositionDecrease} events with realized PnL (\texttt{basePnlUsd}) provide trading-success proxies: close-success count, realized gain proxy, and close success rate \cend{23,53}. Under-collateralized lending default labels are sparse on this chain; GMX V2 perpetual closes offer dense, wallet-level realized outcomes for domain-intuition validation. These proxies parallel Do et al.'s in-degree/in-value logic but target collateralized perpetual trading rather than raw inflows.
 
-Perpetual markets allow leveraged long and short exposure with funding and liquidation rules \cend{60}. A profitable close is not equivalent to loan repayment, but it is an observable outcome that risk systems may care about when screening active traders. This dissertation treats GMX outcomes as \emph{domain-intuition proxies}, not regulatory ground truth.
+Perpetual markets allow leveraged long and short exposure with funding and liquidation rules \cend{59}. A profitable close is not equivalent to loan repayment, but it is an observable outcome that risk systems may care about when screening active traders. This dissertation treats GMX outcomes as \emph{domain-intuition proxies}, not regulatory ground truth.
 
 \dissertationSubheading[sub:gf-pr]{Supplementary extension: outcome-native reference (GF-PR)}
 
@@ -158,7 +158,7 @@ During the empirical phase, \textbf{GF-PR} (GainFlow PageRank) was added as a su
 
 Reputation scores and validation proxies are continuous variables without a universal classification threshold. Following Do et al.\cend{16} and classical psychometrics \cend{14}, this dissertation evaluates monotonic and pairwise rank agreement.
 
-Spearman's rank correlation \cend{55} is Pearson correlation on ranks. For paired ranks $(R_i,S_i)$ of $n$ items,
+Spearman's rank correlation \cend{54} is Pearson correlation on ranks. For paired ranks $(R_i,S_i)$ of $n$ items,
 \begin{equation}
 \rho = 1 - \frac{6\sum_{i=1}^n (R_i-S_i)^2}{n(n^2-1)}
 \label{eq:spearman}
@@ -167,7 +167,7 @@ in the absence of ties (with tie-aware variants used in software). Spearman's $\
 
 Kendall's $\tau$ \cend{36} counts concordant and discordant pairs. For all pairs $(i,j)$ with $i<j$,
 \begin{equation}
-\tau = \frac{C - D}{\binom{n}{2}},
+\tau = \frac{2(C - D)}{n(n-1)},
 \label{eq:kendall}
 \end{equation}
 where $C$ ($D$) is the number of concordant (discordant) pairs, with tie corrections in the $\tau$-b variant. Kendall's $\tau$ is often more interpretable for pairwise ordering agreement and is the primary family-level summary in Chapter~\ref{ch:results}.
@@ -178,29 +178,33 @@ There is no universal cutoff for ``strong'' $\tau$ in blockchain ranking studies
 
 \dissertationSubheading[sec:theoretical-framework]{Theoretical framework}
 
-This study is grounded in hyperlink-citation propagation, construct (domain) alignment, and computational complexity to compare EndorseRank and AWP across reputation structure (H1), trading-success alignment (H2), and computational efficiency (H3).
+This study uses hyperlink--citation propagation, construct (domain) alignment, and computational complexity as the bases for comparing EndorseRank and AWP across reputation structure (H1), social-method alignment (H2), and computational efficiency (H3).
 
-\textbf{Hyperlink--citation semantics.} The original PageRank algorithm \cend{49} treats inbound hyperlinks as citations. Do et al.\cend{16} apply this logic to Ethereum transfers with time-decayed edge weights. Figure~\ref{fig:logistic-decay-methods} (Chapter~\ref{ch:methodology}) plots the logistic decay
+\begin{itemize}
+\item \textbf{Hyperlink--citation semantics:} The original PageRank algorithm \cend{49} treats inbound hyperlinks as citations. Do et al.\cend{16} apply this logic to Ethereum transfers with time-decayed edge weights. Figure~\ref{fig:logistic-decay-methods} (Chapter~\ref{ch:methodology}) plots the logistic decay
 \begin{equation}
 \sigma(\Delta t)=\frac{1}{1+\exp\bigl(k(\Delta t-t_0)\bigr)}
 \label{eq:logistic}
 \end{equation}
-with $k=0.01$ and $t_0=180$ days as used for AWP in this study. EndorseRank extends citation-based propagation to ERC-20 approve/permit edges because allowances are explicit, on-chain delegations of spending authority \cend{18,19}. Unlike transfers, which may reflect trading or routing without trust intent, an allowance records durable authorization until revoked. Graph-based risk models \cend{44} further show that network structure carries information beyond raw activity counts, supporting a directed endorsement graph rather than transfer volume alone.
+with $k=0.01$ and $t_0=180$ days as used for AWP in this study. EndorseRank extends citation-based propagation to ERC-20 approve/permit edges because allowances are explicit, on-chain delegations of spending authority \cend{18,19}. Unlike transfers, which may reflect trading or routing without trust intent, an allowance records explicit authorization that remains in force until revoked or replaced. Graph-based risk models \cend{44} further show that network structure carries information beyond raw activity counts, supporting a directed endorsement graph rather than transfer volume alone.
 
-\textbf{Domain alignment framework.} In measurement theory, construct alignment assesses how well an indicator tracks an observable outcome \cend{14}. For rank-based reputation scoring, Spearman's $\rho$ and Kendall's $\tau$ evaluate monotonic and pairwise ordering agreement without assuming a classification threshold \cend{16}. Close-success count from GMX V2 and realized gain proxy serve as observable trading-success measures on Arbitrum One, satisfying the domain-intuition requirement without claiming external loan-repayment ground truth.
+\item \textbf{Domain alignment framework:} In measurement theory, construct alignment assesses how well an indicator tracks an observable outcome \cend{14}. For rank-based reputation scoring, Spearman's $\rho$ and Kendall's $\tau$ evaluate monotonic and pairwise ordering agreement without assuming a classification threshold \cend{16}. Close-success count from GMX V2 and realized gain proxy serve as observable trading-success measures on Arbitrum One, satisfying the domain-intuition requirement without claiming external loan-repayment ground truth.
 
-\textbf{Computational complexity.} PageRank's per-iteration cost is $O(|E|)$ \cend{49}. Approve/permit graphs are sparser than transfer graphs (fewer edges $|E|$), yielding lower per-iteration cost, faster convergence, and reduced memory---the basis for H3.
+\item \textbf{Computational complexity:} PageRank's per-iteration cost is $O(|E|)$ \cend{49}. Allowance graphs are sparser than transfer graphs (fewer edges $|E|$), yielding lower per-iteration cost and reduced memory, and often fewer iterations in practice---the basis for H3.
+\end{itemize}
 
 Figure~\ref{fig:conceptual-model} presents the conceptual model mapping the primary EndorseRank--AWP comparison to H1--H3 and RQ1--RQ4. GF-PR (dashed) is a supplementary outcome-native ceiling for SRQ1, added during empirical work.
 
 \begin{figure}[htbp]
 \centering
 \input{Figures/conceptual-model.tex}
-\caption{Conceptual model: primary EndorseRank vs.\ AWP comparison mapped to reputation structure (H1/RQ1), social-method alignment (H2/RQ2--4), and computational efficiency (H3/RQ3). GF-PR (dashed) is a supplementary outcome-native ceiling reference (SRQ1), not a third peer social method.}
+\caption{Conceptual model: primary EndorseRank vs.\ AWP comparison mapped to reputation structure (H1/RQ1), social-method alignment (H2/RQ2), and computational efficiency (H3/RQ3); RQ4 separately compares transfer versus trading-success validation frames. GF-PR (dashed) is a supplementary outcome-native ceiling reference (SRQ1), not a third peer social method.}
 \label{fig:conceptual-model}
 \end{figure}
 
-\textbf{Supplementary role of GF-PR.} H1 and H3 concern EndorseRank and AWP only. H2 compares social-method alignment between EndorseRank and AWP across five proxy families (RQ2, RQ4). GF-PR bounds the maximum trading-outcome proxy alignment achievable when ranking directly on outcome flow, clarifying construct overlap for SRQ1 without entering the primary hypothesis tests.
+\begin{itemize}
+\item \textbf{Supplementary role of GF-PR:} H1 and H3 concern EndorseRank and AWP only. H2/RQ2 compares social-method alignment between EndorseRank and AWP across five proxy families. RQ4 separately compares transfer versus trading-success validation frames. GF-PR bounds the maximum trading-outcome proxy alignment achievable when ranking directly on outcome flow, clarifying construct overlap for SRQ1 without entering the primary hypothesis tests.
+\end{itemize}
 
 \dissertationSubheading[sub:terminology]{Reader's guide to terminology}
 
@@ -221,7 +225,7 @@ The definitions in Chapter~\ref{ch:introduction} establish formal constructs; th
 
 Following Do et al.\cend{16} and Cronbach \& Meehl\cend{14}, construct alignment for rank-based scores uses Spearman's $\rho$ and Kendall's $\tau$ between reputation scores and proxy rankings. This dissertation evaluates \textbf{five proxy families} (transfer, allowance, inverse risk, Sybil-adjusted stability, trading success); see Chapter~\ref{ch:methodology} for operational definitions and formulas. Family-level mean $\tau$ summarizes each construct; per-proxy tables report $\rho$ and $\tau$ for transparency.
 
-The literature reviewed here supports three design choices: (i) PageRank as an interpretable propagation backbone; (ii) allowances as endorsement edges distinct from transfers; and (iii) multi-family rank correlation as validation in the absence of loan-default labels. Chapter~\ref{ch:methodology} turns these choices into an operational pipeline on Arbitrum One.
+The literature reviewed here supports three design choices: (i) PageRank as an interpretable propagation backbone; (ii) allowances as endorsement edges distinct from transfers; and (iii) multi-family rank correlation as validation in the absence of loan-default labels. These choices motivate the remaining sections of this chapter and, later, the operational pipeline in Chapter~\ref{ch:methodology}.
 
 \dissertationSubheading[sec:pagerank-worked-example]{Worked example: PageRank on a four-node endorsement graph}
 
@@ -235,33 +239,33 @@ If the same wallets are connected by many small transfers instead of few allowan
 
 \dissertationSubheading[sec:defi-risk-taxonomy]{DeFi risk taxonomy and where reputation fits}
 
-DeFi risk is multi-layered \cend{60,51,26}. Smart-contract risk concerns bugs and upgrade keys. Oracle risk concerns manipulated or stale prices \cend{2}. Market risk concerns volatility and liquidation cascades \cend{50}. Governance risk concerns token-weighted capture. \emph{Counterparty} or \emph{behavioral} risk---the focus of this dissertation---concerns whether a wallet's historical interactions suggest reliable management of leveraged exposure.
+DeFi risk is multi-layered \cend{59,51,26,11}. Smart-contract risk concerns bugs and upgrade keys. Oracle risk concerns manipulated or stale prices \cend{2}. Market risk concerns volatility and liquidation cascades \cend{50}, including stablecoin and funding-market stress \cend{37}. Governance risk concerns token-weighted capture. \emph{Counterparty} or \emph{behavioral} risk---the focus of this dissertation---concerns whether a wallet's historical interactions suggest reliable management of leveraged exposure.
 
 On-chain reputation scores address only the behavioral layer, and only partially. They do not replace collateral, audits, or oracle design. Their role is to summarize relational structure (who authorizes whom; who pays whom) into an ordinal signal that can be audited and recomputed \cend{48}. EndorseRank targets the authorization facet of behavioral risk; AWP targets the payment-flow facet. Neither claims to predict exploits or governance attacks.
 
-Wash trading and MEV further complicate behavioral measurement \cend{58,15,65}. Transfer graphs are especially exposed to artificial volume; allowance graphs are exposed to approval farming. Multi-family validation and Sybil-oriented proxies are partial mitigations, not complete defenses.
+Wash trading and MEV further complicate behavioral measurement \cend{57,15,63}, as do cross-venue arbitrage flows that inflate transfer activity without reflecting durable counterparty relationships \cend{45}. Transfer graphs are especially exposed to artificial volume; allowance graphs are exposed to approval farming. Multi-family validation and Sybil-oriented proxies are partial mitigations, not complete defenses.
 
 \dissertationSubheading[sec:perp-mechanics]{Perpetual markets as a validation laboratory}
 
-Perpetual futures (``perps'') are derivative contracts without expiry, popularized in crypto markets and implemented on-chain by protocols such as GMX \cend{23,28}. Traders post collateral, choose long or short exposure, and pay or receive funding. Positions may be reduced or closed voluntarily, or liquidated when collateral is insufficient. Each close emits an on-chain event with realized PnL attributable to a wallet.
+Perpetual futures (``perps'') are derivative contracts without expiry, popularized in crypto markets and implemented on-chain by protocols such as GMX \cend{23,28}. Decentralized exchanges and automated market makers provide the broader trading infrastructure in which such venues operate \cend{10,21,41,61}. Traders post collateral, choose long or short exposure, and pay or receive funding. Positions may be reduced or closed voluntarily, or liquidated when collateral is insufficient. Each close emits an on-chain event with realized PnL attributable to a wallet.
 
 For reputation research, perps offer three advantages over sparse lending defaults on Arbitrum: (i) high event density ($365{,}488$ closes in the study window); (ii) wallet-level attribution; and (iii) signed outcomes (profit, loss, liquidation) that can be turned into oriented proxies. The disadvantage is construct distance from unsecured credit: a profitable trader is not necessarily a good borrower. This dissertation therefore treats GMX outcomes as domain-intuition proxies and reports transfer proxies alongside them (RQ4).
 
 \dissertationSubheading[sec:related-measurement]{Related measurement traditions}
 
-Beyond blockchain, reputation systems have been studied in e-commerce \cend{52}, peer-to-peer networks \cend{35}, and web spam \cend{27}. Common lessons include: (i) reputation is relational; (ii) cheap identities enable Sybil attacks \cend{17}; (iii) seed sets and normalization limit inflation; and (iv) evaluation requires external criteria, not only internal consistency. EndorseRank inherits (i)--(iii) via PageRank damping and endorsement costs, and addresses (iv) via multi-family rank correlation \cend{14,55,36}.
+Beyond blockchain, reputation systems have been studied in e-commerce \cend{52}, peer-to-peer networks \cend{35}, and web spam \cend{27}. Common lessons include: (i) reputation is relational; (ii) cheap identities enable Sybil attacks \cend{17}; (iii) seed sets and normalization limit inflation; and (iv) evaluation requires external criteria, not only internal consistency. EndorseRank inherits (i)--(iii) via PageRank damping and endorsement costs, and addresses (iv) via multi-family rank correlation \cend{14,54,36}.
 
 Personalized and topic-sensitive PageRank variants \cend{30,32} could, in future work, bias teleportation toward protocol-approved contracts or known-good wallets, analogous to TrustRank seeds. This dissertation uses uniform teleportation for comparability with Do et al.\cend{16}.
 
 \dissertationSubheading[sec:account-model]{Accounts, gas, and why logs are the measurement surface}
 
-Ethereum-style accounts are either externally owned accounts (EOAs), controlled by private keys, or contract accounts, controlled by code \cend{61,3}. Every state-changing interaction consumes gas and emits logs when contracts are written to do so. Reputation research that aims for auditability therefore privileges \emph{logs} over off-chain indexes: logs are part of the canonical chain history and can be re-derived by any full node or public warehouse \cend{47}.
+Ethereum-style accounts are either externally owned accounts (EOAs), controlled by private keys, or contract accounts, controlled by code \cend{60,3}. Every state-changing interaction consumes gas and emits logs when contracts are written to do so. Reputation research that aims for auditability therefore privileges \emph{logs} over off-chain indexes: logs are part of the canonical chain history and can be re-derived by any full node or public warehouse \cend{47}.
 
-Gas costs shape the graphs we observe. On L2s, lower fees increase transfer frequency and approval churn, densifying $G_{\text{transfer}}$ more than $G_{\text{approve}}$ because payments are routine while approvals are intermittent setup actions. This economic asymmetry is one reason EndorseRank graphs remain sparse even when transfer graphs explode (Chapter~\ref{ch:results}).
+Gas costs shape the graphs we observe. On L2s, lower fees increase transfer frequency and approval churn, densifying $G_{\text{transfer}}$ more than $G_{\text{approve}}$ because payments are routine while approvals are intermittent setup actions. This economic asymmetry is one reason EndorseRank graphs are expected to remain sparse relative to transfer graphs (examined in Chapter~\ref{ch:results}).
 
 \dissertationSubheading[sec:approval-security]{Approvals as security-relevant events}
 
-Unlimited approvals (\texttt{type(uint256).max}) are a well-known user-experience hazard: a compromised spender can drain tokens until the owner revokes. Security analyses of honeypots, phishing approvals, and malicious spenders \cend{57,43} underscore that allowances are not neutral metadata---they are capabilities. EndorseRank interprets inbound allowances as endorsement of a spender's capability, which is precisely why the construct is semantically distinct from inbound transfers. A wallet may receive many transfers without ever being trusted to spend on others' behalf.
+Unlimited approvals (\texttt{type(uint256).max}) are a well-known user-experience hazard: a compromised spender can drain tokens until the owner revokes. Security analyses of honeypots, phishing approvals, and malicious spenders \cend{56,43} underscore that allowances are not neutral metadata---they are capabilities. EndorseRank interprets inbound allowances as endorsement of a spender's capability, which is precisely why the construct is semantically distinct from inbound transfers. A wallet may receive many transfers without ever being trusted to spend on others' behalf.
 
 From a measurement standpoint, unlimited approvals create heavy-tailed edge weights. Decimal adjustment and optional winsorization can moderate extremes; this dissertation sums decimal-adjusted latest allowances and relies on PageRank's normalization by out-strength so that a single huge approval does not automatically dominate unless the owner has few outgoing endorsements.
 
@@ -269,7 +273,7 @@ From a measurement standpoint, unlimited approvals create heavy-tailed edge weig
 
 Do et al.\cend{16} propose Adaptive Weighted PageRank on Ethereum transfers as a social-credit signal. Edges are transfers; weights combine value and recency through a logistic decay. Validation uses inbound degree and inbound value---proxies for ``how much economic attention a wallet receives.'' The framework is attractive because it is fully on-chain, rank-based, and free of off-chain identity.
 
-EndorseRank preserves the PageRank-and-rank-correlation template but replaces the edge semantics. The empirical question is not whether AWP is ``wrong,'' but whether allowance edges yield a different, useful, and cheaper signal. Chapter~\ref{ch:results} answers in the affirmative on cost and allowance alignment, and in the negative on universal dominance: AWP remains stronger on transfer and several outcome-adjacent families.
+EndorseRank preserves the PageRank-and-rank-correlation template but replaces the edge semantics. The empirical question is not whether AWP is ``wrong,'' but whether allowance edges yield a different, useful, and cheaper signal. Chapter~\ref{ch:results} tests whether allowance edges produce a construct-distinct, allowance-aligned, and computationally cheaper score, and whether either social method dominates across proxy families.
 
 \dissertationSubheading[sec:method-comparison-table]{Comparison of graph reputation methods}
 

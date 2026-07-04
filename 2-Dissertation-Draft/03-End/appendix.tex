@@ -25,9 +25,9 @@ This appendix documents the evaluation pipeline that produced the numerics in Ch
 The evaluation proceeds in three stages on Arbitrum One over the observation window 2025-12-01 to 2026-05-31 (UTC, inclusive).
 
 \begin{enumerate}
-\item \textbf{Trading-success labels.} Decode GMX V2 \texttt{PositionDecrease} events from the public BigQuery log table, recover wallet identity, realized PnL, position-size change, and liquidation flags, and retain wallets with at least three closes as the matched cohort ($n=5{,}521$; $365{,}488$ decoded closes).
-\item \textbf{Reputation graphs and scores.} Extract ERC-20 \texttt{Approval} and \texttt{Transfer} logs for cohort wallets in monthly batches (per-query dry-run and a $150$\,GiB abort cap). Build the latest-allowance endorsement graph and the time-decayed transfer graph, then compute EndorseRank, AWP, and supplementary GF-PR scores by power iteration (damping $d=0.85$, tolerance $10^{-8}$, at most $300$ iterations).
-\item \textbf{Proxies, alignment, and benchmarks.} Compute the five proxy families defined in Chapter~\ref{ch:methodology}, report Spearman $\rho$ and Kendall $\tau$ against each score vector, time PageRank solves on pre-built edges (three-run averages), and run robustness sweeps over damping, top tokens, and sample size.
+\item \textbf{Trading-success labels:} Decode GMX V2 \texttt{PositionDecrease} events from the public BigQuery log table, recover wallet identity, realized PnL, position-size change, and liquidation flags, and retain wallets with at least three closes as the matched cohort ($n=5{,}521$; $365{,}488$ decoded closes).
+\item \textbf{Reputation graphs and scores:} Extract ERC-20 \texttt{Approval} and \texttt{Transfer} logs for cohort wallets in monthly batches (per-query dry-run and a $150$\,GiB abort cap). Build the latest-allowance endorsement graph and the time-decayed transfer graph, then compute EndorseRank, AWP, and supplementary GF-PR scores by power iteration (damping $d=0.85$, tolerance $10^{-8}$, at most $300$ iterations).
+\item \textbf{Proxies, alignment, and benchmarks:} Compute the five proxy families defined in Chapter~\ref{ch:methodology}, report Spearman $\rho$ and Kendall $\tau$ against each score vector, time PageRank solves on pre-built edges (three-run averages), and run robustness sweeps over damping, top tokens, and sample size.
 \end{enumerate}
 
 Offline synthetic checks use the same scoring and alignment logic on fixture graphs (no cloud access) to validate implementation before real extraction. Real extraction requires Google Cloud credentials and a billing project; scans target only the public Arbitrum One log dataset.
@@ -86,15 +86,17 @@ Expanded pool subsample seed & \texttt{benchmark-tier2-v1} & Deterministic SHA25
 
 The following formulas match Chapter~\ref{ch:methodology}.
 
-\textbf{Transfer.} $\mathrm{in\_degree}(w)=|\{u:\exists u\to w\}|$; $\mathrm{in\_value}(w)=\sum_{e:u\to w}\mathrm{value}(e)$.
+\begin{itemize}
+\item \textbf{Transfer:} $\mathrm{in\_degree}(w)=|\{u:\exists u\to w\}|$; $\mathrm{in\_value}(w)=\sum_{e:u\to w}\mathrm{value}(e)$.
 
-\textbf{Allowance.} $\mathrm{in\_approve\_degree}(w)=|\{o:\exists o\to w\}|$; $\mathrm{in\_approve\_value}(w)=\sum_o w_a(o,w)$ with $w$ as spender.
+\item \textbf{Allowance:} $\mathrm{in\_approve\_degree}(w)=|\{o:\exists o\to w\}|$; $\mathrm{in\_approve\_value}(w)=\sum_o w_a(o,w)$ with $w$ as spender.
 
-\textbf{Inverse risk.} $\mathrm{loss\_avoidance}(w)=-\sum_c\min(\mathrm{PnL}_c,0)$; $\mathrm{non\_loss\_close\_rate}(w)=1-|\{c:\mathrm{PnL}_c<0\land\neg\mathrm{liq}_c\}|/|\mathcal{C}(w)|$; $\mathrm{worst\_close\_pnl\_score}(w)=-\min_c\mathrm{PnL}_c$.
+\item \textbf{Inverse risk:} $\mathrm{loss\_avoidance}(w)=-\sum_c\min(\mathrm{PnL}_c,0)$; $\mathrm{non\_loss\_close\_rate}(w)=1-|\{c:\mathrm{PnL}_c<0\land\neg\mathrm{liq}_c\}|/|\mathcal{C}(w)|$; $\mathrm{worst\_close\_pnl\_score}(w)=-\min_c\mathrm{PnL}_c$.
 
-\textbf{Sybil-adjusted stability.} $\mathrm{inbound\_counterparty\_ratio}(w)=|\{u:u\to w\}|/|T^{\mathrm{in}}(w)|$ (self-transfers excluded); tenure in days; active months.
+\item \textbf{Sybil-adjusted stability:} $\mathrm{inbound\_counterparty\_ratio}(w)=|\{u:u\to w\}|/|T^{\mathrm{in}}(w)|$ (self-transfers excluded); tenure in days; active months.
 
-\textbf{Trading success.} $\mathrm{close\_success\_count}(w)=|\{c:\mathrm{PnL}_c>0\land\neg\mathrm{liq}_c\}|$; $\mathrm{realized\_gain\_proxy}(w)=\sum_c\max(\mathrm{PnL}_c,0)$; $\mathrm{close\_success\_rate}(w)=\mathrm{close\_success\_count}(w)/|\mathcal{C}(w)|$.
+\item \textbf{Trading success:} $\mathrm{close\_success\_count}(w)=|\{c:\mathrm{PnL}_c>0\land\neg\mathrm{liq}_c\}|$; $\mathrm{realized\_gain\_proxy}(w)=\sum_c\max(\mathrm{PnL}_c,0)$; $\mathrm{close\_success\_rate}(w)=\mathrm{close\_success\_count}(w)/|\mathcal{C}(w)|$.
+\end{itemize}
 
 \dissertationSubheading[sec:glossary]{Glossary}
 
