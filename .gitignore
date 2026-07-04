@@ -11,3 +11,5 @@ _p1_sections.txt
 proposal-ko/_spacing_test.*
 # dissertation QA page screenshots (local only)
 **/_qa_pages/
+# dissertation per-chapter build aux snapshots
+**/_chapter_aux_backup/
