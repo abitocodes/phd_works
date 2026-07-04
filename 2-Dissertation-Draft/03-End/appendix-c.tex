@@ -2,7 +2,7 @@
 \section{Elementary Properties of PageRank and Rank Correlation}
 \label{ch:appendix-theory}
 
-This appendix records elementary properties used implicitly in Chapters~\ref{ch:literature}--\ref{ch:results}. The material is standard \cend{49,40,55,36} and is included for self-contained reading.
+This appendix records elementary properties used implicitly in Chapters~\ref{ch:literature}--\ref{ch:results}. The material is standard \cend{49,40,54,36} and is included for self-contained reading.
 
 \dissertationSubheading[sec:pr-existence]{Existence and uniqueness of PageRank}
 
@@ -22,11 +22,11 @@ PageRank is a continuous function of the entries of $P$ for fixed $d\in(0,1)$. S
 
 A sparse matrix--vector product $P^{\top}\mathbf{x}$ costs $O(m)$ arithmetic operations for $m$ nonzero edges. Power iteration therefore costs $O(mI)$ for $I$ iterations. On the matched cohort, $m_{\mathrm{ER}}=14{,}727$ and $m_{\mathrm{AWP}}=137{,}087$, so even at identical $I$ the transfer method would be roughly $9.3\times$ more expensive per iteration. Observed iteration counts ($I_{\mathrm{ER}}\approx 37$, $I_{\mathrm{AWP}}\approx 100$) widen the gap, matching the measured wall-time ratio $\approx 8.9\times$ (Table~\ref{tab:benchmark-runtime}).
 
-\dissertationSubheading[sec:spearman-properties]{Properties of Spearman's $\rho$}
+\dissertationSubheading[sec:spearman-properties]{Properties of Spearman's \texorpdfstring{$\rho$}{rho}}
 
 Spearman's $\rho$ is Pearson's correlation applied to ranks. It is invariant to strictly increasing transformations of either variable and lies in $[-1,1]$. Perfect monotone agreement yields $\rho=1$; perfect reverse agreement yields $\rho=-1$. Ties require mid-rank adjustments; the evaluation pipeline uses standard tie-aware implementations. Because reputation scores and proxies are continuous and heavy-tailed, rank-based association is more appropriate than Pearson correlation on raw values \cend{16}.
 
-\dissertationSubheading[sec:kendall-properties]{Properties of Kendall's $\tau$}
+\dissertationSubheading[sec:kendall-properties]{Properties of Kendall's \texorpdfstring{$\tau$}{tau}}
 
 Kendall's $\tau$ equals the normalized difference between concordant and discordant pairwise orderings. It admits a probabilistic reading: for two random distinct wallets, $\tau$ is the probability their relative order agrees under both rankings, minus the probability it disagrees \cend{36}. This reading is useful when communicating results to practitioners: $\tau=0.355$ means a clear but imperfect tendency for allowance-proxy orderings to agree with EndorseRank orderings.
 
@@ -67,4 +67,4 @@ Observation window & 2025-12-01 -- 2026-05-31 \\
 \end{tabular}
 \end{center}
 
-These values are authoritative only insofar as they match \texttt{eval\_summary.json} and the exported LaTeX tables; if a regenerated export differs, the JSON artifact prevails.
+These values are transcribed from the pipeline's machine-readable evaluation summary and match the exported result tables.

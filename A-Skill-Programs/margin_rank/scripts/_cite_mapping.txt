@@ -1,0 +1,65 @@
+1	2
+2	3
+3	5
+4	7
+5	8
+6	9
+7	12
+8	14
+9	15
+10	16
+11	17
+12	18
+13	19
+14	22
+15	23
+16	25
+17	27
+18	28
+19	29
+20	34
+21	35
+22	36
+23	38
+24	39
+25	40
+26	44
+27	46
+28	47
+29	48
+30	49
+31	51
+32	54
+33	55
+34	56
+35	60
+36	61
+37	62
+38	65
+39	64
+40	4
+41	10
+42	11
+43	13
+44	21
+45	26
+46	30
+47	32
+48	33
+49	37
+50	41
+51	42
+52	43
+53	45
+54	50
+55	52
+56	53
+57	57
+58	58
+59	59
+60	63
+NEW	1	Akerlof, G. A. (1970). The market for ``lemons'': Quality uncertainty and the market mechanism. \textit{The Quarterly Jo
+NEW	6	Basu, S. (1977). Investment performance of common stocks in relation to their price-earnings ratios: A test of the effic
+NEW	20	Fama, E. F., \& French, K. R. (1992). The cross-section of expected stock returns. \textit{The Journal of Finance}, \tex
+NEW	24	Graham, B., \& Dodd, D. L. (1934). \textit{Security analysis}. McGraw-Hill.
+NEW	31	Healy, P. M., \& Wahlen, J. M. (1999). A review of the earnings management literature and its implications for standard 
