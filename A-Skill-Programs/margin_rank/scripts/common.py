@@ -41,6 +41,10 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
         val = bench.get(key)
         if isinstance(val, str):
             bench[key] = str(_resolve_path(val))
+    tier2 = bench.get("tier2_paths") or {}
+    for key, val in tier2.items():
+        if isinstance(val, str):
+            tier2[key] = str(_resolve_path(val))
     return cfg
 
 
@@ -238,3 +242,100 @@ def save_extraction_wallet_set(wallets: list[str], config: dict[str, Any]) -> Pa
     path.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame({"wallet": wallets}).to_parquet(path, index=False)
     return path
+
+
+def derive_wallets_from_reputation_parquet(
+    allowances: pd.DataFrame,
+    transfers: pd.DataFrame,
+) -> list[str]:
+    """Unique wallet addresses appearing in Tier-1 reputation parquet (includes 1-hop neighbors)."""
+    wallets: set[str] = set()
+    if not transfers.empty:
+        wallets |= set(transfers["from_address"].astype(str).str.lower())
+        wallets |= set(transfers["to_address"].astype(str).str.lower())
+    if not allowances.empty:
+        wallets |= set(allowances["owner"].astype(str).str.lower())
+        wallets |= set(allowances["spender"].astype(str).str.lower())
+    return sorted(w for w in wallets if w and w.startswith("0x"))
+
+
+def rank_wallets_by_activity(
+    wallets: list[str],
+    transfers: pd.DataFrame,
+    allowances: pd.DataFrame,
+) -> list[str]:
+    """Order wallets by inbound+outbound transfer event count (descending)."""
+    scores: dict[str, int] = {w.lower(): 0 for w in wallets}
+    if not transfers.empty:
+        for col in ("from_address", "to_address"):
+            counts = transfers[col].astype(str).str.lower().value_counts()
+            for w, c in counts.items():
+                if w in scores:
+                    scores[w] += int(c)
+    if not allowances.empty:
+        for col in ("owner", "spender"):
+            counts = allowances[col].astype(str).str.lower().value_counts()
+            for w, c in counts.items():
+                if w in scores:
+                    scores[w] += int(c)
+    return sorted(scores.keys(), key=lambda w: (-scores[w], w))
+
+
+def build_tier2_wallet_pool(
+    gmx_wallets: list[str],
+    allowances: pd.DataFrame,
+    transfers: pd.DataFrame,
+    config: dict[str, Any],
+    supplemental_path: Path | None = None,
+) -> tuple[list[str], dict[str, Any]]:
+    """Union GMX wallets with supplemental/active pool up to target_wallets."""
+    bench = config.get("benchmark") or {}
+    target = int(bench.get("target_wallets", 100000))
+    gmx_sorted = sorted({w.lower() for w in gmx_wallets})
+
+    path = supplemental_path
+    if path is None and bench.get("supplemental_path"):
+        path = Path(bench["supplemental_path"])
+
+    merged_set = set(gmx_sorted)
+    supplemental_source = "reputation_parquet"
+
+    if path and Path(path).exists():
+        supplemental_source = str(path)
+        df = pd.read_parquet(path)
+        if "wallet" not in df.columns:
+            raise ValueError(f"Missing wallet column in {path}")
+        for wallet in df["wallet"].astype(str).str.lower():
+            if len(merged_set) >= target:
+                break
+            merged_set.add(wallet)
+    else:
+        derived = derive_wallets_from_reputation_parquet(allowances, transfers)
+        ranked = rank_wallets_by_activity(derived, transfers, allowances)
+        for wallet in ranked:
+            if len(merged_set) >= target:
+                break
+            merged_set.add(wallet)
+
+    merged = sorted(merged_set)[:target]
+    meta = {
+        "gmx_wallet_count": len(gmx_sorted),
+        "target_wallets": target,
+        "extraction_wallet_count": len(merged),
+        "supplemental_source": supplemental_source,
+        "supplemental_count": max(0, len(merged) - len(gmx_sorted)),
+    }
+    return merged, meta
+
+
+def tier2_reputation_paths(config: dict[str, Any]) -> dict[str, str]:
+    """Return processed reputation paths preferring Tier-2 parquet when present."""
+    bench = config.get("benchmark") or {}
+    tier2 = bench.get("tier2_paths") or {}
+    rep = config["reputation"]["paths"]
+    out = dict(rep)
+    for key in ("latest_allowances", "transfer_events"):
+        tier2_path = tier2.get(key)
+        if tier2_path and Path(tier2_path).exists():
+            out[key] = tier2_path
+    return out

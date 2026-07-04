@@ -1,10 +1,16 @@
 % !TEX root = ../main.tex
+
+\phantomsection
 \chapter*{Abstract}
-\addcontentsline{toc}{chapter}{Abstract}
+
 \label{ch:abstract}
 
-DeFi protocols require wallet reputation signals that are computationally scalable, semantically interpretable, and aligned with meaningful financial outcomes. This dissertation proposes \textbf{EndorseRank}, applying Weighted PageRank to ERC-20 allowance edges on Arbitrum One, and compares it against Adaptive Weighted PageRank (AWP) on transfer graphs.
+DeFi protocols require on-chain reputation scores that are computationally scalable, semantically interpretable, and aligned with meaningful financial outcomes (Sch\"{a}r, 2021; Packin \& Lev-Aretz, 2024). This dissertation introduces \textbf{EndorseRank}, an on-chain reputation score produced by applying PageRank to a directed endorsement graph built from latest ERC-20 allowance edges on Arbitrum One, and evaluates it against Adaptive Weighted PageRank (AWP), the transfer-graph baseline of Do et al.\ (2023), using five proxy families on a matched alignment cohort ($n=5{,}521$).
 
-On BigQuery-derived data ($n=5{,}521$ GMX-qualified wallets, six-month observation window), validation uses six proxy families: transfer (Do et al.\ baseline), allowance, GMX default/liquidation, inverse risk, Sybil-adjusted stability, and GMX trading success. EndorseRank runs $\approx 8\times$ faster than AWP and aligns more strongly with allowance proxies ($\tau=0.355$ vs.\ $-0.030$); AWP aligns more strongly with transfer and most outcome-based families. Inter-method rank correlation ($\tau=0.316$) confirms non-redundant reputation structures.
+EndorseRank runs $\approx 8.9\times$ faster than AWP on identical cohort inputs (2.1\,s vs.\ 18.7\,s PageRank wall time) and aligns more strongly with allowance proxies (mean Kendall $\tau=0.355$ vs.\ $-0.030$ for AWP); AWP aligns more strongly with transfer proxies ($\tau=0.534$ vs.\ $0.333$ for EndorseRank). Inter-method rank correlation between EndorseRank and AWP ($\tau=0.316$) indicates partially overlapping yet construct-distinct social reputation structures.
 
-\textbf{\emph{Keywords---}} DeFi, EndorseRank, Adaptive Weighted PageRank, On-Chain Reputation, GMX V2, Arbitrum One, Domain Alignment, Spearman's rho, Kendall's tau
+On an expanded wallet pool ($N=31{,}612$), EndorseRank remains $\approx 10.4\times$ faster than AWP at $n=10{,}000$ and $\approx 9.4\times$ at full pool size. Robustness checks (PageRank damping, top-20 token subgraph, sample-size sensitivity) leave EndorseRank allowance alignment stable at $\tau \approx 0.355$ without altering the allowance--transfer trade-off.
+
+During empirical work, GMX V2 trading-success proxies were incorporated to extend domain validation on the same cohort, and \textbf{GF-PR} was added as a supplementary outcome-native ceiling reference built from the same GMX profit-and-loss stream. Among social methods, transfer proxies yield higher mean alignment than trading-success proxies on this chain; GF-PR achieves the highest trading-success mean $\tau$ ($0.583$) by construction, illustrating construct overlap when ranking directly on outcome flow rather than social edges. GF-PR does not constitute a deployable social reputation score.
+
+\textbf{\emph{Keywords---}} DeFi, EndorseRank, Adaptive Weighted PageRank, On-Chain Reputation, GMX V2, Arbitrum One, Domain Alignment, Spearman's rho, Kendall's tau, GF-PR (outcome-native reference)

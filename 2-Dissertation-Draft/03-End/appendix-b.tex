@@ -1,0 +1,106 @@
+% !TEX root = ../main.tex
+\chapter{SQL Templates, Configuration, and Extended Notes}
+\label{ch:appendix-sql}
+
+This appendix collects representative SQL patterns, configuration keys, and extended methodological notes that support reproduction without cluttering the main chapters.
+
+\dissertationSubheading[sec:sql-approval]{Approval log extraction pattern}
+
+ERC-20 \texttt{Approval} events are identified by topic~$0$ equal to the keccak256 hash of \texttt{Approval(address,address,uint256)}. A simplified monthly query pattern is:
+
+\begin{verbatim}
+SELECT
+  block_timestamp,
+  block_number,
+  transaction_hash,
+  log_index,
+  address AS token,
+  topics[SAFE_OFFSET(1)] AS owner_topic,
+  topics[SAFE_OFFSET(2)] AS spender_topic,
+  data AS value_data
+FROM `bigquery-public-data.goog_blockchain_arbitrum_one_us.logs`
+WHERE block_timestamp >= TIMESTAMP('2025-12-01')
+  AND block_timestamp <  TIMESTAMP('2026-01-01')
+  AND topics[SAFE_OFFSET(0)] = '0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925'
+  AND (
+    LOWER(CONCAT('0x', SUBSTR(topics[SAFE_OFFSET(1)], 27))) IN UNNEST(@wallet_list)
+    OR LOWER(CONCAT('0x', SUBSTR(topics[SAFE_OFFSET(2)], 27))) IN UNNEST(@wallet_list)
+  );
+\end{verbatim}
+
+Wallet filtering via \texttt{@wallet\_list} keeps scans proportional to the cohort rather than the full chain. Monthly batching respects per-query byte caps documented in the pipeline manifest.
+
+\dissertationSubheading[sec:sql-transfer]{Transfer log extraction pattern}
+
+\texttt{Transfer} events use topic~$0$ for \texttt{Transfer(address,address,uint256)}:
+
+\begin{verbatim}
+SELECT
+  block_timestamp,
+  block_number,
+  transaction_hash,
+  log_index,
+  address AS token,
+  topics[SAFE_OFFSET(1)] AS from_topic,
+  topics[SAFE_OFFSET(2)] AS to_topic,
+  data AS value_data
+FROM `bigquery-public-data.goog_blockchain_arbitrum_one_us.logs`
+WHERE block_timestamp >= TIMESTAMP('2025-12-01')
+  AND block_timestamp <  TIMESTAMP('2026-01-01')
+  AND topics[SAFE_OFFSET(0)] = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+  AND (
+    LOWER(CONCAT('0x', SUBSTR(topics[SAFE_OFFSET(1)], 27))) IN UNNEST(@wallet_list)
+    OR LOWER(CONCAT('0x', SUBSTR(topics[SAFE_OFFSET(2)], 27))) IN UNNEST(@wallet_list)
+  );
+\end{verbatim}
+
+Post-processing applies token decimals, builds time-decayed edge weights, and restricts nodes to the evaluation sample before PageRank.
+
+\dissertationSubheading[sec:sql-gmx]{GMX PositionDecrease extraction pattern}
+
+GMX V2 events are read from the \texttt{EventEmitter} contract. The pipeline filters on the emitter address
+\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}
+and decodes key--value fields to recover \texttt{account}, \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, and liquidation flags. Only \texttt{PositionDecrease} rows enter proxy computation. Wallets with fewer than three closes are excluded from the matched cohort.
+
+\dissertationSubheading[sec:config-keys]{Configuration keys}
+
+Primary configuration lives in \texttt{config/margin\_config.yaml}. Salient keys include:
+
+\begin{itemize}
+\item observation window start and end timestamps;
+\item PageRank damping, tolerance, and maximum iterations;
+\item logistic decay $k$ and $t_0$;
+\item GMX emitter address and topic filters;
+\item minimum closes for cohort eligibility ($m=3$);
+\item benchmark repetition count and subsample seeds;
+\item output paths for parquet and LaTeX fragments.
+\end{itemize}
+
+Changing damping or decay parameters without re-exporting tables will desynchronize the dissertation numerics from \texttt{eval\_summary.json}. The recommended workflow is always \texttt{run\_dissertation\_eval.py --real --robustness --export-latex} followed by \texttt{generate\_dissertation\_figures.py} and \texttt{build.ps1}.
+
+\dissertationSubheading[sec:complexity-notes]{Complexity notes}
+
+Let $n$ be the number of nodes and $m=|E|$ the number of edges. Building latest-allowance edges is $O(R_a\log R_a)$ if $R_a$ approval rows are sorted by timestamp, or $O(R_a)$ expected time with a hash map keyed by (token, owner, spender). Building transfer edges is $O(R_t)$ over transfer rows. PageRank is $O(mI)$ for $I$ iterations. Empirically $I\approx 37$ for EndorseRank and $I\approx 100$ for AWP on the matched cohort, and $m_{\mathrm{approve}}\ll m_{\mathrm{transfer}}$, so both factors favor EndorseRank.
+
+Memory is dominated by edge lists and score vectors. Peak solve memory of $4.6$\,MB versus $38.2$\,MB (Table~\ref{tab:benchmark-runtime}) is consistent with the edge-count ratio $14{,}727:137{,}087$.
+
+\dissertationSubheading[sec:interpretation-checklist]{Interpretation checklist for readers}
+
+When reading Chapter~\ref{ch:results} tables, the following checklist reduces common misreadings:
+
+\begin{enumerate}
+\item Identify whether a row is a \emph{social} method (EndorseRank, AWP) or the supplementary GF-PR reference.
+\item Match each family to its intended construct (allowance vs.\ transfer vs.\ outcome).
+\item Prefer relative comparisons on the same cohort over absolute $\tau$ thresholds.
+\item Treat GF-PR highs on trading-success and inverse-risk as construct-overlap diagnostics (SRQ1).
+\item Read runtime tables as PageRank solve time on pre-built edges, not end-to-end ETL time.
+\item Confirm robustness tables before generalizing a point estimate.
+\end{enumerate}
+
+\dissertationSubheading[sec:archived-baselines]{Archived extended baselines}
+
+Seven-method and six-Aave alignment matrices are stored under \texttt{2-Dissertation-Draft/archive/extended-baselines/} and corresponding CSV matrices under \texttt{A-Skill-Programs/margin\_rank/data/archive/extended-baselines/}. They are excluded from the main narrative because several variants require additional event types (e.g., credit delegation) or introduce constructs outside the primary EndorseRank--AWP question. Researchers extending this work may re-enable exports via \texttt{export\_method\_matrix.py} presets documented in the archive README.
+
+\dissertationSubheading[sec:limitations-reprise]{Limitations reprise}
+
+Appendix material does not expand the empirical claims beyond Chapter~\ref{ch:results}. In particular, SQL templates do not imply that other chains were queried, and archived baselines do not constitute peer comparisons in this dissertation. The authoritative numerics remain those in \texttt{eval\_summary.json} for the matched cohort ($n=5{,}521$) and expanded wallet pool ($N=31{,}612$).

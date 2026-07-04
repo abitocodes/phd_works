@@ -1,3 +1,277 @@
 % !TEX root = ../main.tex
-\tableofcontents
+
+\clearpage
+
+{\Large\bfseries Table of Contents\par}
+
+\vspace{0.75em}
+
+\TOCentry{}{{\textbf{Abstract}}}{ch:abstract}
+
+\TOCentry{}{{\textbf{Abbreviations and Notation}}}{ch:abbreviations}
+
+\TOCentry{1}{{\textbf{Introduction and Research Problem}}}{ch:introduction}
+
+\hspace*{1.5em}\TOCentry{1.1}{{Background: DeFi, pseudonymity, and collateral}}{sec:background}
+
+\hspace*{1.5em}\TOCentry{1.2}{{Motivation for on-chain reputation scores}}{sec:motivation}
+
+\hspace*{1.5em}\TOCentry{1.3}{{Research problem}}{sec:research-problem}
+
+\hspace*{1.5em}\TOCentry{1.4}{{Supplementary extension (GF-PR)}}{sec:supplementary-extension}
+
+\hspace*{1.5em}\TOCentry{1.5}{{Research questions}}{sec:research-questions}
+
+\hspace*{1.5em}\TOCentry{1.6}{{Contributions}}{sec:contributions}
+
+\hspace*{1.5em}\TOCentry{1.7}{{Scope and limitations}}{sec:scope-limitations}
+
+\hspace*{1.5em}\TOCentry{1.8}{{Dissertation roadmap}}{sec:roadmap}
+
+\TOCentry{2}{{\textbf{Literature Review and Theoretical Framework}}}{ch:literature}
+
+\hspace*{1.5em}\TOCentry{2.1}{{Blockchain and DeFi foundations}}{sec:blockchain-defi-foundations}
+
+\hspace*{1.5em}\TOCentry{2.2}{{Ethereum, Layer-2 rollups, and Arbitrum One}}{sec:ethereum-l2}
+
+\hspace*{1.5em}\TOCentry{2.3}{{ERC-20 tokens and the allowance lifecycle}}{sec:erc20-allowance-lifecycle}
+
+\hspace*{1.5em}\TOCentry{2.4}{{Graph-based on-chain reputation}}{sec:graph-reputation}
+
+\hspace*{1.5em}\TOCentry{2.5}{{PageRank formalism}}{sec:pagerank-formalism}
+
+\hspace*{1.5em}\TOCentry{2.6}{{Reputation systems lineage}}{sec:reputation-systems}
+
+\hspace*{1.5em}\TOCentry{2.7}{{ERC-20 allowances as endorsement}}{sec:allowance-endorsement}
+
+\hspace*{1.5em}\TOCentry{2.8}{{Trading success validation frame (GMX V2)}}{sec:gmx-validation}
+
+\hspace*{1.5em}\TOCentry{2.9}{{Supplementary extension: outcome-native reference (GF-PR)}}{sub:gf-pr}
+
+\hspace*{1.5em}\TOCentry{2.10}{{Rank correlation theory}}{sec:rank-correlation-theory}
+
+\hspace*{1.5em}\TOCentry{2.11}{{Theoretical framework}}{sec:theoretical-framework}
+
+\hspace*{1.5em}\TOCentry{2.12}{{Reader's guide to terminology}}{sub:terminology}
+
+\hspace*{1.5em}\TOCentry{2.13}{{Domain alignment metrics}}{sec:domain-alignment-metrics}
+
+\hspace*{1.5em}\TOCentry{2.14}{{Worked example: PageRank on a four-node endorsement graph}}{sec:pagerank-worked-example}
+
+\hspace*{1.5em}\TOCentry{2.15}{{DeFi risk taxonomy and where reputation fits}}{sec:defi-risk-taxonomy}
+
+\hspace*{1.5em}\TOCentry{2.16}{{Perpetual markets as a validation laboratory}}{sec:perp-mechanics}
+
+\hspace*{1.5em}\TOCentry{2.17}{{Related measurement traditions}}{sec:related-measurement}
+
+\hspace*{1.5em}\TOCentry{2.18}{{Accounts, gas, and why logs are the measurement surface}}{sec:account-model}
+
+\hspace*{1.5em}\TOCentry{2.19}{{Approvals as security-relevant events}}{sec:approval-security}
+
+\hspace*{1.5em}\TOCentry{2.20}{{AWP in depth: what Do et al.\ measure}}{sec:awp-in-depth}
+
+\hspace*{1.5em}\TOCentry{2.21}{{Comparison of graph reputation methods}}{sec:method-comparison-table}
+
+\hspace*{1.5em}\TOCentry{2.22}{{Open problems motivating this dissertation}}{sec:open-problems}
+
+\TOCentry{3}{{\textbf{Research Methodology}}}{ch:methodology}
+
+\hspace*{1.5em}\TOCentry{3.1}{{Notation}}{sec:notation}
+
+\hspace*{1.5em}\TOCentry{3.2}{{Data sources and sampling}}{sec:data-sources}
+
+\hspace*{1.5em}\TOCentry{3.3}{{Three-phase collection strategy}}{sec:collection-strategy}
+
+\hspace*{1.5em}\TOCentry{3.4}{{Pipeline architecture}}{sec:pipeline-architecture}
+
+\hspace*{1.5em}\TOCentry{3.5}{{Event decoding}}{sec:event-decoding}
+
+\hspace*{1.5em}\TOCentry{3.6}{{Graph construction}}{sec:graph-construction}
+
+\hspace*{1.5em}\TOCentry{3.7}{{Supplementary GF-PR graph (extension)}}{sec:gf-pr-graph}
+
+\hspace*{1.5em}\TOCentry{3.8}{{Five-proxy evaluation design}}{sec:proxy-evaluation}
+
+\hspace*{1.5em}\TOCentry{3.9}{{Proxy operational definitions}}{sec:proxy-formulas}
+
+\hspace*{1.5em}\TOCentry{3.10}{{Statistical tests}}{sec:statistical-tests}
+
+\hspace*{1.5em}\TOCentry{3.11}{{Computational benchmark (Claim~C1)}}{sec:computational-benchmark}
+
+\hspace*{1.5em}\TOCentry{3.12}{{Scaling and robustness extensions}}{sec:scaling-robustness}
+
+\hspace*{1.5em}\TOCentry{3.13}{{Reproducibility}}{sec:reproducibility}
+
+\hspace*{1.5em}\TOCentry{3.14}{{Sampling considerations and missingness}}{sec:sampling-bias}
+
+\hspace*{1.5em}\TOCentry{3.15}{{Implementation notes}}{sec:implementation-notes}
+
+\hspace*{1.5em}\TOCentry{3.16}{{Ethics}}{sec:ethics}
+
+\hspace*{3.0em}\TOCentry{3.16.1}{{Privacy and anonymity}}{sub:privacy-anonymity}
+
+\hspace*{3.0em}\TOCentry{3.16.2}{{Data minimization}}{sub:data-minimization}
+
+\hspace*{3.0em}\TOCentry{3.16.3}{{Data usage and compliance}}{sub:data-usage-compliance}
+
+\hspace*{3.0em}\TOCentry{3.16.4}{{Fairness and transparency}}{sub:fairness-transparency}
+
+\hspace*{3.0em}\TOCentry{3.16.5}{{Responsible disclosure and impact}}{sub:responsible-disclosure}
+
+\hspace*{3.0em}\TOCentry{3.16.6}{{Summary of methodological commitments}}{sub:methodological-commitments}
+
+\TOCentry{4}{{\textbf{Implementation and Empirical Results}}}{ch:results}
+
+\hspace*{1.5em}\TOCentry{4.1}{{Dataset}}{sec:dataset}
+
+\hspace*{1.5em}\TOCentry{4.2}{{EndorseRank vs AWP benchmark (Claim~C1)}}{sec:benchmark-results}
+
+\hspace*{1.5em}\TOCentry{4.3}{{Robustness checks}}{sec:robustness-results}
+
+\hspace*{1.5em}\TOCentry{4.4}{{Social-method alignment: EndorseRank vs AWP (Claims~C2--C3)}}{sec:three-method-alignment}
+
+\hspace*{1.5em}\TOCentry{4.5}{{Proxy family detail}}{sec:proxy-family-detail}
+
+\hspace*{1.5em}\TOCentry{4.6}{{Rank divergence (H1 / RQ1)}}{sec:rank-divergence}
+
+\hspace*{1.5em}\TOCentry{4.7}{{Supplementary GF-PR ceiling analysis (SRQ1 / SC1)}}{sec:gf-pr-ceiling}
+
+\hspace*{1.5em}\TOCentry{4.8}{{Primary claims (C1--C4) and supplementary claim (SC1)}}{sec:empirical-claims}
+
+\TOCentry{5}{{\textbf{Discussion}}}{ch:discussion}
+
+\hspace*{1.5em}\TOCentry{5.1}{{Findings by research question}}{sec:findings-rq}
+
+\hspace*{1.5em}\TOCentry{5.2}{{Supplementary finding (SRQ1)}}{sec:supplementary-finding-srq1}
+
+\hspace*{1.5em}\TOCentry{5.3}{{Theoretical implications}}{sec:theoretical-implications}
+
+\hspace*{1.5em}\TOCentry{5.4}{{Practical implications}}{sec:practical-implications}
+
+\hspace*{1.5em}\TOCentry{5.5}{{Sybil cost on allowance graphs}}{sec:sybil-cost-model}
+
+\hspace*{1.5em}\TOCentry{5.6}{{Regulatory and ethical considerations}}{sec:regulatory-ethics}
+
+\hspace*{1.5em}\TOCentry{5.7}{{Threats to validity}}{sec:threats-validity}
+
+\hspace*{1.5em}\TOCentry{5.8}{{Limitations}}{sec:limitations}
+
+\TOCentry{6}{{\textbf{Conclusion and Future Work}}}{ch:conclusion}
+
+\hspace*{1.5em}\TOCentry{6.1}{{Summary of findings}}{sec:summary-findings}
+
+\hspace*{1.5em}\TOCentry{6.2}{{Original contribution to knowledge}}{sec:contribution-knowledge}
+
+\hspace*{1.5em}\TOCentry{6.3}{{Future work}}{sec:future-work}
+
+\hspace*{1.5em}\TOCentry{6.4}{{Closing reflection}}{sec:closing-reflection}
+
+\TOCentry{}{{\textbf{References}}}{ch:references}
+
+\TOCentry{A}{{\textbf{Evaluation Pipeline and Reproducibility}}}{ch:appendix-eval}
+
+\hspace*{1.5em}\TOCentry{A.1}{{Repository layout}}{sec:repo-layout}
+
+\hspace*{1.5em}\TOCentry{A.2}{{Offline synthetic evaluation}}{sec:offline-eval}
+
+\hspace*{1.5em}\TOCentry{A.3}{{Real BigQuery extraction}}{sec:bq-extraction}
+
+\hspace*{1.5em}\TOCentry{A.4}{{Scaling tables}}{sec:scaling-appendix}
+
+\hspace*{1.5em}\TOCentry{A.5}{{Credit Delegation extract (deferred)}}{sec:delegation-deferred}
+
+\hspace*{1.5em}\TOCentry{A.6}{{Supplementary alignment summary table}}{sec:supplementary-summary}
+
+\hspace*{1.5em}\TOCentry{A.7}{{Parameter summary}}{sec:parameter-summary}
+
+\hspace*{1.5em}\TOCentry{A.8}{{Proxy operational definitions (reference)}}{sec:proxy-appendix}
+
+\hspace*{1.5em}\TOCentry{A.9}{{Glossary}}{sec:glossary}
+
+\TOCentry{B}{{\textbf{SQL Templates, Configuration, and Extended Notes}}}{ch:appendix-sql}
+
+\hspace*{1.5em}\TOCentry{B.1}{{Approval log extraction pattern}}{sec:sql-approval}
+
+\hspace*{1.5em}\TOCentry{B.2}{{Transfer log extraction pattern}}{sec:sql-transfer}
+
+\hspace*{1.5em}\TOCentry{B.3}{{GMX PositionDecrease extraction pattern}}{sec:sql-gmx}
+
+\hspace*{1.5em}\TOCentry{B.4}{{Configuration keys}}{sec:config-keys}
+
+\hspace*{1.5em}\TOCentry{B.5}{{Complexity notes}}{sec:complexity-notes}
+
+\hspace*{1.5em}\TOCentry{B.6}{{Interpretation checklist for readers}}{sec:interpretation-checklist}
+
+\hspace*{1.5em}\TOCentry{B.7}{{Archived extended baselines}}{sec:archived-baselines}
+
+\hspace*{1.5em}\TOCentry{B.8}{{Limitations reprise}}{sec:limitations-reprise}
+
+\TOCentry{C}{{\textbf{Elementary Properties of PageRank and Rank Correlation}}}{ch:appendix-theory}
+
+\hspace*{1.5em}\TOCentry{C.1}{{Existence and uniqueness of PageRank}}{sec:pr-existence}
+
+\hspace*{1.5em}\TOCentry{C.2}{{Continuity in edge weights}}{sec:pr-continuity}
+
+\hspace*{1.5em}\TOCentry{C.3}{{Sparsity and per-iteration cost}}{sec:pr-sparsity}
+
+\hspace*{1.5em}\TOCentry{C.4}{{Properties of Spearman's $\rho$}}{sec:spearman-properties}
+
+\hspace*{1.5em}\TOCentry{C.5}{{Properties of Kendall's $\tau$}}{sec:kendall-properties}
+
+\hspace*{1.5em}\TOCentry{C.6}{{Construct validity note}}{sec:construct-validity-note}
+
+\hspace*{1.5em}\TOCentry{C.7}{{Numerical summary sheet}}{sec:numerical-summary-sheet}
+
+\TOCentry{D}{{\textbf{Archived Extended Baselines}}}{ch:appendix-archive}
+
+\hspace*{1.5em}\TOCentry{D.1}{{Seven-method alignment matrix}}{sec:seven-method-archive}
+
+\hspace*{1.5em}\TOCentry{D.2}{{Six-method Aave-oriented matrix}}{sec:six-aave-archive}
+
+\hspace*{1.5em}\TOCentry{D.3}{{Why the main narrative uses three methods}}{sec:why-archived}
+
+\hspace*{1.5em}\TOCentry{D.4}{{Reproducing archive tables}}{sec:archive-repro}
+
+\hspace*{1.5em}\TOCentry{D.5}{{Notes on archived method identifiers}}{sec:archive-method-notes}
+
+\hspace*{1.5em}\TOCentry{D.6}{{Decision log: what stayed in the main text}}{sec:archive-decision-log}
+
+\TOCentry{E}{{\textbf{Claim-to-Evidence Map}}}{ch:appendix-claims}
+
+\hspace*{1.5em}\TOCentry{E.1}{{H1 / RQ1 --- Rank divergence}}{sec:map-h1}
+
+\hspace*{1.5em}\TOCentry{E.2}{{H2 / RQ2 --- Construct-specific alignment}}{sec:map-h2}
+
+\hspace*{1.5em}\TOCentry{E.3}{{H3 / RQ3 --- Computational efficiency}}{sec:map-h3}
+
+\hspace*{1.5em}\TOCentry{E.4}{{RQ4 --- Validation frame}}{sec:map-rq4}
+
+\hspace*{1.5em}\TOCentry{E.5}{{SRQ1 / SC1 --- GF-PR ceiling}}{sec:map-srq1}
+
+\hspace*{1.5em}\TOCentry{E.6}{{Claims C1--C4}}{sec:map-c1c4}
+
+\hspace*{1.5em}\TOCentry{E.7}{{Explicit non-claims}}{sec:map-nonclaims}
+
+\hspace*{1.5em}\TOCentry{E.8}{{Artifact checklist for replication}}{sec:map-artifacts}
+
+\clearpage
+
+{\Large\bfseries List of Figures\par}
+
+\vspace{0.75em}
+
+\makeatletter
+\@starttoc{lof}%
+\makeatother
+
+\clearpage
+
+{\Large\bfseries List of Tables\par}
+
+\vspace{0.75em}
+
+\makeatletter
+\@starttoc{lot}%
+\makeatother
+
 \clearpage

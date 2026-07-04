@@ -1,0 +1,81 @@
+﻿% !TEX root = ../main.tex
+\chapter{연구 방법론}
+\label{ch:methodology}
+
+\dissertationSubheading[sec:data-sources]{데이터 출처 및 표집}
+
+\textbf{Primary chain:} Arbitrum One (chain ID 42161).
+
+\textbf{Observation window:} 2025-12-01 00:00 UTC -- 2026-05-31 23:59:59 UTC (6개월).
+
+\textbf{BigQuery source:} \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us.logs} (SQL 템플릿 및 수집 계획은 부록~\ref{ch:appendix-eval}).
+
+\textbf{Reputation events:} ERC-20 \texttt{Approval} 로그(EndorseRank) 및 \texttt{Transfer} 로그(AWP), Phase~1 지갑 코호트에 대해 6개월 단위 6배치로 추출.
+
+\textbf{GMX events:} 전체 관찰 기간 동안 GMX V2 \texttt{EventEmitter} (\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb})의 \texttt{PositionDecrease}; 트레이더는 이벤트 \texttt{account} 필드로 식별.
+
+\dissertationSubheading[sec:collection-strategy]{3단계 수집 전략}
+
+\textbf{Phase 1 (Stream A):} 모든 GMX \texttt{PositionDecrease} 로그 추출 및 디코딩; $\geq 3$회 청산 지갑 유지(Tier~1 정렬 코호트; BigQuery 추출 후 $n=5{,}521$).
+
+\textbf{Phase 2 (Streams B \& C):} Tier~1 코호트에 대한 지갑 필터 ERC-20 \texttt{Approval} 및 \texttt{Transfer} 이벤트; 최신 allowance 및 시간 감쇠 송금 엣지로 전처리.
+
+\textbf{Phase 3 (local):} 캐시된 parquet에서 5-프록시 정렬 평가, 확장 지갑 풀에 대한 Tier~2 런타임 스케일링, Tier~3 강건성 검사(damping, 상위 토큰 서브그래프, 표본 크기 민감도)---보충 주소를 로컬에서 파생할 때 Tier~2 지갑 풀 구축을 제외하고 추가 BigQuery 스캔 없음.
+
+\dissertationSubheading[sec:tier2-tier3]{Tier~2 및 Tier~3 확장}
+
+\textbf{Tier~2 (H3 확장성):} GMX 자격 지갑($n=5{,}521$)과 평판 서브그래프 또는 보충 parquet에서 표집한 활성 주소를 합집합하여 목표 풀까지 확장(본 연구 $N=31{,}612$). 결정적 SHA256 부분표본(\texttt{benchmark-tier2-v1})으로 동일 approval/transfer parquet에서 $n=10{,}000$ 및 전체 풀 크기 런타임 벤치마크. $50{,}000$/$100{,}000$ 단계는 Tier~2 BigQuery 평판 재추출 완료 필요(\texttt{extract\_reputation\_data.py --tier2}).
+
+\textbf{Tier~3 (강건성):} Tier~1 코호트에서 PageRank damping $d \in \{0.75, 0.85, 0.95\}$ 스윕; 송금/allowance 거래량 상위 20개 ERC-20 토큰으로 제한 서브그래프; GMX \texttt{realized\_gain\_proxy}를 raw-sum 대 size-weighted($|\text{sizeDeltaUsd}|$) 정의로 비교. 표본 크기 민감도는 Tier~2 지갑 풀의 단계별 $n$ 재사용.
+
+\dissertationSubheading[sec:computational-benchmark]{계산 벤치마크 (주장 C1)}
+
+동일 입력에서 EndorseRank와 AWP에 대해 5회 실행 측정: 사전 구축 엣지 리스트에서 PageRank wall-clock 시간(그래프 구축은 코호트당 1회, 타이밍 루프 외부), 최대 메모리(tracemalloc), 수렴 PageRank 반복(허용오차 $10^{-8}$, 최대 300), 엣지 수(부록~\ref{ch:appendix-eval}). Tier~1은 일치 GMX 코호트($n=5{,}521$) 보고; Tier~2는 확장 지갑 풀의 단계별 부분표본(표~\ref{tab:benchmark-scaling}). GF-PR 런타임은 \ref{ch:results}장에서 보조 맥락으로만 괄호 안에 보고.
+
+\textbf{Sample:} $\geq 3$ GMX 청산과 비영 평판 서브그래프 연결성을 갖는 지갑의 교집합($n=5{,}521$).
+
+\textbf{Cost guardrails:} 추출 전 필수 \texttt{--dry-run}; 쿼리당 150 GiB 상한. 추출 메타데이터는 부록~\ref{ch:appendix-eval}에 기록.
+
+\dissertationSubheading[sec:graph-construction]{그래프 구축}
+
+\textbf{EndorseRank graph} $G_{\text{approve}}$: 노드는 지갑; 방향성 엣지 owner $\to$ spender, 강도는 쌍당 최신 소수점 조정 allowance 합; PageRank damping $d=0.85$. 시간 감쇠 없음---allowance 덮어쓰기 의미론이 시간 기반 엣지 가중을 대체.
+
+\textbf{AWP graph} $G_{\text{transfer}}$: 로지스틱 시간 감쇠 $\sigma(\Delta t) = 1/(1+\exp(k(\Delta t - t_0)))$가 적용된 방향성 송금 엣지(Do et al., 2023); $k=0.01$, $t_0=180$일, 관찰 종료 2026-05-31 UTC.
+
+두 주요 방법은 \emph{동일} 지갑 시드 집합에서 작동한다; 결과 차이는 표집 불일치가 아닌 순위 로직에 기인한다.
+
+\dissertationSubheading[sec:gf-pr-graph]{보조 GF-PR 그래프 (확장)}
+
+\textbf{GF-PR graph} $G_{\text{GF-PR}}$: 디코딩된 GMX \texttt{PositionDecrease} 이벤트에서 방향성 스타 그래프---POOL $\to$ wallet(가중치 = 양의 \texttt{basePnlUsd}), wallet $\to$ SINK(손실 및 청산에 가중치 = $|\text{PnL}| + \epsilon$, 일반 손실 $\epsilon=0.1$, 청산 $\epsilon=1.0$으로 동점 처리). 지갑-대-지갑 엣지 없음; PageRank damping $d=0.85$. GF-PR은 EndorseRank나 AWP의 주요 동등 방법이 아니라 보조 질문 SRQ1(구성개념 중첩 진단)에만 평가.
+
+\dissertationSubheading[sec:proxy-evaluation]{5-프록시 평가 설계}
+
+\textbf{Primary evaluation}은 EndorseRank와 AWP를 비교한다: 각 방법 $M \in \{\text{EndorseRank}, \text{AWP}\}$ 및 프록시 $P$에 대해 평판 점수 $\mathbf{s}_M$, 프록시 값 $\mathbf{p}_P$를 계산하고, 순위 간 Spearman's $\rho$와 Kendall's $\tau$를 보고한다. Spearman's $\rho$는 단조적 순위 일치를, Kendall's $\tau$는 쌍별 순서 일치를 측정한다. 평판 점수와 검증 프록시는 이진 부도 레이블이 아닌 연속 순위 변수이므로, Do et al.\ (2023)의 도메인 정렬 접근을 따른다. 모든 프록시는 상관 전에 더 높은 값이 더 높은 기대 평판을 의미하도록 방향을 맞춘다.
+
+\textbf{Supplementary evaluation:} GF-PR은 SRQ1에만 포함되어 거래 결과 프록시에서의 구성개념 중첩을 진단한다. 다섯 계열을 평가한다(운영 정의는 부록~\ref{ch:appendix-eval}):
+
+\begin{enumerate}
+\item \textbf{Transfer} (Do et al.\ baseline): in-degree, in-value.
+\item \textbf{Allowance}: in-approve degree, in-approve value (지갑을 spender로).
+\item \textbf{Inverse risk} (GMX PnL): loss avoidance, non-loss close rate, worst-close PnL score.
+\item \textbf{Sybil-adjusted stability}: inbound counterparty ratio, transfer tenure, active months.
+\item \textbf{Trading success}: close-success count, realized gain proxy, close success rate.
+\end{enumerate}
+
+계열 수준 평균 $\tau$는 주요 EndorseRank--AWP 비교의 구성개념 정렬을 요약한다; 평가 파이프라인은 계열별로 더 강하게 정렬된 사회적 방법을 기록한다(부록~\ref{ch:appendix-eval}). 대출 프로토콜 부도 레이블은 범위 내 Arbitrum 거래량 부족으로 제외.
+
+\dissertationSubheading[sec:reproducibility]{재현성}
+
+공개 평가 파이프라인(부록~\ref{ch:appendix-eval})은 \texttt{run\_dissertation\_eval.py --real [--robustness] --export-latex}로 캐시 parquet에서 프록시, 정렬, 벤치마크, Tier~3 강건성을 재계산한다.
+
+\dissertationSubheading[sec:ethics]{윤리}
+
+본 연구는 공개 블록체인 데이터만 사용하며 인간 참여자에게 개입하지 않는다. 윤리 심의 및 데이터 처리 절차는 실증 데이터 수집 전 기관 승인을 받았으며, 면제 또는 승인 확인서는 연구 기록의 일부로 보관한다. 지갑 소유자 비식별화, 지갑 주소와 오프체인 개인 데이터 결합, 개인 식별 가능한 방식의 주소 수준 결과 게시를 시도하지 않았다.
+
+\textbf{Privacy and anonymity.} Arbitrum One 주소는 가명이며 본질적으로 실명과 연결되지 않는다. 데이터 수집은 IP 주소나 KYC 기록 등 오프체인 데이터 스크래핑·통합 없이 온체인 이벤트(\texttt{approve}, \texttt{permit}, \texttt{transfer}, GMX \texttt{PositionDecrease})로 제한.
+
+\textbf{Data usage and compliance.} 모든 쿼리는 Google Cloud 이용약관 및 속도 제한에 따라 공개 데이터셋(\texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us})을 대상으로 했다. 트랜잭션을 브로드캐스트하거나 네트워크 운영을 방해할 수 있는 방식으로 스마트 계약과 상호작용하지 않았다.
+
+\textbf{Fairness and transparency.} EndorseRank와 AWP는 의도치 않은 편향(예: 신규 참여자나 저거래량 참여자의 체계적 과소평가)에 대해 검토했으며, 한계는 \ref{ch:discussion}장에서 논의한다. 모든 코드, 매개변수, 평가 지표는 공개 평가 파이프라인(부록~\ref{ch:appendix-eval})에 문서화하여 동료 검토와 독립 재현을 가능하게 한다.
+
+\textbf{Responsible disclosure and impact.} EndorseRank가 리스크 평가에 기여할 수 있으나 금융 조언이 아니며, 대출·거래 의사결정에는 인간 감독이 필요하다. $G_{\text{approve}}$에 대한 Sybil 공격 등 적대적 조작 가능성은 \ref{ch:discussion}장에서 논의한다; 개별 사용자 표적화를 위한 지갑 수준 순위보다 집계 코호트 수준 결과를 보고한다.

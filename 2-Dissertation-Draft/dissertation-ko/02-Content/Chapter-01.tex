@@ -1,0 +1,100 @@
+% !TEX root = ../main.tex
+\chapter{서론 및 연구 문제}
+\label{ch:introduction}
+
+탈중앙화 금융(DeFi)은 공개 블록체인상에서 대출, 차입, 레버리지 거래를 확대해 왔으나, 대부분의 신용 유사 상호작용은 여전히 높은 담보 비율 하에서 이루어진다. 이는 프로토콜이 전통적인 오프체인 신원이나 신용 이력에 의존할 수 없기 때문이다(Sch\"{a}r, 2021; Packin \& Lev-Aretz, 2024). 가명(pseudonymous) 환경에서 핵심 과제는 자본을 안전하게 배분하는 것이다: 레버리지 노출을 신뢰성 있게 관리하는 지갑과 반복적 손실이나 청산을 보이는 지갑을 구별하는 것이다.
+
+본 학위논문은 다음 연구 문제를 다룬다: ERC-20 \texttt{approve}/\texttt{permit} allowance로 구축한 온체인 평판 점수---\textbf{EndorseRank}로 구현---가 계산 비용을 줄이고, 보증 의미론을 더 충실히 표현하며, \textbf{Arbitrum One}에서 거래 기반 Adaptive Weighted PageRank(AWP)와 비교하여 구별되면서도 신뢰할 수 있는 정렬 프로파일을 산출할 수 있는가. 주요 실증 비교는 동일 지갑 표본에서 \textbf{EndorseRank 대 AWP}이며, Do et al.\ (2023)의 순위 상관 프레임워크에 따라 다섯 가지 프록시 계열과 GMX V2 무기한 스왑 결과로 검증한다.
+
+본 연구에서 \textbf{온체인 평판 점수(on-chain reputation score)} 산출이란 오프체인 신원 없이 관찰 가능한 온체인 행동과 관계로부터 지갑의 정량적 점수를 도출하는 것을 말한다(Do et al., 2023). EndorseRank는 allowance 기반 보증 엣지로부터 그러한 점수를 산출한다. 모호함을 피하기 위해, 본 학위논문 전반에서 사용하는 핵심 개념을 다음과 같이 정의한다:
+
+\begin{itemize}
+\item \textbf{DeFi (Decentralized Finance):} 공개 블록체인의 스마트 계약으로 구현되는 금융 서비스(대출, 차입, 무기한 거래)(Sch\"{a}r, 2021).
+\item \textbf{Smart contract:} 신뢰할 수 있는 중개자 없이 계약 조건을 집행하는 블록체인상의 자동 실행 프로그램 코드(Buterin, 2014; Szabo, 1997).
+\item \textbf{Wallet / Address:} 자산을 보유하고 스마트 계약과 상호작용하는 블록체인 계정; 분석 단위(Buterin, 2014; Ethereum Improvement Proposals, 2015).
+\item \textbf{On-chain reputation score:} 금융 상호작용에서 지갑의 신뢰성을 나타내는 온체인 신호로부터 계산된 수치 지표(Do et al., 2023).
+\item \textbf{On-chain credit risk:} 포지션 청산이나 반복적 거래 손실 등 공개 블록체인에서 관찰 가능한 부정적 결과(Lin et al., 2024).
+\item \textbf{GMX V2 perpetual swap position:} \textbf{PositionIncrease}로 개설하고 \textbf{PositionDecrease}로 청산되는 Arbitrum One의 GMX V2 담보화 롱 또는 숏 노출(GMX, n.d.; Sch\"{a}r, 2021).
+\item \textbf{PageRank:} 방향성 엣지를 통해 영향력을 전파하는 그래프 순위 방법(Page et al., 1998). \textbf{EndorseRank}는 최신 allowance 보증 그래프에 PageRank를 적용한다: 엣지 강도는 소유자--지출자 쌍당 현재 allowance이며, 시간 감쇠는 없다. \textbf{Adaptive Weighted PageRank (AWP)}는 송금 그래프에 PageRank를 적용하며, 엣지 가중치는 송금액과 로지스틱 시간 감쇠로 주어진다(Do et al., 2023).
+\item \textbf{ERC-20 allowance / Approve / Permit:} 토큰 소유자가 지출자가 이체할 수 있는 금액을 기록하는 메커니즘(Ethereum Improvement Proposals, 2015, 2020).
+\item \textbf{Endorsement graph:} 단순 송금이 아닌 명시적 위임을 나타내는 엣지로 구성된 방향 그래프(Do et al., 2023).
+\end{itemize}
+
+\dissertationSubheading[sec:research-problem]{연구 문제}
+
+기존 Adaptive Weighted PageRank(AWP) 방법은 거래 이력에 대한 송금량과 로지스틱 시간 감쇠로 신뢰를 추론한다(Do et al., 2023). 경제적으로 해석 가능하지만, (i) 값비싼 과거 송금 집계를 요구하고, (ii) 유입 송금량을 ``가치 있는 지갑''의 대리변수로 취급하며, (iii) 명시적 지출 승인을 모델링하지 않는다. EndorseRank는 대신 소유자--지출자 쌍당 최신 allowance를 방향성 보증 그래프의 엣지 강도로 사용하여, 시간 감쇠 가중 없이 더 희소한 그래프와 의미론적으로 구별되는 신뢰 신호를 산출한다---온체인 지갑 평판 점수 산출 강화를 위해 ERC-20 allowance 엣지를 PageRank에 통합한다.
+
+표~\ref{tab:primary-methods-preview}는 주요 비교를 요약한다. 표~\ref{tab:hrq-claim-map}는 가설(H1--H3), 연구 질문(RQ1--RQ4), 보조 질문 SRQ1, 4장 실증 주장(C1--C4, SC1)을 요약한다.
+
+\begin{table}[htbp]
+\centering
+\caption{주요 비교: EndorseRank 대 AWP ($n=5{,}521$ Tier~1 코호트).}
+\label{tab:primary-methods-preview}
+\begin{tabular}{p{2.4cm}p{3.4cm}p{7.4cm}}
+\toprule
+Method & Input graph & Role \\
+\midrule
+EndorseRank & Latest ERC-20 allowances ($G_{\text{approve}}$) & Primary construct: allowance delegation; target of this dissertation \\
+AWP & Time-decayed transfers ($G_{\text{transfer}}$) & Primary baseline: Do et al.\ transfer-graph reproduction \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\dissertationSubheading[sec:supplementary-extension]{보조 확장 (GF-PR)}
+
+실증 분석 과정에서 \textbf{GF-PR} (GainFlow PageRank)이 보조적 결과-네이티브 참조로 추가되었다(절~\ref{sub:gf-pr}). GF-PR은 검증 프록시 정의에 사용된 동일 GMX 손익(PnL) 스트림에서 방향성 스타 그래프를 구축한다. 사회적 지갑-대-지갑 엣지가 아닌 합성 POOL/SINK 흐름으로 지갑 순위를 매기며, 진단적 해석을 위한 거래 결과 프록시 정렬 상한을 설정한다---배포 가능한 사회적 평판 점수가 아니다.
+
+\begin{table}[htbp]
+\centering
+\caption{실증 연구 중 추가된 보조 확장 (주요 EndorseRank--AWP 연구 질문의 일부 아님).}
+\label{tab:supplementary-gf-pr}
+\begin{tabular}{p{2.4cm}p{3.4cm}p{7.4cm}}
+\toprule
+Method & Input graph & Role \\
+\midrule
+GF-PR & GMX PnL star (POOL$\to$wallet, wallet$\to$SINK) & Supplementary ceiling reference; construct overlap on trading-outcome proxies expected \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{가설, 연구 질문, 실증 주장 요약.}
+\label{tab:hrq-claim-map}
+\begin{tabular}{p{1.5cm}p{6.0cm}p{5.6cm}}
+\toprule
+Item & Addresses & Reported in \\
+\midrule
+H1 / RQ1 & EndorseRank와 AWP가 서로 다른 지갑 순서를 산출하는가? & \S\ref{sec:rank-divergence}; inter-method $\tau=0.316$ \\
+H2 / RQ2 & 어떤 사회적 방법이 어떤 프록시 계열과 더 강하게 정렬되는가? & Tables~\ref{tab:alignment-three-methods}--\ref{tab:alignment-gmx}; Claims C2--C3 \\
+H3 / RQ3 & 동일 $n$에서 EndorseRank가 AWP보다 빠른가? & Tables~\ref{tab:benchmark-runtime}--\ref{tab:benchmark-scaling}; Claims C1, C4 \\
+RQ4 & 사회적 방법에 대한 송금 vs.\ 거래 성공 검증 프레임 & Table~\ref{tab:alignment-three-methods} \\
+SRQ1 & GF-PR 상한이 거래 결과 프록시 해석에 함의하는 바는? & \S\ref{sec:gf-pr-ceiling}; Claim SC1 \\
+C1 & EndorseRank vs.\ AWP 런타임 및 그래프 크기 & Table~\ref{tab:benchmark-runtime} \\
+C2 & 선택 프록시에서 신뢰할 수 있는 EndorseRank--AWP 정렬 & Tables~\ref{tab:alignment-transfer}--\ref{tab:alignment-gmx} \\
+C3 & 구성개념별 우세 방법 (EndorseRank vs.\ AWP) & Table~\ref{tab:alignment-three-methods} \\
+C4 & EndorseRank의 효율--정렬 트레이드오프 & Tables~\ref{tab:benchmark-runtime}--\ref{tab:benchmark-scaling} \\
+SC1 & 보조 GF-PR 구성개념 중첩 진단 & \S\ref{sec:gf-pr-ceiling} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\dissertationSubheading[sec:research-questions]{연구 질문}
+
+본 연구는 세 가지 주요 가설을 검증한다: \textbf{H1}---EndorseRank와 AWP는 동일 코호트에서 서로 다른 지갑 순서를 산출한다; \textbf{H2}---두 사회적 방법은 구성개념별 프록시 정렬에서 차이를 보인다; \textbf{H3}---동일 $n$에서 EndorseRank가 AWP보다 계산적으로 효율적이다. 다음 연구 질문은 표~\ref{tab:hrq-claim-map}에 요약된 실증 평가를 안내한다. RQ1--RQ4는 주요 EndorseRank--AWP 비교를 구성하고, SRQ1은 보조 GF-PR 확장을 다룬다.
+
+\begin{enumerate}
+\item[\textbf{RQ1.}] EndorseRank와 AWP는 동일 Arbitrum 지갑 표본에서 의미 있게 다른 지갑 순서를 산출하는가?
+\item[\textbf{RQ2.}] EndorseRank와 AWP 중 어느 사회적 방법이 다섯 가지 프록시 계열 각각과 더 강하게 정렬되는가 (Spearman's $\rho$, Kendall's $\tau$)?
+\item[\textbf{RQ3.}] 동일 일치 표본에서 EndorseRank가 AWP보다 계산적으로 더 효율적인가 (런타임, 메모리, 반복 횟수)?
+\item[\textbf{RQ4.}] 사회적 평판 방법에 대해, 본 체인에서 Do et al.\ 송금 프록시(in-degree/in-value)와 거래 성공 프록시(GMX V2 무기한 청산) 중 어느 검증 프레임이 더 강한 순위 정렬을 산출하는가?
+\item[\textbf{SRQ1.}] 보조 GF-PR 결과-네이티브 상한은 EndorseRank와 AWP의 거래 결과 프록시 정렬 해석에 무엇을 함의하는가?
+\end{enumerate}
+
+\dissertationSubheading[sec:contributions]{기여}
+
+본 연구의 기여는 다음과 같다: (1) allowance 기반 보증 그래프 모델링(EndorseRank); (2) 레버리지 DeFi에서 EndorseRank와 AWP를 비교하는 5-프록시 도메인 정렬 평가; (3) 공개 재현 가능 평가 파이프라인(부록~\ref{ch:appendix-eval}); (4) 실증 연구 중 추가된 보조 GF-PR 상한 분석으로 거래 결과 프록시에서의 구성개념 중첩을 명확히 함($n=5{,}521$).
+
+\dissertationSubheading[sec:scope-limitations]{범위 및 한계}
+
+본 학위논문은 Arbitrum One과 GMX V2에 초점을 맞춘다; 무담보 대출 부도 레이블은 범위 밖이다. 구성개념과 윤리는 \ref{ch:introduction}장과 \ref{ch:methodology}장에서 정의한다. 4장은 주요 EndorseRank--AWP 비교에 대한 BigQuery Tier~1 실증 결과를 보고하며, 확장 지갑 풀($N=31{,}612$)에 대한 Tier~2 런타임 스케일링과 Tier~3 강건성 검사(damping, 상위 토큰 서브그래프, 표본 크기 민감도)를 보완한다. 사회적 방법들 가운데, 본 표본에서는 송금 프록시가 거래 성공 프록시보다 더 강하게 정렬된다(RQ4); 이는 EndorseRank의 allowance 특화 타당성이나 런타임 이점을 약화시키지 않는다. GF-PR 결과는 세 번째 동등 사회적 평판 방법이 아니라 보조 진단(SRQ1)으로 보고한다.

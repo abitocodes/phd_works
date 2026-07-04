@@ -2,61 +2,526 @@
 \chapter{Research Methodology}
 \label{ch:methodology}
 
-\dissertationSubheading{Data sources and sampling}
+This chapter specifies the empirical design used to compare EndorseRank and Adaptive Weighted PageRank (AWP) as social reputation scores on Arbitrum One. The design covers notation, data sources, a three-phase collection strategy, pipeline architecture, event decoding, graph construction algorithms, validation proxies, statistical tests, computational benchmarks, scaling and robustness extensions, reproducibility, and ethics. The primary comparison is between EndorseRank on the ERC-20 allowance graph and AWP on the time-decayed transfer graph (Do et al., 2023; Page et al., 1998). GainFlow PageRank (GF-PR) appears only as a supplementary outcome-native ceiling reference and is not treated as a peer social method.
 
-\textbf{Primary chain:} Arbitrum One (chain ID 42161).
+The methodological stance follows construct (domain) alignment: reputation scores are continuous rankings, and validation uses observable wallet-level proxies rather than binary default labels (Cronbach \& Meehl, 1955; Do et al., 2023). In measurement terms, each ranking method is an indicator of an unobserved reputation construct; proxies are alternative indicators chosen for domain intuition (inbound economic activity, received endorsements, risk-avoiding trading behavior, activity stability, and trading success). Alignment statistics ask whether the ordering induced by a method co-varies with the ordering induced by each proxy on the same wallets. This approach is appropriate when ground-truth loan defaults are sparse and when the scientific claim is comparative---EndorseRank versus AWP---rather than absolute prediction of an external credit bureau label.
 
-\textbf{Observation window:} 2025-12-01 00:00 UTC through 2026-05-31 23:59:59 UTC (six months).
+All procedures operate on publicly available blockchain logs within a fixed observation window, with deterministic seeds and an open evaluation pipeline so that reported tables can be regenerated from cached parquet. The chapter is organized to move from symbols and data acquisition, through graph and proxy formalisms, to evaluation statistics, computational protocol, and research ethics. Readers primarily interested in empirical outcomes may skim Sections~\ref{sec:notation}--\ref{sec:event-decoding} and focus on Sections~\ref{sec:graph-construction}--\ref{sec:statistical-tests}; readers implementing a replication should follow the full pipeline description and Section~\ref{sec:reproducibility}.
 
-\textbf{BigQuery source:} \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us.logs} (SQL templates in \texttt{A-Skill-Programs/margin\_rank/sql/}; acquisition plan in \texttt{docs/bigquery\_data\_plan.md}).
+\textbf{Design principles.} Four principles govern every operational choice. First, \emph{same-seed comparability}: EndorseRank and AWP are always scored on identical wallet sets so that differences cannot be attributed to sampling inconsistency. Second, \emph{pre-registration by configuration}: observation window, topic hashes, damping, decay parameters, minimum closes, and benchmark seeds are fixed in configuration before interpreting results. Third, \emph{separation of construction and timing}: graph construction is performed once per cohort; computational benchmarks time only the PageRank solve. Fourth, \emph{primary versus supplementary scope}: claims C1--C4 and hypotheses H1--H3 concern EndorseRank and AWP; GF-PR enters only SRQ1 as an outcome-native ceiling.
 
-\textbf{Reputation events:} ERC-20 \texttt{Approval} logs (EndorseRank) and \texttt{Transfer} logs (AWP), extracted in six monthly batches for the Phase~1 wallet cohort.
+\dissertationSubheading[sec:notation]{Notation}
 
-\textbf{GMX events:} \texttt{PositionDecrease} from GMX V2 \texttt{EventEmitter} (\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}) over the full observation window, identifying traders via the event \texttt{account} field.
+Table~\ref{tab:notation-methods} summarizes the operational symbols used throughout this chapter and in Chapters~\ref{ch:results}--\ref{ch:discussion} (a compact front-matter summary appears in Table~\ref{tab:notation}). Vectors are bold; sets are calligraphic when helpful. Wallet addresses are treated as opaque identifiers and are never linked to off-chain identities.
 
-\dissertationSubheading{Three-phase collection strategy}
+\begin{table}[htbp]
+\centering
+\caption{Notation for graphs, scores, proxies, and parameters.}
+\label{tab:notation-methods}
+\begin{tabular}{ll}
+\toprule
+Symbol & Meaning \\
+\midrule
+$\mathcal{W}$ & Matched wallet cohort ($|\mathcal{W}|=n=5{,}521$) \\
+$\mathcal{W}_{\mathrm{pool}}$ & Expanded wallet pool ($|\mathcal{W}_{\mathrm{pool}}|=N=31{,}612$) \\
+$G_{\mathrm{approve}}=(V_A,E_A,w_A)$ & EndorseRank allowance graph \\
+$G_{\mathrm{transfer}}=(V_T,E_T,w_T)$ & AWP transfer graph \\
+$G_{\mathrm{GF\text{-}PR}}$ & Supplementary GF-PR star graph \\
+$w_A(u,v)$ & Latest allowance weight, owner $u\to$ spender $v$ \\
+$w_T(u,v)$ & Time-decayed transfer weight, sender $u\to$ receiver $v$ \\
+$\mathbf{s}_M$ & Reputation score vector for method $M$ \\
+$\mathbf{p}_P$ & Proxy value vector for proxy $P$ \\
+$d$ & PageRank damping factor (default $0.85$) \\
+$\tau_{\mathrm{tol}}$ & PageRank convergence tolerance ($10^{-8}$) \\
+$I_{\max}$ & Maximum PageRank iterations ($300$) \\
+$\sigma(\Delta t)$ & Logistic time-decay on transfer age \\
+$k$, $t_0$ & Decay steepness ($0.01$) and midpoint ($180$ days) \\
+$\Delta t$ & Age of an event in days before observation end \\
+$\varepsilon_{\mathrm{loss}}$, $\varepsilon_{\mathrm{liq}}$ & GF-PR sink additives ($0.1$, $1.0$) \\
+$\rho$ & Spearman's rank correlation \\
+$\tau$ & Kendall's rank correlation \\
+$T_{\mathrm{obs}}$ & Observation end timestamp (2026-05-31 UTC) \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\textbf{Phase 1 (Stream A):} Extract and decode all GMX \texttt{PositionDecrease} logs; retain wallets with $\geq 3$ closes (Tier~1 alignment cohort; $n=5{,}521$ after BigQuery extraction).
+Unless otherwise stated, PageRank is the weighted formulation of Page et al.\ (1998): at iteration $t$,
+\begin{equation}
+\label{eq:pagerank}
+\mathbf{r}^{(t+1)}
+=
+(1-d)\,\boldsymbol{\pi}
++
+d\,P^{\top}\mathbf{r}^{(t)}
++
+d\,\bigl(\mathbf{r}^{(t)\top}\mathbf{1}_{\mathrm{dang}}\bigr)\,\boldsymbol{\pi},
+\end{equation}
+where $P$ is the row-stochastic transition matrix induced by positive edge weights, $\boldsymbol{\pi}$ is the uniform teleportation distribution over nodes, and $\mathbf{1}_{\mathrm{dang}}$ marks dangling nodes (zero out-strength). Explicitly, if $w(u,v)$ denotes the weight of the directed edge $u\to v$ and $s(u)=\sum_v w(u,v)$ is the out-strength, then
+\begin{equation}
+\label{eq:transition-impl}
+P_{u,v}
+=
+\begin{cases}
+w(u,v)/s(u) & \text{if }s(u)>0,\\
+0 & \text{otherwise.}
+\end{cases}
+\end{equation}
+Dangling mass is redistributed uniformly through the teleportation term, which is the standard treatment in sparse web and transaction graphs. Iteration stops when $\|\mathbf{r}^{(t+1)}-\mathbf{r}^{(t)}\|_1 < \tau_{\mathrm{tol}}$ or after $I_{\max}$ iterations. Scores are renormalized to sum to one over reachable nodes. Dense ranks for alignment are assigned by sorting scores descending (rank $1$ = highest score), with wallet address as a deterministic tie-break when scores are equal.
 
-\textbf{Phase 2 (Streams B \& C):} Wallet-filtered ERC-20 \texttt{Approval} and \texttt{Transfer} events for the Tier~1 cohort; preprocess to latest allowances and time-decayed transfer edges.
+The damping factor $d$ interpolates between pure graph propagation ($d\to 1$) and uniform scores ($d\to 0$). The default $d=0.85$ follows the classical web setting and the AWP baseline of Do et al.\ (2023). Robustness sweeps vary $d$ while holding edge weights fixed (Section~\ref{sec:scaling-robustness}). Tolerance $\tau_{\mathrm{tol}}=10^{-8}$ and $I_{\max}=300$ are intentionally strict relative to interactive analytics settings, so that runtime differences reflect graph structure rather than early stopping.
 
-\textbf{Phase 3 (local):} Six-proxy alignment evaluation and computational benchmarks on the full Tier~1 cohort from cached parquet---no additional BigQuery scans.
+\dissertationSubheading[sec:data-sources]{Data sources and sampling}
 
-\textbf{Sample:} Intersection of wallets with $\geq 3$ GMX closes and non-zero reputation subgraph connectivity ($n=5{,}521$).
+This section fixes the empirical universe: which chain, which time window, which public tables, which event types, and which wallets enter the primary sample. Downstream graph construction and proxy formulas never invent events outside this universe.
 
-\textbf{Cost guardrails:} Mandatory \texttt{--dry-run} before extraction; 150 GiB per-query cap. Bytes logged in \texttt{data/processed/extraction\_manifest.json}.
+\textbf{Primary chain.} All on-chain events are drawn from Arbitrum One (chain ID $42161$), an Ethereum Layer-2 rollup with dense DeFi activity and public log availability (Sch\"{a}r, 2021). Restricting to a single chain avoids cross-chain address aliasing---the same private key controlling addresses on multiple chains would otherwise appear as unrelated nodes---and keeps gas-cost and latency regimes comparable across wallets. Arbitrum One is also the deployment venue for GMX V2's high-volume perpetual markets, which supply wallet-attributed realized PnL at a density that lending defaults do not match within scope.
 
-\dissertationSubheading{Graph construction}
+\textbf{Observation window.} The study window is 2025-12-01 00:00:00 UTC through 2026-05-31 23:59:59 UTC (six calendar months). Exclusive end timestamps in SQL use 2026-06-01 00:00:00 UTC so that the inclusive calendar end is 2026-05-31. This window is long enough to accumulate multiple GMX closes per active trader---the minimum-close filter requires at least three---while remaining tractable for monthly-batched reputation extracts under BigQuery byte budgets. AWP time-decay is anchored at observation end $T_{\mathrm{obs}}=$ 2026-05-31 23:59:59 UTC, so $\Delta t=0$ for events at the window's close and $\Delta t\approx 181$ days for events at the window's open.
 
-\textbf{EndorseRank graph} $G_{\text{approve}}$: nodes are wallets; directed edges owner $\to$ spender weighted by latest decimal-adjusted allowance sum per pair; PageRank damping $d=0.85$.
+\textbf{BigQuery source.} Event logs are read from the public dataset
+\begin{center}
+\texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us.logs}.
+\end{center}
+Each row corresponds to a contract log entry with block timestamp, emitting address, topics, and data. Queries filter on \texttt{block\_timestamp}, contract address (when applicable), and event topic hashes. The public dataset removes the need for a private archive node while remaining auditable: any researcher with Google Cloud access can re-issue the same SQL against the same table. SQL templates, dry-run cost guardrails, and acquisition metadata are documented in Appendix~\ref{ch:appendix-eval}.
 
-\textbf{AWP graph} $G_{\text{transfer}}$: directed transfer edges with logistic time-decay $\sigma(\Delta t) = 1/(1+\exp(k(\Delta t - t_0)))$ on edge weights (Do et al., 2023); $k=0.01$, $t_0=180$ days, observation end 2026-05-31 UTC.
+\textbf{Reputation events.} EndorseRank uses ERC-20 \texttt{Approval} logs (EIP-20; Ethereum Improvement Proposals, 2015), including allowances established via EIP-2612 \texttt{permit} flows that ultimately emit the same \texttt{Approval} event (Ethereum Improvement Proposals, 2020). AWP uses ERC-20 \texttt{Transfer} logs. Both streams are wallet-filtered to the cohort under study: a log is retained if the owner or spender (approvals) or the sender or recipient (transfers) lies in the seed wallet set. Filtering at query time reduces scanned payload relative to full-chain extracts and focuses the reputation subgraph on economically relevant neighbors of the cohort. Extracts run in six monthly batches to respect per-query byte caps and to allow resumable checkpoints if a month fails.
 
-Both methods operate on the \emph{same} wallet seed set; differences in results are attributable to ranking logic, not sampling inconsistency.
+\textbf{GMX events.} Trading-success and risk proxies are derived from GMX V2 \texttt{PositionDecrease} events emitted by the GMX \texttt{EventEmitter} at
+\begin{center}
+\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}
+\end{center}
+(GMX, n.d.). Traders are identified via the event \texttt{account} field. Realized profit and loss use \texttt{basePnlUsd}; position size changes use \texttt{sizeDeltaUsd} when size-weighted robustness variants are computed; liquidations are flagged from order-type metadata in the decoded payload. GMX is used because it provides dense, wallet-level realized outcomes on collateralized perpetual trading---a domain-intuition validation frame analogous to Do et al.'s use of inbound transfer activity, but targeted at trading success rather than passive inflows (Do et al., 2023; Sch\"{a}r, 2021). Lending-protocol default labels are excluded because under-collateralized lending volume on Arbitrum within scope is insufficient for stable wallet-level labels.
 
-\dissertationSubheading{Six-proxy evaluation design}
+\textbf{Matched cohort definition.} The primary alignment sample is the intersection of (i)~wallets with at least three GMX \texttt{PositionDecrease} closes in the observation window and (ii)~wallets with non-zero connectivity in the reputation subgraph induced by approval or transfer edges. The minimum-close threshold $m=3$ excludes one-off traders whose success rates are dominated by sampling noise, while remaining inclusive of active retail participants. The connectivity requirement excludes wallets that appear in GMX events but have no approval or transfer edges touching the reputation extract, for whom social PageRank scores would be uniformly zero and uninformative. After BigQuery extraction and preprocessing, this matched wallet cohort has size $n=5{,}521$. Both EndorseRank and AWP are scored on the same seed set so that differences in alignment and runtime are attributable to ranking logic and graph structure, not to inconsistent sampling.
 
-For each method $M \in \{\text{EndorseRank}, \text{AWP}\}$ and proxy $P$, compute reputation scores $\mathbf{s}_M$, proxy values $\mathbf{p}_P$, and report Spearman's $\rho$ and Kendall's $\tau$ between rankings. All proxies are oriented so higher values imply higher expected reputation before correlation. Six families are evaluated (definitions in \texttt{margin\_config.yaml} and \texttt{proxy\_metrics.py}):
+\textbf{What is not in scope.} The study does not ingest mempool data, off-chain order books, centralized-exchange account maps, or cross-chain bridges. It does not attempt entity resolution across multiple addresses controlled by one actor. It does not use proprietary GMX indexer APIs as the primary source of truth; the public log table is authoritative, and decoding is performed in the open pipeline.
 
+\dissertationSubheading[sec:collection-strategy]{Three-phase collection strategy}
+
+Data acquisition and evaluation proceed in three phases that separate expensive remote scans from local, repeatable analysis. The separation is intentional: once parquet artifacts exist, alignment tables, benchmarks, and robustness sweeps can be regenerated without further cloud cost, which is essential for iterative dissertation writing and for third-party replication.
+
+\textbf{Phase 1 (GMX validation stream).} Extract and decode all GMX \texttt{PositionDecrease} logs from the \texttt{EventEmitter} over the full observation window. The extract is not wallet-filtered a priori because the cohort is defined from this stream: every decrease in the window is a candidate label. After decoding, wallets with fewer than three closes are dropped from the eligibility set. This stream supplies trading-success, inverse-risk, and liquidation-family proxies, and it defines the matched wallet cohort used for primary alignment ($n=5{,}521$ after intersecting with reputation connectivity in Phase~2).
+
+\textbf{Phase 2 (reputation streams).} For the matched cohort, extract wallet-filtered ERC-20 \texttt{Approval} and \texttt{Transfer} events in monthly batches. Each month is an independent query with its own dry-run estimate and checkpoint, so a failure in one month does not invalidate prior months. Preprocess approvals to latest allowances per owner--spender--token: given multiple approvals for the same triple, only the last timestamp in the window survives, and a final zero allowance removes the edge. Preprocess transfers to decimal-adjusted event tables with timestamps, preserving sender, recipient, value, token, and block time. These tables are the sole inputs to EndorseRank and AWP graph construction for the primary comparison.
+
+\textbf{Phase 3 (local evaluation).} From cached parquet, compute reputation ranks, five primary proxy families, Spearman and Kendall alignment, computational benchmarks, and scaling/robustness extensions. Supplemental active wallets for the expanded pool are drawn from reputation-subgraph addresses (and optional supplemental parquet) without requiring a full-chain re-scan for every robustness experiment. No additional BigQuery scans are required once the Phase~1 and Phase~2 extracts and any supplemental active-wallet parquet are on disk.
+
+\textbf{Cost guardrails.} Every remote query begins with a mandatory \texttt{--dry-run} that estimates bytes processed before extraction. Each query is aborted if the estimate exceeds a $150$\,GiB per-query cap. Operators must pass an explicit confirmation flag before paid scans proceed. Extraction metadata---wallet counts, row counts, bytes processed, timestamps, and output paths---is logged in the pipeline manifest (Appendix~\ref{ch:appendix-eval}). These controls implement responsible use of public cloud resources and make the acquisition cost of the study auditable.
+
+\dissertationSubheading[sec:pipeline-architecture]{Pipeline architecture}
+
+Figure~\ref{fig:pipeline-architecture} summarizes the end-to-end flow from public logs to dissertation tables. Remote stages write immutable parquet; local stages are idempotent given those inputs and configuration in \texttt{margin\_config.yaml}.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  node distance=1.0cm and 1.0cm,
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=0.95cm, minimum width=2.2cm, inner sep=3pt},
+  wide/.style={draw, rounded corners=2pt, align=center, minimum height=0.95cm, minimum width=2.6cm, inner sep=3pt},
+  arrow/.style={-{Stealth[length=2.5mm]}, thick}
+]
+% Top row: remote acquisition (left to right)
+\node[wide] (bq) {BigQuery\\public logs};
+\node[box, right=of bq] (extract) {Extract\\(monthly)};
+\node[box, right=of extract] (decode) {Decode\\events};
+
+% Bottom row: local evaluation (left to right, continuing the flow)
+\node[box, below=1.6cm of bq] (prep) {Preprocess\\edges};
+\node[box, right=of prep] (ranks) {PageRank\\scores};
+\node[box, right=of ranks] (proxy) {Proxy\\metrics};
+\node[wide, right=of proxy] (align) {Alignment\\\& benchmarks};
+\node[wide, right=of align] (latex) {LaTeX\\export};
+
+\draw[arrow] (bq) -- (extract);
+\draw[arrow] (extract) -- (decode);
+\draw[arrow] (decode.south) -- ++(0,-0.45) -| (prep.north);
+\draw[arrow] (prep) -- (ranks);
+\draw[arrow] (ranks) -- (proxy);
+\draw[arrow] (proxy) -- (align);
+\draw[arrow] (align) -- (latex);
+
+\node[draw, dashed, rounded corners, fit=(bq)(extract)(decode), inner sep=8pt, label=above:{\footnotesize Remote / acquisition}] {};
+\node[draw, dashed, rounded corners, fit=(prep)(ranks)(proxy)(align)(latex), inner sep=8pt, label=below:{\footnotesize Local / reproducible}] {};
+\end{tikzpicture}
+\caption{Evaluation pipeline: public Arbitrum logs are extracted and decoded, reputation edges and GMX outcomes are preprocessed, EndorseRank and AWP ranks are computed, proxies and alignment statistics are evaluated, and LaTeX result fragments are exported.}
+\label{fig:pipeline-architecture}
+\end{figure}
+
+Operationally, Phase~1 scripts write GMX raw logs and decoded events; Phase~2 scripts write monthly approval/transfer shards and consolidated latest-allowance and transfer-event tables; Phase~3 scripts read those tables, build graphs, run PageRank, compute proxies, and export tables under \texttt{results/tables/}. The same local path supports fixture-mode dry runs for continuous integration without cloud credentials.
+
+\dissertationSubheading[sec:event-decoding]{Event decoding}
+
+Blockchain logs store events as topics and a data payload rather than as named fields. Decoding maps each log row to a typed record used by graph construction and proxy computation. Incorrect decoding would silently corrupt both reputation graphs and validation labels; this section therefore records the exact topic hashes and field mappings used in the pipeline.
+
+\textbf{Log anatomy.} An Ethereum-compatible log contains an emitting contract address, an ordered list of topics, and an ABI-encoded data blob. Topic~$0$ is the keccak-256 hash of the event signature string, which uniquely identifies the event type among well-known standards. Indexed parameters occupy subsequent topics as $32$-byte words (addresses are left-padded); non-indexed parameters occupy the data field in ABI order (EIP-20; Ethereum Improvement Proposals, 2015). BigQuery exposes these fields as columns; the pipeline applies topic filters in SQL and performs ABI decoding in Python for fields that require numeric interpretation.
+
+\textbf{ERC-20 \texttt{Approval}.} Topic~$0$ is
+\begin{center}
+\texttt{0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925},
+\end{center}
+the hash of \texttt{Approval(address,address,uint256)}. Topics~$1$ and~$2$ hold the owner and spender addresses (left-padded); the allowance amount is ABI-decoded from the data field and scaled by the token's decimals. Unlimited approvals (\texttt{type(uint256).max}) are retained as large finite weights after decimal adjustment; they contribute strong endorsement edges, which is intentional: an unlimited approval is a strong on-chain authorization. EIP-2612 \texttt{permit} does not introduce a separate reputation event: successful permits emit the same \texttt{Approval} log, so EndorseRank observes the resulting allowance snapshot regardless of whether authorization was set by an on-chain \texttt{approve} call or an off-chain signature (Ethereum Improvement Proposals, 2020).
+
+\textbf{ERC-20 \texttt{Transfer}.} Topic~$0$ is
+\begin{center}
+\texttt{0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef},
+\end{center}
+the hash of \texttt{Transfer(address,address,uint256)}. Sender and recipient are indexed; value is decimal-adjusted. Mint and burn patterns that use the zero address are retained if they touch cohort wallets, but they are rare relative to wallet-to-wallet transfers in the filtered extract. Self-transfers are retained in the event table but excluded from Sybil-stability inbound-counterparty calculations (Section~\ref{sec:proxy-formulas}), because a wallet transferring to itself does not evidence an external counterparty relationship.
+
+\textbf{GMX \texttt{PositionDecrease}.} GMX V2 emits structured events through \texttt{EventEmitter} rather than a minimal ERC-20-style signature (GMX, n.d.). Extraction filters on the emitter address and the verified \texttt{EventLog1} topic~$0$, then decodes key--value fields from the event payload to recover \texttt{account}, \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, and liquidation indicators. Only decreases (closes, partial closes, and liquidations) enter the validation frame; increases open or enlarge positions and do not realize PnL for the success proxies used here. Liquidation flags distinguish forced closes from voluntary ones, which matters for both inverse-risk proxies and GF-PR sink weights.
+
+\textbf{Address normalization and units.} All addresses are lower-cased before joins so that checksummed and non-checksummed hex forms collide correctly. Token amounts are stored as floating-point decimal-adjusted values for weighting; ranking uses relative magnitudes within a cohort rather than absolute USD conversion for allowance and transfer edges. GMX PnL fields are already denominated in USD units in the protocol's event schema and are used directly for trading-success and risk proxies.
+
+\dissertationSubheading[sec:graph-construction]{Graph construction}
+
+EndorseRank and AWP share the PageRank solver in Equation~\eqref{eq:pagerank} but differ in edge semantics. Both methods induce a directed, weighted graph on wallet nodes, restrict attention to the subgraph touching the seed wallet set (edges with at least one endpoint in the cohort, including one-hop neighbors), and emit a score for every cohort wallet (missing nodes receive score $0$ before ranking). Subgraph restriction is important for scalability and for interpretability: the score of a cohort wallet may receive mass from non-cohort neighbors that endorse or transfer to it, but the evaluation reports scores only on $\mathcal{W}$.
+
+The conceptual distinction is endorsement versus flow. An allowance is an explicit, revocable authorization to spend; a transfer is a completed movement of value that may reflect payment, routing, market-making, or wash activity without a trust commitment (Do et al., 2023; Ethereum Improvement Proposals, 2015). EndorseRank therefore treats the latest allowance snapshot as a citation-like endorsement graph in the sense of Page et al.\ (1998). AWP treats historical transfers as time-decayed citations, down-weighting older flows so that recent economic activity dominates.
+
+\dissertationSubsubheading[sub:endorserank-graph]{EndorseRank allowance graph}
+
+Let $\mathcal{A}$ be the set of latest allowance records after preprocessing: for each token and owner--spender pair, only the chronologically last \texttt{Approval} in the observation window is retained (zero allowances remove the edge). Across tokens, weights are summed:
+\begin{equation}
+\label{eq:approve-weight}
+w_A(u,v)
+=
+\sum_{\mathrm{token}}
+a^{\star}(u,v,\mathrm{token}),
+\end{equation}
+where $a^{\star}$ is the latest decimal-adjusted allowance. The directed edge $u\to v$ encodes owner $u$ endorsing spender $v$. PageRank damping is $d=0.85$. No temporal decay is applied: allowance override semantics replace time-based weighting, because a newer approval supersedes an older one for the same pair (EIP-20; Ethereum Improvement Proposals, 2015).
+
+Algorithm~\ref{alg:endorserank} formalizes construction and scoring.
+
+\begin{algorithm}[htbp]
+\caption{EndorseRank graph construction and scoring}
+\label{alg:endorserank}
+\begin{algorithmic}[1]
+\Require Latest allowances $\mathcal{A}$, seed wallets $\mathcal{W}$, damping $d$, tolerance $\tau_{\mathrm{tol}}$, max iterations $I_{\max}$
+\Ensure Scores $\mathbf{s}_{\mathrm{ER}}$ on $\mathcal{W}$
+\State $E \gets \emptyset$
+\For{each $(u,v)$ in unique owner--spender pairs in $\mathcal{A}$}
+  \State $w \gets \sum_{\mathrm{token}} a^{\star}(u,v,\mathrm{token})$
+  \If{$w > 0$}
+    \State add edge $(u\to v, w)$ to $E$
+  \EndIf
+\EndFor
+\State $E \gets$ edges in $E$ incident to at least one wallet in $\mathcal{W}$
+\State $\mathbf{s} \gets \mathrm{WeightedPageRank}(E, d, \tau_{\mathrm{tol}}, I_{\max})$
+\State \Return $\mathbf{s}_{\mathrm{ER}}[w] \gets \mathbf{s}[w]$ for $w\in\mathcal{W}$ (else $0$)
+\end{algorithmic}
+\end{algorithm}
+
+\dissertationSubsubheading[sub:awp-graph]{AWP transfer graph}
+
+AWP follows Do et al.\ (2023): each transfer of value $v$ at age $\Delta t$ days before observation end $T_{\mathrm{obs}}$ contributes a decayed weight
+\begin{equation}
+\label{eq:logistic-decay}
+\sigma(\Delta t)
+=
+\frac{1}{1+\exp\bigl(k(\Delta t-t_0)\bigr)},
+\qquad
+k=0.01,\quad t_0=180\text{ days}.
+\end{equation}
+Edge weights aggregate over transfers:
+\begin{equation}
+\label{eq:transfer-weight}
+w_T(u,v)
+=
+\sum_{e:\,u\to v}
+v_e\,\sigma(\Delta t_e).
+\end{equation}
+Damping is again $d=0.85$. Figure~\ref{fig:logistic-decay-methods} plots $\sigma(\Delta t)$ over the relevant age range: recent transfers retain nearly full weight, while transfers older than the midpoint $t_0$ are smoothly down-weighted.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{\figpath{logistic-decay.pdf}}
+\caption{Logistic time-decay $\sigma(\Delta t)$ used by AWP ($k=0.01$, $t_0=180$ days). Horizontal axis is event age in days before 2026-05-31 UTC; vertical axis is the multiplicative weight applied to transfer value.}
+\label{fig:logistic-decay-methods}
+\end{figure}
+
+Algorithm~\ref{alg:awp} formalizes construction and scoring.
+
+\begin{algorithm}[htbp]
+\caption{AWP graph construction and scoring}
+\label{alg:awp}
+\begin{algorithmic}[1]
+\Require Transfers $\mathcal{T}$, seed wallets $\mathcal{W}$, observation end $T_{\mathrm{obs}}$, parameters $k,t_0,d,\tau_{\mathrm{tol}},I_{\max}$
+\Ensure Scores $\mathbf{s}_{\mathrm{AWP}}$ on $\mathcal{W}$
+\State $E \gets \emptyset$
+\For{each transfer $e=(u,v,v_e,t_e)$ in $\mathcal{T}$}
+  \State $\Delta t \gets (T_{\mathrm{obs}}-t_e)$ in days
+  \State $w_e \gets v_e\cdot\sigma(\Delta t)$ with $\sigma$ as in Equation~\eqref{eq:logistic-decay}
+  \State accumulate $w_e$ on edge $(u\to v)$
+\EndFor
+\State remove non-positive edges; retain edges incident to $\mathcal{W}$
+\State $\mathbf{s} \gets \mathrm{WeightedPageRank}(E, d, \tau_{\mathrm{tol}}, I_{\max})$
+\State \Return $\mathbf{s}_{\mathrm{AWP}}[w] \gets \mathbf{s}[w]$ for $w\in\mathcal{W}$ (else $0$)
+\end{algorithmic}
+\end{algorithm}
+
+Because $G_{\mathrm{approve}}$ records durable authorizations and $G_{\mathrm{transfer}}$ records historical value flows, the two graphs differ in density and temporal sensitivity. Approvals are relatively rare, high-intent events; transfers are frequent and often mechanical. On the matched cohort, the approval subgraph is substantially sparser than the transfer subgraph (Chapter~\ref{ch:results}), which is the structural basis for the computational-efficiency hypothesis (H3): per-iteration PageRank cost scales with $|E|$, so fewer edges imply faster solves and lower memory for the adjacency structures in Equation~\eqref{eq:transition-impl}.
+
+\textbf{Implementation notes shared by both methods.} Edge lists are stored as triples $(\mathrm{from\_node},\mathrm{to\_node},\mathrm{weight})$ in memory. Duplicate edges are aggregated by summing weights before the solve. Non-positive weights are dropped. The solver builds a sparse compressed-row transition matrix, iterates Equation~\eqref{eq:pagerank}, and returns a dictionary from node identifier to score. Cohort scores are aligned to $\mathcal{W}$ with missing entries set to zero, then converted to dense ranks for correlation.
+
+\dissertationSubheading[sec:gf-pr-graph]{Supplementary GF-PR graph (extension)}
+
+GF-PR is an outcome-native reference built only from GMX \texttt{PositionDecrease} events. It is evaluated solely for supplementary question SRQ1 (construct-overlap diagnostic) and is not a primary peer to EndorseRank or AWP. The method exists to answer a methodological question: if a ranking is allowed to read the same PnL stream that defines trading-success proxies, how high can alignment rise? That ceiling clarifies how much of a social method's trading-success $\tau$ might be attributed to genuine social signal versus residual correlation with outcomes.
+
+The graph is a directed star with two synthetic nodes, $\mathrm{POOL}$ and $\mathrm{SINK}$. For each close of wallet $w$ with realized PnL $x$ (field \texttt{basePnlUsd}):
+\begin{itemize}
+\item if the close is a liquidation, add weight $|x|+\varepsilon_{\mathrm{liq}}$ on $w\to\mathrm{SINK}$ with $\varepsilon_{\mathrm{liq}}=1.0$;
+\item else if $x>0$, add weight $x$ on $\mathrm{POOL}\to w$;
+\item else if $x<0$, add weight $|x|+\varepsilon_{\mathrm{loss}}$ on $w\to\mathrm{SINK}$ with $\varepsilon_{\mathrm{loss}}=0.1$.
+\end{itemize}
+The additives $\varepsilon_{\mathrm{loss}}$ and $\varepsilon_{\mathrm{liq}}$ break ties when PnL is exactly zero after absolute value and ensure that liquidations contribute strictly more sink mass than ordinary losses of equal magnitude. There are no wallet-to-wallet edges: GF-PR does not encode social endorsement or transfer structure. PageRank with $d=0.85$ propagates mass from $\mathrm{POOL}$ toward profitable wallets and from loss-making wallets toward $\mathrm{SINK}$. High alignment with trading-success proxies is expected by construction and must be interpreted as construct overlap, not as superior social reputation (Cronbach \& Meehl, 1955).
+
+\dissertationSubheading[sec:proxy-evaluation]{Five-proxy evaluation design}
+
+Primary evaluation compares EndorseRank and AWP only. For each method $M\in\{\mathrm{EndorseRank},\mathrm{AWP}\}$ and each proxy $P$, the pipeline computes scores $\mathbf{s}_M$ and proxy values $\mathbf{p}_P$ on the matched cohort, then reports Spearman's $\rho$ and Kendall's $\tau$ between the induced rankings (Section~\ref{sec:statistical-tests}). All proxies are oriented so that higher values imply higher expected reputation before correlation, following the domain-alignment approach of Do et al.\ (2023). Orientation is part of construct validity: without it, a method that correctly ranks safer traders could appear negatively aligned with a loss-magnitude proxy.
+
+Five families structure the primary comparison. They were chosen to span (i)~baselines from prior work, (ii)~within-construct checks for each social graph, and (iii)~outcome-oriented trading and risk measures that are not direct inputs to EndorseRank or AWP:
 \begin{enumerate}
-\item \textbf{Transfer} (Do et al.\ baseline): in-degree, in-value.
-\item \textbf{Allowance}: in-approve degree, in-approve value (wallet as spender).
-\item \textbf{Default/liquidation} (GMX): liquidation-free rate, zero-liquidation flag, liquidation-free closes.
-\item \textbf{Inverse risk} (GMX PnL): loss avoidance, non-loss close rate, worst-close PnL score.
-\item \textbf{Sybil-adjusted stability}: inbound counterparty ratio, transfer tenure, active months.
-\item \textbf{GMX success}: close-success count, realized gain proxy, close success rate.
+\item \textbf{Transfer} (Do et al.\ baseline): inbound transfer activity.
+\item \textbf{Allowance}: inbound approval activity (wallet as spender).
+\item \textbf{Inverse risk} (GMX PnL): loss avoidance and non-loss close behavior.
+\item \textbf{Sybil-adjusted stability}: counterparty diversity and activity tenure.
+\item \textbf{Trading success}: GMX close outcomes and realized gains.
 \end{enumerate}
+Transfer and allowance families are \emph{graph-adjacent}: they are computed from the same event classes that build $G_{\mathrm{transfer}}$ and $G_{\mathrm{approve}}$, but they are simple local statistics (degree and value sums) rather than global PageRank scores. Strong alignment of AWP with transfer proxies, or of EndorseRank with allowance proxies, is therefore evidence of within-construct coherence, not of independent predictive power. Inverse-risk, Sybil-stability, and trading-success families are the more demanding tests for social reputation as a signal of trading behavior and account quality.
 
-Family-level mean $\tau$ summarizes construct alignment; \texttt{method\_comparison} in \texttt{eval\_summary.json} records which method aligns more strongly per family. Lending-protocol default labels are excluded due to insufficient Arbitrum volume within scope.
+Family-level mean $\tau$ summarizes construct alignment for the EndorseRank--AWP comparison; the evaluation pipeline records which social method aligns more strongly per family (Appendix~\ref{ch:appendix-eval}). A sixth liquidation family is computed in the codebase for completeness and is mentioned where relevant, but main-text claims use the five families above.
 
-\dissertationSubheading{Computational benchmark (Claim~1)}
+Supplementary evaluation includes GF-PR only for SRQ1, to diagnose construct overlap on trading-outcome proxies. Lending-protocol default labels remain out of scope. Packin and Lev-Aretz (2024) caution that decentralized credit scores can become opaque; the proxy design counters opacity by publishing explicit formulas (Section~\ref{sec:proxy-formulas}) and by separating social methods from outcome-native references.
 
-On identical inputs, measure over five runs: wall-clock runtime (graph build + PageRank), peak memory (tracemalloc), PageRank iterations to convergence, and edge counts. Implementation: \texttt{scripts/benchmark\_runtime.py} (invoked from \texttt{run\_dissertation\_eval.py}).
+\dissertationSubheading[sec:proxy-formulas]{Operational definitions of proxies}
 
-\dissertationSubheading{Reproducibility}
+Let $\mathcal{W}$ be the matched cohort. For GMX-derived proxies, only wallets with at least $m=3$ closes in the decoded event table are eligible; ineligible wallets receive zeros after left-join to $\mathcal{W}$. Notation below matches \texttt{proxy\_metrics.py} in the open evaluation pipeline.
 
-\texttt{scripts/run\_dissertation\_eval.py --real} recomputes proxies, alignment, and benchmarks from cached parquet. \texttt{--fixtures} remains available for offline synthetic runs. Outputs: \texttt{data/processed/eval\_summary.json} and LaTeX fragments under \texttt{2-Dissertation-Draft/results/tables/}.
+\dissertationSubsubheading[sub:proxy-transfer]{Transfer family}
 
-\dissertationSubheading{Ethics}
+Let $\mathcal{T}_{\mathrm{in}}(w)$ be inbound transfers to wallet $w$ (any sender). Define
+\begin{align}
+\mathrm{in\_degree}(w)
+&=
+\bigl|\{\,u : \exists\text{ transfer }u\to w\,\}\bigr|,
+\label{eq:in-degree}\\
+\mathrm{in\_value}(w)
+&=
+\sum_{e:\,\cdot\to w} v_e.
+\label{eq:in-value}
+\end{align}
+These are the domain-intuition baselines of Do et al.\ (2023): economically important addresses tend to receive transfers from more counterparties and in larger aggregate value. Unlike PageRank, $\mathrm{in\_degree}$ and $\mathrm{in\_value}$ are strictly local: they ignore the reputation of senders. Comparing AWP (global, time-decayed) to these local baselines tests whether propagation and recency weighting add ordering information beyond raw inflows.
 
-Only public on-chain data are used; no off-chain identity linkage. See approved proposal \texttt{1-Proposal/proposal/02-Content/Chapter-07.tex} for ethics clearance details.
+\dissertationSubsubheading[sub:proxy-allowance]{Allowance family}
+
+Let $\mathcal{A}_{\mathrm{in}}(w)$ be latest allowances in which $w$ is the spender (owner $\to w$). Define
+\begin{align}
+\mathrm{in\_approve\_degree}(w)
+&=
+\bigl|\{\,u : a^{\star}(u,w,\cdot)>0\,\}\bigr|,
+\label{eq:in-approve-degree}\\
+\mathrm{in\_approve\_value}(w)
+&=
+\sum_{u,\mathrm{token}} a^{\star}(u,w,\mathrm{token}).
+\label{eq:in-approve-value}
+\end{align}
+These proxies measure endorsement received, the construct EndorseRank is designed to rank. Strong alignment of EndorseRank with this family is expected and is interpreted as within-construct validity rather than independent trading skill. As with transfer baselines, the allowance proxies are local: they count and sum inbound approvals without propagating through multi-hop endorsement chains. EndorseRank's incremental value, if any, appears when it aligns with non-allowance families while remaining coherent with allowance baselines.
+
+\dissertationSubsubheading[sub:proxy-inverse-risk]{Inverse-risk family}
+
+Let $\mathcal{C}(w)$ be the set of non-missing GMX closes for wallet $w$, with PnL $x_c$ and liquidation flag $\ell_c\in\{0,1\}$. A loss close is a non-liquidation close with $x_c<0$. Define
+\begin{align}
+\mathrm{loss\_avoidance}(w)
+&=
+-\sum_{c\in\mathcal{C}(w)} \min(x_c,0),
+\label{eq:loss-avoidance}\\
+\mathrm{non\_loss\_close\_rate}(w)
+&=
+1-\frac{|\{c\in\mathcal{C}(w):\ell_c=0\land x_c<0\}|}{|\mathcal{C}(w)|},
+\label{eq:non-loss-rate}\\
+\mathrm{worst\_close\_pnl\_score}(w)
+&=
+-\min_{c\in\mathcal{C}(w)} x_c.
+\label{eq:worst-close}
+\end{align}
+Equation~\eqref{eq:loss-avoidance} sums absolute loss magnitudes (higher is better after the sign flip). Equation~\eqref{eq:non-loss-rate} is the fraction of closes that are not ordinary losses. Equation~\eqref{eq:worst-close} rewards wallets whose worst close is less severe (again after sign flip). Liquidation closes are included in the worst-close minimum but are excluded from the ordinary-loss count in Equation~\eqref{eq:non-loss-rate}, so that forced liquidations are not double-counted as ordinary losses. Inverse-risk proxies are not inputs to EndorseRank or AWP; alignment here is evidence that social structure co-varies with risk-avoiding trading behavior.
+
+\dissertationSubsubheading[sub:proxy-sybil]{Sybil-adjusted stability family}
+
+Self-transfers ($u=w$) are excluded from inbound counters. Let $N_{\mathrm{tx}}(w)$ be the number of inbound transfers to $w$ from other addresses and $N_{\mathrm{uniq}}(w)$ the number of distinct inbound counterparties. Let $t_{\min}(w)$ and $t_{\max}(w)$ be the first and last timestamps at which $w$ appears as sender or recipient in the transfer table, and let $M(w)$ be the number of distinct calendar months of activity (inbound months and full-span months, taking the maximum). Define
+\begin{align}
+\mathrm{inbound\_counterparty\_ratio}(w)
+&=
+\frac{N_{\mathrm{uniq}}(w)}{\max(N_{\mathrm{tx}}(w),1)},
+\label{eq:counterparty-ratio}\\
+\mathrm{transfer\_tenure\_days}(w)
+&=
+\frac{t_{\max}(w)-t_{\min}(w)}{86400}\quad\text{(seconds to days)},
+\label{eq:tenure}\\
+\mathrm{active\_months}(w)
+&=
+M(w).
+\label{eq:active-months}
+\end{align}
+High counterparty ratio penalizes wallets that receive many transfers from few addresses (a simple Sybil/wash pattern). Tenure and active months capture persistence of on-chain activity within the observation window. These measures are imperfect Sybil defenses---coordinated adversaries can still diversify counterparties---but they operationalize the intuition that durable, multi-counterparty activity is more reputation-relevant than bursty self-dealing (Packin \& Lev-Aretz, 2024).
+
+\dissertationSubsubheading[sub:proxy-trading]{Trading-success family}
+
+A successful close is a non-liquidation close with $x_c>0$. Define
+\begin{align}
+\mathrm{close\_success\_count}(w)
+&=
+\bigl|\{c\in\mathcal{C}(w):\ell_c=0\land x_c>0\}\bigr|,
+\label{eq:success-count}\\
+\mathrm{realized\_gain\_proxy}(w)
+&=
+\sum_{c\in\mathcal{C}(w)} \max(x_c,0),
+\label{eq:realized-gain}\\
+\mathrm{close\_success\_rate}(w)
+&=
+\frac{\mathrm{close\_success\_count}(w)}{|\mathcal{C}(w)|}.
+\label{eq:success-rate}
+\end{align}
+The primary definition of $\mathrm{realized\_gain\_proxy}$ is the raw sum of positive PnL. A size-weighted variant multiplies each positive PnL by $\max(|s_c|,1)$, where $s_c$ is the close's \texttt{sizeDeltaUsd}, and is used only in robustness checks (Section~\ref{sec:scaling-robustness}). These proxies operationalize trading success on GMX V2 perpetual markets (GMX, n.d.; Sch\"{a}r, 2021). They are outcome measures, not social-graph features: neither EndorseRank nor AWP reads \texttt{basePnlUsd} when building edges. Consequently, non-trivial alignment with trading success is the strongest form of domain evidence available in this design short of external credit labels. Count, sum, and rate capture complementary aspects of success---frequency, magnitude, and consistency---so family-level mean $\tau$ is not dominated by a single operationalization.
+
+\dissertationSubsubheading[sub:proxy-liquidation]{Liquidation family (ancillary)}
+
+For completeness, the pipeline also computes
+\begin{align}
+\mathrm{liquidation\_free\_rate}(w)
+&=
+1-\frac{\sum_c \ell_c}{|\mathcal{C}(w)|},
+\label{eq:liq-free-rate}\\
+\mathrm{zero\_liquidation\_flag}(w)
+&=
+\mathbf{1}\!\left[\sum_c \ell_c=0\right],
+\label{eq:zero-liq}\\
+\mathrm{liquidation\_free\_closes}(w)
+&=
+\sum_c (1-\ell_c).
+\label{eq:liq-free-closes}
+\end{align}
+These metrics support sensitivity analyses and GF-PR diagnostics but are not part of the five-family primary claims.
+
+\dissertationSubheading[sec:statistical-tests]{Statistical tests}
+
+Reputation scores and validation proxies are continuous rank variables, not binary default labels. Following Do et al.\ (2023) and the construct-validity tradition of Cronbach and Meehl (1955), alignment is measured with rank correlations that are invariant to monotonic transforms of either margin.
+
+\textbf{Spearman's $\rho$.} Let $R_i$ and $S_i$ be the dense ranks of score and proxy for wallet $i=1,\ldots,n$. Spearman's coefficient is the Pearson correlation of these ranks:
+\begin{equation}
+\label{eq:spearman-ops}
+\rho
+=
+\frac{\sum_{i=1}^{n}(R_i-\bar R)(S_i-\bar S)}
+{\sqrt{\sum_{i=1}^{n}(R_i-\bar R)^2\sum_{i=1}^{n}(S_i-\bar S)^2}}.
+\end{equation}
+Spearman captures monotonic agreement: if higher reputation consistently co-occurs with higher proxy values, $\rho$ is positive even when the relationship is nonlinear in the raw scores.
+
+\textbf{Kendall's $\tau$.} Kendall's coefficient counts concordant and discordant pairs. For all pairs $i<j$,
+\begin{equation}
+\label{eq:kendall-ops}
+\tau
+=
+\frac{C-D}{\binom{n}{2}},
+\end{equation}
+where $C$ is the number of pairs ordered the same way by both rankings and $D$ is the number ordered differently (ties handled by the implementation's standard tie correction). Kendall's $\tau$ is more interpretable as a pairwise ordering probability and is less sensitive to large rank displacements than Spearman in some heavy-tailed settings.
+
+\textbf{Why both.} Spearman summarizes global monotonic association; Kendall emphasizes pairwise order fidelity. Reporting both follows Do et al.\ (2023) and allows readers to verify that family-level conclusions are not an artifact of a single rank statistic. In blockchain reputation settings, score distributions are often heavy-tailed: a few hubs receive large mass while many wallets share near-zero scores. Rank correlations remain well-defined in that regime, whereas Pearson correlation on raw scores would be dominated by hubs.
+
+\textbf{Family aggregation.} Family-level summaries use mean $\tau$ across proxies within a family. For example, the transfer-family mean is $\tfrac{1}{2}(\tau_{\mathrm{in\_degree}}+\tau_{\mathrm{in\_value}})$. Method comparisons on the same cohort and proxies are relative, not absolute claims about universal reputation. Chapter~\ref{ch:literature} notes interpretive bands used in related PageRank studies ($|\tau|<0.10$ negligible; $0.10$--$0.35$ weak-to-moderate; $\geq 0.35$ substantively meaningful); these bands guide discussion but do not replace the primary EndorseRank-versus-AWP contrast on identical inputs.
+
+\textbf{Orientation and missingness.} Proxies are pre-oriented so that larger values indicate better reputation. Wallets absent from a proxy source receive zeros after alignment to $\mathcal{W}$, which is conservative for sparse activity and is applied identically to both methods. No wallet is dropped from one method but retained in the other: the correlation sample is always the full matched cohort for primary tables.
+
+\textbf{What is not tested.} The study does not claim causal identification (reputation does not ``cause'' trading success in an interventional sense), does not fit predictive classifiers with train/test splits, and does not report $p$-values as the primary decision criterion. The scientific target is comparative construct alignment and computational cost under a fixed, transparent protocol.
+
+\dissertationSubheading[sec:computational-benchmark]{Computational benchmark (Claim~C1)}
+
+Claim~C1 concerns computational efficiency of EndorseRank versus AWP on identical inputs. The benchmark protocol isolates PageRank solve cost from one-time graph construction, because construction cost is dominated by I/O and preprocessing that would be amortized in a deployed scorer that updates incrementally, whereas the iterative solve is the recurring computational core of both methods.
+
+\textbf{Timed quantity.} For each method, edge lists are built once per cohort outside the timed loop. The timed section runs weighted PageRank only, with damping $d=0.85$, tolerance $\tau_{\mathrm{tol}}=10^{-8}$, and at most $I_{\max}=300$ iterations. These numerical settings match the configuration used for alignment scores, so runtime and alignment refer to the same mathematical object.
+
+\textbf{Repetitions and metrics.} Each configuration is repeated for five independent runs to average out operating-system noise. Per run, the pipeline records wall-clock solve time (\texttt{time.perf\_counter}), peak memory via \texttt{tracemalloc}, and iterations to convergence. Reported statistics are the mean runtime, runtime standard deviation, mean iterations, maximum peak memory across runs, and edge/node counts of the pre-built graph. Edge counts are reported because they are the leading structural explanation for runtime differences under $O(|E|)$ per-iteration complexity (Page et al., 1998).
+
+\textbf{Cohorts.} The primary benchmark uses the matched wallet cohort ($n=5{,}521$). Scaling benchmarks use deterministic subsamples of the expanded wallet pool (Section~\ref{sec:scaling-robustness}). GF-PR runtime may be reported parenthetically in Chapter~\ref{ch:results} as supplementary context only and is not part of Claim~C1.
+
+\textbf{Fairness of comparison.} Both methods use the same solver, tolerance, iteration cap, damping (unless a robustness sweep varies $d$), and seed wallet set. Differences therefore reflect graph density and weight structure---allowance snapshots versus time-decayed transfers---rather than implementation asymmetry. Hardware and software versions are recorded in the evaluation manifest so that absolute seconds can be interpreted relative to the experimental machine; speedup ratios (AWP time divided by EndorseRank time) are the preferred comparative summary.
+
+\dissertationSubheading[sec:scaling-robustness]{Scaling and robustness extensions}
+
+Beyond the matched cohort, the study evaluates runtime scaling on a larger address set and stress-tests alignment under parameter and sample perturbations. These extensions support H3 (efficiency at larger $n$) and the stability of family-level conclusions. They are not alternative primary samples: unless otherwise noted, alignment claims in Chapter~\ref{ch:results} refer to the matched cohort, and scaling claims refer to the expanded pool.
+
+\dissertationSubsubheading[sub:expanded-pool]{Expanded wallet pool and runtime scaling}
+
+The expanded wallet pool $\mathcal{W}_{\mathrm{pool}}$ unions the matched GMX cohort with supplemental active addresses derived from the reputation subgraph (and, when present, supplemental active-wallet parquet), yielding $N=|\mathcal{W}_{\mathrm{pool}}|=31{,}612$ addresses in this study. Supplemental addresses increase graph size for timing experiments without requiring every address to carry GMX labels. Runtime benchmarks at intermediate sizes use deterministic SHA256 subsampling with seed string \texttt{benchmark-tier2-v1}: wallets are ordered by
+\begin{center}
+\texttt{SHA256(seed || address)} with seed \texttt{benchmark-tier2-v1}
+\end{center}
+and the first $n$ addresses form the subsample. The seed string is a technical identifier in configuration only; the dissertation narrative refers to the expanded wallet pool and robustness checks, not to numbered evaluation stages. Reported stages include $n=10{,}000$ and the full pool $n=N=31{,}612$, always on the same approval and transfer parquet. In-cohort scaling stages with $n\le 5{,}521$ are reported in Appendix~\ref{ch:appendix-eval}. Deterministic hashing avoids the non-reproducibility of pseudorandom draws across library versions.
+
+\dissertationSubsubheading[sub:damping-protocol]{Damping sensitivity}
+
+PageRank damping is swept over $d\in\{0.75,0.85,0.95\}$ on the matched cohort, holding graphs and proxies fixed. The default $d=0.85$ matches the classical web PageRank setting (Page et al., 1998) and Do et al.\ (2023). Lower $d$ increases teleportation and flattens scores; higher $d$ emphasizes multi-hop structure and can slow convergence. The sweep tests whether allowance- and transfer-family alignment are artifacts of a single teleportation weight.
+
+\dissertationSubsubheading[sub:top-tokens]{Top-token subgraph}
+
+A restricted subgraph retains only the top-$20$ ERC-20 tokens by combined transfer and allowance volume within the observation window. EndorseRank and AWP are recomputed on this subgraph to assess sensitivity to long-tail tokens and possible spam assets. If family-level conclusions reverse when low-volume tokens are removed, the primary result would be fragile to token composition; stability supports interpreting the full-token graphs as representative of major economic activity.
+
+\dissertationSubsubheading[sub:sample-size-protocol]{Sample-size sensitivity}
+
+Alignment statistics are recomputed on staged subsamples drawn from the expanded wallet pool using the same deterministic seed, to verify that family-level mean $\tau$ and method orderings are not driven by a single cohort size. Because rank correlations have sampling variability, modest movement in $\tau$ across sizes is expected; the robustness question is whether EndorseRank and AWP preserve their relative ordering on key families.
+
+\dissertationSubsubheading[sub:gmx-proxy-variants]{GMX proxy definition variants}
+
+For trading-success robustness, $\mathrm{realized\_gain\_proxy}$ is computed under both the primary raw-sum definition (Equation~\eqref{eq:realized-gain}) and a size-weighted definition that multiplies positive PnL by $\max(|s_c|,1)$ for close size $s_c$ (\texttt{sizeDeltaUsd}). Size-weighting up-weights large positions and can change the identity of top traders. Primary tables use the raw-sum definition; size-weighted results appear only in robustness tables.
+
+\dissertationSubheading[sec:reproducibility]{Reproducibility}
+
+All empirical tables in Chapter~\ref{ch:results} are produced by the open evaluation pipeline under \texttt{A-Skill-Programs/margin\_rank}. After Phase~1--2 parquet artifacts are present, the dissertation evaluation is:
+\begin{center}
+\texttt{python scripts/run\_dissertation\_eval.py --real [--robustness] --export-latex}
+\end{center}
+The \texttt{--real} flag selects cached BigQuery-derived inputs rather than synthetic fixtures; \texttt{--robustness} enables damping, top-token, sample-size, and GMX-proxy variant sweeps; \texttt{--export-latex} writes table fragments to \texttt{2-Dissertation-Draft/results/tables/}. Configuration (observation window, damping, decay parameters, topic hashes, benchmark seeds) lives in \texttt{config/margin\_config.yaml}. Fixture mode (\texttt{--fixtures}) supports offline continuous integration without cloud credentials.
+
+Reproducible elements include: deterministic wallet subsampling via SHA256 seeds; fixed PageRank tolerance and iteration caps; explicit proxy formulas in Section~\ref{sec:proxy-formulas}; and logged extraction manifests. Peer reviewers can regenerate alignment and benchmark tables from the same parquet without re-querying BigQuery.
+
+\dissertationSubheading[sec:sampling-bias]{Sampling considerations and missingness}
+
+The matched cohort is a purposeful sample, not a random sample of all Arbitrum addresses. Eligibility requires GMX activity and reputation-subgraph connectivity, so results speak to \emph{active perpetual traders with observable approval or transfer structure}. Idle wallets, pure holders, and addresses that interact only through non-ERC-20 mechanisms are out of scope by design.
+
+Missingness arises in several forms. Tokens with unknown decimals may be dropped or defaulted during preprocessing; such decisions are logged in the pipeline. Approvals that never emit standard ERC-20 logs (non-standard tokens) are invisible to EndorseRank. Transfers that occur off-chain or through custodial systems never enter AWP. These missingness patterns bias both methods toward on-chain, standard-token activity---acceptable for an on-chain reputation study, but relevant when generalizing to the full user population of a protocol.
+
+Supplemental addresses in the expanded wallet pool ($N=31{,}612$) increase coverage for runtime tests but do not automatically carry GMX labels. Alignment claims therefore remain anchored to the matched cohort ($n=5{,}521$), while scaling claims use the pool.
+
+\dissertationSubheading[sec:implementation-notes]{Implementation notes}
+
+PageRank is implemented with sparse adjacency lists and power iteration in Python, with optional NumPy vectorization for score updates. Graphs are built once per configuration; timed benchmarks exclude I/O and preprocessing. Randomness enters only through optional fixture generation; real-data evaluation is deterministic given parquet inputs and configuration seeds. Floating-point differences across machines are expected to be negligible relative to the reported $\tau$ precision (three decimal places).
+
+Figure generation (\texttt{generate\_dissertation\_figures.py}) reads the same artifacts and writes vector PDFs under \texttt{Figures/generated/}. Dissertations built from stale figures or tables should regenerate both before submission.
+
+\dissertationSubheading[sec:ethics]{Ethics}
+
+This study uses exclusively publicly available blockchain data and does not intervene with human participants. Ethics clearance and data-handling procedures were approved by the institution prior to empirical data collection; the exemption or clearance confirmation is retained as part of the research record.
+
+\dissertationSubsubheading[sub:privacy-anonymity]{Privacy and anonymity}
+
+Arbitrum One addresses are pseudonymous identifiers, not inherently linked to real-world identities (Packin \& Lev-Aretz, 2024). Pseudonymity is not anonymity: determined adversaries can sometimes link addresses to persons through exchange deposits, public profiles, or clustering heuristics. This study deliberately refrains from such linkage. Collection is restricted to on-chain events---\texttt{Approval}, \texttt{Transfer}, and GMX \texttt{PositionDecrease}---with no scraping or integration of off-chain personal data such as IP addresses, exchange KYC records, social-media handles, or deanonymization graphs. No attempt was made to cluster addresses into real-world entities, to publish address-level rankings that could reasonably identify individuals, or to combine wallet histories with external identity providers. Reported results are cohort-level aggregates (correlations, runtimes, family means), not leaderboards of named users. Where examples are discussed in prose, they refer to abstract roles (e.g., ``high-allowance spenders'') rather than concrete addresses.
+
+\dissertationSubsubheading[sub:data-minimization]{Data minimization}
+
+Only fields required for graph construction and proxies are retained in processed tables (addresses, token amounts, timestamps, GMX PnL fields, liquidation flags). Raw logs are stored for auditability of the research pipeline but are not redistributed as a deanonymization aid. Query filters are wallet-scoped where possible to avoid indiscriminate full-chain dumps beyond the study design.
+
+\dissertationSubsubheading[sub:data-usage-compliance]{Data usage and compliance}
+
+All queries targeted public datasets under \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us} in accordance with Google Cloud terms of service and rate limits. Dry-run byte estimates and per-query caps limit unnecessary scanning. No transactions were broadcast, no smart contracts were called in ways that could disrupt network operations, and no privileged or non-public indexer access was used.
+
+\dissertationSubsubheading[sub:fairness-transparency]{Fairness and transparency}
+
+Graph reputation systems can systematically undervalue new entrants, low-volume participants, or wallets that avoid public approvals (Packin \& Lev-Aretz, 2024). EndorseRank and AWP were therefore audited for such structural biases: allowance graphs favor addresses that receive spending authority; transfer graphs favor addresses embedded in value-flow networks. Limitations---including cold-start effects, Sybil susceptibility of approval graphs, and construct overlap for GF-PR---are discussed in Chapter~\ref{ch:discussion}. All code paths, parameter choices, and evaluation metrics are documented in the open pipeline (Appendix~\ref{ch:appendix-eval}) to enable peer review and independent replication.
+
+\dissertationSubsubheading[sub:responsible-disclosure]{Responsible disclosure and impact}
+
+Although EndorseRank may inform risk assessment in DeFi contexts, it is not financial advice, credit advice, or a consumer reporting product. Human oversight remains necessary for lending, trading, and compliance decisions. Potential adversarial manipulation (for example, Sybil attacks on $G_{\mathrm{approve}}$ or wash transfers on $G_{\mathrm{transfer}}$) is acknowledged and discussed in Chapter~\ref{ch:discussion}. The study reports aggregated cohort-level findings rather than wallet-level rankings intended for targeting individual users. Any future operational deployment would require additional governance, appeal mechanisms, and fairness monitoring beyond the scope of this dissertation.
+
+\dissertationSubsubheading[sub:methodological-commitments]{Summary of methodological commitments}
+
+The design fixes the chain, window, cohort rules, graph formulas, proxy definitions, and statistical tests before interpreting results. Primary claims compare only EndorseRank and AWP on the matched wallet cohort; the expanded pool and robustness sweeps test efficiency and stability; GF-PR bounds outcome-native alignment for SRQ1. Chapter~\ref{ch:results} reports the empirical outcomes of this protocol.

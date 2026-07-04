@@ -4,18 +4,18 @@
 
 \begin{table}[htbp]
 \centering
-\caption{Mean Kendall $\tau$ by proxy family: EndorseRank vs.\ AWP ($n=5521$).}
+\caption{Mean Kendall $\tau$ by proxy family: EndorseRank, AWP, and GF-PR ($n=5521$).}
 \label{tab:alignment-summary}
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc}
 \toprule
-Proxy family & EndorseRank (mean $\tau$) & AWP (mean $\tau$) & Higher alignment \\
+Proxy family & EndorseRank & AWP & GF-PR & Highest alignment \\
 \midrule
-Transfer & 0.333 & 0.534 & AWP \\
-Allowance & 0.355 & -0.030 & EndorseRank \\
-Default/Liquidation & 0.093 & 0.113 & AWP \\
-Inverse risk & 0.035 & 0.107 & AWP \\
-Sybil-adjusted stability & 0.233 & 0.286 & AWP \\
-GMX success & 0.096 & 0.179 & AWP \\
+Transfer & 0.333 & 0.534 & 0.246 & AWP \\
+Allowance & 0.355 & -0.030 & -0.041 & EndorseRank \\
+Default/Liquidation & 0.093 & 0.113 & 0.132 & GF-PR \\
+Inverse risk & 0.035 & 0.107 & 0.376 & GF-PR \\
+Sybil-adjusted stability & 0.233 & 0.286 & 0.093 & AWP \\
+GMX success & 0.096 & 0.179 & 0.583 & GF-PR \\
 \bottomrule
 \end{tabular}
 \end{table}

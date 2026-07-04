@@ -76,6 +76,18 @@ ALL_PROXIES = tuple(p for proxies in PROXY_FAMILIES.values() for p in proxies)
 
 
 
+DISSERTATION_METHODS: dict[str, str] = {
+
+    "endorserank": "endorserank_score",
+
+    "awp": "awp_score",
+
+    "gf_pr": "gf_pr_score",
+
+}
+
+
+
 METHODS: dict[str, str] = {
 
     "awp": "awp_score",

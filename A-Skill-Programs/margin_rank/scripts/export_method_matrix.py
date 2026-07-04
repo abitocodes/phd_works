@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export method-proxy matrix to CSV and LaTeX (seven-method or six-aave preset)."""
+"""Export method-proxy matrix to CSV and LaTeX (three-method or archived presets)."""
 
 from __future__ import annotations
 
@@ -11,7 +11,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from common import ROOT, load_config, load_json  # noqa: E402
-from evaluate_alignment import (
+from evaluate_alignment import (  # noqa: E402
+    DISSERTATION_METHODS,
     METHOD_LABELS,
     METHODS,
     PROXY_FAMILIES,
@@ -29,6 +30,19 @@ FAMILY_HEADERS = {
 }
 
 PRESETS = {
+    "three": {
+        "methods": DISSERTATION_METHODS,
+        "labels": METHOD_LABELS,
+        "matrix_key": "method_proxy_matrix",
+        "benchmark_prefix": None,
+        "csv_name": "three_method_proxy_matrix.csv",
+        "tex_name": "alignment-three-methods.tex",
+        "label": "tab:alignment-three-methods",
+        "caption_extra": (
+            " EndorseRank and AWP are social reputation graphs; GF-PR is an "
+            "outcome-native GMX PnL star baseline (construct overlap on GMX proxies)."
+        ),
+    },
     "seven": {
         "methods": METHODS,
         "labels": METHOD_LABELS,
@@ -103,11 +117,18 @@ def write_latex(summary: dict, out: Path, preset_cfg: dict) -> None:
     synthetic = summary.get("synthetic", False)
     diagnostics = summary.get("aave_edge_diagnostics", {})
     edge_note = ""
-    if diagnostics:
+    if preset_cfg.get("tex_name") == "alignment-seven-methods.tex" and diagnostics:
         parts = []
         for key in ("liq_pr", "borrow_pr", "repay_pr", "borrow_pr_pool", "repay_pr_pool", "delegation_pr"):
             if key in diagnostics:
                 parts.append(f"{key}={diagnostics[key].get('edge_count', 0)}")
+        if parts:
+            edge_note = " Edge counts: " + ", ".join(parts) + "."
+    elif preset_cfg.get("tex_name") == "alignment-six-aave-methods.tex" and diagnostics:
+        parts = []
+        for key in ("liq_pr", "borrow_pr", "repay_pr", "borrow_pr_pool", "repay_pr_pool", "delegation_pr"):
+            if key in diagnostics:
+                parts.append(f"\\texttt{{{key}={diagnostics[key].get('edge_count', 0)}}}")
         if parts:
             edge_note = " Edge counts: " + ", ".join(parts) + "."
 
@@ -153,7 +174,7 @@ def write_latex(summary: dict, out: Path, preset_cfg: dict) -> None:
     body = f"""{hdr}
 \\begin{{table}}[htbp]
 \\centering
-\\caption{{Mean Kendall $\\tau$ by proxy family across {method_count} PageRank methods ($n={n}$). Bold = column maximum. Runtime = mean PageRank wall time (s, 5 repeats).{preset_cfg['caption_extra']}{edge_note}}}
+\\caption{{Mean Kendall $\\tau$ by proxy family across {method_count} PageRank methods ($n={n}$). Bold = column maximum. Runtime = mean PageRank wall time (s, 3 repeats).{preset_cfg['caption_extra']}{edge_note}}}
 \\label{{{preset_cfg['label']}}}
 \\begin{{tabular}}{{l{'c' * len(families)}r}}
 \\toprule
@@ -174,8 +195,18 @@ def main() -> int:
     parser.add_argument(
         "--preset",
         choices=list(PRESETS.keys()),
-        default="seven",
-        help="Matrix preset (default: seven)",
+        default="three",
+        help="Matrix preset (default: three)",
+    )
+    parser.add_argument(
+        "--out-dir",
+        type=Path,
+        help="LaTeX tables output directory (default: dissertation results/tables for three)",
+    )
+    parser.add_argument(
+        "--csv-out-dir",
+        type=Path,
+        help="CSV output directory (default: data/processed or archive for seven/six-aave)",
     )
     args = parser.parse_args()
 
@@ -195,11 +226,29 @@ def main() -> int:
         print(f"Missing {preset_cfg['matrix_key']} in eval summary.")
         return 1
 
-    csv_path = ROOT / "data" / "processed" / preset_cfg["csv_name"]
+    repo_root = ROOT.parents[1]
+    if args.csv_out_dir:
+        csv_dir = args.csv_out_dir
+    elif args.preset == "three":
+        csv_dir = ROOT / "data" / "processed"
+    else:
+        csv_dir = ROOT / "data" / "archive" / "extended-baselines"
+    csv_path = csv_dir / preset_cfg["csv_name"]
     write_csv(matrix, csv_path, summary, preset_cfg)
 
-    repo_root = ROOT.parents[1]
-    tex_path = repo_root / "2-Dissertation-Draft" / "results" / "tables" / preset_cfg["tex_name"]
+    if args.out_dir:
+        tex_path = args.out_dir / preset_cfg["tex_name"]
+    elif args.preset == "three":
+        tex_path = repo_root / "2-Dissertation-Draft" / "results" / "tables" / preset_cfg["tex_name"]
+    else:
+        tex_path = (
+            repo_root
+            / "2-Dissertation-Draft"
+            / "archive"
+            / "extended-baselines"
+            / "tables"
+            / preset_cfg["tex_name"]
+        )
     write_latex(summary, tex_path, preset_cfg)
 
     print(f"CSV  -> {csv_path}")

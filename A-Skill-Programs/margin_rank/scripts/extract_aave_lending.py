@@ -53,6 +53,11 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--extract", action="store_true")
     parser.add_argument("--yes", action="store_true")
+    parser.add_argument(
+        "--include-delegation",
+        action="store_true",
+        help="Record Credit Delegation (BorrowAllowanceDelegated) extract intent in manifest; BQ SQL deferred",
+    )
     args = parser.parse_args()
 
     if not args.dry_run and not args.extract:
@@ -117,6 +122,27 @@ def main() -> int:
         "months": month_plans,
     }
     save_json(manifest_path, manifest)
+
+    if args.include_delegation:
+        delegation_topic = config.get("aave_arbitrum", {}).get("event_topics", {}).get(
+            "borrow_allowance_delegated"
+        )
+        delegation_out = Path(config["paths"]["aave_delegation_events"])
+        manifest["aave_delegation_extract"] = {
+            "at": datetime.now(timezone.utc).isoformat(),
+            "status": "deferred",
+            "topic0": delegation_topic,
+            "output_path": str(delegation_out),
+            "note": (
+                "BorrowAllowanceDelegated BQ SQL not run in this study; "
+                "Delegation-PR scores degenerate until extract is implemented."
+            ),
+        }
+        save_json(manifest_path, manifest)
+        print(
+            f"Credit Delegation: deferred (topic {delegation_topic}); "
+            f"expected output {delegation_out}"
+        )
 
     if args.dry_run:
         print("Dry-run complete.")

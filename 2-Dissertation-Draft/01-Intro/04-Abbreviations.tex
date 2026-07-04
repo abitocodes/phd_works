@@ -1,0 +1,73 @@
+% !TEX root = ../main.tex
+\clearpage
+\phantomsection
+\chapter*{Abbreviations and Notation}
+\label{ch:abbreviations}
+
+This section lists abbreviations and mathematical notation used throughout the dissertation. Symbols are defined again at first use in the main chapters when helpful for local reading.
+
+\phantomsection
+\section*{Abbreviations}
+\label{sec:abbrev-table}
+
+\begin{table}[htbp]
+\centering
+\caption{Abbreviations used in this dissertation.}
+\label{tab:abbreviations}
+\begin{tabular}{ll}
+\toprule
+Abbreviation & Meaning \\
+\midrule
+AMM & Automated Market Maker \\
+AWP & Adaptive Weighted PageRank \\
+BQ & BigQuery \\
+CCS & ACM Conference on Computer and Communications Security \\
+DeFi & Decentralized Finance \\
+DEX & Decentralized Exchange \\
+EIP & Ethereum Improvement Proposal \\
+ERC-20 & Ethereum Request for Comments 20 (fungible token standard) \\
+FC & Financial Cryptography and Data Security \\
+GF-PR & GainFlow PageRank (outcome-native reference) \\
+GMX & GMX perpetual swap protocol (V2 on Arbitrum One) \\
+MEV & Maximal (Miner/Maximal) Extractable Value \\
+PnL & Profit and Loss \\
+PR & PageRank \\
+RQ & Research Question \\
+SoK & Systematization of Knowledge \\
+SRQ & Supplementary Research Question \\
+USENIX & USENIX Security Symposium \\
+WWW & World Wide Web Conference \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\phantomsection
+\section*{Mathematical notation}
+\label{sec:notation-table}
+
+\begin{table}[htbp]
+\centering
+\caption{Mathematical notation used in this dissertation.}
+\label{tab:notation}
+\begin{tabular}{lp{9.2cm}}
+\toprule
+Symbol & Meaning \\
+\midrule
+$G_{\mathrm{approve}}$ & Directed endorsement graph from latest ERC-20 allowances (owner $\to$ spender) \\
+$G_{\mathrm{transfer}}$ & Directed transfer graph with time-decayed edge weights (AWP input) \\
+$n$ & Alignment-cohort size (primary comparison: $n=5{,}521$) \\
+$N$ & Expanded wallet-pool size (scaling: $N=31{,}612$) \\
+$d$ & PageRank damping (teleportation) factor \\
+$k$ & AWP logistic time-decay steepness \\
+$t_0$ & AWP logistic time-decay midpoint (days) \\
+$\Delta t$ & Edge age in days for AWP decay \\
+$\sigma(\Delta t)$ & Logistic decay weight applied to transfer edges \\
+$\rho$ & Spearman's rank correlation coefficient \\
+$\tau$ & Kendall's rank correlation coefficient \\
+$|E|$ & Number of directed edges in a reputation graph \\
+$\mathcal{W}$ & Set of wallets in the evaluation cohort \\
+$s(w)$ & Reputation score of wallet $w$ under a given method \\
+$p(w)$ & Validation-proxy value for wallet $w$ \\
+\bottomrule
+\end{tabular}
+\end{table}

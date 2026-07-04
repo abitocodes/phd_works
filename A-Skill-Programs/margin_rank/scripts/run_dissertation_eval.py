@@ -19,8 +19,8 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from benchmark_runtime import benchmark_reputation  # noqa: E402
-from common import load_config, save_json  # noqa: E402
+from benchmark_runtime import benchmark_reputation, benchmark_scaling, benchmark_tier2_scaling  # noqa: E402
+from common import ROOT, build_tier2_wallet_pool, load_config, save_json, tier2_reputation_paths  # noqa: E402
 from evaluate_alignment import (  # noqa: E402
     METHOD_LABELS,
     METHODS,
@@ -32,6 +32,7 @@ from evaluate_alignment import (  # noqa: E402
 )
 from pagerank_variants import collect_six_aave_edges  # noqa: E402
 from proxy_metrics import compute_all_proxies  # noqa: E402
+from run_robustness_eval import run_robustness_eval  # noqa: E402
 
 
 def _run_script(name: str, extra: list[str] | None = None) -> int:
@@ -103,6 +104,11 @@ def main() -> int:
         action="store_true",
         help="Do not require Aave lending parquet (Aave PR scores may be zero)",
     )
+    parser.add_argument(
+        "--robustness",
+        action="store_true",
+        help="Run Tier-3 robustness sweeps (damping, top-token, sample-size)",
+    )
     args = parser.parse_args()
 
     if not args.fixtures and not args.real:
@@ -137,8 +143,9 @@ def main() -> int:
     rankings_path = Path(config["paths"]["wallet_rankings"])
     decoded_path = Path(config["paths"]["decoded_events"])
     rep = config["reputation"]
-    allowances_path = Path(rep["paths"]["latest_allowances"])
-    transfers_path = Path(rep["paths"]["transfer_events"])
+    rep_paths = tier2_reputation_paths(config)
+    allowances_path = Path(rep_paths["latest_allowances"])
+    transfers_path = Path(rep_paths["transfer_events"])
     aave_path = Path(config["paths"]["aave_events"])
     delegation_path = Path(config["paths"]["aave_delegation_events"])
 
@@ -164,6 +171,7 @@ def main() -> int:
     delegation_events = pd.read_parquet(delegation_path) if delegation_path.exists() else None
 
     min_closes = int(config["ranking"]["min_closes"])
+    print(f"Loading cohort data ({len(wallets)} wallets)...")
     proxies = compute_all_proxies(transfers, allowances, decoded, wallets, min_closes=min_closes)
     merged = rankings.merge(proxies, on="wallet", how="inner")
 
@@ -180,6 +188,7 @@ def main() -> int:
     alignment = build_alignment_report(merged)
     six_aave_alignment = build_six_aave_alignment_report(merged)
 
+    print("Benchmarking EndorseRank vs AWP (full cohort)...")
     benchmark = benchmark_reputation(
         wallets,
         allowances,
@@ -190,6 +199,55 @@ def main() -> int:
         aave_events=aave_events,
         delegation_events=delegation_events,
     )
+
+    print("Tier-1 in-cohort scaling benchmark...")
+    benchmark_scaling_result = benchmark_scaling(
+        wallets,
+        allowances,
+        transfers,
+        config,
+        repeats=args.benchmark_repeats,
+        decoded=decoded,
+        aave_events=aave_events,
+        authoritative_full_cohort=benchmark,
+    )
+
+    wallet_pool, pool_meta = build_tier2_wallet_pool(wallets, allowances, transfers, config)
+    tier2_paths = config.get("benchmark", {}).get("tier2_paths") or {}
+    tier2_allowances = allowances
+    tier2_transfers = transfers
+    tier2_processed = Path(tier2_paths.get("transfer_events", ""))
+    if tier2_processed.exists():
+        tier2_allowances = pd.read_parquet(tier2_paths["latest_allowances"])
+        tier2_transfers = pd.read_parquet(tier2_paths["transfer_events"])
+        pool_from_t2 = build_tier2_wallet_pool(
+            wallets, tier2_allowances, tier2_transfers, config
+        )
+        wallet_pool, pool_meta = pool_from_t2
+
+    print(f"Tier-2 scaling benchmark (pool N={len(wallet_pool)})...")
+    benchmark_tier2_result = benchmark_tier2_scaling(
+        wallet_pool,
+        tier2_allowances,
+        tier2_transfers,
+        config,
+        repeats=args.benchmark_repeats,
+    )
+
+    robustness_result = None
+    if args.robustness:
+        print("Tier-3 robustness sweeps (damping, top-token, sample-size)...")
+        robustness_result = run_robustness_eval(
+            wallets,
+            wallet_pool,
+            allowances,
+            transfers,
+            decoded,
+            merged,
+            config,
+            min_closes,
+            repeats=max(2, min(args.benchmark_repeats, 3)),
+        )
 
     aave_diagnostics = _build_aave_diagnostics(
         wallets,
@@ -213,6 +271,9 @@ def main() -> int:
         "n_wallets": len(merged),
         "note": note,
         "benchmark": benchmark,
+        "benchmark_scaling": benchmark_scaling_result,
+        "benchmark_tier2": benchmark_tier2_result,
+        "wallet_pool_meta": pool_meta,
         "alignment": alignment,
         "six_aave_alignment": six_aave_alignment,
         "method_proxy_matrix": alignment["method_proxy_matrix"],
@@ -220,6 +281,7 @@ def main() -> int:
         "family_winners": alignment["family_winners"],
         "six_aave_family_winners": six_aave_alignment["family_winners"],
         "aave_edge_diagnostics": aave_diagnostics,
+        "robustness": robustness_result,
         "dataset": {
             "rankings_path": str(rankings_path),
             "decoded_events_path": str(decoded_path),
@@ -263,12 +325,26 @@ def main() -> int:
         rc = _run_script("export_latex_results.py")
         if rc != 0:
             return rc
-        rc = _run_script("export_method_matrix.py", ["--preset", "seven"])
+        rc = _run_script("export_method_matrix.py", ["--preset", "three"])
         if rc != 0:
             return rc
-        rc = _run_script("export_method_matrix.py", ["--preset", "six-aave"])
-        if rc != 0:
-            return rc
+        repo_root = Path(__file__).resolve().parents[2].parent
+        archive_tex = repo_root / "2-Dissertation-Draft" / "archive" / "extended-baselines" / "tables"
+        archive_csv = ROOT / "data" / "archive" / "extended-baselines"
+        for preset in ("seven", "six-aave"):
+            rc = _run_script(
+                "export_method_matrix.py",
+                [
+                    "--preset",
+                    preset,
+                    "--out-dir",
+                    str(archive_tex),
+                    "--csv-out-dir",
+                    str(archive_csv),
+                ],
+            )
+            if rc != 0:
+                return rc
 
     return 0
 

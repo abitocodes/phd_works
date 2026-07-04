@@ -72,7 +72,7 @@ reputation:
   observation_end: "2026-05-31 23:59:59 UTC"
   damping: 0.85
   pagerank_tolerance: 1.0e-8
-  max_iterations: 100
+  max_iterations: 300
   awp_decay_k: 0.01
   awp_decay_t0_days: 180
   approval_topic0: "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
@@ -114,7 +114,27 @@ benchmark:
   seed: "endorserank-benchmark-v1"
   target_wallets: 100000
   stages: [10000, 50000, 100000]
-  # Optional parquet with wallet column (BQ-sampled active addresses); if absent,
-  # deterministic SHA256(seed:i) addresses pad the GMX set to target_wallets.
-  supplemental_path: null
+  # In-cohort runtime scaling (Tier-1 subsample; full n appended at runtime).
+  scaling_stages: [1000, 2000, 4000]
+  scaling_seed: "benchmark-scale-v1"
+  tier2_scaling_seed: "benchmark-tier2-v1"
+  # Parquet of BQ-sampled or --from-parquet derived active addresses.
+  supplemental_path: data/processed/supplemental_wallets.parquet
   wallet_set_path: data/processed/extraction_wallet_set.parquet
+  # Tier-2 BQ re-extract writes here; Tier-1 raw stays in reputation.paths.
+  tier2_paths:
+    raw_approvals_dir: data/raw/reputation_tier2/approvals
+    raw_transfers_dir: data/raw/reputation_tier2/transfers
+    latest_allowances: data/processed/reputation_tier2/latest_allowances.parquet
+    transfer_events: data/processed/reputation_tier2/transfer_events.parquet
+
+robustness:
+  damping_values: [0.75, 0.85, 0.95]
+  top_n_tokens: 20
+  sample_sizes: [50000, 200000]
+  gmx_proxy_variants: [raw_sum, size_weighted]
+  primary_methods: [endorserank, awp]
+
+dissertation:
+  export_methods: [endorserank, awp, gf_pr]
+  archive_presets: [seven, six-aave]

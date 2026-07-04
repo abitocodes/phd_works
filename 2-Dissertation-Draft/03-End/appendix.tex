@@ -1,26 +1,36 @@
 % !TEX root = ../main.tex
 \clearpage
 \appendix
-\chapter{Evaluation Pipeline Commands}
+\chapter{Evaluation Pipeline and Reproducibility}
 \label{ch:appendix-eval}
 
-Offline synthetic evaluation (no Google Cloud):
+This appendix documents the open evaluation pipeline used to reproduce Chapter~\ref{ch:results} numerics, including repository layout, offline synthetic evaluation, real BigQuery extraction procedures, parameter summaries, proxy formulas, and a glossary.
+
+\dissertationSubheading[sec:repo-layout]{Repository layout}
+
+The evaluation pipeline lives in \texttt{A-Skill-Programs/margin\_rank/}. It ingests (1) latest ERC-20 allowances, (2) time-stamped transfers, and (3) decoded GMX \texttt{PositionDecrease} events. EndorseRank, AWP, and GF-PR scores are merged into \texttt{wallet\_rankings.parquet} via \texttt{compute\_reputation\_ranks.py}. Five proxy families are computed in \texttt{proxy\_metrics.py}; alignment and benchmarks run through \texttt{run\_dissertation\_eval.py}. Figures are produced by \texttt{generate\_dissertation\_figures.py}.
+
+Key outputs: \texttt{data/processed/eval\_summary.json} (numerics), LaTeX fragments under \texttt{2-Dissertation-Draft/results/tables/}, and PDFs under \texttt{2-Dissertation-Draft/Figures/generated/}. Extended baselines (7-method, 6-Aave) export to \texttt{2-Dissertation-Draft/archive/extended-baselines/}.
+
+\dissertationSubheading[sec:offline-eval]{Offline synthetic evaluation (no Google Cloud)}
 
 \begin{verbatim}
 cd A-Skill-Programs/margin_rank
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python scripts/run_dissertation_eval.py --fixtures --n-wallets 571 --export-latex
+python scripts/generate_dissertation_figures.py
 cd ../../2-Dissertation-Draft && ./build.ps1
 \end{verbatim}
 
-Real BigQuery extraction (requires ADC and \texttt{GOOGLE\_CLOUD\_PROJECT}).
-See \texttt{docs/bigquery\_data\_plan.md} for tiers and cost guardrails.
+\dissertationSubheading[sec:bq-extraction]{Real BigQuery extraction}
+
+Requires Application Default Credentials and \texttt{GOOGLE\_CLOUD\_PROJECT}. See \texttt{docs/bigquery\_data\_plan.md} for cost guardrails.
 
 \begin{verbatim}
 export GOOGLE_CLOUD_PROJECT=your-project-id
 
-# Phase 1 — GMX validation labels (6-month window)
+# Phase 1 — trading-success label extraction (GMX V2) (6-month window)
 python scripts/extract_margin_week.py --dry-run
 python scripts/extract_margin_week.py --extract --yes
 python scripts/decode_gmx_events.py
@@ -33,10 +43,78 @@ python scripts/preprocess_arbitrum_allowances.py
 python scripts/preprocess_arbitrum_transfers.py
 python scripts/compute_reputation_ranks.py
 
-# Phase 3 — Six-proxy evaluation (local; no extra BQ)
-python scripts/run_dissertation_eval.py --real --export-latex
+# Phase 3 — Five-proxy evaluation + robustness (local)
+python scripts/sample_active_wallets.py --from-parquet --extract
+python scripts/run_dissertation_eval.py --real --robustness --export-latex
+python scripts/generate_dissertation_figures.py
 \end{verbatim}
 
-Extraction metadata (bytes processed, row counts) is written to
-\texttt{data/processed/extraction\_manifest.json}. Alignment numerics are in
-\texttt{data/processed/eval\_summary.json} (six proxy families; $n=5{,}521$ Tier~1 cohort).
+Extraction metadata (bytes processed, row counts) is written to \texttt{data/processed/extraction\_manifest.json}.
+
+\dissertationSubheading[sec:scaling-appendix]{Scaling tables}
+
+Table~\ref{tab:benchmark-scaling-incohort} retains in-cohort runtime scaling ($n \leq 5{,}521$). Robustness tables appear in Chapter~\ref{ch:results}; they are regenerated with \texttt{run\_dissertation\_eval.py --real --robustness --export-latex}.
+
+\input{results/tables/benchmark-scaling-incohort.tex}
+
+\dissertationSubheading[sec:delegation-deferred]{Credit Delegation extract (deferred)}
+
+Aave V3 \texttt{BorrowAllowanceDelegated} logs are configured in \texttt{margin\_config.yaml} but were not extracted in this study (\texttt{aave\_delegation\_events.parquet} absent). The archived six-Aave baseline (\texttt{Delegation-PR}) therefore reports degenerate alignment ($\tau = \text{---}$). Re-enable via a dedicated delegation SQL template and \texttt{extract\_aave\_lending.py --include-delegation} in a follow-on extract pass.
+
+\dissertationSubheading[sec:supplementary-summary]{Supplementary alignment summary table}
+
+Table~\ref{tab:alignment-summary} duplicates family-level mean $\tau$ from Table~\ref{tab:alignment-three-methods} in columnar form (EndorseRank / AWP / GF-PR / highest-alignment label). It is retained for CSV-oriented reproducibility; the main text uses Table~\ref{tab:alignment-three-methods} only.
+
+\input{results/tables/alignment-summary.tex}
+
+\dissertationSubheading[sec:parameter-summary]{Parameter summary}
+
+\begin{table}[htbp]
+\centering
+\caption{Default parameters used in the primary evaluation.}
+\label{tab:parameter-summary}
+\begin{tabular}{lll}
+\toprule
+Parameter & Value & Role \\
+\midrule
+PageRank damping $d$ & $0.85$ & Default teleport mixture \\
+Convergence tolerance $\varepsilon$ & $10^{-8}$ & Power-iteration stop \\
+Max iterations & $300$ & Power-iteration cap \\
+Logistic $k$ & $0.01$ & AWP decay slope \\
+Logistic $t_0$ & $180$ days & AWP decay midpoint \\
+Min.\ GMX closes & $3$ & Cohort eligibility \\
+Observation window & 2025-12-01 -- 2026-05-31 & UTC inclusive \\
+GF-PR loss $\varepsilon_{\mathrm{loss}}$ & $0.1$ & Ordinary loss edge boost \\
+GF-PR liquidation $\varepsilon_{\mathrm{liq}}$ & $1.0$ & Liquidation edge boost \\
+Expanded pool seed & \texttt{benchmark-tier2-v1} & SHA256 subsample seed \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\dissertationSubheading[sec:proxy-appendix]{Proxy operational definitions (reference)}
+
+The following formulas match Chapter~\ref{ch:methodology} and \texttt{proxy\_metrics.py}.
+
+\textbf{Transfer.} $\mathrm{in\_degree}(w)=|\{u:\exists u\to w\}|$; $\mathrm{in\_value}(w)=\sum_{e:u\to w}\mathrm{value}(e)$.
+
+\textbf{Allowance.} $\mathrm{in\_approve\_degree}(w)=|\{o:\exists o\to w\}|$; $\mathrm{in\_approve\_value}(w)=\sum_o w_a(o,w)$ with $w$ as spender.
+
+\textbf{Inverse risk.} $\mathrm{loss\_avoidance}(w)=-\sum_c\min(\mathrm{PnL}_c,0)$; $\mathrm{non\_loss\_close\_rate}(w)=1-|\{c:\mathrm{PnL}_c<0\land\neg\mathrm{liq}_c\}|/|\mathcal{C}(w)|$; $\mathrm{worst\_close\_pnl\_score}(w)=-\min_c\mathrm{PnL}_c$.
+
+\textbf{Sybil-adjusted stability.} $\mathrm{inbound\_counterparty\_ratio}(w)=|\{u:u\to w\}|/|T^{\mathrm{in}}(w)|$ (self-transfers excluded); tenure in days; active months.
+
+\textbf{Trading success.} $\mathrm{close\_success\_count}(w)=|\{c:\mathrm{PnL}_c>0\land\neg\mathrm{liq}_c\}|$; $\mathrm{realized\_gain\_proxy}(w)=\sum_c\max(\mathrm{PnL}_c,0)$; $\mathrm{close\_success\_rate}(w)=\mathrm{close\_success\_count}(w)/|\mathcal{C}(w)|$.
+
+\dissertationSubheading[sec:glossary]{Glossary}
+
+\begin{description}
+\item[Allowance] ERC-20 authorization for a spender to transfer tokens on behalf of an owner.
+\item[Alignment] Rank agreement between reputation scores and a validation proxy ($\rho$, $\tau$).
+\item[Construct overlap] Shared data source between a ranking method and a proxy, inflating alignment.
+\item[Endorsement graph] Directed graph of latest allowances (EndorseRank input).
+\item[Matched cohort] Primary sample of $n=5{,}521$ wallets meeting eligibility rules.
+\item[Expanded wallet pool] Larger address set ($N=31{,}612$) for runtime scaling.
+\item[PageRank] Spectral ranking by stationary distribution of a damped random walk.
+\item[Proxy] Observable wallet metric used for domain-intuition validation.
+\item[Teleport] Uniform jump in PageRank with probability $1-d$.
+\end{description}

@@ -20,7 +20,7 @@
 | 실증 파이프라인 | **활성 (실데이터 + 오프라인)** | `A-Skill-Programs/margin_rank/` — BQ 추출 완료, 6-family·7-method eval |
 | BigQuery 실데이터 추출 | **완료 (Tier 1, n=5,521)** | GMX 6mo + reputation + Aave lending; `run_dissertation_eval.py --real` |
 
-논문 초안 4–5장은 **BigQuery 실측 mean τ**를 반영한다. EndorseRank vs AWP trade-off 및 7-method 비교표는 [`results/tables/`](2-Dissertation-Draft/results/tables/)에서 재생성. 연구 진행 narrative: [`A-Skill-Programs/margin_rank/docs/research_log.md`](A-Skill-Programs/margin_rank/docs/research_log.md).
+논문 초안 4–5장은 **BigQuery 실측 mean τ**를 반영한다. EndorseRank·AWP·GF-PR 3-method 표는 [`results/tables/`](2-Dissertation-Draft/results/tables/)에서 재생성; 확장 baseline은 [`archive/extended-baselines/`](2-Dissertation-Draft/archive/extended-baselines/README.md). 연구 진행 narrative: [`.cursor/journey.md`](.cursor/journey.md).
 
 ---
 
@@ -31,7 +31,7 @@
 | # | 주장 | 가설 / 초점 | 논문 | 코드 / 출력 |
 |---|------|-------------|------|-------------|
 | 1 | EndorseRank가 동일 지갑 샘플에서 AWP보다 **빠르다** | H3 (효율) | Ch4–5, [`results/tables/benchmark-runtime.tex`](2-Dissertation-Draft/results/tables/benchmark-runtime.tex) | `benchmark_runtime.py` |
-| 2 | **Spearman ρ / Kendall τ**로 EndorseRank의 신뢰성 입증; GMX 정렬에서 AWP보다 우수 | H2 (정렬) | Ch4, `alignment-transfer.tex`, `alignment-gmx.tex` | `evaluate_alignment.py` — **실측: AWP가 대부분 family 우세, ER는 allowance만 우세** (see research_log) |
+| 2 | **Spearman ρ / Kendall τ**로 EndorseRank의 신뢰성 입증; GMX 정렬에서 AWP보다 우수 | H2 (정렬) | Ch4, `alignment-transfer.tex`, `alignment-gmx.tex` | `evaluate_alignment.py` — **실측: AWP가 대부분 family 우세, ER는 allowance만 우세** (see central journey log) |
 | 3 | 검증이 transfer 프록시(in-degree/in-value)에서 **GMX margin** 프록시로 바뀌면 AWP **τ가 개선**된다 | 도메인 프레임 | Ch4–5, [`alignment-summary.tex`](2-Dissertation-Draft/results/tables/alignment-summary.tex) | `eval_summary.json`의 cross-proxy mean τ |
 | 4 | EndorseRank가 transfer + GMX **양쪽** 프록시 계열에서 AWP보다 mean τ가 높다 | H2 확장 | Ch4–5 요약 표 | **실측 미달** — trade-off 서술로 전환 |
 | 5 | 결론은 주장 1–4에서 도출된다 | — | Ch6 | — |
@@ -83,6 +83,7 @@ flowchart TB
 |------|------|
 | `1-Proposal/` | 완료된 제안서 (정본 LaTeX: `1-Proposal/proposal/`) |
 | `proposal-ko/` | 제안서 한국어 LaTeX 번역본 (`build.ps1` → `main.pdf`) |
+| `2-Dissertation-Draft/dissertation-ko/` | 논문 초안 한국어 LaTeX 번역본 (결과 표는 `../results/tables/` 재사용) |
 | `2-Dissertation-Draft/` | **활성** 논문 초안 (6장 학위논문) |
 | `A-Skill-Programs/` | 실증 코드 (`margin_rank/`) |
 | `papers/` | 공유 참고 PDF |

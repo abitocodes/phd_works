@@ -5,15 +5,28 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
+from typing import Callable
 
 import pandas as pd
+import pyarrow.parquet as pq
 from google.cloud import bigquery
 from google.cloud.bigquery import ArrayQueryParameter, QueryJobConfig, ScalarQueryParameter
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from bq_progress import (  # noqa: E402
+    ExtractionStep,
+    StepProgressBar,
+    count_completed_steps,
+    download_query_to_parquet,
+    get_checkpoint_block,
+    save_checkpoint,
+    should_skip_dry_run,
+    step_is_completed,
+    upsert_step_record,
+    utc_now_iso,
+)
 from common import (  # noqa: E402
     format_bytes,
     load_config,
@@ -32,6 +45,14 @@ OBSERVATION_MONTHS = [
     ("2026-04", "2026-04-01 00:00:00 UTC", "2026-05-01 00:00:00 UTC"),
     ("2026-05", "2026-05-01 00:00:00 UTC", "2026-06-01 00:00:00 UTC"),
 ]
+
+
+def build_extraction_steps() -> list[ExtractionStep]:
+    steps: list[ExtractionStep] = []
+    for label, _, _ in OBSERVATION_MONTHS:
+        steps.append(ExtractionStep(label, "approvals"))
+        steps.append(ExtractionStep(label, "transfers"))
+    return steps
 
 
 def get_client(config: dict) -> bigquery.Client:
@@ -114,13 +135,49 @@ def dry_run_bytes(client: bigquery.Client, sql: str, params: list) -> int:
     return int(job.total_bytes_processed or 0)
 
 
-def run_query(client: bigquery.Client, sql: str, params: list) -> pd.DataFrame:
-    job_config = QueryJobConfig(use_query_cache=False, query_parameters=params)
-    job = client.query(sql, job_config=job_config)
-    return job.to_dataframe()
+def merge_parquet_paths(paths: list[Path], out_path: Path) -> int:
+    """Merge monthly parquet files without loading entire dataset into RAM."""
+    writer: pq.ParquetWriter | None = None
+    total = 0
+    for path in paths:
+        if not path.exists():
+            continue
+        pf = pq.ParquetFile(path)
+        for rg in range(pf.num_row_groups):
+            table = pf.read_row_group(rg)
+            if writer is None:
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                writer = pq.ParquetWriter(out_path, table.schema)
+            writer.write_table(table)
+            total += table.num_rows
+    if writer is not None:
+        writer.close()
+    return total
+
+
+def month_path(
+    step: ExtractionStep,
+    approvals_dir: Path,
+    transfers_dir: Path,
+) -> Path:
+    if step.kind == "approvals":
+        return approvals_dir / f"approvals_{step.month}.parquet"
+    return transfers_dir / f"transfers_{step.month}.parquet"
+
+
+def month_plan_for(label: str, month_plans: list[dict]) -> dict:
+    for mo in month_plans:
+        if mo["label"] == label:
+            return mo
+    raise KeyError(label)
 
 
 def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(line_buffering=True)
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(line_buffering=True)
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--wallets", type=Path, help="Parquet with wallet column")
     parser.add_argument(
@@ -129,9 +186,24 @@ def main() -> int:
         help="Extract reputation for GMX-qualified wallets only (skip benchmark seed merge)",
     )
     parser.add_argument(
+        "--tier2",
+        action="store_true",
+        help="Write raw outputs to benchmark.tier2_paths (preserves Tier-1 raw); uses extraction_wallet_set if present",
+    )
+    parser.add_argument(
         "--resume",
         action="store_true",
-        help="Skip month/event files that already exist on disk",
+        help="Skip completed steps; reuse in-progress BQ job_id when possible",
+    )
+    parser.add_argument(
+        "--skip-dry-run",
+        action="store_true",
+        help="Skip byte-estimate dry-run (use manifest or proceed without estimate)",
+    )
+    parser.add_argument(
+        "--dry-run-first",
+        action="store_true",
+        help="With --extract, always run dry-run before extraction",
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--extract", action="store_true")
@@ -143,30 +215,60 @@ def main() -> int:
 
     config = load_config()
     gmx_wallets = load_wallet_addresses(config, args.wallets)
-    wallets, wallet_meta = merge_extraction_wallets(
-        gmx_wallets,
-        config,
-        include_benchmark=not args.gmx_only,
-    )
+
+    if args.tier2:
+        wallet_set_path = Path(config.get("benchmark", {}).get("wallet_set_path", ""))
+        if wallet_set_path.exists():
+            df_ws = pd.read_parquet(wallet_set_path)
+            wallets = sorted(df_ws["wallet"].astype(str).str.lower().unique().tolist())
+            wallet_meta = {
+                "gmx_wallet_count": len(gmx_wallets),
+                "target_wallets": len(wallets),
+                "extraction_wallet_count": len(wallets),
+                "supplemental_source": str(wallet_set_path),
+                "supplemental_count": max(0, len(wallets) - len(gmx_wallets)),
+                "tier2": True,
+            }
+        else:
+            wallets, wallet_meta = merge_extraction_wallets(
+                gmx_wallets, config, include_benchmark=True
+            )
+            wallet_meta["tier2"] = True
+    else:
+        wallets, wallet_meta = merge_extraction_wallets(
+            gmx_wallets,
+            config,
+            include_benchmark=not args.gmx_only,
+        )
     print(
         f"Wallet set: {len(wallets)} addresses "
         f"(GMX {wallet_meta['gmx_wallet_count']}, "
         f"supplemental {wallet_meta.get('supplemental_count', 0)}, "
         f"source={wallet_meta.get('supplemental_source', 'none')})"
     )
-    wallet_set_path = save_extraction_wallet_set(wallets, config)
-    if wallet_set_path:
-        print(f"Saved extraction wallet set -> {wallet_set_path}")
+    if not args.dry_run:
+        wallet_set_path = save_extraction_wallet_set(wallets, config)
+        if wallet_set_path:
+            print(f"Saved extraction wallet set -> {wallet_set_path}")
+    else:
+        wallet_set_path = None
 
     logs_fqn = config["bigquery"]["logs_fqn"]
     sql_approvals = read_sql("arbitrum_approvals.sql").replace("__LOGS_FQN__", logs_fqn)
     sql_transfers = read_sql("arbitrum_transfers.sql").replace("__LOGS_FQN__", logs_fqn)
 
     rep_paths = config["reputation"]["paths"]
+    if args.tier2:
+        tier2_paths = config.get("benchmark", {}).get("tier2_paths") or {}
+        if tier2_paths.get("raw_approvals_dir"):
+            rep_paths = {**rep_paths, "raw_approvals_dir": tier2_paths["raw_approvals_dir"]}
+        if tier2_paths.get("raw_transfers_dir"):
+            rep_paths = {**rep_paths, "raw_transfers_dir": tier2_paths["raw_transfers_dir"]}
     approvals_dir = Path(rep_paths["raw_approvals_dir"])
     transfers_dir = Path(rep_paths["raw_transfers_dir"])
     manifest_path = Path(config["paths"]["manifest"])
     budget_limit = config.get("budget", {}).get("max_bytes_per_query", 0)
+    manifest_key = "tier2_reputation_extract" if args.tier2 else "reputation_extract"
 
     try:
         client = get_client(config)
@@ -175,39 +277,59 @@ def main() -> int:
         print("Use: python scripts/generate_synthetic_reputation.py for offline mode.")
         return 1
 
+    manifest = load_json(manifest_path)
+    block = get_checkpoint_block(manifest, manifest_key)
+    checkpoint = block["checkpoint"]
+
+    skip_dry = should_skip_dry_run(
+        manifest,
+        len(wallets),
+        force_dry_run=args.dry_run_first,
+        skip_dry_run_flag=args.skip_dry_run,
+        resume=args.resume,
+        extract=args.extract,
+    )
+
     month_plans: list[dict] = []
     total_bytes = 0
-    for label, start_ts, end_ts in OBSERVATION_MONTHS:
-        params = query_params(config, wallets, start_ts, end_ts)
-        bytes_app = dry_run_bytes(client, sql_approvals, params)
-        bytes_tx = dry_run_bytes(client, sql_transfers, params)
-        month_total = bytes_app + bytes_tx
-        total_bytes += month_total
+
+    if skip_dry and manifest.get("reputation_extract", {}).get("months"):
+        month_plans = manifest["reputation_extract"]["months"]
+        total_bytes = int(manifest["reputation_extract"].get("dry_run_bytes_total") or 0)
         print(
-            f"  {label}: approvals {format_bytes(bytes_app)}, "
-            f"transfers {format_bytes(bytes_tx)}"
+            f"Skipping dry-run (manifest wallet_count={manifest['reputation_extract'].get('wallet_count')}, "
+            f"total {format_bytes(total_bytes)})"
         )
-        if budget_limit and max(bytes_app, bytes_tx) > budget_limit:
+    else:
+        for label, start_ts, end_ts in OBSERVATION_MONTHS:
+            params = query_params(config, wallets, start_ts, end_ts)
+            bytes_app = dry_run_bytes(client, sql_approvals, params)
+            bytes_tx = dry_run_bytes(client, sql_transfers, params)
+            month_total = bytes_app + bytes_tx
+            total_bytes += month_total
             print(
-                f"ERROR: {label} exceeds per-query budget "
-                f"({format_bytes(budget_limit)})"
+                f"  {label}: approvals {format_bytes(bytes_app)}, "
+                f"transfers {format_bytes(bytes_tx)}"
             )
-            return 1
-        month_plans.append(
-            {
-                "label": label,
-                "start_ts": start_ts,
-                "end_ts": end_ts,
-                "bytes_approvals": bytes_app,
-                "bytes_transfers": bytes_tx,
-            }
-        )
+            if budget_limit and max(bytes_app, bytes_tx) > budget_limit:
+                print(
+                    f"ERROR: {label} exceeds per-query budget "
+                    f"({format_bytes(budget_limit)})"
+                )
+                return 1
+            month_plans.append(
+                {
+                    "label": label,
+                    "start_ts": start_ts,
+                    "end_ts": end_ts,
+                    "bytes_approvals": bytes_app,
+                    "bytes_transfers": bytes_tx,
+                }
+            )
+        print(f"Dry-run total ({len(month_plans)} months): {format_bytes(total_bytes)}")
 
-    print(f"Dry-run total ({len(month_plans)} months): {format_bytes(total_bytes)}")
-
-    manifest = load_json(manifest_path)
     manifest["reputation_extract"] = {
-        "at": datetime.now(timezone.utc).isoformat(),
+        "at": utc_now_iso(),
         "wallet_count": len(wallets),
         "wallet_meta": wallet_meta,
         "extraction_wallet_set_path": str(wallet_set_path) if wallet_set_path else None,
@@ -230,66 +352,138 @@ def main() -> int:
             print("Aborted.")
             return 0
 
+    steps = build_extraction_steps()
+
+    def path_for_step(step: ExtractionStep) -> Path:
+        return month_path(step, approvals_dir, transfers_dir)
+
+    progress = StepProgressBar(steps, initial=0)
+
     approvals_dir.mkdir(parents=True, exist_ok=True)
     transfers_dir.mkdir(parents=True, exist_ok=True)
-    approval_frames: list[pd.DataFrame] = []
-    transfer_frames: list[pd.DataFrame] = []
-    bytes_processed = 0
 
-    for mo in month_plans:
-        label = mo["label"]
-        app_month_path = approvals_dir / f"approvals_{label}.parquet"
-        tx_month_path = transfers_dir / f"transfers_{label}.parquet"
-        params = query_params(config, wallets, mo["start_ts"], mo["end_ts"])
-        print(f"Extracting {label}...")
+    block["status"] = "in_progress"
+    block["wallet_pool_size"] = len(wallets)
+    block["started_at"] = block.get("started_at") or utc_now_iso()
+    save_checkpoint(manifest_path, manifest_key, manifest, block)
 
-        if args.resume and app_month_path.exists():
-            print(f"  approvals: skip (exists)")
-            df_app = pd.read_parquet(app_month_path)
-        else:
-            df_app = run_query(client, sql_approvals, params)
-            df_app = normalize_approvals(df_app)
-            df_app.to_parquet(app_month_path, index=False)
-            print(f"  approvals: {len(df_app)} rows")
-        approval_frames.append(df_app)
+    sql_for_kind: dict[str, tuple[str, Callable[[pd.DataFrame], pd.DataFrame], str]] = {
+        "approvals": (sql_approvals, normalize_approvals, "bytes_approvals"),
+        "transfers": (sql_transfers, normalize_transfers, "bytes_transfers"),
+    }
 
-        if args.resume and tx_month_path.exists():
-            print(f"  transfers: skip (exists)")
-            df_tx = pd.read_parquet(tx_month_path)
-        else:
-            df_tx = run_query(client, sql_transfers, params)
-            df_tx = normalize_transfers(df_tx)
-            df_tx.to_parquet(tx_month_path, index=False)
-            print(f"  transfers: {len(df_tx)} rows")
-        transfer_frames.append(df_tx)
+    try:
+        for step in steps:
+            out_path = path_for_step(step)
+            progress.set_step(step)
+            mo = month_plan_for(step.month, month_plans)
+            params = query_params(config, wallets, mo["start_ts"], mo["end_ts"])
+            sql, normalize_fn, bytes_key = sql_for_kind[step.kind]
+            step_bytes = int(mo.get(bytes_key) or 0)
 
-        bytes_processed += mo["bytes_approvals"] + mo["bytes_transfers"]
-        print(f"  {label} done")
+            if args.resume and step_is_completed(step, out_path, checkpoint):
+                print(f"  {step.step_id}: skip (exists)", flush=True)
+                upsert_step_record(
+                    checkpoint,
+                    step.step_id,
+                    status="completed",
+                    finished_at=utc_now_iso(),
+                )
+                progress.advance(step)
+                save_checkpoint(manifest_path, manifest_key, manifest, block)
+                continue
 
-    df_app_all = pd.concat(approval_frames, ignore_index=True) if approval_frames else pd.DataFrame()
-    df_tx_all = pd.concat(transfer_frames, ignore_index=True) if transfer_frames else pd.DataFrame()
+            download_query_to_parquet(
+                client,
+                sql,
+                params,
+                out_path,
+                normalize_fn,
+                checkpoint,
+                step.step_id,
+                bytes_scanned=step_bytes,
+                reporter=progress,
+                manifest_path=manifest_path,
+                manifest_key=manifest_key,
+                manifest=manifest,
+                block=block,
+            )
+            progress.advance(step)
+            save_checkpoint(manifest_path, manifest_key, manifest, block)
+    except KeyboardInterrupt:
+        done = count_completed_steps(steps, path_for_step, checkpoint)
+        block["status"] = "in_progress"
+        save_checkpoint(manifest_path, manifest_key, manifest, block)
+        print("\nInterrupted.", flush=True)
+        print(f"  Progress: {done}/{len(steps)} steps completed.", flush=True)
+        print("  Chunks and job_id saved. Re-run:", flush=True)
+        print(
+            "  python -u scripts/extract_reputation_data.py --tier2 --extract --yes --resume",
+            flush=True,
+        )
+        return 130
+    finally:
+        progress.close()
+
+    all_done = count_completed_steps(steps, path_for_step, checkpoint) == len(steps)
+    if not all_done:
+        block["status"] = "in_progress"
+        save_checkpoint(manifest_path, manifest_key, manifest, block)
+        done = count_completed_steps(steps, path_for_step, checkpoint)
+        print(
+            f"Incomplete: {done}/{len(steps)} steps. "
+            "Re-run with --extract --yes --resume to continue."
+        )
+        return 0
+
+    approval_paths = [
+        approvals_dir / f"approvals_{mo['label']}.parquet" for mo in month_plans
+    ]
+    transfer_paths = [
+        transfers_dir / f"transfers_{mo['label']}.parquet" for mo in month_plans
+    ]
+    bytes_processed = sum(
+        mo["bytes_approvals"] + mo["bytes_transfers"] for mo in month_plans
+    )
+
     app_path = approvals_dir / "approvals_arbitrum.parquet"
     tx_path = transfers_dir / "transfers_arbitrum.parquet"
-    if not df_app_all.empty:
-        df_app_all.to_parquet(app_path, index=False)
-    if not df_tx_all.empty:
-        df_tx_all.to_parquet(tx_path, index=False)
+    approval_rows = merge_parquet_paths(approval_paths, app_path)
+    transfer_rows = merge_parquet_paths(transfer_paths, tx_path)
 
     manifest["reputation_extract"].update(
         {
-            "extracted_at": datetime.now(timezone.utc).isoformat(),
-            "approval_rows": len(df_app_all),
-            "transfer_rows": len(df_tx_all),
+            "extracted_at": utc_now_iso(),
+            "approval_rows": approval_rows,
+            "transfer_rows": transfer_rows,
             "bytes_processed": bytes_processed,
             "approvals_path": str(app_path),
             "transfers_path": str(tx_path),
         }
     )
-    save_json(manifest_path, manifest)
-    print(f"Approvals: {len(df_app_all)} rows -> {app_path}")
-    print(f"Transfers: {len(df_tx_all)} rows -> {tx_path}")
+    block.update(
+        {
+            "status": "completed",
+            "at": utc_now_iso(),
+            "wallet_pool_size": len(wallets),
+            "approval_rows": approval_rows,
+            "transfer_rows": transfer_rows,
+            "bytes_processed": bytes_processed,
+            "approvals_path": str(app_path),
+            "transfers_path": str(tx_path),
+            "monthly_approvals_dir": str(approvals_dir),
+            "monthly_transfers_dir": str(transfers_dir),
+        }
+    )
+    save_checkpoint(manifest_path, manifest_key, manifest, block)
+    print(f"Approvals: {approval_rows} rows -> {app_path}")
+    print(f"Transfers: {transfer_rows} rows -> {tx_path}")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except KeyboardInterrupt:
+        print("\nInterrupted.", flush=True)
+        raise SystemExit(130) from None

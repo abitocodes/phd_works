@@ -230,6 +230,55 @@ def compute_sybil_stability_proxies(transfers: pd.DataFrame, wallets: list[str])
     return out
 
 
+def compute_gmx_success_proxies_size_weighted(
+    decoded: pd.DataFrame,
+    wallets: list[str],
+    min_closes: int = 3,
+) -> pd.DataFrame:
+    """GMX success proxies with size-weighted realized gain (positive PnL × |sizeDeltaUsd|)."""
+    work = _gmx_wallet_frame(decoded, wallets, min_closes)
+    if work.empty:
+        base = pd.DataFrame({"wallet": [w.lower() for w in wallets]})
+        base["close_success_count"] = 0.0
+        base["realized_gain_proxy"] = 0.0
+        base["close_success_rate"] = 0.0
+        return base
+
+    work["win"] = (~work["is_liquidation"]) & (work["base_pnl_usd"] > 0)
+    work["realized_gain"] = work["base_pnl_usd"].clip(lower=0)
+    if "size_delta_usd" in work.columns:
+        size = pd.to_numeric(work["size_delta_usd"], errors="coerce").fillna(0.0).abs()
+        size = size.replace(0.0, 1.0)
+        work["realized_gain"] = work["realized_gain"] * size
+
+    agg = work.groupby("wallet", as_index=False).agg(
+        close_success_count=("win", "sum"),
+        realized_gain_proxy=("realized_gain", "sum"),
+        total_closes=("win", "count"),
+    )
+    agg["close_success_rate"] = agg["close_success_count"] / agg["total_closes"].clip(lower=1)
+
+    base = pd.DataFrame({"wallet": [w.lower() for w in wallets]})
+    return base.merge(
+        agg[
+            [
+                "wallet",
+                "close_success_count",
+                "realized_gain_proxy",
+                "close_success_rate",
+            ]
+        ],
+        on="wallet",
+        how="left",
+    ).fillna(
+        {
+            "close_success_count": 0.0,
+            "realized_gain_proxy": 0.0,
+            "close_success_rate": 0.0,
+        }
+    )
+
+
 def compute_gmx_success_proxies(
     decoded: pd.DataFrame,
     wallets: list[str],

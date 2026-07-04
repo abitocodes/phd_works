@@ -1,0 +1,109 @@
+% !TEX root = ../main.tex
+
+\chapter{구현 및 실증 결과}
+\label{ch:results}
+
+본 장은 주요 EndorseRank--AWP 비교에 대한 BigQuery Tier~1 실증 결과---코호트 특성, 계산 벤치마크(주장 C1), Tier~2 런타임 스케일링, Tier~3 강건성 검사, 다섯 프록시 계열에 걸친 사회적 방법 정렬(주장 C2--C3), 순위 발산(H1/RQ1), 보조 GF-PR 상한 분석(SRQ1/SC1)---를 보고한다.
+
+\dissertationSubheading[sec:dataset]{데이터셋}
+
+Tier~1 코호트는 $\geq 3$ GMX 청산과 비영 평판 서브그래프 연결성을 갖는 $n=5{,}521$ 지갑으로, 6개월 Arbitrum One BigQuery 로그(2025-12-01 -- 2026-05-31)에서 추출했다. EndorseRank와 AWP 점수---주요 비교--- 및 다섯 프록시 계열은 부록~\ref{ch:appendix-eval}에 기술된 공개 평가 파이프라인으로 계산한다. GF-PR 점수는 보조 분석(SRQ1)을 위해 동일 코호트에서 계산.
+
+표~\ref{tab:dataset-stats}는 코호트 크기, 이벤트 수, 서브그래프 엣지 수를 요약한다.
+
+\begin{table}[htbp]
+\centering
+\caption{데이터셋 특성 (BigQuery Tier~1, $n=5{,}521$ 일치 지갑).}
+\label{tab:dataset-stats}
+\begin{tabular}{lr}
+\toprule
+Statistic & Value \\
+\midrule
+Matched wallets & 5{,}521 \\
+GMX \texttt{PositionDecrease} events (decoded) & 365{,}488 \\
+EndorseRank edges (subgraph) & 14{,}727 \\
+AWP edges (subgraph) & 137{,}087 \\
+Observation window & 2025-12-01 -- 2026-05-31 \\
+Min.\ GMX closes per wallet & 3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\dissertationSubheading[sec:benchmark-results]{EndorseRank vs AWP 벤치마크 (주장 C1)}
+
+표~\ref{tab:benchmark-runtime}는 전체 일치 코호트($n=5{,}521$)에서 PageRank 해결 시간, 메모리, 그래프 크기를 비교한다. EndorseRank는 승인 그래프가 시간 감쇠 송금 그래프보다 희소하기 때문에(14{,}727 vs.\ 137{,}087 엣지) AWP보다 약 $8.9\times$ 짧은 wall-clock 시간(2.105\,s vs.\ 18.711\,s)에 완료된다. 두 방법 모두 허용오차 $10^{-8}$ 내 수렴(EndorseRank $\approx 37$회; AWP $\approx 100$회). (보조: 동일 코호트 GF-PR 런타임 $\approx 1.5$\,s.)
+
+\input{../results/tables/benchmark-runtime.tex}
+
+표~\ref{tab:benchmark-scaling}는 확장 지갑 풀($N=31{,}612$ 주소: GMX 코호트 + 평판 서브그래프 보충 활성 지갑)에서 Tier~2 런타임 스케일링을 보고한다. $n=10{,}000$에서 EndorseRank는 AWP보다 약 $10.4\times$ 빠르다(1.18\,s vs.\ 12.28\,s); 전체 풀 크기($n=31{,}612$)에서 속도 향상은 약 $9.4\times$(2.29\,s vs.\ 21.40\,s). Tier~1 in-cohort 스케일링($n \leq 5{,}521$)은 부록~\ref{ch:appendix-eval}(표~\ref{tab:benchmark-scaling-incohort})에 보고.
+
+\input{../results/tables/benchmark-scaling.tex}
+
+\dissertationSubheading[sec:robustness-results]{강건성 검사 (Tier~3)}
+
+표~\ref{tab:robustness-damping}에서 EndorseRank allowance 평균 $\tau$는 damping $d \in \{0.75, 0.85, 0.95\}$ 전반에서 $\approx 0.355$로 안정적이다; 두 방법의 송금 계열 $\tau$는 최대 $\approx 0.005$ 이내로 변동한다. 표~\ref{tab:robustness-tokens}는 상위 20개 ERC-20 토큰 서브그래프 정렬을 보고한다. 표~\ref{tab:robustness-sample-size}는 Tier~2 지갑 풀의 단계별 부분표본 크기에서 allowance 및 송금 $\tau$를 요약한다.
+
+\input{../results/tables/robustness-damping.tex}
+
+\input{../results/tables/robustness-tokens.tex}
+
+\input{../results/tables/robustness-sample-size.tex}
+
+\dissertationSubheading[sec:three-method-alignment]{사회적 방법 정렬: EndorseRank vs AWP (주장 C2--C3)}
+
+표~\ref{tab:alignment-three-methods}는 다섯 프록시 계열에 걸친 평균 Kendall $\tau$를 보고한다. 1--2행(EndorseRank, AWP)은 주요 사회적 방법 비교; 3행(GF-PR)은 보조(절~\ref{sec:gf-pr-ceiling}). EndorseRank는 allowance($\tau=0.355$)에서 우세; AWP는 송금($\tau=0.534$) 및 여러 사회-결과 계열에서 우세. 프록시별 상세는 표~\ref{tab:alignment-transfer}--\ref{tab:alignment-gmx}.
+
+\input{../results/tables/alignment-three-methods.tex}
+
+\dissertationSubheading[sec:proxy-family-detail]{프록시 계열 상세}
+
+다음 표는 계열 내 각 프록시에 대한 Spearman $\rho$와 Kendall $\tau$를 보고한다. 각 계열은 먼저 주요 EndorseRank--AWP 비교 관점에서 해석하고, 해당 시 보조 GF-PR 주석을 계열 끝에 둔다.
+
+\textbf{Transfer (Do et al.\ baseline).} 표~\ref{tab:alignment-transfer}: AWP가 사회적 방법 중 최고 $\tau$($0.534$); EndorseRank는 중간 수준의 2차 축 정렬($0.333$). \emph{보조 주석:} GF-PR은 송금 프록시에서 약함(송금 엣지 없음).
+
+\input{../results/tables/alignment-transfer.tex}
+
+\textbf{Allowance.} 표~\ref{tab:alignment-allowance}: EndorseRank 양($\tau \approx 0.35$); AWP 거의 영($-0.030$). \emph{보조 주석:} GF-PR 거의 영(allowance 의미론 없음).
+
+\input{../results/tables/alignment-allowance.tex}
+
+\textbf{Inverse risk (GMX PnL).} 표~\ref{tab:alignment-inverse-risk}: EndorseRank 약함; AWP 낮~중간. \emph{보조 주석:} GF-PR 최고($0.376$), 역리스크 프록시와 공유 PnL 입력 반영.
+
+\input{../results/tables/alignment-inverse-risk.tex}
+
+\textbf{Sybil-adjusted stability.} 표~\ref{tab:alignment-sybil-stability}: 사회적 방법 중 AWP가 EndorseRank 초과. \emph{보조 주석:} GF-PR 약함(송금 활동 의미론 없음).
+
+\input{../results/tables/alignment-sybil-stability.tex}
+
+\textbf{Trading success.} 표~\ref{tab:alignment-gmx}: 사회적 방법 중 AWP가 EndorseRank 초과($0.179$ vs.\ $0.096$). \emph{보조 주석:} GF-PR 최고($0.583$); 절~\ref{sec:gf-pr-ceiling} 참조.
+
+\input{../results/tables/alignment-gmx.tex}
+
+\dissertationSubheading[sec:rank-divergence]{순위 발산 (H1 / RQ1)}
+
+EndorseRank와 AWP는 부분적으로 겹치면서 구성개념적으로 구별된 순서를 산출한다: 두 점수 벡터 간 inter-method Kendall $\tau$는 일치 코호트($n=5{,}521$)에서 $0.316$로, 약~중간 정렬 구간(\ref{ch:literature}장)---상관은 있으나 allowance와 송금 그래프는 다른 지갑 관계를 강조한다(RQ1).
+
+\dissertationSubheading[sec:gf-pr-ceiling]{보조 GF-PR 상한 분석 (SRQ1 / SC1)}
+
+GF-PR은 실증 연구 중 사회적 엣지가 아닌 결과 흐름에 직접 순위를 매길 때 거래 결과 프록시 정렬 상한을 설정하기 위해 추가되었다. 표~\ref{tab:alignment-three-methods}(3행)에서 GF-PR은 모든 방법 중 역리스크($0.376$)와 거래 성공($0.583$) 평균 $\tau$ 최고. 이 패턴은 구성상 예상된다: GF-PR POOL/SINK 스타 그래프는 거래 성공 및 역리스크 프록시 정의에 사용된 동일 GMX \texttt{PositionDecrease} PnL 스트림에서 구축된다. 결과는 \emph{구성개념 중첩}을 보여 준다---공유 입력 의미론이 GF-PR이 배포 가능한 사회적 평판을 측정함을 함의하지 않고 정렬을 부풀린다.
+
+거래 성공 프록시에서 사회적 방법 중 AWP($\tau=0.179$)가 여전히 EndorseRank($0.096$)를 초과하여, GF-PR 상한과 무관하게 본 코호트에서 송금 기반 사회적 전파가 allowance 기반 전파보다 거래 결과와 더 강하게 정렬함을 확인한다. \textbf{보조 주장 SC1:} GF-PR은 거래 결과 프록시 정렬의 결과-네이티브 상한을 설정한다; 거래 성공 계열에서 높은 GF-PR $\tau$는 결과-네이티브 순위가 평판 배포를 위해 사회적 보증 그래프를 대체한다는 증거로 읽어서는 안 된다.
+
+\dissertationSubheading[sec:empirical-claims]{주요 주장 (C1--C4) 및 보조 주장 (SC1)}
+
+4장 실증 결과는 표~\ref{tab:hrq-claim-map}에 정렬된 다음 주장을 뒷받침한다:
+
+\textbf{Primary claims (EndorseRank vs AWP):}
+
+\begin{enumerate}
+\item[\textbf{C1.}] 동일 $n$에서 EndorseRank 런타임 $<$ AWP 런타임(표~\ref{tab:benchmark-runtime}).
+\item[\textbf{C2.}] Do et al. 프레임워크 하 선택 프록시에서 EndorseRank와 AWP가 신뢰할 Spearman $\rho$/Kendall $\tau$ 달성; 계열 수준 정렬은 구성개념별로 다름(표~\ref{tab:alignment-transfer}--\ref{tab:alignment-gmx}).
+\item[\textbf{C3.}] \textbf{구성개념별 정렬:} allowance 프록시에서 EndorseRank가 AWP 초과($\tau=0.355$ vs.\ $-0.030$); 사회적 방법 중 송금 및 대부분 결과 기반 계열에서 AWP가 EndorseRank 초과(표~\ref{tab:alignment-three-methods}).
+\item[\textbf{C4.}] \textbf{효율--정렬 트레이드오프:} EndorseRank는 Tier~1에서 AWP보다 약 $8.9\times$ 낮은 PageRank 런타임, Tier~2 풀 스케일링에서 약 $9$--$10\times$(표~\ref{tab:benchmark-runtime}, \ref{tab:benchmark-scaling})를 제공하면서 중간 수준 송금 정렬($\tau \approx 0.33$)과 더 강한 allowance 정렬($\tau \approx 0.35$)을 유지. Tier~3 damping 스윕은 allowance 계열 안정성을 확인(표~\ref{tab:robustness-damping}).
+\end{enumerate}
+
+\textbf{Supplementary claim:}
+
+\begin{enumerate}
+\item[\textbf{SC1.}] GF-PR의 최고 거래 성공 및 역리스크 평균 $\tau$(표~\ref{tab:alignment-three-methods}, 절~\ref{sec:gf-pr-ceiling})는 결과 프록시와의 구성개념 중첩을 반영하며 우수한 사회적 평판이 아니다; 거래 성공 계열에서 EndorseRank와 AWP의 해석 가능한 정렬 상한을 설정한다(SRQ1).
+\end{enumerate}
