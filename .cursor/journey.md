@@ -207,3 +207,14 @@ python scripts/run_dissertation_eval.py --real --export-latex
 - Motivation·Contributions·Design principles·기여 요약의 First/Second 연결어를 제거
 - \textbf{Label:} 본문 형식의 itemize로 통일해 개조식 가독성을 맞춤
 - 순수 서술 열거와 한국어판은 변경하지 않음
+
+---
+
+## 2026-07-04 — docs: 미사용 참고문헌 정리 및 논문 표현·메타데이터 정합
+
+- **commit**: `875e690` · branch `master`
+- 미인용 Saleh·Yaish 항목을 제거하고 인용 번호를 재매핑한다
+- Abstract·Ch4 표현을 완화하고 런타임 수치를 정밀화한다
+- 부록의 구현 경로·파일명을 일반화하고 PDF 메타데이터를 추가한다
+- 약어(LP·MEV)·개념도 RQ 표기·표 헤더 주석을 정리한다
+- 참고문헌 삭제·재번호 스크립트와 진행 로그를 추가한다
