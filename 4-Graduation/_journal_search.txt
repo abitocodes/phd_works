@@ -1,0 +1,241 @@
+﻿ELIGIBLE TOPIC MATCHES: 553
+---
+Blockchain
+issn: 2959-1260 eissn: 2958-8138
+publisher: ELS Publishing (ELSP)
+WoS:  Scopus:  DHET: 
+strong: ['blockchain'] medium: []
+---
+Blockchain in Healthcare Today
+issn:  eissn: 2573-8240
+publisher: Partners in Digital Health
+WoS:  Scopus: X DHET: 
+strong: ['blockchain'] medium: []
+---
+Blockchain: Research and Applications
+issn: 2096-7209 eissn: 2666-9536
+publisher: Elsevier
+WoS: X Scopus: X DHET: 
+strong: ['blockchain'] medium: []
+---
+DISTRIBUTED LEDGER TECHNOLOGIES: RESEARCH AND PRACTICE
+issn:  eissn: 2769-6480
+publisher: ASSOC COMPUTING MACHINERY
+WoS: X Scopus:  DHET: 
+strong: ['distributed ledger'] medium: []
+---
+FinTech
+issn:  eissn: 2674-1032
+publisher: MDPI
+WoS:  Scopus:  DHET: 
+strong: ['fintech'] medium: []
+---
+Frontiers in Blockchain
+issn: 2624-7852 eissn: 2624-7852
+publisher: Frontiers Media S.A.
+WoS: X Scopus: X DHET: 
+strong: ['blockchain'] medium: []
+---
+IET Blockchain
+issn: 2634-1573 eissn: 2634-1573
+publisher: Institution of Engineering and Technology (IET)
+WoS:  Scopus: X DHET: 
+strong: ['blockchain'] medium: []
+---
+Journal of Acquired Immune Deficiency Syndromes (1999)
+issn: 1525-4135 eissn: 1077-9450
+publisher: Lippincott Williams, Wilkins Ltd
+WoS: X Scopus: X DHET: 
+strong: ['defi'] medium: []
+---
+Southern African Journal of HIV Medicine
+issn: 1608-9693 eissn: 2078-6751
+publisher: AOSIS
+WoS: X Scopus: X DHET: 
+strong: ['defi'] medium: []
+---
+The Journal of The British Blockchain Association
+issn: 2516-3949 eissn: 2516-3957
+publisher: The British Blockchain Association
+WoS: X Scopus:  DHET: 
+strong: ['blockchain'] medium: []
+---
+Token
+issn: 2299-5900 eissn: 2392-2087
+publisher: Jan Kochanowski University Press
+WoS:  Scopus: X DHET: 
+strong: ['token'] medium: []
+---
+ACM Transactions on Graphics
+issn: 0730-0301 eissn: 1557-7368
+publisher: Association for Computing Machinery (ACM)
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+ACME: An International Journal for Critical Geographies
+issn:  eissn: 1492-9732
+publisher: Okanagan University College
+WoS:  Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+AKCE International Journal of Graphs and Combinatorics
+issn: 0972-8600 eissn: 2543-3474
+publisher: Kalasalingam University
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Chromatographica
+issn: 1233-2356 eissn: 2083-5736
+publisher: Akademiai Kiado Rt.
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Crystallographica Section A: Foundations and Advances
+issn: 2053-2733 eissn: 2053-2733
+publisher: John Wiley and Sons Inc.
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Crystallographica Section B: Structural Science, Crystal Engineering and Materials
+issn: 2052-5206 eissn: 2052-5206
+publisher: John Wiley and Sons Inc.
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Crystallographica Section D: Structural Biology
+issn: 2059-7983 eissn: 2059-7983
+publisher: John Wiley and Sons Inc.
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Crystallographica Section E: Crystallographic Communications
+issn: 2056-9890 eissn: 2056-9890
+publisher: International Union of Crystallography
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Crystallographica Section F: Structural Biology Communications
+issn:  eissn: 2053-230X
+publisher: John Wiley and Sons Ltd
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Crystallographica. Section C, Structural Chemistry
+issn: 2053-2296 eissn: 2053-2296
+publisher: John Wiley and Sons Inc.
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Ethnographica Hungarica
+issn: 1216-9803 eissn: 1588-2586
+publisher: Akademiai Kiado
+WoS:  Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Geographica Debrecina: Landscape and Environment Series
+issn: 1789-4921 eissn: 1789-7556
+publisher: University of Debrecen
+WoS:  Scopus:  DHET: 
+strong: [] medium: ['graph']
+---
+Acta Geographica Lodziensia
+issn: 0065-1249 eissn: 
+publisher: Lodz Scientific Society
+WoS:  Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Geographica Sinica
+issn: 0375-5444 eissn: 
+publisher: Science Press
+WoS:  Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Geographica Slovenica
+issn: 1581-8314 eissn: 1581-8314
+publisher: ZRC SAZU, Zalozba ZRC
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Geographica Slovenica-Geografski Zbornik
+issn: 1581-6613 eissn: 1854-5106
+publisher: GEOGRAFSKI INST ANTONA MELIKA ZRC SAZU
+WoS: X Scopus:  DHET: 
+strong: [] medium: ['graph']
+---
+Acta Geographica Universitatis Comenianae
+issn: 1338-6034 eissn: 
+publisher: Comenius University in Bratislava
+WoS:  Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Universitatis Carolinae. Geographica
+issn: 0300-5402 eissn: 2336-1980
+publisher: Vydavatelstvi Karolinum
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Acta Universitatis Lodziensis. Folia Geographica Physica
+issn: 1427-9711 eissn: 2353-6063
+publisher: Lodz University Press
+WoS:  Scopus:  DHET: 
+strong: [] medium: ['graph']
+---
+Advances in Chromatography
+issn: 0065-2415 eissn: 2153-991X
+publisher: Marcel Dekker Inc.
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Advances in Geographical and Environmental Sciences
+issn: 2198-3542 eissn: 2198-3550
+publisher: Springer
+WoS:  Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Advances in Oceanography and Limnology
+issn: 1947-5721 eissn: 1947-573X
+publisher: PagePress Publications
+WoS:  Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Advances in Statistical Climatology, Meteorology and Oceanography
+issn: 2364-3579 eissn: 2364-3587
+publisher: Copernicus GmbH
+WoS:  Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+African Geographical Review
+issn: 1937-6812 eissn: 2163-2642
+publisher: Taylor & Francis
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Al-Arbah
+issn: 2716-3946 eissn: 2716-2575
+publisher: Universitas Islam Negeri Walisongo Semarang
+WoS:  Scopus:  DHET: 
+strong: [] medium: ['banking']
+---
+Al-Mashrof
+issn: 2774-7166 eissn: 2746-3877
+publisher: Fakultas Ekonomi dan Bisnis Islam Universitas Islam Negeri Raden Intan Lampung
+WoS:  Scopus:  DHET: 
+strong: [] medium: ['banking']
+---
+American Literature
+issn: 0002-9831 eissn: 1527-2117
+publisher: Duke University Press
+WoS: X Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+American Translators Association Scholarly Monograph Series
+issn: 0890-4111 eissn: 
+publisher: John Benjamins Publishing Company
+WoS:  Scopus: X DHET: 
+strong: [] medium: ['graph']
+---
+Amsterdam Monographs in American Studies
+issn: 0926-5600 eissn: 
+publisher: Brill: Rodopi
+WoS:  Scopus: X DHET: 
+strong: [] medium: ['graph']

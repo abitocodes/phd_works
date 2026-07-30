@@ -16,7 +16,7 @@ from scipy import stats
 
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED = ROOT / "data" / "processed"
-OUT = ROOT.parents[1] / "2-Dissertation-Draft" / "Figures" / "generated"
+OUT = ROOT.parents[1] / "2-Dissertation-Draft" / "en" / "Figures" / "generated"
 
 
 def _setup_style() -> None:

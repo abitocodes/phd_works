@@ -5,9 +5,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft"
-BIB = ROOT / "03-End" / "bibliography.tex"
-CONTENT_DIRS = [ROOT / "01-Intro", ROOT / "02-Content", ROOT / "03-End"]
+ROOT = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft" / "en"
+BIB = ROOT / "Chapter-07-References" / "index.tex"
+CONTENT_DIRS = [ROOT / "01-Intro"] + sorted(ROOT.glob("Chapter-*"))
 
 # Old numbers to remove (Saleh PoS, Yaish time manipulation).
 DELETE_OLD: set[int] = {53, 63}

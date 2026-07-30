@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EndorseRank — Progress Roundtable 2026 | Taehong Kwon</title>
+  <style>
+    :root {
+      --bg: #f6f3ec;
+      --surface: #fffdf8;
+      --ink: #1c2430;
+      --muted: #5a6573;
+      --line: #d7d0c3;
+      --accent: #0b5f4b;
+      --accent-soft: #d9eee7;
+      --warn: #8a4b12;
+      --warn-soft: #f3e6d4;
+      --slate: #2f3e4f;
+      --slide-pad: clamp(1.4rem, 3vw, 2.6rem);
+      --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      --font-body: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "Cascadia Mono", "Consolas", "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #1a1f26;
+      color: var(--ink);
+      font-family: var(--font-body);
+      overflow: hidden;
+    }
+
+    .deck { height: 100%; width: 100%; position: relative; }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: var(--slide-pad);
+      padding-bottom: 2.4rem;
+      overflow: auto;
+      background:
+        radial-gradient(1200px 600px at 100% -10%, #e7f2ed 0%, transparent 55%),
+        radial-gradient(900px 500px at -10% 110%, #efe6d8 0%, transparent 50%),
+        var(--bg);
+      border: 10px solid #1a1f26;
+    }
+    .slide.active { display: flex; }
+    .slide.center { justify-content: center; }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      left: var(--slide-pad);
+      right: var(--slide-pad);
+      bottom: 1.2rem;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent 70%);
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      line-height: 1.15;
+      margin: 0 0 0.55rem;
+      letter-spacing: -0.02em;
+    }
+    h1 { font-size: clamp(1.9rem, 3.6vw, 3rem); max-width: 22ch; }
+    h2 { font-size: clamp(1.45rem, 2.6vw, 2.15rem); color: var(--slate); }
+    h3 { font-size: clamp(1.05rem, 1.6vw, 1.25rem); color: var(--accent); margin-top: 0.35rem; }
+
+    p, li {
+      font-size: clamp(0.95rem, 1.25vw, 1.12rem);
+      line-height: 1.42;
+      color: var(--ink);
+    }
+    p { margin: 0 0 0.65rem; max-width: 95ch; }
+    .lede { font-size: clamp(1.05rem, 1.5vw, 1.25rem); color: var(--muted); max-width: 58ch; }
+
+    ul, ol { margin: 0.25rem 0 0.6rem; padding-left: 1.2rem; max-width: 95ch; }
+    li { margin: 0.28rem 0; }
+    li strong { color: var(--slate); }
+
+    .kicker {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.55rem;
+    }
+
+    .meta {
+      margin-top: 1.2rem;
+      color: var(--muted);
+      font-size: clamp(0.9rem, 1.15vw, 1.05rem);
+      line-height: 1.5;
+    }
+    .meta strong { color: var(--ink); }
+
+    .thank-you {
+      margin: 2rem 0 0;
+      text-align: center;
+      width: 100%;
+      max-width: none;
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 700;
+      color: var(--slate);
+      letter-spacing: -0.02em;
+    }
+
+    .title-slide h1 { max-width: 24ch; }
+    .title-slide .brand-bar {
+      width: min(12rem, 30vw);
+      height: 4px;
+      background: var(--accent);
+      margin: 0.9rem 0 1.1rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(0.8rem, 2vw, 1.4rem);
+      align-items: start;
+      width: min(100%, 1180px);
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      width: min(100%, 1180px);
+      margin-top: 0.4rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      box-shadow: 0 1px 0 rgba(28, 36, 48, 0.04);
+    }
+    .card h3 { margin-bottom: 0.35rem; }
+    .card p, .card li { font-size: clamp(0.9rem, 1.15vw, 1.05rem); }
+    .card.accent { background: var(--accent-soft); border-color: #b7d8cc; }
+    .card.warn { background: var(--warn-soft); border-color: #e0c6a4; }
+    .card.warn h3 { color: var(--warn); }
+
+    .stat {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 2.4vw, 2rem);
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    table {
+      width: min(100%, 1100px);
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: clamp(0.82rem, 1.05vw, 0.98rem);
+      margin-top: 0.35rem;
+    }
+    th, td {
+      padding: 0.48rem 0.65rem;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th {
+      background: #ece7dc;
+      font-weight: 700;
+      color: var(--slate);
+      font-size: 0.92em;
+    }
+    td.num, th.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-family: var(--font-mono);
+      font-size: 0.95em;
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr.hl td { background: var(--accent-soft); font-weight: 600; }
+    code, .mono {
+      font-family: var(--font-mono);
+      font-size: 0.92em;
+      background: #efe9dd;
+      padding: 0.05em 0.28em;
+      border-radius: 4px;
+    }
+    .eq {
+      font-family: var(--font-display);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.7rem 0.9rem;
+      margin: 0.45rem 0 0.7rem;
+      font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+      max-width: 95ch;
+    }
+    .note {
+      margin-top: 0.55rem;
+      color: var(--muted);
+      font-size: clamp(0.85rem, 1.05vw, 0.98rem);
+      max-width: 95ch;
+    }
+    .tiny { font-size: clamp(0.8rem, 1vw, 0.92rem); color: var(--muted); }
+
+    .agenda-list {
+      list-style: none;
+      padding: 0;
+      counter-reset: ag;
+      width: min(100%, 820px);
+    }
+    .agenda-list li {
+      counter-increment: ag;
+      display: grid;
+      grid-template-columns: 2.2rem 1fr;
+      gap: 0.7rem;
+      align-items: baseline;
+      padding: 0.42rem 0;
+      border-bottom: 1px solid var(--line);
+      margin: 0;
+    }
+    .agenda-list li::before {
+      content: counter(ag, decimal-leading-zero);
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+      margin: 0.5rem 0 0.8rem;
+      font-size: clamp(0.85rem, 1.1vw, 0.98rem);
+    }
+    .flow span {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.35rem 0.7rem;
+    }
+    .flow .arrow { border: none; background: transparent; color: var(--accent); font-weight: 700; padding: 0 0.1rem; }
+
+    .footer-bar {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: 8px;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #c9d0d8;
+      font-size: 0.72rem;
+      letter-spacing: 0.02em;
+      pointer-events: none;
+      font-family: var(--font-mono);
+    }
+    .footer-bar .hint { opacity: 0.75; }
+    .progress {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      height: 4px;
+      background: var(--accent);
+      z-index: 30;
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      h1 { max-width: none; }
+    }
+
+    @media print {
+      html, body { overflow: visible; background: white; height: auto; }
+      .footer-bar, .progress { display: none; }
+      .slide {
+        display: flex !important;
+        position: relative;
+        page-break-after: always;
+        min-height: 100vh;
+        border: none;
+        overflow: visible;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck" id="deck">
+
+    <!-- 1 -->
+    <section class="slide title-slide center active" data-title="Title">
+      <div class="kicker">UNISA · Postgraduate Research Roundtable 2026 · Progress Presentation</div>
+      <h1>Integrating ERC-20 Allowance Edges into PageRank for On-Chain Wallet Reputation</h1>
+      <div class="brand-bar"></div>
+      <p class="lede">EndorseRank vs Adaptive Weighted PageRank (AWP): parameters, data collection, computation, and what the measured quantities tell us.</p>
+      <div class="meta">
+        <strong>Taehong Kwon</strong> · Student No. 28576810 · PhD (Computer Science)<br />
+        Supervisor: Prof. Ernest Mnkandla · Co-supervisor: Prof. Donatien Koulla Moulla
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide center" data-title="Agenda">
+      <div class="kicker">Agenda</div>
+      <h2>Talk structure (process-heavy)</h2>
+      <ol class="agenda-list">
+        <li>Topic snapshot and progress since May 2026</li>
+        <li>Pre-registered parameters (what we fixed before interpreting results)</li>
+        <li>How data were collected (three-phase BigQuery → parquet pipeline)</li>
+        <li>How scores and proxies were computed</li>
+        <li>What each parameter / statistic reveals</li>
+        <li>Empirical results, challenges, and next steps</li>
+      </ol>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide" data-title="Topic">
+      <div class="kicker">1 · Brief topic summary</div>
+      <h2>EndorseRank in context</h2>
+      <div class="grid-2">
+        <div>
+          <ul>
+            <li><strong>Problem:</strong> DeFi wallets lack traditional credit signals. Transfer-graph rankings can be computationally heavy and may confuse “activity” with “authorization trust.”</li>
+            <li><strong>Core idea:</strong> Build a directed endorsement graph from <em>latest</em> ERC-20 allowance edges (approve / permit → Approval logs), then apply weighted PageRank → <strong>EndorseRank</strong>.</li>
+            <li><strong>Baseline:</strong> Adaptive Weighted PageRank (AWP) on time-decayed transfer graphs (Do et al.).</li>
+            <li><strong>Validation style:</strong> Construct (domain) alignment — compare method ranks to observable wallet proxies with Spearman ρ and Kendall τ on the <em>same</em> wallets.</li>
+          </ul>
+        </div>
+        <div class="card accent">
+          <h3>Scientific claim (current framing)</h3>
+          <p>EndorseRank is a <strong>construct-distinct</strong>, computationally lighter social reputation score. It is not expected to dominate AWP on every proxy. The contribution is an <strong>efficiency–alignment trade-off</strong> with explicit parameters and a reproducible pipeline.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide" data-title="Progress">
+      <div class="kicker">1 · Progress since last presentation</div>
+      <h2>From revised proposal → measured dissertation pipeline</h2>
+      <div class="grid-3">
+        <div class="card"><div class="stat">May 2026</div><div class="stat-label">Proposal revision: 27 supervisor comments addressed; open questions on data scope, labels, baselines</div></div>
+        <div class="card accent"><div class="stat">Now</div><div class="stat-label">Arbitrum One real data; n = 5,521 matched cohort; EndorseRank vs AWP scored; English draft Ch.1–8</div></div>
+        <div class="card"><div class="stat">Locked</div><div class="stat-label">Window, damping, decay, min closes, tolerance fixed in config before interpreting τ tables</div></div>
+      </div>
+      <ul>
+        <li><strong>Data:</strong> Public BigQuery Arbitrum logs → GMX PositionDecrease + ERC-20 Approval/Transfer extracts → local parquet.</li>
+        <li><strong>Compute:</strong> Latest-allowance graph &amp; time-decayed transfer graph → shared weighted PageRank solver → five proxy families → ρ/τ + runtime benchmarks → LaTeX tables.</li>
+        <li><strong>Writing:</strong> Results now report construct-specific winners (allowance vs transfer) rather than universal superiority.</li>
+      </ul>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide" data-title="Feedback">
+      <div class="kicker">1 · Previous comments &amp; actions</div>
+      <h2>May feedback mapped to concrete pipeline choices</h2>
+      <table>
+        <thead>
+          <tr><th>Comment theme</th><th>Action in this phase</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Proposal coherence / RQs</td><td>27 comments addressed; proposal frozen; dissertation RQs H1–H3 + SRQ1</td></tr>
+          <tr><td>Method &amp; metric justification</td><td>PageRank variables, d = 0.85, ρ/τ interpretation, pre-registered config</td></tr>
+          <tr><td>Data scope</td><td>Single chain Arbitrum One; 6-month window; GMX V2 as dense outcome stream</td></tr>
+          <tr><td>Risk / outcome labels</td><td>Five proxy families (not sparse lending defaults as primary labels)</td></tr>
+          <tr><td>Baseline set</td><td>Primary: EndorseRank vs AWP; GF-PR only as outcome-native ceiling (SRQ1)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 6 -->
+    <section class="slide" data-title="Parameters catalog">
+      <div class="kicker">2 · Pre-registered parameters</div>
+      <h2>What we fixed before reading results</h2>
+      <p>These values are configuration constants (not tuned to maximize τ after seeing outcomes). Changing them would require a robustness re-run, not silent retuning.</p>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th class="num">Value</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Chain</td><td class="num">Arbitrum One (42161)</td><td>Single-chain universe; avoid cross-chain aliasing</td></tr>
+          <tr><td>Observation window</td><td class="num">2025-12-01 → 2026-05-31 UTC</td><td>6 months of logs; AWP age Δt anchored at end</td></tr>
+          <tr><td>Observation end <span class="mono">T_obs</span></td><td class="num">2026-05-31 23:59:59 UTC</td><td>Δt = 0 at window close; ≈181 days at open</td></tr>
+          <tr><td>Min GMX closes <span class="mono">m</span></td><td class="num">3</td><td>Exclude one-off traders; stabilize success-rate proxies</td></tr>
+          <tr><td>PageRank damping <span class="mono">d</span></td><td class="num">0.85</td><td>Classical web / AWP baseline; teleport vs graph walk</td></tr>
+          <tr><td>Convergence tolerance <span class="mono">τ_tol</span></td><td class="num">10⁻⁸</td><td>Strict stop so runtime reflects graph structure</td></tr>
+          <tr><td>Max iterations <span class="mono">I_max</span></td><td class="num">300</td><td>Hard cap; matched cohort converges earlier</td></tr>
+          <tr><td>AWP decay steepness <span class="mono">k</span></td><td class="num">0.01</td><td>Logistic time-decay sharpness</td></tr>
+          <tr><td>AWP decay midpoint <span class="mono">t₀</span></td><td class="num">180 days</td><td>Half-weight age under logistic σ(Δt)</td></tr>
+          <tr><td>GF-PR ε_loss / ε_liq</td><td class="num">0.1 / 1.0</td><td>Sink additives (supplementary only)</td></tr>
+          <tr><td>Matched cohort size <span class="mono">n</span></td><td class="num">5,521</td><td>GMX ≥3 closes ∩ reputation connectivity</td></tr>
+          <tr><td>Expanded pool <span class="mono">N</span></td><td class="num">31,612</td><td>Scaling / runtime stress beyond matched n</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide" data-title="What params mean">
+      <div class="kicker">2 · What these parameters allow us to know</div>
+      <h2>Interpretation guide (before numbers)</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Sampling parameters (window, m, n)</h3>
+          <ul>
+            <li><strong>Window + T_obs:</strong> fix which events exist and how old transfers are for AWP.</li>
+            <li><strong>m = 3:</strong> success-rate denominators are not dominated by a single lucky/unlucky close.</li>
+            <li><strong>Same n for both methods:</strong> τ differences are attributable to graph/method, not unequal samples.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Solver / graph parameters (d, τ_tol, k, t₀)</h3>
+          <ul>
+            <li><strong>d = 0.85:</strong> how much score comes from network neighbors vs uniform teleport.</li>
+            <li><strong>τ_tol, I_max:</strong> make runtime comparable; avoid “faster because stopped early.”</li>
+            <li><strong>k, t₀:</strong> how strongly AWP prefers recent transfers — EndorseRank has <em>no</em> time decay (latest allowance wins).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card accent" style="margin-top:0.75rem; max-width:1100px">
+        <h3>Design principle</h3>
+        <p style="margin:0">Pre-registration by configuration: we decide the experimental knobs first, then measure alignment and runtime. Robustness sweeps (damping, top tokens, sample size) test sensitivity; they do not redefine the primary setting after seeing τ.</p>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="slide" data-title="Data sources">
+      <div class="kicker">3 · Data collection — sources</div>
+      <h2>Public Arbitrum logs only (no private indexer as ground truth)</h2>
+      <table>
+        <thead>
+          <tr><th>Stream</th><th>Source</th><th>Events / fields used</th><th>Used for</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Reputation</td>
+            <td><span class="mono">bigquery-public-data.goog_blockchain_arbitrum_one_us.logs</span></td>
+            <td>ERC-20 <span class="mono">Approval</span>, <span class="mono">Transfer</span> (topic-filtered; wallet-filtered to cohort neighborhood)</td>
+            <td>EndorseRank edges; AWP edges; transfer/allowance proxies</td>
+          </tr>
+          <tr>
+            <td>GMX outcomes</td>
+            <td>Same BQ logs · EventEmitter <span class="mono">0xC8ee…2Fb</span></td>
+            <td><span class="mono">PositionDecrease</span>: account, basePnlUsd, liquidation flags, size fields</td>
+            <td>Cohort eligibility; trading-success &amp; inverse-risk proxies; GF-PR</td>
+          </tr>
+        </tbody>
+      </table>
+      <ul>
+        <li><strong>In scope:</strong> on-chain logs in the fixed window; addresses as opaque IDs; decimal-adjusted token amounts; GMX USD PnL fields as protocol-emitted.</li>
+        <li><strong>Out of scope:</strong> mempool, CEX maps, bridges, multi-address entity resolution, proprietary GMX APIs as primary truth.</li>
+        <li><strong>Why GMX (not Aave defaults as primary labels):</strong> dense wallet-level realized PnL on Arbitrum within the window; lending defaults too sparse for stable primary validation.</li>
+      </ul>
+    </section>
+
+    <!-- 9 -->
+    <section class="slide" data-title="Three phases">
+      <div class="kicker">3 · Data collection — three phases</div>
+      <h2>Expensive cloud scans once → local reproducible analysis many times</h2>
+      <div class="flow">
+        <span>Phase 1 · GMX extract/decode</span><span class="arrow">→</span>
+        <span>Phase 2 · Approval/Transfer monthly BQ</span><span class="arrow">→</span>
+        <span>Phase 3 · Local ranks / proxies / τ / benchmarks</span>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Phase 1 — Validation stream</h3>
+          <ul>
+            <li>Extract all GMX PositionDecrease in the window (not pre-filtered by wallet).</li>
+            <li>Decode → 365,488 closes in the study narrative.</li>
+            <li>Wallets with ≥ m=3 closes = GMX-eligible set.</li>
+            <li>Supplies trading-success, inverse-risk, liquidation-family proxies.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Phase 2 — Reputation streams</h3>
+          <ul>
+            <li>For eligible wallets, extract Approval + Transfer in <strong>6 monthly batches</strong> (byte caps + resume).</li>
+            <li>Keep logs if owner/spender or from/to touches the seed set (one-hop neighborhood).</li>
+            <li>Matched cohort = eligible ∩ non-zero reputation connectivity → <strong>n = 5,521</strong>.</li>
+          </ul>
+        </div>
+        <div class="card accent">
+          <h3>Phase 3 — Local evaluation</h3>
+          <ul>
+            <li>From cached parquet: build graphs, PageRank, proxies, ρ/τ, runtime, robustness.</li>
+            <li>No further BigQuery needed to regenerate Chapter 4 tables.</li>
+            <li>Offline fixtures available for CI-style checks without GCP.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">Same-seed comparability: EndorseRank and AWP always score identical wallet sets.</p>
+    </section>
+
+    <!-- 10 -->
+    <section class="slide" data-title="Preprocess">
+      <div class="kicker">3 · Preprocessing rules (what becomes an edge)</div>
+      <h2>From raw logs to graph inputs</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Approvals → latest allowances</h3>
+          <ul>
+            <li>Topic: <span class="mono">Approval(address,address,uint256)</span>.</li>
+            <li>EIP-2612 permit ultimately emits the same Approval — no separate event type.</li>
+            <li>Per (owner, spender, token): keep <strong>chronologically last</strong> approval in the window.</li>
+            <li>Final zero allowance <strong>removes</strong> the edge.</li>
+            <li>Across tokens: sum positive latest amounts → weight <span class="mono">w_A(u→v)</span>.</li>
+            <li>Unlimited approvals retained as large finite weights after decimals (strong authorization).</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Transfers → time-decayed flows</h3>
+          <ul>
+            <li>Topic: <span class="mono">Transfer(address,address,uint256)</span>.</li>
+            <li>Decimal-adjust value; keep timestamp, from, to, token.</li>
+            <li>Age Δt = days before <span class="mono">T_obs</span>.</li>
+            <li>Weight contribution: <span class="mono">v_e · σ(Δt)</span> with logistic σ.</li>
+            <li>Aggregate on directed edge u→v by summing contributions.</li>
+            <li>Addresses lower-cased for joins; self-transfers handled specially in Sybil proxies.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">Subgraph restriction: retain edges with ≥1 endpoint in the cohort (neighbors can push mass into cohort scores). Evaluation reports scores only on W.</p>
+    </section>
+
+    <!-- 11 -->
+    <section class="slide" data-title="EndorseRank compute">
+      <div class="kicker">4 · Computation — EndorseRank</div>
+      <h2>Allowance graph → weighted PageRank</h2>
+      <div class="eq">
+        Edge: owner u endorses spender v with weight w_A(u,v) = Σ_token a*(u,v,token)<br />
+        Transition: P_{u,v} = w(u,v) / out-strength(u) if out-strength &gt; 0<br />
+        Iterate: r ← (1−d) π + d Pᵀ r + dangling redistribution · π &nbsp; until ‖Δr‖₁ &lt; 10⁻⁸ or 300 iters<br />
+        Rank: dense rank of scores on cohort (1 = highest); address tie-break
+      </div>
+      <div class="grid-2">
+        <div class="card accent">
+          <h3>Critical semantic choice</h3>
+          <p><strong>No temporal decay</strong> on allowances. A newer Approval for the same (owner, spender, token) <em>overrides</em> the older one. The graph is a snapshot of current spending permissions, not a history of all past approvals.</p>
+        </div>
+        <div class="card">
+          <h3>What the score means</h3>
+          <p>High EndorseRank ≈ wallet sits in a position that receives multi-hop endorsement mass from allowance structure (who is authorized to spend by whom). It is <em>not</em> “this wallet made profitable trades.”</p>
+        </div>
+      </div>
+      <p class="note">Matched-cohort graph size (benchmark table): <strong>14,727 edges</strong> · PageRank wall-clock <strong>2.105 s</strong> · peak mem ≈ 4.6 MB · ≈ 37 iterations.</p>
+    </section>
+
+    <!-- 12 -->
+    <section class="slide" data-title="AWP compute">
+      <div class="kicker">4 · Computation — AWP</div>
+      <h2>Transfer graph with logistic time decay</h2>
+      <div class="eq">
+        σ(Δt) = 1 / (1 + exp(k (Δt − t₀))) &nbsp; with &nbsp; k = 0.01, &nbsp; t₀ = 180 days<br />
+        w_T(u,v) = Σ_{transfers u→v} v_e · σ(Δt_e)<br />
+        Same PageRank solver as EndorseRank (d = 0.85, τ_tol = 10⁻⁸, I_max = 300)
+      </div>
+      <ul>
+        <li><strong>Recent transfers</strong> (Δt ≪ 180): σ ≈ 1 — nearly full value weight.</li>
+        <li><strong>Older transfers</strong> (Δt ≫ 180): σ smoothly shrinks — history fades.</li>
+        <li><strong>What the score means:</strong> high AWP ≈ wallet receives multi-hop, recency-weighted transfer mass (economic-flow centrality), not necessarily “authorized spender trust.”</li>
+        <li><strong>Structural cost:</strong> denser graph → more work per iteration. Matched cohort: <strong>137,087 edges</strong> · <strong>18.711 s</strong> · ≈ 38.2 MB · ≈ 100 iterations.</li>
+      </ul>
+      <p class="note">H3 intuition: PageRank cost scales with |E|; sparse allowance graphs should recompute faster than dense transfer graphs under the same solver settings.</p>
+    </section>
+
+    <!-- 13 -->
+    <section class="slide" data-title="GF-PR">
+      <div class="kicker">4 · Computation — GF-PR (supplementary only)</div>
+      <h2>Outcome-native ceiling, not a social peer method</h2>
+      <div class="grid-2">
+        <div>
+          <p>GF-PR builds a star graph from the <em>same</em> GMX PnL stream that defines trading-success proxies:</p>
+          <ul>
+            <li>Profit close: edge POOL → wallet with weight x</li>
+            <li>Loss close: wallet → SINK with |x| + ε_loss (0.1)</li>
+            <li>Liquidation: wallet → SINK with |x| + ε_liq (1.0)</li>
+            <li><strong>No wallet↔wallet social edges</strong></li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>What we learn from GF-PR</h3>
+          <p>If ranking is allowed to read outcome flow directly, trading-success mean τ can reach <strong>0.583</strong> on this cohort. That is a <strong>construct-overlap ceiling</strong>, not evidence of better social reputation. Social methods should be judged far below this ceiling without being called “failures.”</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 -->
+    <section class="slide" data-title="Proxies overview">
+      <div class="kicker">4 · Proxies — five families</div>
+      <h2>What we compare ranks against (and why)</h2>
+      <p>Each proxy P is a wallet-level observable. Higher values are oriented toward “better / more central / safer / more successful” before correlation. For method M and proxy P we report Spearman ρ and Kendall τ between ranks on the same n wallets.</p>
+      <table>
+        <thead>
+          <tr><th>Family</th><th>Example measures</th><th>What alignment would mean</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Transfer</strong></td><td>in-degree; in-value</td><td>Method order matches inbound economic activity (Do et al. baseline). Strong AWP↔transfer = within-construct coherence for transfer graphs.</td></tr>
+          <tr><td><strong>Allowance</strong></td><td>in-approve-degree; in-approve-value</td><td>Method order matches received spending authorizations. Strong EndorseRank↔allowance = within-construct validity for endorsement graphs.</td></tr>
+          <tr><td><strong>Inverse risk</strong></td><td>loss avoidance; non-loss close rate; worst-close score</td><td>Social ranks co-vary with loss-avoiding GMX behavior (not an input to either social graph).</td></tr>
+          <tr><td><strong>Sybil stability</strong></td><td>counterparty ratio; tenure; active months</td><td>Ranks co-vary with diversified / durable activity patterns.</td></tr>
+          <tr><td><strong>Trading success</strong></td><td>close-success count; realized gain; success rate</td><td>Ranks co-vary with profitable closing behavior on GMX (demanding test for social scores).</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Transfer &amp; allowance proxies are <em>local</em> degree/value sums from the same event classes as the graphs — they check construct coherence. Inverse-risk / Sybil / trading-success are harder external tests.</p>
+    </section>
+
+    <!-- 15 -->
+    <section class="slide" data-title="Proxy formulas">
+      <div class="kicker">4 · Proxies — operational definitions (selected)</div>
+      <h2>How proxy numbers are calculated</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Transfer / Allowance (local)</h3>
+          <ul>
+            <li><span class="mono">in_degree(w)</span> = # distinct senders to w</li>
+            <li><span class="mono">in_value(w)</span> = Σ inbound transfer values</li>
+            <li><span class="mono">in_approve_degree(w)</span> = # owners with latest allowance to w as spender</li>
+            <li><span class="mono">in_approve_value(w)</span> = Σ latest positive allowances to w</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>GMX-derived (external to social graphs)</h3>
+          <ul>
+            <li><span class="mono">loss_avoidance</span> = −Σ min(x_c, 0) over closes</li>
+            <li><span class="mono">non_loss_close_rate</span> = 1 − (ordinary loss closes / |C|)</li>
+            <li>Trading success: close-success counts, realized gains, success rate (min closes m=3)</li>
+            <li>Sybil family: unique counterparties / inbound txs; tenure days; active months</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card accent" style="margin-top:0.7rem; max-width:1100px">
+        <h3>What Kendall τ tells us here</h3>
+        <p style="margin:0">τ ≈ agreement of orderings (how often pairs of wallets are ranked the same way by method and proxy). We use bands: |τ| &lt; 0.10 ≈ noise; 0.10–0.35 weak–moderate; ≥ 0.35 practically meaningful in comparable PageRank/blockchain ranking work. Values are compared <em>relatively</em> across methods on the same cohort — not as clinical cutoffs.</p>
+      </div>
+    </section>
+
+    <!-- 16 -->
+    <section class="slide" data-title="Pipeline end-to-end">
+      <div class="kicker">4 · End-to-end computation path</div>
+      <h2>From SQL to dissertation tables</h2>
+      <div class="flow">
+        <span>BQ logs</span><span class="arrow">→</span>
+        <span>decode / monthly shards</span><span class="arrow">→</span>
+        <span>latest allowances + transfers parquet</span><span class="arrow">→</span>
+        <span>build G_approve / G_transfer</span><span class="arrow">→</span>
+        <span>PageRank scores</span>
+      </div>
+      <div class="flow">
+        <span>GMX decoded closes</span><span class="arrow">→</span>
+        <span>proxy vectors p_P</span><span class="arrow">→</span>
+        <span>ρ, τ vs s_M</span><span class="arrow">→</span>
+        <span>runtime ×5 repeats</span><span class="arrow">→</span>
+        <span>eval_summary.json → LaTeX</span>
+      </div>
+      <ul>
+        <li><strong>Separation of construction and timing:</strong> build graphs once; benchmark clocks <em>only</em> the PageRank solve (fair H3 test).</li>
+        <li><strong>Primary vs supplementary:</strong> claims C1–C4 / H1–H3 = EndorseRank vs AWP; GF-PR only SRQ1.</li>
+        <li><strong>Regeneration rule:</strong> Chapter 4 numbers are not hand-edited; they come from <span class="mono">run_dissertation_eval.py → export_latex_results.py</span>.</li>
+      </ul>
+    </section>
+
+    <!-- 17 -->
+    <section class="slide" data-title="Results alignment">
+      <div class="kicker">5 · Results — alignment (mean Kendall τ, n = 5,521)</div>
+      <h2>Construct-specific winners</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Proxy family</th>
+            <th class="num">EndorseRank</th>
+            <th class="num">AWP</th>
+            <th class="num">GF-PR</th>
+            <th>Highest</th>
+            <th>What we learn</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="hl">
+            <td>Allowance</td>
+            <td class="num">0.355</td>
+            <td class="num">−0.030</td>
+            <td class="num">−0.041</td>
+            <td>EndorseRank</td>
+            <td>Allowance graph PageRank matches received-authorization structure; AWP does not.</td>
+          </tr>
+          <tr>
+            <td>Transfer</td>
+            <td class="num">0.333</td>
+            <td class="num">0.534</td>
+            <td class="num">0.246</td>
+            <td>AWP</td>
+            <td>Transfer-graph AWP matches inbound flow centrality; ER still moderate secondary axis.</td>
+          </tr>
+          <tr>
+            <td>Sybil stability</td>
+            <td class="num">0.233</td>
+            <td class="num">0.286</td>
+            <td class="num">0.093</td>
+            <td>AWP</td>
+            <td>Transfer activity tracks tenure/diversity slightly better than allowances.</td>
+          </tr>
+          <tr>
+            <td>Inverse risk</td>
+            <td class="num">0.035</td>
+            <td class="num">0.107</td>
+            <td class="num">0.376</td>
+            <td>GF-PR*</td>
+            <td>Social methods ≈ weak; outcome-native GF-PR rises by construction.</td>
+          </tr>
+          <tr>
+            <td>Trading success (GMX)</td>
+            <td class="num">0.096</td>
+            <td class="num">0.179</td>
+            <td class="num">0.583</td>
+            <td>GF-PR*</td>
+            <td>Social reputation ≠ trading skill on this sample; AWP slightly less weak than ER.</td>
+          </tr>
+          <tr>
+            <td>Inter-method τ (ER vs AWP scores)</td>
+            <td class="num" colspan="3" style="text-align:center">0.316</td>
+            <td>—</td>
+            <td>Partially overlapping yet construct-distinct orderings (supports H1).</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="tiny">*GF-PR is supplementary (SRQ1), not a deployable social reputation score.</p>
+    </section>
+
+    <!-- 18 -->
+    <section class="slide" data-title="Results runtime">
+      <div class="kicker">5 · Results — computational parameters in practice</div>
+      <h2>Measured runtime / memory / iterations / edges</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th class="num">Runtime (s)</th>
+            <th class="num">Peak mem (MB)</th>
+            <th class="num">Iters</th>
+            <th class="num">Edges</th>
+            <th>Reading</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="hl">
+            <td>EndorseRank</td>
+            <td class="num">2.105</td>
+            <td class="num">4.6</td>
+            <td class="num">37</td>
+            <td class="num">14,727</td>
+            <td>Sparse authorization graph → fast refresh</td>
+          </tr>
+          <tr>
+            <td>AWP</td>
+            <td class="num">18.711</td>
+            <td class="num">38.2</td>
+            <td class="num">100</td>
+            <td class="num">137,087</td>
+            <td>≈8.9× slower; denser flow graph</td>
+          </tr>
+          <tr>
+            <td>GF-PR (suppl.)</td>
+            <td class="num">1.461</td>
+            <td class="num">3.2</td>
+            <td class="num">89</td>
+            <td class="num">10,338</td>
+            <td>Small star graph; not social</td>
+          </tr>
+        </tbody>
+      </table>
+      <ul>
+        <li><strong>Pool scaling:</strong> advantage ≈10.4× at n=10,000 and ≈9.4× at N=31,612 — efficiency claim is not an n=5,521 accident.</li>
+        <li><strong>Robustness:</strong> damping / top-token / sample-size sweeps leave allowance τ ≈ 0.355 and the allowance–transfer trade-off intact under primary settings.</li>
+        <li><strong>What runtime parameters taught us:</strong> with identical d, τ_tol, I_max, the speed gap is a property of edge semantics and |E|, not of unequal solver generosity.</li>
+      </ul>
+    </section>
+
+    <!-- 19 -->
+    <section class="slide" data-title="Learning synthesis">
+      <div class="kicker">5 · Synthesis — what the whole parameter→measure chain shows</div>
+      <h2>From knobs to knowledge claims</h2>
+      <div class="grid-2">
+        <div class="card accent">
+          <h3>We can claim</h3>
+          <ul>
+            <li><strong>H1:</strong> ER and AWP induce different rankings (inter-method τ = 0.316).</li>
+            <li><strong>H2 (construct-specific):</strong> ER wins allowance; AWP wins transfer (and most outcome-adjacent social families).</li>
+            <li><strong>H3:</strong> ER PageRank is substantially faster under matched solver settings.</li>
+            <li><strong>RQ4:</strong> Transfer proxies are a stronger validation frame than trading-success for social methods here.</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>We should not claim</h3>
+          <ul>
+            <li>EndorseRank universally “beats” AWP on all proxies.</li>
+            <li>Social PageRank predicts GMX profitability well (τ small; GF-PR ceiling shows outcome overlap is a different construct).</li>
+            <li>Reputation can replace collateral — not supported; at best a monitoring / fee-tier signal hypothesis.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note" style="margin-top:0.8rem">Operator reading: choose EndorseRank for authorization semantics + refresh latency; choose AWP for transfer-hub detection / outcome co-movement — with explicit τ tables, not a single headline score.</p>
+    </section>
+
+    <!-- 20 -->
+    <section class="slide" data-title="Challenges">
+      <div class="kicker">6 · Challenges encountered</div>
+      <h2>Process difficulties (and how they changed the story)</h2>
+      <div class="grid-2">
+        <div class="card warn">
+          <h3>Hypothesis reframing</h3>
+          <p>Proposal-era hope of overall EndorseRank superiority failed on real data. Parameters were <em>not</em> retuned to force a win; the dissertation claim was rewritten as an efficiency–alignment trade-off with construct-specific τ.</p>
+        </div>
+        <div class="card">
+          <h3>Other issues</h3>
+          <ul>
+            <li>Aave wallet↔wallet baselines too sparse (τ ≈ 0.05–0.14) — archived, not primary.</li>
+            <li>Trading-success alignment weak for both social methods.</li>
+            <li>Pipeline hazards (e.g. fixtures overwriting real rankings) required restore discipline.</li>
+            <li>Registration working title vs current EndorseRank title still needs supervisor alignment.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 21 -->
+    <section class="slide" data-title="Status next">
+      <div class="kicker">6 · Status &amp; next steps</div>
+      <h2>Where the PhD stands / planned work</h2>
+      <div class="grid-3">
+        <div class="card accent"><h3>Done</h3><p>Proposal baseline frozen; literature framing; Tier-1 BQ extracts; EndorseRank vs AWP primary eval; parameter table locked; draft Ch.1–8</p></div>
+        <div class="card"><h3>Active</h3><p>Discussion/conclusion polish around trade-off; robustness narrative; co-supervisor sync; journal targeting</p></div>
+        <div class="card"><h3>Next</h3><p>Manuscript from Ch.4–5; keep extended baselines archived; examination docs; future: cross-protocol / adversarial / hybrid (post-core)</p></div>
+      </div>
+      <ul>
+        <li><strong>Form status:</strong> Proposal Approved · Literature Review · Data Collection · Implementation · Analysis · Writing.</li>
+        <li><strong>Guidance sought:</strong> publication timing; official title wording vs registration working title; whether primary story should stay strictly 2-method (ER vs AWP).</li>
+      </ul>
+    </section>
+
+    <!-- 22 -->
+    <section class="slide title-slide center" data-title="Close">
+      <div class="kicker">Closing</div>
+      <h1>Summary for discussion</h1>
+      <div class="brand-bar"></div>
+      <ul>
+        <li><strong>Parameters fixed first</strong> (window, m, d, τ_tol, k, t₀, n) — then measured.</li>
+        <li><strong>Collection:</strong> public Arbitrum BQ → three phases → parquet → shared PageRank solver.</li>
+        <li><strong>Findings:</strong> ER = allowance-valid + ≈8.9× faster; AWP = transfer/outcome-stronger; inter-method τ = 0.316.</li>
+        <li><strong>Knowledge:</strong> authorization graphs and payment graphs are not interchangeable reputation substrates.</li>
+      </ul>
+      <p class="thank-you">Thank you.</p>
+    </section>
+
+  </div>
+
+  <div class="footer-bar">
+    <span>EndorseRank · Roundtable Progress 2026</span>
+    <span class="hint">← → navigate · F fullscreen · scroll if needed</span>
+    <span id="page">1 / 22</span>
+  </div>
+  <div class="progress" id="progress"></div>
+
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const pageEl = document.getElementById("page");
+      const progressEl = document.getElementById("progress");
+      let i = 0;
+
+      function show(n) {
+        i = Math.max(0, Math.min(slides.length - 1, n));
+        slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
+        pageEl.textContent = (i + 1) + " / " + slides.length;
+        progressEl.style.width = ((i + 1) / slides.length * 100) + "%";
+        document.title = (slides[i].dataset.title || "Slide") + " · EndorseRank Roundtable";
+        history.replaceState(null, "", "#" + (i + 1));
+        slides[i].scrollTop = 0;
+      }
+
+      function fromHash() {
+        const m = location.hash.match(/^#(\d+)/);
+        return m ? parseInt(m[1], 10) - 1 : 0;
+      }
+
+      document.addEventListener("keydown", (e) => {
+        const tag = (e.target && e.target.tagName) || "";
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        if (e.key === "ArrowRight" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)) {
+          e.preventDefault(); show(i + 1);
+        } else if (e.key === "ArrowLeft" || e.key === "PageUp" || (e.key === " " && e.shiftKey)) {
+          e.preventDefault(); show(i - 1);
+        } else if (e.key === "Home") {
+          e.preventDefault(); show(0);
+        } else if (e.key === "End") {
+          e.preventDefault(); show(slides.length - 1);
+        } else if (e.key === "f" || e.key === "F") {
+          if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+          else document.exitFullscreen?.();
+        }
+      });
+
+      let touchX = null;
+      document.addEventListener("touchstart", (e) => { touchX = e.changedTouches[0].clientX; }, { passive: true });
+      document.addEventListener("touchend", (e) => {
+        if (touchX == null) return;
+        const dx = e.changedTouches[0].clientX - touchX;
+        if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
+        touchX = null;
+      }, { passive: true });
+
+      window.addEventListener("hashchange", () => show(fromHash()));
+      show(fromHash());
+    })();
+  </script>
+</body>
+</html>

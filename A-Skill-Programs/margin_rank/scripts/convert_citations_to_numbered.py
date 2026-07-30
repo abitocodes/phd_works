@@ -9,24 +9,24 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft"
-BIB = ROOT / "03-End" / "bibliography.tex"
+ROOT = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft" / "en"
+BIB = ROOT / "Chapter-07-References" / "index.tex"
 PREAMBLE = ROOT / "Config" / "preamble.tex"
 
 # Files to convert (English dissertation only).
 TARGETS = [
     ROOT / "01-Intro" / "02-Abstract.tex",
-    ROOT / "02-Content" / "Chapter-01.tex",
-    ROOT / "02-Content" / "Chapter-02.tex",
-    ROOT / "02-Content" / "Chapter-03.tex",
-    ROOT / "02-Content" / "Chapter-04.tex",
-    ROOT / "02-Content" / "Chapter-05.tex",
-    ROOT / "02-Content" / "Chapter-06.tex",
-    ROOT / "03-End" / "appendix.tex",
-    ROOT / "03-End" / "appendix-b.tex",
-    ROOT / "03-End" / "appendix-c.tex",
-    ROOT / "03-End" / "appendix-d.tex",
-    ROOT / "03-End" / "appendix-e.tex",
+    ROOT / "Chapter-01-Introduction-and-Research-Problem" / "index.tex",
+    ROOT / "Chapter-02-Literature-Review-and-Theoretical-Framework" / "index.tex",
+    ROOT / "Chapter-03-Research-Methodology" / "index.tex",
+    ROOT / "Chapter-04-Implementation-and-Empirical-Results" / "index.tex",
+    ROOT / "Chapter-05-Discussion" / "index.tex",
+    ROOT / "Chapter-06-Conclusion-and-Future-Work" / "index.tex",
+    ROOT / "Chapter-08-Appendix" / "index.tex",
+    ROOT / "Chapter-08-Appendix" / "appendix-b.tex",
+    ROOT / "Chapter-08-Appendix" / "appendix-c.tex",
+    ROOT / "Chapter-08-Appendix" / "appendix-d.tex",
+    ROOT / "Chapter-08-Appendix" / "appendix-e.tex",
 ]
 
 

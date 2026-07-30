@@ -155,7 +155,7 @@ def main() -> int:
             return 1
 
     if not aave_path.exists() and not args.skip_aave:
-        print(f"Note: {aave_path} missing — Aave PR methods will be zero.")
+        print(f"Note: {aave_path} missing ??Aave PR methods will be zero.")
         print("  Run: extract_aave_lending.py --gmx-only --extract --yes && preprocess_aave_lending.py")
         print("  Or pass --skip-aave to suppress this notice.")
 
@@ -329,7 +329,7 @@ def main() -> int:
         if rc != 0:
             return rc
         repo_root = Path(__file__).resolve().parents[2].parent
-        archive_tex = repo_root / "2-Dissertation-Draft" / "archive" / "extended-baselines" / "tables"
+        archive_tex = repo_root / "2-Dissertation-Draft" / "en" / "archive" / "extended-baselines" / "tables"
         archive_csv = ROOT / "data" / "archive" / "extended-baselines"
         for preset in ("seven", "six-aave"):
             rc = _run_script(

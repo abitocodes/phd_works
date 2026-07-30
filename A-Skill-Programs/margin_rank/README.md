@@ -28,7 +28,7 @@ python scripts/export_latex_results.py
 Outputs:
 
 - `data/processed/eval_summary.json`
-- `2-Dissertation-Draft/results/tables/*.tex` (LaTeX table fragments)
+- `2-Dissertation-Draft/en/results/tables/*.tex` (LaTeX table fragments)
 
 ## Real BigQuery pipeline (3 phases)
 

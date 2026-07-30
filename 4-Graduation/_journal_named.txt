@@ -1,0 +1,324 @@
+﻿---
+Blockchain: Research and Applications
+issn: 2096-7209 eissn: 2666-9536
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier
+WoS: X Scopus: X DOAJ: X DHET: 
+---
+DISTRIBUTED LEDGER TECHNOLOGIES: RESEARCH AND PRACTICE
+issn:  eissn: 2769-6480
+status: Eligible for subsidy | qualify: Yes
+publisher: ASSOC COMPUTING MACHINERY
+WoS: X Scopus:  DOAJ:  DHET: 
+---
+Frontiers in Blockchain
+issn: 2624-7852 eissn: 2624-7852
+status: Eligible for subsidy | qualify: Yes
+publisher: Frontiers Media S.A.
+WoS: X Scopus: X DOAJ: X DHET: 
+---
+IET Blockchain
+issn: 2634-1573 eissn: 2634-1573
+status: Eligible for subsidy | qualify: Yes
+publisher: Institution of Engineering and Technology (IET)
+WoS:  Scopus: X DOAJ: X DHET: 
+---
+FinTech
+issn:  eissn: 2674-1032
+status: Eligible for subsidy | qualify: Yes
+publisher: MDPI
+WoS:  Scopus:  DOAJ: X DHET: 
+---
+Financial Innovation
+issn:  eissn: 2199-4730
+status: Eligible for subsidy | qualify: Yes
+publisher: SpringerOpen
+WoS: X Scopus: X DOAJ: X DHET: 
+---
+Electronic Markets
+issn: 1019-6781 eissn: 1422-8890
+status: Eligible for subsidy | qualify: Yes
+publisher: Springer Verlag
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Decision Support Systems
+issn: 0167-9236 eissn: 1873-5797
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Expert Systems with Applications
+issn: 0957-4174 eissn: 1873-6793
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier Ltd.
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Future Generation Computer Systems
+issn: 0167-739X eissn: 1872-7115
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Applied Mathematics and Information Sciences
+issn: 1935-0090 eissn: 2325-0399
+status: Eligible for subsidy | qualify: Yes
+publisher: Natural Sciences Publishing
+WoS:  Scopus: X DOAJ:  DHET: 
+---
+Applied Soft Computing Journal
+issn: 1568-4946 eissn: 1872-9681
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Computers and Security
+issn: 0167-4048 eissn: 1872-6208
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier Ltd.
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Computer Networks
+issn: 1389-1286 eissn: 1872-7069
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Journal of Network and Computer Applications
+issn: 1084-8045 eissn: 1095-8592
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier Inc.
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+International Journal of Information Management
+issn: 0268-4012 eissn: 1873-4707
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier Ltd.
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Quantitative Finance
+issn: 1469-7688 eissn: 1469-7696
+status: Eligible for subsidy | qualify: Yes
+publisher: Taylor & Francis
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+International Journal of Banking and Finance
+issn: 1675-722X eissn: 
+status: Eligible for subsidy | qualify: Yes
+publisher: Universiti Utara Malaysia
+WoS:  Scopus:  DOAJ: X DHET: 
+---
+Finance Research Letters
+issn: 1544-6123 eissn: 1544-6131
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+International Review of Financial Analysis
+issn: 1057-5219 eissn: 1873-8079
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Journal of Financial Stability
+issn: 1572-3089 eissn: 1878-0962
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+American Economic Journal: Applied Economics
+issn: 1945-7782 eissn: 1945-7790
+status: Eligible for subsidy | qualify: Yes
+publisher: American Economic Association
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+PLoS ONE
+issn: 1932-6203 eissn: 1932-6203
+status: Eligible for subsidy | qualify: Yes
+publisher: Public Library of Science
+WoS: X Scopus: X DOAJ: X DHET: 
+---
+IEEE Access
+issn: 2169-3536 eissn: 2169-3536
+status: Eligible for subsidy | qualify: Yes
+publisher: Institute of Electrical and Electronics Engineers Inc.
+WoS: X Scopus: X DOAJ: X DHET: 
+---
+African Scientific Reports
+issn: 2955-1625 eissn: 2955-1617
+status: Eligible for subsidy | qualify: Yes
+publisher: Nigerian Society of Physical Sciences
+WoS:  Scopus:  DOAJ: X DHET: 
+---
+Alfarama Journal of Basic, Applied Sciences
+issn:  eissn: 2682-275X
+status: Eligible for subsidy | qualify: Yes
+publisher: Port Said University, Faculty of Sciences
+WoS:  Scopus:  DOAJ: X DHET: 
+---
+ACS Sensors
+issn: 2379-3694 eissn: 2379-3694
+status: Eligible for subsidy | qualify: Yes
+publisher: American Chemical Society
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Journal of Geometry and Symmetry in Physics
+issn: 1312-5192 eissn: 1314-5673
+status: Eligible for subsidy | qualify: Yes
+publisher: Institute of Biophysics and Biomedical Engineering at the Bulgarian Academy of Sciences
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Acta Technica Napocensis. Series Applied Mathematics, Mechanics and Engineering
+issn: 1221-5872 eissn: 2393-2988
+status: Eligible for subsidy | qualify: Yes
+publisher: TECHNICAL UNIV CLUJ-NAPOCA, FAC MACHINE BUILDING DEPT SYSTEMS ENG
+WoS: X Scopus:  DOAJ:  DHET: 
+---
+Complex Systems and Complexity Science
+issn: 1672-3813 eissn: 
+status: Eligible for subsidy | qualify: Yes
+publisher: fu za xi tong yu fu za xing ke xue bian ji bu
+WoS:  Scopus: X DOAJ:  DHET: 
+---
+Entropy
+issn: 1099-4300 eissn: 1099-4300
+status: Eligible for subsidy | qualify: Yes
+publisher: MDPI
+WoS: X Scopus: X DOAJ: X DHET: 
+---
+ACM Transactions on Database Systems
+issn: 0362-5915 eissn: 1557-4644
+status: Eligible for subsidy | qualify: Yes
+publisher: Association for Computing Machinery (ACM)
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+ACM Transactions on Algorithms
+issn: 1549-6325 eissn: 1549-6333
+status: Eligible for subsidy | qualify: Yes
+publisher: Association for Computing Machinery (ACM)
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Journal of Big Data
+issn:  eissn: 2196-1115
+status: Eligible for subsidy | qualify: Yes
+publisher: Springer Open
+WoS: X Scopus: X DOAJ: X DHET: 
+---
+Big Data Research
+issn: 2214-5796 eissn: 2214-5796
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier Inc.
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Knowledge-Based Systems
+issn: 0950-7051 eissn: 1872-7409
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+ACM Transactions on Asian and Low-Resource Language Information Processing
+issn: 2375-4699 eissn: 2375-4702
+status: Eligible for subsidy | qualify: Yes
+publisher: Association for Computing Machinery
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+ACM Transactions on Internet of Things
+issn: 2691-1914 eissn: 2577-6207
+status: Eligible for subsidy | qualify: Yes
+publisher: ACM Association for Computing Machinery
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+International Journal of Computational Science and Engineering
+issn: 1742-7185 eissn: 1742-7193
+status: Eligible for subsidy | qualify: Yes
+publisher: Inderscience Enterprises
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Cluster Computing
+issn: 1386-7857 eissn: 1573-7543
+status: Eligible for subsidy | qualify: Yes
+publisher: Baltzer Science Publishers B.V.
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Journal of Parallel and Distributed Computing
+issn: 0743-7315 eissn: 1096-0848
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier Inc.
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Distributed and Parallel Databases
+issn: 0926-8782 eissn: 1573-7578
+status: Eligible for subsidy | qualify: Yes
+publisher: Kluwer Academic Publishers
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Peer-to-Peer Networking and Applications
+issn: 1936-6442 eissn: 1936-6450
+status: Eligible for subsidy | qualify: Yes
+publisher: Springer New York LLC
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Social Network Analysis and Mining
+issn: 1869-5450 eissn: 1869-5469
+status: Eligible for subsidy | qualify: Yes
+publisher: Springer Wien
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Applied Network Science
+issn:  eissn: 2364-8228
+status: Eligible for subsidy | qualify: Yes
+publisher: Springer Open
+WoS: X Scopus: X DOAJ: X DHET: 
+---
+Biochimica et Biophysica Acta - Bioenergetics
+issn: 0005-2728 eissn: 1879-2650
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+European Journal of Operational Research
+issn: 0377-2217 eissn: 1872-6860
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Annals of Operations Research
+issn: 0254-5330 eissn: 1572-9338
+status: Eligible for subsidy | qualify: Yes
+publisher: Kluwer Academic Publishers
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Annals of Operations Research
+issn: 0254-5330 eissn: 1572-9338
+status: Eligible for subsidy | qualify: Yes
+publisher: Kluwer Academic Publishers
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+The Journal of The British Blockchain Association
+issn: 2516-3949 eissn: 2516-3957
+status: Eligible for subsidy | qualify: Yes
+publisher: The British Blockchain Association
+WoS: X Scopus:  DOAJ: X DHET: 
+---
+DISTRIBUTED LEDGER TECHNOLOGIES: RESEARCH AND PRACTICE
+issn:  eissn: 2769-6480
+status: Eligible for subsidy | qualify: Yes
+publisher: ASSOC COMPUTING MACHINERY
+WoS: X Scopus:  DOAJ:  DHET: 
+---
+Digital Finance
+issn: 2524-6984 eissn: 2524-6186
+status: Eligible for subsidy | qualify: Yes
+publisher: Springer International Publishing
+WoS:  Scopus: X DOAJ:  DHET: 
+---
+International Journal of Finance and Economics
+issn: 1076-9307 eissn: 1099-1158
+status: Eligible for subsidy | qualify: Yes
+publisher: John Wiley, Sons Inc.
+WoS: X Scopus: X DOAJ:  DHET: 
+---
+Research in International Business and Finance
+issn: 0275-5319 eissn: 1878-3384
+status: Eligible for subsidy | qualify: Yes
+publisher: Elsevier BV
+WoS: X Scopus: X DOAJ:  DHET: 

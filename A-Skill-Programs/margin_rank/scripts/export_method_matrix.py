@@ -133,11 +133,11 @@ def write_latex(summary: dict, out: Path, preset_cfg: dict) -> None:
             edge_note = " Edge counts: " + ", ".join(parts) + "."
 
     if synthetic:
-        hdr = r"""% Synthetic fixtures — regenerate with:
+        hdr = r"""% Synthetic fixtures ??regenerate with:
 %   run_dissertation_eval.py --fixtures --export-latex
 """
     else:
-        hdr = r"""% Real BigQuery data — regenerate with:
+        hdr = r"""% Real BigQuery data ??regenerate with:
 %   run_dissertation_eval.py --real --export-latex
 """
 
@@ -242,11 +242,12 @@ def main() -> int:
     if args.out_dir:
         tex_path = args.out_dir / preset_cfg["tex_name"]
     elif args.preset == "three":
-        tex_path = repo_root / "2-Dissertation-Draft" / "results" / "tables" / preset_cfg["tex_name"]
+        tex_path = repo_root / "2-Dissertation-Draft" / "en" / "results" / "tables" / preset_cfg["tex_name"]
     else:
         tex_path = (
             repo_root
             / "2-Dissertation-Draft"
+            / "en"
             / "archive"
             / "extended-baselines"
             / "tables"

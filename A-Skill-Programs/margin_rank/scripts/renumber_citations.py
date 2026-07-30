@@ -3,10 +3,10 @@
 Usage:
   python renumber_citations.py
 
-Reads 2-Dissertation-Draft/03-End/bibliography.tex, inserts NEW_ENTRIES,
+Reads 2-Dissertation-Draft/en/Chapter-07-References/index.tex, inserts NEW_ENTRIES,
 sorts APA-style by first-author surname, rewrites ref:N labels, and updates
 every \\cend{...} in 01-Intro/, 02-Content/, and 03-End/.
-Prints the old→new mapping for QA.
+Prints the old?�new mapping for QA.
 """
 
 from __future__ import annotations
@@ -14,9 +14,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft"
-BIB = ROOT / "03-End" / "bibliography.tex"
-CONTENT_DIRS = [ROOT / "01-Intro", ROOT / "02-Content", ROOT / "03-End"]
+ROOT = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft" / "en"
+BIB = ROOT / "Chapter-07-References" / "index.tex"
+CONTENT_DIRS = [ROOT / "01-Intro"] + sorted(ROOT.glob("Chapter-*"))
 
 # Verified APA entries (Crossref / standard book citation). No leading label.
 NEW_ENTRIES: list[str] = [
@@ -47,7 +47,7 @@ CEND_RE = re.compile(r"\\cend\{([^}]+)\}")
 def normalize_sort_key(text: str) -> tuple[str, str, str]:
     """Return (surname_lower, year, title_lower) for APA-ish sort."""
     text = text.strip()
-    # Strip LaTeX accents for sorting: Sch\"{a}r → Schar
+    # Strip LaTeX accents for sorting: Sch\"{a}r ??Schar
     plain = re.sub(r'\\[a-zA-Z]+\{([^{}]*)\}', r"\1", text)
     plain = plain.replace(r"\&", "&")
     # First author surname: text before first comma, or first token before period for orgs.
@@ -123,9 +123,9 @@ def main() -> None:
 
     BIB.write_text(rewrite_bibliography(header, footer, new_texts), encoding="utf-8")
     print(f"wrote {BIB} ({len(new_texts)} entries)")
-    print("old → new mapping:")
+    print("old ??new mapping:")
     for old in sorted(mapping):
-        print(f"  {old:3d} → {mapping[old]:3d}")
+        print(f"  {old:3d} ??{mapping[old]:3d}")
     print("new entries (no old number):")
     for i, text in enumerate(new_texts, start=1):
         if i not in mapping.values() or all(mapping[o] != i for o in mapping):

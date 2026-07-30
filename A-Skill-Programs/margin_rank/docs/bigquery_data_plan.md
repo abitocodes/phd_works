@@ -1,7 +1,7 @@
 # BigQuery Data Acquisition Plan
 
 Technical reference for EndorseRank dissertation evaluation on Arbitrum One.
-LaTeX mirrors: `1-Proposal/proposal/02-Content/Chapter-05.tex`, `2-Dissertation-Draft/02-Content/Chapter-03.tex`.
+LaTeX mirrors: `1-Proposal/proposal/02-Content/Chapter-05.tex`, `2-Dissertation-Draft/en/Chapter-03-Research-Methodology/index.tex`.
 
 ## Source
 
