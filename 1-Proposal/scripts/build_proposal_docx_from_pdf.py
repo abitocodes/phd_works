@@ -13,11 +13,14 @@ PDF = ROOT / "proposal" / "main.pdf"
 DOCX = ROOT / "proposal" / "main.docx"
 
 REQUIRED_SNIPPETS = (
-    "June 2026",
+    "August 2026",
     "versus AWP",
     "EndorseRank",
     "Lin et al",
     "Figure 1",
+    "Human Passport",
+    "Bordeianu",
+    "Siddarth",
 )
 
 

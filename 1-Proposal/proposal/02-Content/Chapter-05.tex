@@ -55,7 +55,7 @@ Data Collection \& Preprocessing
 \textbf{Blockchain Data Source}
 
 
-\textbf{Arbitrum One} (chain ID 42161), observation window December 1, 2025 -- May 31, 2026, via Google BigQuery (\texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us}) or an archive node.
+\textbf{Arbitrum One} (chain ID 42161), observation window December 1, 2025 -- May 31, 2026, via Google BigQuery (\codepath{bigquery-public-data.goog_blockchain_arbitrum_one_us}) or an archive node.
 
 
 Event Extraction
@@ -64,7 +64,7 @@ Event Extraction
 Approval/permit-derived authorizations: all ERC-20 Approval(owner, spender, value) events on Arbitrum One, including approvals generated through permit-compatible flows where the token emits the standard Approval event.
 
 
-GMX V2 perpetual swap outcomes: \textbf{PositionDecrease} logs from the GMX V2 \textbf{EventEmitter} contract (\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}) over the full observation window are the \textbf{primary validation stream}, decoded to extract \textbf{account}, \textbf{basePnlUsd}, \textbf{orderType}, and liquidation flags. \textbf{PositionIncrease} events are referenced for domain context (position opening) but are not extracted separately. Profitable closes satisfy \textbf{basePnlUsd} $> 0$ and are not position liquidations (\texttt{orderType} $\neq 7$).
+GMX V2 perpetual swap outcomes: \textbf{PositionDecrease} logs from the GMX V2 \textbf{EventEmitter} contract (\codepath{0xC8ee91A54287DB53897056e12D9819156D3822Fb}) over the full observation window are the \textbf{primary validation stream}, decoded to extract \textbf{account}, \textbf{basePnlUsd}, \textbf{orderType}, and liquidation flags. \textbf{PositionIncrease} events are referenced for domain context (position opening) but are not extracted separately. Profitable closes satisfy \textbf{basePnlUsd} $> 0$ and are not position liquidations (\texttt{orderType} $\neq 7$).
 
 
 \textbf{Empirical Validation Choice}
@@ -96,7 +96,7 @@ The alignment analysis uses the intersection of wallets present in the reputatio
 
 \proposalSubheading{BigQuery Data Acquisition Plan}
 
-Data are collected in three phases from \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us.logs}. Technical details and SQL templates are versioned in \texttt{A-Skill-Programs/margin\_rank/docs/bigquery\_data\_plan.md}.
+Data are collected in three phases from \codepath{bigquery-public-data.goog_blockchain_arbitrum_one_us.logs}. Technical details and SQL templates are versioned in \codepath{A-Skill-Programs/margin_rank/docs/bigquery_data_plan.md}.
 
 
 \textbf{Phase 1 --- GMX validation labels (Stream A).}
@@ -132,7 +132,7 @@ Tier 3 (local) & Damping, top-token subgraph, weight transforms & 0 (local recom
 \textbf{Cost guardrails.}
 
 
-All extractions require a BigQuery \texttt{--dry-run} before \texttt{--extract}; per-query scan is capped at 150 GiB (\texttt{margin\_config.yaml}). The billing account receives 1 TiB of query processing free per month; overage is approximately US\$6.25/TiB. Target total cost for Tier~1+2 is \textbf{\$0}. If dry-run estimates exceed budget, restrict Phase~2 to the top ERC-20 tokens by Arbitrum volume (consistent with Section~5.2.2 robustness checks). Bytes processed and row counts are logged in \texttt{data/processed/extraction\_manifest.json}.
+All extractions require a BigQuery \texttt{--dry-run} before \texttt{--extract}; per-query scan is capped at 150 GiB (\codepath{margin_config.yaml}). The billing account receives 1 TiB of query processing free per month; overage is approximately US\$6.25/TiB. Target total cost for Tier~1+2 is \textbf{\$0}. If dry-run estimates exceed budget, restrict Phase~2 to the top ERC-20 tokens by Arbitrum volume (consistent with Section~5.2.2 robustness checks). Bytes processed and row counts are logged in \codepath{data/processed/extraction_manifest.json}.
 
 
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}p{0.39\linewidth}>{\raggedright\arraybackslash}p{0.35\linewidth}}

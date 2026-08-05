@@ -11,6 +11,9 @@ Current on-chain reputation methods using PageRank rely primarily on transaction
 Second, transaction value is an indirect and sometimes ambiguous proxy for ``trust.'' Wallets may exchange tokens for many reasons (e.g., trading, arbitrage, airdrops, or automated contract activity) without expressing endorsement or delegating spending authority. Yet delegated permission is central to credit exposure in DeFi (Ghosh et al., 2024). By contrast, the ERC-20 allowance mechanism explicitly encodes delegation through approval (and, where supported, permit) updates that authorize a spender to transfer tokens on an owner's behalf (Ethereum Improvement Proposals, 2015; Ethereum Improvement Proposals, 2020). Because an approval remains in force until changed, the latest allowance state between each owner--spender pair offers a direct, current endorsement signal that can be represented as a sparse directed graph, aligning with network-propagation style risk scoring used in related graph-based models (Lin et al., 2024).
 
 
+A third consideration concerns the reputation tooling already deployed in practice. Attestation-based systems such as Human Passport establish whether an address is likely to be a distinct person by aggregating weighted on-chain and off-chain credentials against a passing threshold (Human Passport, n.d.; Bordeianu \& Popescu, 2026). They therefore act as an admission gate rather than as a graded ordering of wallets, and the relationships between addresses play no part in the score. A delegation-based ranking addresses the complementary question that remains open once such a gate has been applied, and Section~3.4 sets out this distinction in full.
+
+
 Thus, the central research problem is: Can we construct an on-chain reputation score using ERC-20 approve/permit relationships on Arbitrum One that reduces computational cost, more faithfully represents endorsement semantics, and yields equal or superior alignment with observable GMX V2 perpetual trading success compared to transaction-based PageRank methods?
 
 
@@ -22,10 +25,10 @@ To address this issue, we will design, implement, and evaluate the EndorseRank a
 \label{sec:research-questions}
 \addcontentsline{toc}{subsection}{2.1 Research Questions}
 
-In the setting of Arbitrum One-based GMX V2 perpetual swap position trading, from the perspective of DeFi protocols, risk analysts, wallet users, and researchers who need explainable wallet-level risk indicators, can EndorseRank---a Weighted PageRank metric built from ERC-20 approval/permit-derived allowance relationships---match or outperform Adaptive Weighted PageRank and transfer-based PageRank baselines, as measured by rank divergence, trading-success alignment, runtime, memory use, and convergence stability?
+Can EndorseRank, a Weighted PageRank computed over ERC-20 allowance relationships, match or outperform transaction-based PageRank baselines in ranking Arbitrum One wallets by trading success, at lower computational cost?
 
 
-The sub-questions below are grouped into four thematic areas that mirror the evaluation constructs in Section~4.
+The setting, perspective, comparison baselines, and evaluation criteria that qualify this question are specified in the SPICE framework below rather than restated within the question itself. The sub-questions that follow are grouped into four thematic areas that mirror the evaluation constructs in Section~4.
 
 
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.27\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}}
@@ -153,7 +156,7 @@ where N\textsuperscript{+}(u) is the set of out-neighbors of u (all nodes x that
 SMART Alignment
 
 
-The objectives are specific because each one targets a concrete research output: data pipeline, graph construction, algorithm implementation, baseline reproduction, trading-success alignment evaluation, and scalability benchmarking. They are measurable through rank-correlation statistics (Spearman's rho, Kendall's tau), runtime, memory, and convergence tolerance. They are attainable and realistic because they use public Arbitrum One blockchain logs, GMX V2 \textbf{PositionDecrease} events, reproducible Python-based tooling, and fixed computational resources. They are time-bound through the post-approval schedule, which allocates data extraction, implementation, evaluation, writing, and publication milestones between June 2026 and January 2028.
+The objectives are specific because each one targets a concrete research output: data pipeline, graph construction, algorithm implementation, baseline reproduction, trading-success alignment evaluation, and scalability benchmarking. They are measurable through rank-correlation statistics (Spearman's rho, Kendall's tau), runtime, memory, and convergence tolerance. They are attainable and realistic because they use public Arbitrum One blockchain logs, GMX V2 \textbf{PositionDecrease} events, reproducible Python-based tooling, and fixed computational resources. They are time-bound through the post-approval schedule, which allocates data extraction, implementation, evaluation, writing, and publication milestones between September 2026 and January 2028.
 
 
 By accomplishing these objectives, we will demonstrate how a latest-allowance-weighted approach to PageRank can yield a scalable, trust-aligned reputation-scoring model, EndorseRank, that outperforms or matches existing transaction-value-based methods in GMX trading-success alignment without any time-decay overhead.
