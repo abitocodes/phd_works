@@ -85,6 +85,7 @@ flowchart TB
 | `proposal-ko/` | 제안서 한국어 LaTeX 번역본 (`build.ps1` → `main.pdf`) |
 | `2-Dissertation-Draft/en/` | **활성** 영문 논문 초안 (정본) |
 | `2-Dissertation-Draft/kr/` | 한국어 논문 초안 (표·그림은 `../en/` 재사용) |
+| `2-Dissertation-Draft/sources/supervisor-feedback/` | 지도교수 초안 리뷰 (DOCX·이메일·코멘트 전사) |
 | `5-Roundtable/` | Roundtable·진전 발표 (일자별 `pptx` / `html`) |
 | `A-Skill-Programs/` | 실증 코드 (`margin_rank/`) |
 | `papers/` | 공유 참고 PDF |
@@ -104,6 +105,12 @@ flowchart TB
 |------|------|
 | `5-Roundtable/YYYY-MM-DD/` | 해당 회차 발표 자료 (`index.html` 및/또는 `.pptx`) |
 | `5-Roundtable/README.md` | 일자 폴더 규칙 |
+
+### `2-Dissertation-Draft/sources/` 내부
+
+| 경로 | 역할 |
+|------|------|
+| `supervisor-feedback/` | 2026-08 Moulla·Attipoe Word 리뷰와 Mnkandla 표지 이메일 |
 
 ### `2-Dissertation-Draft/en/` 내부
 
