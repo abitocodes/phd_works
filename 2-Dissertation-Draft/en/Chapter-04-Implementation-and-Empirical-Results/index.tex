@@ -38,34 +38,16 @@ The observation window (2025-12-01 -- 2026-05-31) is long enough to capture mult
 
 \dissertationSubsubheading[sub:gmx-activity]{GMX activity in the matched cohort}
 
-Figure~\ref{fig:gmx-closes-hist} shows GMX close counts per wallet. The minimum of three closes is a sampling filter. The right tail indicates a minority of highly active traders. These figures describe the sample; they are not trading-success claims.
+Figure~\ref{fig:gmx-closes-hist} shows GMX close counts per wallet. The minimum of three closes is a sampling filter. The right tail is a count of repeated \texttt{PositionDecrease} events, not a performance ranking.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{gmx-closes-hist.pdf}}
-\caption{Distribution of GMX V2 \texttt{PositionDecrease} close counts per wallet in the matched cohort ($n=5{,}521$). The cohort filter requires at least three closes; the long right tail reflects a minority of highly active traders.}
+\caption{Distribution of GMX V2 \texttt{PositionDecrease} close counts per wallet in the matched cohort ($n=5{,}521$). The cohort filter requires at least three closes.}
 \label{fig:gmx-closes-hist}
 \end{figure}
 
-Figure~\ref{fig:gmx-pnl-hist} shows realized profit-and-loss in the sample. It is descriptive only. Dissertation claims do not use PnL alignment.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{\figpath{gmx-pnl-hist.pdf}}
-\caption{Distribution of GMX realized PnL summaries in the matched cohort. Descriptive only; not a validation claim.}
-\label{fig:gmx-pnl-hist}
-\end{figure}
-
-Figure~\ref{fig:success-rate-hist} shows close success rates in the sample. The figure is retained for cohort description and is not a claim.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{\figpath{success-rate-hist.pdf}}
-\caption{Distribution of GMX close success rates in the matched cohort. Descriptive only; not a validation claim.}
-\label{fig:success-rate-hist}
-\end{figure}
-
-Taken together, the descriptive figures establish two constraints. First, the matched cohort is active enough for stable rank statistics ($n=5{,}521$; 365{,}488 decoded closes) but heterogeneous in trading intensity. Second, endorsement and transfer graphs differ by nearly an order of magnitude in edge count, so efficiency and alignment claims must be evaluated jointly. Outcome histograms are not used as prediction evidence.
+The close-count figure and the edge-count gap in Table~\ref{tab:dataset-stats} fix two sample constraints. First, the matched cohort is large enough for stable rank statistics ($n=5{,}521$; 365{,}488 decoded closes). Second, endorsement and transfer graphs differ by nearly an order of magnitude in edge count, so efficiency and alignment claims must be evaluated jointly.
 
 \dissertationSubheading[sec:benchmark-results]{EndorseRank vs.\ AWP benchmark (Claim~C1)}
 
@@ -98,7 +80,7 @@ Figure~\ref{fig:runtime-scaling} visualizes the scaling relationship. The curves
 \label{fig:runtime-scaling}
 \end{figure}
 
-Two caveats qualify the efficiency claim. First, the benchmark times PageRank solve on pre-built edge lists; end-to-end pipelines that include BigQuery extraction and edge construction incur additional costs shared or partially shared across methods. Second, memory footprints reported here are modest because the cohort is wallet-filtered; full-chain transfer graphs would increase AWP's absolute cost further and would likely widen, not narrow, the relative gap. Within the scope of this dissertation---matched wallets with reputation-subgraph connectivity---Claim~C1 is supported at both the matched cohort and the expanded pool.
+Two caveats qualify the efficiency claim. First, the benchmark times PageRank solve on pre-built edge lists; end-to-end pipelines that include BigQuery extraction and edge construction incur additional costs shared or partially shared across methods. Second, memory footprints reported here are modest because the cohort is wallet-filtered; full-chain transfer graphs would increase AWP's absolute cost further and would likely widen, not narrow, the relative gap. Within the scope of this research---matched wallets with reputation-subgraph connectivity---Claim~C1 is supported at both the matched cohort and the expanded pool.
 
 A third caveat concerns what ``faster'' does and does not buy. EndorseRank's speedup does not automatically imply superior risk discrimination. Efficiency is valuable only insofar as the resulting scores remain credible on the constructs a protocol cares about. Section~\ref{sec:three-method-alignment} and Claim~C4 therefore pair the runtime results with alignment results: EndorseRank is not merely cheaper; it is cheaper while preserving credible primary-construct allowance alignment ($\tau=0.355$) and moderate transfer alignment. Protocols that need transfer-hub detection above all else may still prefer AWP and pay the runtime premium; protocols that need authorization-aware scores at low latency have a clear efficiency rationale for EndorseRank.
 
@@ -149,7 +131,7 @@ Claims~C2 and~C3 address whether EndorseRank and AWP achieve intended-construct 
 
 \input{results/tables/alignment-three-methods.tex}
 
-EndorseRank leads on allowance ($\tau=0.355$), while AWP leads on transfer ($\tau=0.534$). EndorseRank's transfer alignment is moderate ($\tau=0.333$). AWP's allowance alignment is near zero ($-0.030$). Outcome-family cells in the table are not dissertation claims.
+EndorseRank leads on allowance ($\tau=0.355$), while AWP leads on transfer ($\tau=0.534$). EndorseRank's transfer alignment is moderate ($\tau=0.333$). AWP's allowance alignment is near zero ($-0.030$). Outcome-family cells in the table are not research claims.
 
 Figure~\ref{fig:alignment-heatmap} shows the same crossed pattern on allowance versus transfer. Outcome-native cells in the figure are not interpreted.
 
@@ -188,13 +170,13 @@ Table~\ref{tab:alignment-allowance} reports alignment with spender-side in-appro
 
 EndorseRank shows credible primary-construct alignment with both allowance proxies (in-approve degree $\tau=0.356$; in-approve value $\tau=0.354$; family mean $0.355$). As with AWP on transfer, this is a primary-construct check: PageRank on $G_{\text{approve}}$ should correlate with spender-side approval centrality. The allowance-family result is therefore partly a same-construct check, not an independent external criterion. The scientifically informative cell is AWP's near-zero allowance $\tau$, which shows that transfer centrality does not recover authorization. EndorseRank's $\tau \approx 0.355$ is evidence of recoverable graph signal on the graph it was given. The near-equality of degree and value correlations suggests that, on this cohort, being approved by many owners and being approved for large aggregate value convey similar ranking information under latest-allowance semantics.
 
-AWP alignment on allowance is near zero and slightly negative ($\tau=-0.030$ for both proxies). Transfer centrality does not identify wallets that receive spending authorization. This dissociation is central to the dissertation's contribution: if transfer-based reputation were a sufficient proxy for endorsement, AWP would show at least moderate allowance alignment. It does not. Protocols that care about explicit spending authorization---for example, which addresses are trusted to move tokens on behalf of others---cannot substitute AWP for an allowance-aware method on this evidence.
+AWP alignment on allowance is near zero and slightly negative ($\tau=-0.030$ for both proxies). Transfer centrality does not identify wallets that receive spending authorization. This dissociation is central to this research's contribution: if transfer-based reputation were a sufficient proxy for endorsement, AWP would show at least moderate allowance alignment. It does not. Protocols that care about explicit spending authorization---for example, which addresses are trusted to move tokens on behalf of others---cannot substitute AWP for an allowance-aware method on this evidence.
 
 The allowance result is the empirical core of the same-window contribution. Transfer graphs do not encode spending authorization. Combined with the runtime results, the allowance family supports Claim~C4: the cheaper method is also the only social method that aligns with authorization checks. The holdout in Section~\ref{sec:gf-pr-ceiling} tests whether that signal persists after the score window.
 
 \dissertationSubsubheading[sub:inverse-risk-family]{Inverse-risk family (not claimed)}
 
-Table~\ref{tab:alignment-inverse-risk} remains in the artifact. It is not a dissertation claim.
+Table~\ref{tab:alignment-inverse-risk} is an artifact table and is not interpreted in the main text.
 
 \input{results/tables/alignment-inverse-risk.tex}
 
@@ -208,7 +190,7 @@ AWP exceeds EndorseRank on tenure and active months, as expected from time-decay
 
 \dissertationSubsubheading[sub:trading-success-family]{Trading-success family (not claimed)}
 
-Table~\ref{tab:alignment-gmx} remains in the artifact. Trading-success alignment is not a dissertation claim and is not used to answer RQ4.
+Table~\ref{tab:alignment-gmx} is an artifact table and is not interpreted in the main text.
 
 \input{results/tables/alignment-gmx.tex}
 

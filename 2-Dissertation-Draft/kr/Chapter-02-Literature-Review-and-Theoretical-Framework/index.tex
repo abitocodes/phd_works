@@ -20,7 +20,7 @@
 
 이더리움 메인넷은 보안과 유동성을 제공하지만 수요 하에서 처리량과 수수료 제약을 직면한다 \cend{7,22}. Layer-2(L2) 프로토콜은 기본 계층 밖(또는 압축된 형태)에서 거래를 실행하고 주기적으로 이더리움에 커밋먼트를 게시하여, 보안을 상속하면서 비용을 줄이는 것을 목표로 한다 \cend{25,26}. Arbitrum과 같은 옵티미스틱 롤업은 분쟁 창 동안 이의가 제기되지 않는 한 정확성을 가정한다 \cend{34}.
 
-Arbitrum One은 GMX V2 무기한 시장을 포함한 DeFi 활동에 널리 사용되는 EVM 호환 옵티미스틱 롤업이다 \cend{23}. 본 학위논문에서 Arbitrum One을 실증 설정으로 선택한 이유는 (i)~공개 BigQuery 데이터셋에서 ERC-20 \texttt{Approval} 및 \texttt{Transfer} 로그를 이용할 수 있고, (ii)~GMX V2가 실현 PnL이 있는 지갑 귀속 \texttt{PositionDecrease} 이벤트를 방출하며, (iii)~수수료 수준이 6개월 창 안에서 밀집한 소매 및 전문 거래 활동을 허용하기 때문이다. 결과는 재검증 없이 다른 L2나 이더리움 메인넷으로 자동 이전된다고 가정해서는 안 되지만, allowance 그래프 대 전송 그래프, 구성 개념 검사, 순위 상관이라는 방법론적 템플릿은 동등한 로그가 존재하는 한 체인에 무관하다.
+Arbitrum One은 GMX V2를 포함한 DeFi 활동에 널리 사용되는 EVM 호환 옵티미스틱 롤업이다 \cend{23}. 본 연구에서 Arbitrum One을 실증 설정으로 선택한 이유는 (i)~공개 BigQuery 데이터셋에서 ERC-20 \texttt{Approval} 및 \texttt{Transfer} 로그를 이용할 수 있고, (ii)~GMX V2가 활동 필터로만 쓰는 지갑 귀속 \texttt{PositionDecrease} 이벤트를 방출하며, (iii)~수수료 수준이 6개월 창 안에서 밀집한 활동을 허용하기 때문이다. 결과는 재검증 없이 다른 L2나 이더리움 메인넷으로 자동 이전된다고 가정해서는 안 되지만, allowance 그래프 대 전송 그래프, 대리 지표 계열, 순위 상관이라는 방법론적 템플릿은 동등한 로그가 존재하는 한 체인에 무관하다.
 
 \dissertationSubheading[sec:erc20-allowance-lifecycle]{ERC-20 토큰과 allowance 생명주기}
 
@@ -37,9 +37,9 @@ ERC-20 표준은 대체 가능 토큰의 공통 인터페이스를 정의한다:
   note/.style={font=\scriptsize\itshape, text=black!70, align=left}
 ]
 % Actors
-\node[actor] (owner) at (0,0) {소유자};
-\node[actor] (token) at (5.5,0) {ERC-20 토큰};
-\node[actor] (spender) at (11,0) {지출자};
+\node[actor] (owner) at (0,0) {Owner};
+\node[actor] (token) at (5.5,0) {ERC-20 token};
+\node[actor] (spender) at (11,0) {Spender};
 
 % Lifelines (vertical dashed lines)
 \draw[dashed, gray] (owner.south) -- ++(0,-5.2);
@@ -48,16 +48,16 @@ ERC-20 표준은 대체 가능 토큰의 공통 인터페이스를 정의한다:
 
 % Message 1: approve (owner -> token), horizontal span 5.5cm
 \draw[msg] (0,-1.2) -- node[above,font=\scriptsize] {\texttt{approve(spender,$a$)}} (5.5,-1.2);
-\node[note] at (2.75,-1.7) {\texttt{Approval} 방출; allowance 저장};
+\node[note] at (2.75,-1.7) {emit \texttt{Approval}; store allowance};
 
 % Message 2: transferFrom (spender -> token), horizontal span 5.5cm
 \draw[msg] (11,-2.8) -- node[above,font=\scriptsize] {\texttt{transferFrom(owner,to,$v\leq a$)}} (5.5,-2.8);
-\node[note] at (8.25,-3.3) {토큰 이동; allowance 감소};
+\node[note] at (8.25,-3.3) {move tokens; reduce allowance};
 
 % Message 3: revoke (owner -> token), dashed
-\draw[msg, dashed] (0,-4.4) -- node[above,font=\scriptsize] {\texttt{approve(spender,$0$)} (철회)} (5.5,-4.4);
+\draw[msg, dashed] (0,-4.4) -- node[above,font=\scriptsize] {\texttt{approve(spender,$0$)} (revoke)} (5.5,-4.4);
 \end{tikzpicture}
-\caption{ERC-20 allowance 생명주기: approve(또는 permit), 선택적 \texttt{transferFrom}, 철회. EndorseRank 간선은 소유자--지출자 쌍당 최신 활성 allowance 스냅샷을 반영한다(과거 승인은 대체되며 시간 감쇠되지 않음).}
+\caption{ERC-20 allowance lifecycle: approve (or permit), optional \texttt{transferFrom}, and revoke. EndorseRank edges reflect the latest live allowance snapshot per owner--spender pair (historical approvals superseded, not time-decayed).}
 \label{fig:allowance-sequence}
 \end{figure}
 
@@ -67,7 +67,7 @@ ERC-20 표준은 대체 가능 토큰의 공통 인터페이스를 정의한다:
 
 PageRank와 그 변형은 방향성 간선을 통한 전파 영향력으로 노드를 순위화한다 \cend{49,8}. Do and Do\cend{16}는 이더리움 거래 그래프에 PageRank와 HodgeRank를 사회적 신용 측정으로 적용한다. Adaptive Weighted PageRank(AWP)\cend{64}는 전송 가치와 로지스틱 시간 감쇠로 간선을 가중하는 관련 전송 그래프 순위 방법이며, 경제적 중요성에 대한 도메인 직관 대리 지표로서 \textbf{인디그리}와 \textbf{인밸류}---인바운드 전송의 건수와 합---에 대해 점수를 검증한다. Lin et al.\cend{44}은 거래 연결성만으로는 위험 신호가 네트워크를 통해 전파되지 않는 한 위험 관련 구조를 놓칠 수 있음을 보여, 단순 PageRank를 넘는 정교한 그래프 의미론을 동기화한다. 더 넓은 DeFi 신용 평점 문헌에는 전망 이론 및 블록체인 기반 모형 \cend{29}과 대출 프로토콜에 대한 기계학습 파이프라인 \cend{39}이 포함되며, Packin and Lev-Aretz\cend{48}는 가명성 하에서의 감사 가능성 제약을 강조한다. EndorseRank는 블랙박스 예측 평점이 아니라 해석 가능한 그래프 전파 내에 머문다.
 
-그래프 기반 접근은 (i)~공개 데이터만 사용하고, (ii)~순위에 적합한 연속 점수를 산출하며, (iii)~간선 수 측면에서 복잡도 분석을 허용하기 때문에 매력적이다. 한계는 Sybil 공격 \cend{17}, 워시 트레이딩, 그래프 중심성과 경제적 부도 위험 사이의 간극이다. 본 학위논문은 PageRank 점수가 규제적 의미의 신용 점수라고 주장하지 않는다. allowance 기반 순위와 전송 기반 순위를 공유 대리 지표에서 엄밀히 비교할 수 있다고 주장한다.
+그래프 기반 접근은 (i)~공개 데이터만 사용하고, (ii)~순위에 적합한 연속 점수를 산출하며, (iii)~간선 수 측면에서 복잡도 분석을 허용하기 때문에 매력적이다. 한계는 Sybil 공격 \cend{17}, 워시 트레이딩, 그래프 중심성과 경제적 부도 위험 사이의 간극이다. 본 연구는 PageRank 점수가 규제적 의미의 신용 점수라고 주장하지 않는다. allowance 기반 순위와 전송 기반 순위를 공유 대리 지표에서 엄밀히 비교할 수 있다고 주장한다.
 
 \dissertationSubheading[sec:pagerank-formalism]{PageRank 형식화}
 
@@ -111,9 +111,9 @@ G_{\mathrm{PR}} = d\, P^{\top} + \frac{1-d}{n}\,\mathbf{1}\mathbf{1}^{\top},
 \draw[arrow] (b) -- (d);
 \draw[arrow] (c) -- (d);
 \draw[arrow, dashed] (d) to[bend left=25] (a);
-\node[align=left, font=\scriptsize] at (3.2,-2.8) {실선: 간선 추종 (확률 $d$); 점선: 텔레포트 (확률 $1-d$)};
+\node[align=left, font=\scriptsize] at (3.2,-2.8) {solid: follow edge (prob.\ $d$); dashed: teleport (prob.\ $1-d$)};
 \end{tikzpicture}
-\caption{PageRank의 랜덤 서퍼 직관. 실선 화살표는 그래프 전이이고, 점선 화살표는 체인을 혼합하는 텔레포트를 나타낸다.}
+\caption{Random-surfer intuition for PageRank. Solid arrows are graph transitions; dashed arrows represent teleportation that mixes the chain.}
 \label{fig:random-surfer}
 \end{figure}
 
@@ -126,13 +126,13 @@ G_{\mathrm{PR}} = d\, P^{\top} + \frac{1-d}{n}\,\mathbf{1}\mathbf{1}^{\top},
 \end{equation}
 $\|\boldsymbol{\pi}^{(t+1)}-\boldsymbol{\pi}^{(t)}\|_1 < \varepsilon$이거나 최대 반복 횟수에 도달할 때까지. 각 반복은 희소 그래프에 대해 $O(|E|)$ 산술 연산이 든다 \cend{42}. 따라서 최신 allowance 스냅샷처럼 더 적은 간선을 유도하는 방법은 반복당 비용과 종종 메모리를 줄인다. 이 복잡도 관찰이 가설 H3의 근거이다.
 
-본 학위논문의 기본 매개변수는 관례를 따라 감쇠 $d=0.85$를 사용하며 \cend{49}, 수렴 허용오차 $\varepsilon=10^{-8}$와 최대 $300$회 반복은 연구 고유 솔버 설정이다.\footnote{허용오차와 반복 상한은 재현 가능한 타이밍을 위한 구현 선택이며, 고전적 PageRank 정식화의 일부로 주장되지 않는다.} 강건성 검사는 $d\in\{0.75,0.85,0.95\}$를 변화시킨다.
+본 연구의 기본 매개변수는 관례를 따라 감쇠 $d=0.85$를 사용하며 \cend{49}, 수렴 허용오차 $\varepsilon=10^{-8}$와 최대 $300$회 반복은 연구 고유 솔버 설정이다.\footnote{허용오차와 반복 상한은 재현 가능한 타이밍을 위한 구현 선택이며, 고전적 PageRank 정식화의 일부로 주장되지 않는다.} 강건성 검사는 $d\in\{0.75,0.85,0.95\}$를 변화시킨다.
 
 \dissertationSubheading[sec:reputation-systems]{평판 시스템 계보}
 
 PageRank는 스펙트럼 및 전파 기반 평판 메커니즘 가족의 일원이다. Kleinberg의 HITS 알고리즘은 하이퍼링크 코퍼스에서 허브와 권위를 구분한다 \cend{38}. EigenTrust는 악의적 인플레이션을 제한하기 위한 정규화와 함께 P2P 네트워크에서 지역 신뢰 점수를 집계한다 \cend{35}. TrustRank는 웹 스팸에 대응하기 위해 알려진 양호 노드의 시드 집합으로부터 신뢰를 전파한다 \cend{27}. 이들 시스템은 공통 주제를 공유한다. 평판은 관계적이며, 이미 평판이 있는 노드로부터의 비용이 큰 보증 없이는 위조하기 어려워야 한다.
 
-온체인에서 Sybil 공격은 여전히 중심적이다 \cend{17}. 지갑 생성은 저렴하지만, 다양한 상대방으로부터 allowance나 전송을 받는 지갑을 만드는 것은 비용이 더 크다. 본 학위논문의 Sybil 조정 안정성 대리 지표(인바운드 상대방 비율, 재직 기간, 활성 월수)는 상호작용의 다양성을 부분적으로 포착하지만 적대적 조작을 제거하지는 않는다. 제~\ref{ch:discussion}장은 allowance 그래프 Sybil에 대한 비용 모형을 스케치한다.
+온체인에서 Sybil 공격은 여전히 중심적이다 \cend{17}. 지갑 생성은 저렴하지만, 다양한 상대방으로부터 allowance나 전송을 받는 지갑을 만드는 것은 비용이 더 크다. 본 연구의 Sybil 조정 안정성 대리 지표(인바운드 상대방 비율, 재직 기간, 활성 월수)는 상호작용의 다양성을 부분적으로 포착하지만 적대적 조작을 제거하지는 않는다. 제~\ref{ch:discussion}장은 allowance 그래프 Sybil에 대한 비용 모형을 스케치한다.
 
 DeFi 특징에 대한 기계학습 신용 모형 \cend{39}은 라벨이 존재할 때 라벨링된 부도에서 단순 그래프 점수보다 우수할 수 있지만, 정확도를 위해 해석 가능성을 희생한다. EndorseRank와 AWP는 감사에 적합한 투명한 전파 규칙을 우선한다 \cend{48}.
 
@@ -146,15 +146,15 @@ ERC-20 \texttt{approve}와 EIP-2612 \texttt{permit}은 명시적 지출 승인�
 
 \dissertationSubheading[sec:gmx-validation]{GMX V2를 표본 틀로}
 
-Arbitrum One에서 GMX V2 \texttt{PositionDecrease} 이벤트는 반복적 무기한 활동이 있는 지갑을 식별한다 \cend{23,53}. 본 학위논문은 매칭 평가 표본을 정의하기 위해 최소 세 건의 포지션 종료만을 사용한다. 종료 단위 손익은 검증 주장이 아니다. 저담보 대출 부도 라벨은 범위 밖으로 남는다.
+Arbitrum One에서 GMX V2 \texttt{PositionDecrease} 이벤트는 매칭 표본을 정한다: 포지션 종료가 세 건 이상인 지갑($n=5{,}521$) \cend{23,53}. 손익·성공률·청산은 검증이 아니다. 저담보 대출 부도 라벨은 범위 밖으로 남는다.
 
-\dissertationSubheading[sub:gf-pr]{본 학위논문이 주장하지 않는 것}
+\dissertationSubheading[sub:gf-pr]{본 연구가 주장하지 않는 것}
 
-거래 성공, 역위험, 청산, 악성 지출자 정합은 증거로 사용하지 않는다. GMX 손익에 대한 결과 고유 PageRank(평가 산출물에서 때때로 GF-PR로 불림)는 탐색 작업 중 계산되었으나, 구성상 그 결과와 순환하므로 주장에서 제외한다. 남는 외부 검사는 미래 신규 소유자--지출자 승인의 시간 홀드아웃이다(제~\ref{ch:methodology}장과 제~\ref{ch:results}장).
+본 연구는 거래 이익·청산·악성 지출자를 예측하지 않는다. 남는 외부 검사는 미래 신규 소유자--지출자 승인의 시간 홀드아웃이다(제~\ref{ch:methodology}장과 제~\ref{ch:results}장).
 
 \dissertationSubheading[sec:rank-correlation-theory]{순위 상관 이론}
 
-평판 점수와 검증 대리 지표는 보편적 분류 임계값이 없는 연속 변수이다. Do et al.\cend{16}과 고전적 심리측정학 \cend{14}을 따라, 본 학위논문은 단조 및 쌍별 순위 일치를 평가한다.
+평판 점수와 검증 대리 지표는 보편적 분류 임계값이 없는 연속 변수이다. Do et al.\cend{16}과 고전적 심리측정학 \cend{14}을 따라, 본 연구는 단조 및 쌍별 순위 일치를 평가한다.
 
 Spearman 순위 상관 \cend{54}은 순위에 대한 Pearson 상관이다. $n$개 항목의 쌍별 순위 $(R_i,S_i)$에 대해, 동점이 없을 때
 \begin{equation}
@@ -192,7 +192,7 @@ Kendall의 $\tau$ \cend{36}는 일치 및 불일치 쌍을 센다. $i<j$인 모�
 \begin{figure}[htbp]
 \centering
 \input{Figures/conceptual-model.tex}
-\caption{개념 모형: 주요 EndorseRank 대 AWP 비교를 평판 구조(H1/RQ1), 구성 개념 검사(H2/RQ2), 계산 효율(H3/RQ3), 미래 신규 승인의 시간 홀드아웃(RQ4)에 매핑한다.}
+\caption{Conceptual model: primary EndorseRank vs.\ AWP comparison mapped to reputation structure (H1/RQ1), construct checks (H2/RQ2), computational efficiency (H3/RQ3), and the temporal holdout of future new approvals (RQ4).}
 \label{fig:conceptual-model}
 \end{figure}
 
@@ -216,7 +216,7 @@ Kendall의 $\tau$ \cend{36}는 일치 및 불일치 쌍을 센다. $i<j$인 모�
 
 \dissertationSubheading[sec:domain-alignment-metrics]{도메인 정합 지표}
 
-Do et al.\cend{16}과 Cronbach \& Meehl\cend{14}을 따라, 순위 기반 점수의 구성 개념 정합은 평판 점수와 검사 순위 간 Spearman의 $\rho$와 Kendall의 $\tau$를 사용한다. 본 학위논문은 동시기 전송·allowance 검사와 미래 신규 승인의 시간 홀드아웃을 보고한다. 운영적 정의는 제~\ref{ch:methodology}장을 참조한다.
+Do et al.\cend{16}과 Cronbach \& Meehl\cend{14}을 따라, 순위 기반 점수의 구성 개념 정합은 평판 점수와 검사 순위 간 Spearman의 $\rho$와 Kendall의 $\tau$를 사용한다. 본 연구는 동시기 전송·allowance 검사와 미래 신규 승인의 시간 홀드아웃을 보고한다. 운영적 정의는 제~\ref{ch:methodology}장을 참조한다.
 
 여기서 검토한 문헌은 세 가지 설계 선택을 지지한다: (i)~해석 가능한 전파 백본으로서의 PageRank; (ii)~전송과 구별되는 보증 간선으로서의 allowance; (iii)~검사 설계로서의 순위 상관과 시간 분할. 이들 선택은 본 장의 나머지 절과, 이후 제~\ref{ch:methodology}장의 운영 파이프라인을 동기화한다.
 
@@ -232,23 +232,17 @@ A\to B\ (2),\quad A\to C\ (1),\quad B\to D\ (3),\quad C\to D\ (1),
 
 \dissertationSubheading[sec:defi-risk-taxonomy]{DeFi 위험 분류와 평판의 위치}
 
-DeFi 위험은 다층적이다 \cend{59,51,26,11}. 스마트 계약 위험은 버그와 업그레이드 키에 관련된다. 오라클 위험은 조작되거나 오래된 가격에 관련된다 \cend{2}. 시장 위험은 변동성과 청산 연쇄에 관련되며 \cend{50}, 스테이블코인과 펀딩 시장 스트레스를 포함한다 \cend{37}. 거버넌스 위험은 토큰 가중 포획에 관련된다. \emph{상대방} 또는 \emph{행동} 위험---본 학위논문의 초점---은 지갑의 과거 상호작용이 레버리지 노출의 신뢰성 있는 관리를 시사하는가에 관련된다.
+DeFi 위험은 다층적이다 \cend{59,51,26,11}. 스마트 계약 위험은 버그와 업그레이드 키에 관련된다. 오라클 위험은 조작되거나 오래된 가격에 관련된다 \cend{2}. 시장 위험은 변동성과 청산 연쇄에 관련되며 \cend{50}, 스테이블코인과 펀딩 시장 스트레스를 포함한다 \cend{37}. 거버넌스 위험은 토큰 가중 포획에 관련된다. \emph{상대방} 또는 \emph{행동} 위험---본 연구의 초점---은 지갑의 과거 상호작용이 레버리지 노출의 신뢰성 있는 관리를 시사하는가에 관련된다.
 
 온체인 평판 점수는 행동 계층만, 그것도 부분적으로만 다룬다. 담보, 감사, 오라클 설계를 대체하지 않는다. 역할은 관계적 구조(누가 누구를 승인하는지; 누가 누구에게 지불하는지)를 감사·재계산 가능한 서열 신호로 요약하는 것이다 \cend{48}. EndorseRank는 행동 위험의 승인 측면을, AWP는 결제 흐름 측면을 대상으로 한다. 어느 쪽도 익스플로잇이나 거버넌스 공격을 예측한다고 주장하지 않는다.
 
 워시 트레이딩과 MEV는 행동 측정을 더욱 복잡하게 하며 \cend{57,15,63}, 지속적 상대방 관계를 반영하지 않으면서 전송 활동을 부풀리는 교차 거래소 차익거래 흐름도 마찬가지이다 \cend{45}. 전송 그래프는 인위적 거래량에 특히 노출되고, allowance 그래프는 승인 파밍에 노출된다. 시간 분할 검사와 Sybil 지향 진단은 부분적 완화이지 완전한 방어가 아니다.
 
-\dissertationSubheading[sec:perp-mechanics]{표본 실험실로서의 무기한 시장}
-
-무기한 선물(``퍼프'')은 만기가 없는 파생 계약으로, 암호화폐 시장에서 대중화되었고 GMX와 같은 프로토콜에 의해 온체인으로 구현된다 \cend{23,28}. 탈중앙화 거래소와 자동화된 시장 조성자는 이러한 거래소가 운영되는 더 넓은 거래 인프라를 제공한다 \cend{10,21,41,61}. 거래자는 담보를 예치하고, 롱 또는 숏 노출을 선택하며, 펀딩을 지불하거나 수령한다. 포지션은 자발적으로 축소되거나 강제 청산될 수 있다. 각 포지션 종료는 지갑에 귀속되는 온체인 이벤트를 방출한다.
-
-본 학위논문은 그 이벤트 밀도를 활성 매칭 표본을 정의하는 데만 사용한다(연구 창에서 $365{,}488$건 포지션 종료; 지갑당 $\geq 3$건). 부호 있는 손익은 검증 주장이 아니다. RQ4는 미래 신규 승인의 시간 홀드아웃을 사용하며, 무기한 수익성을 사용하지 않는다.
-
 \dissertationSubheading[sec:related-measurement]{관련 측정 전통}
 
 블록체인을 넘어, 평판 시스템은 전자상거래 \cend{52}, P2P 네트워크 \cend{35}, 웹 스팸 \cend{27}에서 연구되어 왔다. 공통 교훈은 다음과 같다: (i)~평판은 관계적이다; (ii)~저렴한 신원은 Sybil 공격을 가능하게 한다 \cend{17}; (iii)~시드 집합과 정규화는 인플레이션을 제한한다; (iv)~평가는 내부 일관성만이 아니라 외부 기준을 요구한다. EndorseRank는 PageRank 감쇠와 보증 비용을 통해 (i)--(iii)를 상속하고, 동시기 구성 개념 검사와 시간 홀드아웃을 통해 (iv)를 다룬다 \cend{14,54,36}.
 
-개인화 및 주제 민감 PageRank 변형 \cend{30,32}은 향후 연구에서 TrustRank 시드와 유사하게, 프로토콜 승인 계약이나 알려진 양호 지갑을 향해 텔레포트를 편향시킬 수 있다. 본 학위논문은 Do et al.\cend{16}과의 비교 가능성을 위해 균등 텔레포트를 사용한다.
+개인화 및 주제 민감 PageRank 변형 \cend{30,32}은 향후 연구에서 TrustRank 시드와 유사하게, 프로토콜 승인 계약이나 알려진 양호 지갑을 향해 텔레포트를 편향시킬 수 있다. 본 연구는 Do et al.\cend{16}과의 비교 가능성을 위해 균등 텔레포트를 사용한다.
 
 \dissertationSubheading[sec:account-model]{계정, 가스, 로그가 측정 표면인 이유}
 
@@ -260,7 +254,7 @@ DeFi 위험은 다층적이다 \cend{59,51,26,11}. 스마트 계약 위험은 �
 
 무제한 승인(\texttt{type(uint256).max})은 잘 알려진 사용자 경험 위험이다. 손상된 지출자는 소유자가 철회할 때까지 토큰을 고갈시킬 수 있다. 허니팟, 피싱 승인, 악의적 지출자에 대한 보안 분석 \cend{56,43}은 allowance가 중립적 메타데이터가 아니라 능력이라는 점을 강조한다. EndorseRank는 인바운드 allowance를 지출자 능력에 대한 보증으로 해석하며, 이것이 정확히 구성 개념이 인바운드 전송과 의미적으로 구별되는 이유이다. 지갑은 타인을 대신해 지출하도록 신뢰받지 않고도 많은 전송을 수신할 수 있다.
 
-측정 관점에서 무제한 승인은 두꺼운 꼬리 간선 가중치를 만든다. 소수점 조정과 선택적 윈저화는 극단을 완화할 수 있다. 본 학위논문은 소수점 조정된 최신 allowance를 합산하고, 소유자가 나가는 보증이 적은 경우가 아니면 단일 거대 승인이 자동으로 지배하지 않도록 PageRank의 아웃스트렝스 정규화에 의존한다.
+측정 관점에서 무제한 승인은 두꺼운 꼬리 간선 가중치를 만든다. 소수점 조정과 선택적 윈저화는 극단을 완화할 수 있다. 본 연구는 소수점 조정된 최신 allowance를 합산하고, 소유자가 나가는 보증이 적은 경우가 아니면 단일 거대 승인이 자동으로 지배하지 않도록 PageRank의 아웃스트렝스 정규화에 의존한다.
 
 \dissertationSubheading[sec:awp-in-depth]{AWP 심층: 전송 그래프 기준선이 측정하는 것}
 
@@ -294,7 +288,7 @@ EndorseRank & 최신 allowance & 스냅샷 (덮어쓰기) & allowance 검사; t2
 
 표는 EndorseRank의 새로움이 PageRank 사용 자체가 아니라, DeFi 지갑의 주요 사회적 구성 개념으로서 최신 allowance 보증 간선의 선택임을 강조한다.
 
-\dissertationSubheading[sec:open-problems]{본 학위논문을 동기화하는 미해결 문제}
+\dissertationSubheading[sec:open-problems]{본 연구를 동기화하는 미해결 문제}
 
 온체인 평판의 여러 미해결 문제는 문헌에서 해결되지 않은 채 남아 있으며 본 연구를 동기화한다:
 

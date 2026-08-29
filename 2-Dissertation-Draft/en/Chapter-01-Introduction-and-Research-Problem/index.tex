@@ -4,9 +4,9 @@
 
 Decentralized Finance (DeFi) has transformed how capital is allocated on public blockchains, enabling lending, borrowing, and leveraged trading without traditional financial intermediaries \cend{53}. Yet most credit-like interactions remain highly collateralized because protocols cannot rely on off-chain identity systems or conventional credit histories \cend{48}. In a pseudonymous environment, the operational challenge is to allocate capital safely when counterparties are addresses rather than identified persons.
 
-This dissertation addresses a concrete research problem within that setting: whether an on-chain reputation score built from ERC-20 \texttt{approve}/\texttt{permit} allowances---implemented as \textbf{EndorseRank}---can reduce computational cost, represent endorsement semantics more faithfully, and yield a distinct yet credible alignment profile compared with transfer-based Adaptive Weighted PageRank (AWP) on \textbf{Arbitrum One}. The primary empirical comparison is \textbf{EndorseRank versus AWP} on an identical wallet sample, checked with contemporaneous transfer and allowance statistics and with a temporal holdout of future new approvals, under the rank-correlation framework of Do et al.\cend{16}.
+This research addresses a concrete research problem within that setting: whether an on-chain reputation score built from ERC-20 \texttt{approve}/\texttt{permit} allowances---implemented as \textbf{EndorseRank}---can reduce computational cost, represent endorsement semantics more faithfully, and yield a distinct yet credible alignment profile compared with transfer-based Adaptive Weighted PageRank (AWP) on \textbf{Arbitrum One}. The primary empirical comparison is \textbf{EndorseRank versus AWP} on an identical wallet sample, checked with contemporaneous transfer and allowance statistics and with a temporal holdout of future new approvals, under the rank-correlation framework of Do et al.\cend{16}.
 
-In this study, \textbf{on-chain reputation score} computation refers to deriving a quantitative wallet score from observable on-chain behavior and relationships without off-chain identity \cend{16}. EndorseRank produces such a score from allowance-based endorsement edges. The remainder of this chapter situates the problem historically and economically, motivates allowance-based reputation, states the research problem, objectives, and questions, defines key constructs, and outlines contributions, scope, and the dissertation roadmap.
+In this study, \textbf{on-chain reputation score} computation refers to deriving a quantitative wallet score from observable on-chain behavior and relationships without off-chain identity \cend{16}. EndorseRank produces such a score from allowance-based endorsement edges. The remainder of this chapter situates the problem historically and economically, motivates allowance-based reputation, states the research problem, objectives, and questions, defines key constructs, and outlines contributions, scope, and this research roadmap.
 
 \dissertationSubheading[sec:background]{Background: DeFi, collateralization, and pseudonymity}
 
@@ -30,7 +30,7 @@ Four practical pressures motivate on-chain reputation research in leveraged DeFi
 
 Transfer-based AWP addresses the first two pressures but is costly on the third. Constructing $G_{\text{transfer}}$ requires aggregating transfer history, applying logistic time-decay, and running PageRank on a dense edge set \cend{64}. On the matched cohort studied here ($n=5{,}521$ wallets),\footnote{The matched cohort is the intersection of wallets with at least three GMX V2 \texttt{PositionDecrease} closes in the observation window and non-zero connectivity in the reputation subgraphs. Runtime scaling uses a larger expanded wallet pool ($N=31{,}612$).} the AWP subgraph contains $137{,}087$ edges and requires $18.711$\,s of PageRank wall-clock time. Allowance graphs offer a structurally different alternative. An ERC-20 \texttt{approve} or EIP-2612 \texttt{permit} records how much a token owner authorizes a spender to transfer \cend{18,19}. The latest allowance per owner--spender pair is a snapshot of current authorization intent: newer approvals override older ones, so temporal decay is unnecessary. The resulting endorsement graph $G_{\text{approve}}$ is sparse---$14{,}727$ edges on the same cohort---and PageRank completes in $2.105$\,s, approximately $8.9\times$ faster than AWP. That gap is a consequence of graph sparsity ($14{,}727$ vs.\ $137{,}087$ edges) under latest-allowance snapshots, not a standalone scientific contribution. Claim~C1 reports it as an operational property of the representation.
 
-Beyond efficiency, allowances carry distinct semantics. A transfer may reflect routing, market making, or passive receipt; an allowance is an explicit delegation of spending authority. Treating allowances as endorsement edges aligns PageRank's citation metaphor \cend{49} with a trust-like act that protocols already rely on for token interactions. Whether that semantic difference produces rankings that are merely different, or differently aligned with authorization and transfer checks, is an empirical question. This dissertation answers that question on Arbitrum One. GMX V2 activity defines the matched sample ($\geq 3$ \texttt{PositionDecrease} closes) so that wallets are economically active; it is not used as a trading-success ground truth \cend{23}.
+Beyond efficiency, allowances carry distinct semantics. A transfer may reflect routing, market making, or passive receipt; an allowance is an explicit delegation of spending authority. Treating allowances as endorsement edges aligns PageRank's citation metaphor \cend{49} with a trust-like act that protocols already rely on for token interactions. Whether that semantic difference produces rankings that are merely different, or differently aligned with authorization and transfer checks, is an empirical question. This research answers that question on Arbitrum One. GMX V2 activity defines the matched sample ($\geq 3$ \texttt{PositionDecrease} closes) so that wallets are economically active; it is not used as a trading-success ground truth \cend{23}.
 
 \dissertationSubheading[sec:research-problem]{Research problem}
 
@@ -49,21 +49,21 @@ Table~\ref{tab:primary-methods-preview} summarizes the primary comparison. Table
 \toprule
 Method & Input graph & Role \\
 \midrule
-EndorseRank & Latest ERC-20 allowances ($G_{\text{approve}}$) & Primary construct: allowance delegation; target of this dissertation \\
+EndorseRank & Latest ERC-20 allowances ($G_{\text{approve}}$) & Primary construct: allowance delegation; target of this research \\
 AWP & Time-decayed transfers ($G_{\text{transfer}}$) & Primary baseline: IEEE RIVF 2023 transfer-graph method \cend{64}; Do and Do\cend{16} is the PageRank/HodgeRank companion paper \\
 \bottomrule
 \end{tabular}
 }
 \end{table}
 
-To avoid ambiguity, the key concepts used throughout this dissertation are defined as follows:
+To avoid ambiguity, the key concepts used throughout this research are defined as follows:
 
 \begin{itemize}
 \item \textbf{DeFi (Decentralized Finance):} Financial services---including lending, borrowing, and perpetual trading---implemented via smart contracts on public blockchains, typically without a central operator controlling custody or settlement \cend{53,28}. DeFi protocols compose open interfaces so that positions, liquidations, and token movements are observable on-chain.
-\item \textbf{Smart contract:} Self-executing program code deployed on a blockchain that enforces agreement terms without a trusted intermediary \cend{9,55}. In this dissertation, smart contracts are the source of ERC-20 allowance logs, transfer logs, and GMX V2 position events.
+\item \textbf{Smart contract:} Self-executing program code deployed on a blockchain that enforces agreement terms without a trusted intermediary \cend{9,55}. In this research, smart contracts are the source of ERC-20 allowance logs, transfer logs, and GMX V2 position events.
 \item \textbf{Wallet / Address:} A blockchain account that holds assets and interacts with smart contracts; the unit of analysis for reputation scoring \cend{9,18}. A wallet is identified by its address; no off-chain identity is assumed or recovered.
 \item \textbf{On-chain reputation score:} A numerical indicator derived from on-chain signals that represents a wallet's relative standing for financial interactions under pseudonymity \cend{16}. Scores are ordinal for ranking purposes; absolute magnitudes are not interpreted as credit limits.
-\item \textbf{GMX V2 perpetual swap position:} A collateralized long or short exposure on GMX V2, opened via \textbf{PositionIncrease} and closed via \textbf{PositionDecrease} events on Arbitrum One \cend{23,53}. In this dissertation, a minimum of three closes is only a sampling filter for the matched cohort. Close-level profit-and-loss is not used as a claim.
+\item \textbf{GMX V2 perpetual swap position:} A collateralized long or short exposure on GMX V2, opened via \textbf{PositionIncrease} and closed via \textbf{PositionDecrease} events on Arbitrum One \cend{23,53}. In this research, a minimum of three closes is only a sampling filter for the matched cohort. Close-level profit-and-loss is not used as a claim.
 \item \textbf{PageRank:} A graph ranking method that propagates influence through directed edges under a damping factor \cend{49,8,40}. \textbf{EndorseRank} applies PageRank to a latest-allowance endorsement graph: edge strength equals the current allowance per owner--spender pair, with no temporal decay. \textbf{Adaptive Weighted PageRank (AWP)} applies PageRank to transfer graphs with edge weights given by transfer value and logistic time-decay \cend{64}.
 \item \textbf{ERC-20 allowance / Approve / Permit:} Mechanisms recording how much a token owner permits a spender to transfer on the owner's behalf \cend{18,19}. \texttt{Approve} is a standard on-chain call; EIP-2612 \texttt{permit} authorizes the same state change via signature. EndorseRank uses the latest non-zero allowance snapshot per owner--spender pair.
 \item \textbf{Endorsement graph:} A directed graph in which edges represent explicit delegation of spending authority rather than mere asset transfers \cend{18,19}. In EndorseRank, an edge $u \to v$ means wallet $u$ currently authorizes wallet or contract $v$ to spend tokens owned by $u$; transfer-graph AWP provides the contrasting baseline \cend{16}.
@@ -122,7 +122,7 @@ RQ1 tests whether allowance and transfer graphs induce distinct centrality struc
 
 \dissertationSubheading[sec:contributions]{Contributions}
 
-This dissertation makes four contributions to on-chain reputation research and DeFi risk assessment.
+This research makes four contributions to on-chain reputation research and DeFi risk assessment.
 \begin{itemize}
 \item \textbf{EndorseRank:} An allowance-based endorsement graph model that applies PageRank to latest ERC-20 \texttt{approve}/\texttt{permit} edges. EndorseRank is not a new ranking algorithm; it applies classical PageRank \cend{49} to a new edge construct (latest ERC-20 allowances). The model treats current spending authorization as endorsement strength, eliminates temporal decay by relying on allowance override semantics, and produces a sparse graph suitable for frequent refresh.
 \item \textbf{Construct checks and temporal holdout:} Compares EndorseRank and AWP on contemporaneous transfer and allowance statistics \cend{16} and on t2 new owner--spender approvals after scores are frozen at t1. Alignment is reported with Spearman's $\rho$ and Kendall's $\tau$ \cend{54,36}.
@@ -133,15 +133,15 @@ Headline numerical results for inter-method $\tau$, family-level alignment, and 
 
 \dissertationSubheading[sec:scope-limitations]{Scope and limitations}
 
-This dissertation focuses on Arbitrum One and GMX V2 perpetual trading over the observation window 2025-12-01 to 2026-05-31. The primary empirical sample is a matched wallet cohort of $n=5{,}521$ addresses with at least three GMX \texttt{PositionDecrease} events and non-zero reputation subgraph connectivity, comprising $365{,}488$ decoded closes, $14{,}727$ EndorseRank edges, and $137{,}087$ AWP edges. Runtime scaling is reported on an expanded wallet pool ($N=31{,}612$). Robustness checks examine damping sensitivity, top-token subgraphs, and sample-size sensitivity.
+This research focuses on Arbitrum One and GMX V2 perpetual trading over the observation window 2025-12-01 to 2026-05-31. The primary empirical sample is a matched wallet cohort of $n=5{,}521$ addresses with at least three GMX \texttt{PositionDecrease} events and non-zero reputation subgraph connectivity, comprising $365{,}488$ decoded closes, $14{,}727$ EndorseRank edges, and $137{,}087$ AWP edges. Runtime scaling is reported on an expanded wallet pool ($N=31{,}612$). Robustness checks examine damping sensitivity, top-token subgraphs, and sample-size sensitivity.
 
-Unsecured lending default labels are out of scope. Constructs and ethics are defined in Chapters~\ref{ch:introduction} and~\ref{ch:methodology}. Trading profit, liquidation, and malicious-spender labels are not dissertation claims. The holdout claim uses the spender cohort ($n=1{,}335$), not the GMX-matched intersection. Extended baselines archived for future comparison are excluded from the main narrative (Appendix~\ref{ch:appendix-eval}).
+Unsecured lending default labels are out of scope. Constructs and ethics are defined in Chapters~\ref{ch:introduction} and~\ref{ch:methodology}. Trading profit, liquidation, and malicious-spender labels are not research claims. The holdout claim uses the spender cohort ($n=1{,}335$), not the GMX-matched intersection. Extended baselines archived for future comparison are excluded from the main narrative (Appendix~\ref{ch:appendix-eval}).
 
 Generalization beyond Arbitrum One, GMX V2, and the six-month window is not claimed. Token-decimal normalization, price oracles, and permit-versus-approve coverage may affect edge weights. Adversarial manipulation of allowances or transfers remains a threat discussed in Chapter~\ref{ch:discussion}; Sybil-adjusted proxies partially address but do not eliminate that risk \cend{17}.
 
-\dissertationSubheading[sec:roadmap]{Dissertation roadmap}
+\dissertationSubheading[sec:roadmap]{Research roadmap}
 
-The dissertation proceeds as follows.
+This research proceeds as follows.
 
 Chapter~\ref{ch:literature} reviews graph-based on-chain reputation and ERC-20 allowance semantics. It develops the theoretical framework---hyperlink propagation, domain alignment, and computational complexity---that motivates the primary EndorseRank versus AWP comparison.
 

@@ -38,34 +38,16 @@ AWP 간선(부분그래프) & 137{,}087 \\
 
 \dissertationSubsubheading[sub:gmx-activity]{매칭 코호트의 GMX 활동}
 
-그림~\ref{fig:gmx-closes-hist}는 지갑당 GMX close 건수를 보여 준다. 최소 세 건의 close는 표본추출 필터이다. 우측 꼬리는 소수 고활동 거래자를 나타낸다. 이들 수치는 표본을 기술하며, 거래 성공 주장이 아니다.
+그림~\ref{fig:gmx-closes-hist}는 지갑당 GMX close 건수를 보여 준다. 최소 세 건의 close는 표본추출 필터이다. 우측 꼬리는 반복된 \texttt{PositionDecrease} 건수이지 성과 순위가 아니다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{gmx-closes-hist.pdf}}
-\caption{매칭 코호트($n=5{,}521$)에서 지갑당 GMX V2 \texttt{PositionDecrease} close 건수 분포. 코호트 필터는 최소 세 건의 close를 요구하며, 긴 우측 꼬리는 소수 고활동 거래자를 반영한다.}
+\caption{Distribution of GMX V2 \texttt{PositionDecrease} close counts per wallet in the matched cohort ($n=5{,}521$). The cohort filter requires at least three closes.}
 \label{fig:gmx-closes-hist}
 \end{figure}
 
-그림~\ref{fig:gmx-pnl-hist}는 표본의 실현 손익을 보여 준다. 기술 통계일 뿐이다. 학위논문 주장은 PnL 정합을 사용하지 않는다.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{\figpath{gmx-pnl-hist.pdf}}
-\caption{매칭 코호트의 GMX 실현 손익 요약 분포. 기술 통계일 뿐이며, 검증 주장이 아니다.}
-\label{fig:gmx-pnl-hist}
-\end{figure}
-
-그림~\ref{fig:success-rate-hist}는 표본의 close 성공률을 보여 준다. 그림은 코호트 기술을 위해 유지하며, 주장이 아니다.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{\figpath{success-rate-hist.pdf}}
-\caption{매칭 코호트의 GMX close 성공률 분포. 기술 통계일 뿐이며, 검증 주장이 아니다.}
-\label{fig:success-rate-hist}
-\end{figure}
-
-기술 그림을 종합하면 두 제약이 성립한다. 첫째, 매칭 코호트는 안정적 순위 통계에 충분할 만큼 활성이지만($n=5{,}521$; 디코딩된 close $365{,}488$건) 거래 강도는 이질적이다. 둘째, 보증 그래프와 전송 그래프는 간선 수에서 거의 한 자릿수 차이나므로, 효율과 정합 주장은 함께 평가해야 한다. 결과 히스토그램은 예측 증거로 사용하지 않는다.
+close 건수 그림과 표~\ref{tab:dataset-stats}의 간선 수 격차는 두 표본 제약을 고정한다. 첫째, 매칭 코호트는 안정적 순위 통계에 충분하다($n=5{,}521$; 디코딩된 close $365{,}488$건). 둘째, 보증 그래프와 전송 그래프는 간선 수에서 거의 한 자릿수 차이나므로, 효율과 정합 주장은 함께 평가해야 한다.
 
 \dissertationSubheading[sec:benchmark-results]{EndorseRank 대 AWP 벤치마크 (주장~C1)}
 
@@ -94,11 +76,11 @@ $n=10{,}000$에서 EndorseRank는 $1.18$\,s, AWP는 $12.28$\,s이다(가속 $\ap
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{runtime-scaling.pdf}}
-\caption{코호트 크기 대비 PageRank 벽시계 런타임(로그 $x$축). 실선: 매칭 GMX 표본의 코호트 내 스케일링($n\leq 5{,}521$). 점선: 확장 지갑 풀($N=31{,}612$). EndorseRank는 $n=10{,}000$에서 약 $9$--$10\times$($\approx 10.4\times$), 전체 풀 크기에서 $\approx 9.4\times$ 더 빠르다.}
+\caption{PageRank wall-clock runtime versus cohort size (log $x$-axis). Solid lines: in-cohort scaling on the matched GMX sample ($n\leq 5{,}521$). Dashed lines: expanded wallet pool ($N=31{,}612$). EndorseRank remains approximately $9$--$10\times$ faster than AWP at $n=10{,}000$ ($\approx 10.4\times$) and at full pool size ($\approx 9.4\times$).}
 \label{fig:runtime-scaling}
 \end{figure}
 
-효율 주장을 한정하는 두 주의가 있다. 첫째, 벤치마크는 미리 구축된 간선 목록에서 PageRank 해를 계측한다. BigQuery 추출과 간선 구축을 포함하는 종단 파이프라인은 방법 간에 공유되거나 부분 공유되는 추가 비용을 부담한다. 둘째, 여기서 보고한 메모리 발자국은 코호트가 지갑 필터되었기 때문에 크지 않다. 전체 체인 전송 그래프는 AWP의 절대 비용을 더 높이고, 상대 격차를 좁히기보다 벌릴 가능성이 크다. 본 학위논문의 범위---평판 부분그래프 연결성을 가진 매칭 지갑---에서 주장~C1은 매칭 코호트와 확장 풀 모두에서 지지된다.
+효율 주장을 한정하는 두 주의가 있다. 첫째, 벤치마크는 미리 구축된 간선 목록에서 PageRank 해를 계측한다. BigQuery 추출과 간선 구축을 포함하는 종단 파이프라인은 방법 간에 공유되거나 부분 공유되는 추가 비용을 부담한다. 둘째, 여기서 보고한 메모리 발자국은 코호트가 지갑 필터되었기 때문에 크지 않다. 전체 체인 전송 그래프는 AWP의 절대 비용을 더 높이고, 상대 격차를 좁히기보다 벌릴 가능성이 크다. 본 연구의 범위---평판 부분그래프 연결성을 가진 매칭 지갑---에서 주장~C1은 매칭 코호트와 확장 풀 모두에서 지지된다.
 
 셋째 주의는 ``더 빠름''이 사는 것과 사지 않는 것에 관한 것이다. EndorseRank의 가속이 자동으로 우월한 위험 판별을 함의하지는 않는다. 효율은 결과 점수가 프로토콜이 관심하는 구성 개념에서 신뢰할 만할 때에만 가치가 있다. 따라서 제~\ref{sec:three-method-alignment}절과 주장~C4는 런타임 결과를 정합 결과와 짝짓는다. EndorseRank는 단지 더 싼 것이 아니라, 신뢰할 만한 일차 구성 개념 allowance 정합($\tau=0.355$)과 중간 정도 전송 정합을 유지하면서 더 싸다. 전송 허브 탐지를 최우선하는 프로토콜은 여전히 AWP를 선호하고 런타임 프리미엄을 지불할 수 있다. 저지연에서 승인 인식 점수가 필요한 프로토콜에는 EndorseRank의 효율 근거가 명확하다.
 
@@ -119,7 +101,7 @@ EndorseRank allowance 평균 $\tau$는 세 감쇠 값에 걸쳐 약 $0.355$로 �
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{damping-sensitivity.pdf}}
-\caption{allowance 및 전송 계열 평균 Kendall $\tau$의 감쇠 민감도($d \in \{0.75, 0.85, 0.95\}$). EndorseRank allowance 정합은 스윕에 걸쳐 $\approx 0.355$를 유지하고, AWP 전송 정합은 최대 $\approx 0.005$만 변동한다.}
+\caption{Damping sensitivity of mean Kendall $\tau$ for allowance and transfer families ($d \in \{0.75, 0.85, 0.95\}$). EndorseRank allowance alignment remains $\approx 0.355$ across the sweep; AWP transfer alignment varies by at most $\approx 0.005$.}
 \label{fig:damping-sensitivity}
 \end{figure}
 
@@ -131,7 +113,7 @@ EndorseRank allowance 평균 $\tau$는 세 감쇠 값에 걸쳐 약 $0.355$로 �
 
 \input{../en/results/tables/robustness-tokens.tex}
 
-표~\ref{tab:alignment-three-methods}의 전체 토큰 매칭 코호트 결과에 비해 계열 수준 평균은 한계적으로만 변한다. EndorseRank allowance는 $0.355$로 남고, 전송은 $0.331$이다(전체 그래프의 $0.333$ 대비). AWP 전송은 $0.532$이고(전체 그래프 $0.534$ 대비), AWP allowance는 영에 가깝다($-0.031$). 산출물에 남는 거래 성공 및 Sybil 조정 안정성 평균 역시 전체 그래프 값의 수천분의 몇 이내이다. 이들은 학위논문 주장이 아니다. 일차 정합 패턴은 따라서 희소하고 잡음 있는 간선을 가진 긴 꼬리 토큰이 주도하지 않는다. ERC-20 활동의 경제적으로 두드러진 핵심인 고거래량 토큰만으로 EndorseRank--AWP 대비를 재현하기에 충분하다.
+표~\ref{tab:alignment-three-methods}의 전체 토큰 매칭 코호트 결과에 비해 계열 수준 평균은 한계적으로만 변한다. EndorseRank allowance는 $0.355$로 남고, 전송은 $0.331$이다(전체 그래프의 $0.333$ 대비). AWP 전송은 $0.532$이고(전체 그래프 $0.534$ 대비), AWP allowance는 영에 가깝다($-0.031$). 산출물에 남는 거래 성공 및 Sybil 조정 안정성 평균 역시 전체 그래프 값의 수천분의 몇 이내이다. 이들은 연구 주장이 아니다. 일차 정합 패턴은 따라서 희소하고 잡음 있는 간선을 가진 긴 꼬리 토큰이 주도하지 않는다. ERC-20 활동의 경제적으로 두드러진 핵심인 고거래량 토큰만으로 EndorseRank--AWP 대비를 재현하기에 충분하다.
 
 \dissertationSubsubheading[sub:sample-size]{표본 크기 민감도}
 
@@ -149,14 +131,14 @@ $n=10{,}000$과 $N=31{,}612$에서 EndorseRank는 계속 allowance에서, AWP는
 
 \input{../en/results/tables/alignment-three-methods.tex}
 
-EndorseRank는 allowance에서 우세하고($\tau=0.355$), AWP는 전송에서 우세하다($\tau=0.534$). EndorseRank의 전송 정합은 중간 정도이다($\tau=0.333$). AWP의 allowance 정합은 영에 가깝다($-0.030$). 표의 결과 계열 칸은 학위논문 주장이 아니다.
+EndorseRank는 allowance에서 우세하고($\tau=0.355$), AWP는 전송에서 우세하다($\tau=0.534$). EndorseRank의 전송 정합은 중간 정도이다($\tau=0.333$). AWP의 allowance 정합은 영에 가깝다($-0.030$). 표의 결과 계열 칸은 연구 주장이 아니다.
 
 그림~\ref{fig:alignment-heatmap}는 allowance 대 전송에서 동일 교차 패턴을 보여 준다. 그림의 결과 고유 칸은 해석하지 않는다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{alignment-heatmap.pdf}}
-\caption{매칭 코호트($n=5{,}521$)의 계열 수준 평균 Kendall $\tau$ 히트맵. 주장은 allowance 및 전송 칸만 사용한다.}
+\caption{Family-level mean Kendall $\tau$ heatmap on the matched cohort ($n=5{,}521$). Claims use allowance and transfer cells only.}
 \label{fig:alignment-heatmap}
 \end{figure}
 
@@ -188,13 +170,13 @@ EndorseRank는 중간 정도 이차 축 정합을 보인다(인디그리 $\tau=0
 
 EndorseRank는 두 allowance 대리 지표와 신뢰할 만한 일차 구성 개념 정합을 보인다(인승인 차수 $\tau=0.356$; 인승인 가치 $\tau=0.354$; 계열 평균 $0.355$). 전송에서의 AWP와 마찬가지로 이는 일차 구성 개념 검사이다. $G_{\text{approve}}$의 PageRank는 지출자 측 승인 중심성과 상관해야 한다. 따라서 allowance 계열 결과는 부분적으로 동일 구성 개념 검사이며, 독립된 외부 기준이 아니다. 과학적으로 정보적인 칸은 AWP의 영에 가까운 allowance $\tau$로, 전송 중심성이 승인을 복원하지 않음을 보여 준다. EndorseRank의 $\tau \approx 0.355$는 주어진 그래프에서 복원 가능한 그래프 신호의 증거이다. 차수와 가치 상관의 거의 동등함은, 이 코호트에서 많은 소유자에게 승인받는 것과 큰 집계 가치로 승인받는 것이 최신 allowance 의미 아래 유사한 순위 정보를 전달함을 시사한다.
 
-AWP의 allowance 정합은 영에 가깝고 약간 음이다(두 대리 지표 모두 $\tau=-0.030$). 전송 중심성은 지출 승인을 받는 지갑을 식별하지 않는다. 이 분리는 학위논문 기여의 중심에 있다. 전송 기반 평판이 보증의 충분한 대리 지표라면 AWP는 적어도 중간 정도 allowance 정합을 보여야 한다. 그렇지 않다. 명시적 지출 승인---예를 들어 타인을 대신하여 토큰을 이동하도록 신뢰받는 주소---을 중시하는 프로토콜은, 이 증거에서 AWP를 allowance 인식 방법으로 대체할 수 없다.
+AWP의 allowance 정합은 영에 가깝고 약간 음이다(두 대리 지표 모두 $\tau=-0.030$). 전송 중심성은 지출 승인을 받는 지갑을 식별하지 않는다. 이 분리는 연구 기여의 중심에 있다. 전송 기반 평판이 보증의 충분한 대리 지표라면 AWP는 적어도 중간 정도 allowance 정합을 보여야 한다. 그렇지 않다. 명시적 지출 승인---예를 들어 타인을 대신하여 토큰을 이동하도록 신뢰받는 주소---을 중시하는 프로토콜은, 이 증거에서 AWP를 allowance 인식 방법으로 대체할 수 없다.
 
 allowance 결과는 동일 창 기여의 실증적 핵심이다. 전송 그래프는 지출 승인을 인코딩하지 않는다. 런타임 결과와 결합하면, allowance 계열은 주장~C4를 지지한다. 더 싼 방법이 승인 검사와 정합하는 유일한 사회적 방법이기도 하다. 제~\ref{sec:gf-pr-ceiling}절의 홀드아웃은 그 신호가 점수 창 이후에도 지속되는지를 검정한다.
 
 \dissertationSubsubheading[sub:inverse-risk-family]{역위험 계열 (주장하지 않음)}
 
-표~\ref{tab:alignment-inverse-risk}는 산출물에 남긴다. 학위논문 주장이 아니다.
+표~\ref{tab:alignment-inverse-risk}는 산출물 표이며 본문에서 해석하지 않는다.
 
 \input{../en/results/tables/alignment-inverse-risk.tex}
 
@@ -208,7 +190,7 @@ AWP는 재직 기간과 활성 월에서 EndorseRank를 상회하며, 이는 시
 
 \dissertationSubsubheading[sub:trading-success-family]{거래 성공 계열 (주장하지 않음)}
 
-표~\ref{tab:alignment-gmx}는 산출물에 남긴다. 거래 성공 정합은 학위논문 주장이 아니며 RQ4에 답하는 데 사용하지 않는다.
+표~\ref{tab:alignment-gmx}는 산출물 표이며 본문에서 해석하지 않는다.
 
 \input{../en/results/tables/alignment-gmx.tex}
 
@@ -221,7 +203,7 @@ AWP는 재직 기간과 활성 월에서 EndorseRank를 상회하며, 이는 시
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{score-distributions.pdf}}
-\caption{매칭 코호트($n=5{,}521$)에서 EndorseRank와 AWP 점수의 주변 분포. 양수 점수 지갑을 $\log_{10}$ 척도로 표시한다(EndorseRank는 영점 지갑 $966$개 제외; AWP는 $381$개 제외). 둘 다 우측 왜도 PageRank 분포이며, 형상 차이는 구별되는 보증·전송 연산자를 반영한다.}
+\caption{Marginal distributions of EndorseRank and AWP scores on the matched cohort ($n=5{,}521$), shown on a $\log_{10}$ scale for wallets with positive score (EndorseRank excludes $966$ zero-score wallets; AWP excludes $381$). Both are right-skewed PageRank distributions; differences in shape reflect the distinct endorsement and transfer operators.}
 \label{fig:score-distributions}
 \end{figure}
 
@@ -230,7 +212,7 @@ AWP는 재직 기간과 활성 월에서 EndorseRank를 상회하며, 이는 시
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{rank-scatter.pdf}}
-\caption{매칭 코호트에서 EndorseRank 대 AWP의 순위--순위 산점도. 방법 간 Kendall $\tau=0.316$은 부분 중첩과 상당한 쌍별 불일치를 나타내며, H1/RQ1(구성 개념상 구별되는 순서)을 지지한다.}
+\caption{Rank--rank scatter of EndorseRank versus AWP on the matched cohort. Inter-method Kendall $\tau=0.316$ indicates partial overlap with substantial pairwise disagreement, supporting H1/RQ1 (construct-distinct orderings).}
 \label{fig:rank-scatter}
 \end{figure}
 

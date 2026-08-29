@@ -28,6 +28,7 @@ W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 W14 = "{http://schemas.microsoft.com/office/word/2010/wordml}"
 W15 = "{http://schemas.microsoft.com/office/word/2012/wordml}"
 W16CID = "{http://schemas.microsoft.com/office/word/2016/wordml/cid}"
+CEX = "{http://schemas.microsoft.com/office/word/2018/wordml/cex}"
 XML_SPACE = "{http://www.w3.org/XML/1998/namespace}space"
 
 PARENT_ORDER = [
@@ -66,7 +67,7 @@ REPLIES = {
     "6": "Removed bold from EndorseRank in the abstract. It is now plain body text.",
     "2": "Agreed. Do and Do (2023, IJSI) is PageRank and HodgeRank. AWP is the separate IEEE RIVF paper (Do, Do Van Dung, and Nguyen, 2023; doi:10.1109/rivf60135.2023.10471809). I split that attribution at the first AWP definition and added the RIVF item to References. A full in-text pass (every fused “Do et al. = AWP”) is deferred until after the meeting.",
     "7": "Dropped trading-success proxies and the GF-PR ceiling from the claims. GMX remains a sampling frame only. The external check is now a temporal holdout of future new owner–spender approvals.",
-    "14": "Removed GF-PR / SRQ1 / SC1 from the dissertation claims. Trading-success alignment is not used as evidence.",
+    "14": "Removed GF-PR / SRQ1 / SC1 from the research claims. Trading-success alignment is not used as evidence.",
     "20": "Split this opening paragraph so each claim has one source: [53] for DeFi intermediation; [48] for the absence of conventional credit histories. A document-wide cluster pass is deferred.",
     "62": "Kept the 2.105 s / 8.9× measurement. Added in red that the speedup is the expected O(|E|) consequence of approval sparsity, that the solver matches AWP, and that C1 is demoted from a headline contribution.",
     "72": "Inserted a Research objectives section (four objectives, mapped to RQ1–RQ4) immediately before Research questions. Chapter 5 mapping of each objective is deferred until after the meeting.",
@@ -149,6 +150,8 @@ def is_marker(el) -> bool:
 
 
 def replace_para_text(p, text: str) -> None:
+    if p is None:
+        return
     sample = first_text_run(p)
     starts, tails = [], []
     for child in list(p):
@@ -475,7 +478,7 @@ def apply_body(doc) -> None:
     p14 = find_para(paras, lambda p: para_has_comment(p, "14"))
     caveat = new_para_like(
         p39,
-        "Note: GF-PR and trading-success families are excluded from the dissertation claims. The external check is the temporal holdout of future new approvals.",
+        "Note: GF-PR and trading-success families are excluded from the research claims. The external check is the temporal holdout of future new approvals.",
     )
     p14.addnext(caveat)
 
@@ -512,6 +515,8 @@ def norm_comment_text(s: str) -> str:
 def xml_id_by_text(comments_root) -> dict[str, str]:
     mapping: dict[str, str] = {}
     for c in comments_root.findall(qn("comment")):
+        if c.get(qn("author")) == AUTHOR:
+            continue
         text = "".join(t.text or "" for t in c.iter(qn("t")))
         mapping[norm_comment_text(text)] = c.get(qn("id"))
     return mapping
@@ -530,9 +535,9 @@ def match_parent_id(word_text: str, id_by_text: dict[str, str]) -> str | None:
 def stamp_replies_with_word(path: Path, id_by_text: dict[str, str]) -> None:
     """Let Word create real threaded replies (COM Replies.Add).
 
-    Hand-written commentsExtended + range marks are not enough for this
-    Word build: it still shows those as new top-level comments. Word's own
-    reply writer produces a thread the Comments pane will nest.
+    A reply that also has commentRangeStart/End in document.xml is a new
+    root balloon in this Word build. Replies.Add after those marks are
+    gone is what the Comments pane nests.
     """
     import pythoncom
     import win32com.client
@@ -542,7 +547,18 @@ def stamp_replies_with_word(path: Path, id_by_text: dict[str, str]) -> None:
     word.Visible = False
     word.DisplayAlerts = 0
     doc = None
+    old_name = old_init = None
     try:
+        try:
+            old_name = word.UserName
+            old_init = word.UserInitials
+        except Exception:
+            old_name = old_init = None
+        try:
+            word.UserName = AUTHOR
+            word.UserInitials = INITIALS
+        except Exception:
+            pass
         try:
             doc = word.Documents.Open(str(path), False, False, False)
         except Exception as exc:
@@ -555,10 +571,12 @@ def stamp_replies_with_word(path: Path, id_by_text: dict[str, str]) -> None:
             try:
                 if c.Ancestor is not None:
                     continue
-                if c.Replies.Count >= 1:
-                    continue
             except Exception:
                 pass
+            if getattr(c, "Author", "") == AUTHOR:
+                continue
+            if getattr(c, "Replies", None) is not None and c.Replies.Count >= 1:
+                continue
             parents.append(c)
         if len(parents) != 27:
             raise RuntimeError(f"expected 27 parent comments, got {len(parents)}")
@@ -566,10 +584,15 @@ def stamp_replies_with_word(path: Path, id_by_text: dict[str, str]) -> None:
         for c in parents:
             parent_id = match_parent_id(c.Range.Text, id_by_text)
             if parent_id is None or parent_id not in REPLIES:
-                raise KeyError(f"unmatched Word comment: {norm_comment_text(c.Range.Text)[:80]!r}")
+                raise KeyError(
+                    f"unmatched Word comment: {norm_comment_text(c.Range.Text)[:80]!r}"
+                )
             reply = c.Replies.Add(c.Range, REPLIES[parent_id])
-            reply.Author = AUTHOR
-            reply.Initial = INITIALS
+            try:
+                reply.Author = AUTHOR
+                reply.Initial = INITIALS
+            except Exception:
+                pass
             added += 1
         if added != 27:
             raise RuntimeError(f"added {added} replies, expected 27")
@@ -582,8 +605,125 @@ def stamp_replies_with_word(path: Path, id_by_text: dict[str, str]) -> None:
                 doc.Close(False)
             except Exception:
                 pass
+        if old_name is not None:
+            try:
+                word.UserName = old_name
+                word.UserInitials = old_init
+            except Exception:
+                pass
         word.Quit()
         pythoncom.CoUninitialize()
+
+
+def strip_independent_reply_balloons(path: Path) -> dict[str, str]:
+    """Drop Taehong Kwon comments that were stored as their own balloons.
+
+    Replies must not keep commentRangeStart/End/commentReference in the body.
+    After this, only supervisor root comments remain; Word Replies.Add
+    recreates the 27 answers as nested replies.
+    """
+    with zipfile.ZipFile(path) as z:
+        names = z.namelist()
+        doc = etree.fromstring(z.read("word/document.xml"))
+        comments = etree.fromstring(z.read("word/comments.xml"))
+        ext = etree.fromstring(z.read("word/commentsExtended.xml"))
+        cids = (
+            etree.fromstring(z.read("word/commentsIds.xml"))
+            if "word/commentsIds.xml" in names
+            else None
+        )
+        cex = (
+            etree.fromstring(z.read("word/commentsExtensible.xml"))
+            if "word/commentsExtensible.xml" in names
+            else None
+        )
+
+    tk_ids: set[str] = set()
+    tk_pids: set[str] = set()
+    for c in comments.findall(qn("comment")):
+        if c.get(qn("author")) != AUTHOR:
+            continue
+        tk_ids.add(c.get(qn("id")))
+        for p in c.findall(qn("p")):
+            pid = p.get(f"{W14}paraId")
+            if pid:
+                tk_pids.add(pid.upper())
+    if len(tk_ids) != 27:
+        raise RuntimeError(f"expected 27 Taehong Kwon comments to strip, got {len(tk_ids)}")
+
+    tk_durable: set[str] = set()
+    if cids is not None:
+        for el in cids:
+            pid = (el.get(f"{W16CID}paraId") or "").upper()
+            if pid in tk_pids:
+                dur = el.get(f"{W16CID}durableId")
+                if dur:
+                    tk_durable.add(dur.upper())
+
+    for tag in ("commentRangeStart", "commentRangeEnd", "commentReference"):
+        for el in list(doc.iter(qn(tag))):
+            if el.get(qn("id")) not in tk_ids:
+                continue
+            parent = el.getparent()
+            if parent is None:
+                continue
+            parent.remove(el)
+            if tag == "commentReference":
+                leftover = [
+                    ch
+                    for ch in parent
+                    if etree.QName(ch).localname != "rPr"
+                ]
+                if not leftover and parent.getparent() is not None:
+                    parent.getparent().remove(parent)
+
+    for c in list(comments.findall(qn("comment"))):
+        if c.get(qn("id")) in tk_ids:
+            comments.remove(c)
+
+    for el in list(ext):
+        pid = (el.get(f"{W15}paraId") or "").upper()
+        if pid in tk_pids:
+            ext.remove(el)
+
+    if cids is not None:
+        for el in list(cids):
+            pid = (el.get(f"{W16CID}paraId") or "").upper()
+            if pid in tk_pids:
+                cids.remove(el)
+
+    if cex is not None:
+        for el in list(cex):
+            dur = (el.get(f"{CEX}durableId") or "").upper()
+            if dur in tk_durable:
+                cex.remove(el)
+
+    mapping = xml_id_by_text(comments)
+    if len(mapping) != 27:
+        raise RuntimeError(f"expected 27 supervisor comments after strip, got {len(mapping)}")
+
+    updates = {
+        "word/document.xml": serialize(doc),
+        "word/comments.xml": serialize(comments),
+        "word/commentsExtended.xml": serialize(ext),
+    }
+    if cids is not None:
+        updates["word/commentsIds.xml"] = serialize(cids)
+    if cex is not None:
+        updates["word/commentsExtensible.xml"] = serialize(cex)
+    rewrite_zip(path, updates)
+    return mapping
+
+
+def rethread_replies(path: Path) -> None:
+    """Turn independent Taehong Kwon balloons into Word replies on parents."""
+    mapping = strip_independent_reply_balloons(path)
+    stamp_replies_with_word(path, mapping)
+    force_reply_authors(path)
+    verify(path)
+    verify_word_threads(path)
+    print("rethreaded replies into existing supervisor comments")
+    print("wrote", path)
 
 
 def force_reply_authors(path: Path) -> None:
@@ -791,6 +931,7 @@ def set_comment_text(comment, text: str) -> None:
 REPLY_PREFIX_TO_PARENT = {
     "Rewrote that sentence in the first person": "7",
     "Added a one-sentence circular-construction caveat": "14",
+    "Removed GF-PR / SRQ1 / SC1 from the": "14",
     "Re-posed RQ4 in red as a construct-validity": "74",
     "Added a red paragraph under Contributions stating that the present claim is latest-allowance": "77",
     "Acknowledged. I am not inserting a two-page": "78",
@@ -835,7 +976,10 @@ def apply_body_inplace(doc) -> None:
         return find_para(paras, lambda p: para_has_comment(p, cid))
 
     def by_prefix(prefix: str):
-        return find_para(paras, lambda p: para_text(p).startswith(prefix))
+        try:
+            return find_para(paras, lambda p: para_text(p).startswith(prefix))
+        except KeyError:
+            return None
 
     replace_para_text(
         by_comment("2"),
@@ -859,7 +1003,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("Note: GF-PR is circular by construction"),
-        "Note: GF-PR and trading-success families are excluded from the dissertation claims. The external check is the temporal holdout of future new approvals.",
+        "Note: GF-PR and trading-success families are excluded from the research claims. The external check is the temporal holdout of future new approvals.",
     )
     replace_para_text(
         by_prefix("Four objectives are derived from the problem statement"),
@@ -875,7 +1019,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("SRQ1. What does the supplementary GF-PR"),
-        "SRQ1 is withdrawn. GF-PR is not a dissertation claim. The external check is the temporal holdout under RQ4.",
+        "SRQ1 is withdrawn. GF-PR is not a research claim. The external check is the temporal holdout under RQ4.",
     )
     replace_para_text(
         by_prefix("RQ1 tests whether allowance and transfer graphs"),
@@ -893,10 +1037,13 @@ def apply_body_inplace(doc) -> None:
         by_prefix("DeFi activity. Proxies span transfer centrality"),
         "EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. Same-window checks remain allowance versus transfer. Trading-success families are not claims.",
     )
-    p316 = find_para(
-        paras,
-        lambda p: "claims C1–C4 and SC1" in para_text(p) or "claims C1-C4 and SC1" in para_text(p),
-    )
+    try:
+        p316 = find_para(
+            paras,
+            lambda p: "claims C1–C4 and SC1" in para_text(p) or "claims C1-C4 and SC1" in para_text(p),
+        )
+    except KeyError:
+        p316 = None
     replace_para_text(
         p316,
         "Open reproducible evaluation pipeline: Links BigQuery extraction, graph construction, PageRank scoring, proxy computation, and LaTeX result tables to a machine-readable summary (Appendix 8.1). The pipeline supports independent verification of claims C1–C4. "
@@ -952,7 +1099,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("Supplementary claim SC1:"),
-        "Withdrawn: SC1 / GF-PR is not a dissertation claim. The external check that remains is the spender holdout under RQ4.",
+        "Withdrawn: SC1 / GF-PR is not a research claim. The external check that remains is the spender holdout under RQ4.",
     )
     replace_para_text(
         by_prefix("Primary claims (C1–C4) and supplementary claim"),
@@ -1012,16 +1159,19 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("GF-PR is suitable only as a diagnostic ceiling"),
-        "GF-PR is not used as a diagnostic ceiling in the claims. Evaluation pipelines may retain the artifact; this dissertation does not sell outcome-native ranking as social validity.",
+        "GF-PR is not used as a diagnostic ceiling in the claims. Evaluation pipelines may retain the artifact; this research does not sell outcome-native ranking as social validity.",
     )
     replace_para_text(
         by_prefix("Proxy not ground truth:"),
         "Proxy not ground truth: No under-collateralized lending default labels are available at sufficient density. GMX V2 closes define the matched sample. They are not loan repayment and are not used as a trading-success claim.",
     )
-    p1746 = find_para(
-        paras,
-        lambda p: para_text(p).startswith("dorseRank") and "0.179" in para_text(p),
-    )
+    try:
+        p1746 = find_para(
+            paras,
+            lambda p: para_text(p).startswith("dorseRank") and "0.179" in para_text(p),
+        )
+    except KeyError:
+        p1746 = None
     replace_para_text(
         p1746,
         "Trading-success alignments (formerly 0.096 / 0.179) are dropped from the claims.",
@@ -1074,7 +1224,10 @@ def apply_body_pass2(doc) -> None:
     paras = [p for p in body if etree.QName(p).localname == "p"]
 
     def by_prefix(prefix: str):
-        return find_para(paras, lambda p: para_text(p).startswith(prefix))
+        try:
+            return find_para(paras, lambda p: para_text(p).startswith(prefix))
+        except KeyError:
+            return None
 
     replace_para_text(
         by_prefix("§4.7"),
@@ -1090,7 +1243,7 @@ def apply_body_pass2(doc) -> None:
     )
     replace_para_text(
         by_prefix("Following Do et al.[16] and Cronbach"),
-        "Following Do et al.[16] and Cronbach & Meehl[14], construct alignment for rank-based scores uses Spearman’s ρ and Kendall’s τ. This dissertation reports same-window allowance and transfer checks plus a temporal holdout of future new approvals. Trading-success, inverse-risk, and liquidation families remain in the artifact and are not claims.",
+        "Following Do et al.[16] and Cronbach & Meehl[14], construct alignment for rank-based scores uses Spearman’s ρ and Kendall’s τ. This research reports same-window allowance and transfer checks plus a temporal holdout of future new approvals. Trading-success, inverse-risk, and liquidation families remain in the artifact and are not claims.",
     )
     replace_para_text(
         by_prefix("This chapter reports the empirical evaluation of EndorseRank against Adaptive Weighted"),
@@ -1114,12 +1267,231 @@ def apply_body_pass2(doc) -> None:
     )
     replace_para_text(
         by_prefix("GF-PR construct overlap:"),
-        "Non-claim: GF-PR shares input semantics with trading-success and inverse-risk proxies. Those alignments are not interpreted as social reputation and are not dissertation claims.",
+        "Non-claim: GF-PR shares input semantics with trading-success and inverse-risk proxies. Those alignments are not interpreted as social reputation and are not research claims.",
     )
     replace_para_text(
         by_prefix("Hybrid social and outcome-aware methods:"),
         "Hybrid social methods: Operators may combine endorsement-graph features with transfer-graph features, or with DeFi-informed representation learning [39], while preserving the auditability emphasized by Packin and Lev-Aretz[48]. Hybrid designs should report construct-specific checks and, where claimed, a time-split holdout rather than a single aggregate trading-success metric.",
     )
+
+
+DISS_PAIRS = (
+    ("This dissertation", "This research"),
+    ("this dissertation", "this research"),
+    ("For this dissertation", "For this research"),
+    ("the dissertation's", "this research's"),
+    ("The dissertation's", "This research's"),
+    ("The dissertation", "This research"),
+    ("the dissertation", "this research"),
+    ("Dissertation roadmap", "Research roadmap"),
+    ("dissertation claims", "research claims"),
+    ("a dissertation claim", "a research claim"),
+    ("dissertation claim", "research claim"),
+    ("dissertation narrative", "research narrative"),
+    ("main dissertation", "main research"),
+)
+
+
+def rewrite_dissertation(text: str) -> str:
+    for old, new in DISS_PAIRS:
+        text = text.replace(old, new)
+    return text
+
+
+def para_has_any_comment(p) -> bool:
+    for el in p.iter():
+        tag = etree.QName(el).localname
+        if tag in {"commentRangeStart", "commentRangeEnd", "commentReference"}:
+            return True
+    return False
+
+
+def remove_para(p) -> None:
+    parent = p.getparent()
+    if parent is None:
+        raise RuntimeError("paragraph has no parent")
+    parent.remove(p)
+
+
+def remove_between(start, stop, *, keep_start: bool, keep_stop: bool) -> int:
+    """Remove siblings from start to stop (both in the same parent)."""
+    parent = start.getparent()
+    if stop.getparent() is not parent:
+        raise RuntimeError("start/stop parents differ")
+    cur = start
+    removed = 0
+    while cur is not None:
+        nxt = cur.getnext()
+        is_start = cur is start
+        is_stop = cur is stop
+        drop = True
+        if is_start and keep_start:
+            drop = False
+        if is_stop and keep_stop:
+            drop = False
+        if drop:
+            if etree.QName(cur).localname == "p" and para_has_any_comment(cur):
+                raise RuntimeError(
+                    f"refusing to delete commented paragraph: {para_text(cur)[:80]!r}"
+                )
+            parent.remove(cur)
+            removed += 1
+        if is_stop:
+            break
+        cur = nxt
+    return removed
+
+
+def apply_body_pass3(doc) -> None:
+    """dissertation→research; drop perp mechanics and PnL/success-rate figures."""
+    body = doc.find(qn("body"))
+
+    def paras():
+        return [p for p in body.iter(qn("p"))]
+
+    def by_prefix(prefix: str):
+        return find_para(paras(), lambda p: para_text(p).startswith(prefix))
+
+    def by_exact(text: str):
+        return find_para(paras(), lambda p: para_text(p).strip() == text)
+
+    replace_para_text(
+        by_prefix("Arbitrum One is an EVM-compatible optimistic rollup"),
+        "Arbitrum One is an EVM-compatible optimistic rollup widely used for DeFi activity, including GMX V2 [23]. For this research, Arbitrum One is the empirical setting because (i) ERC-20 Approval and Transfer logs are available in public BigQuery datasets, (ii) GMX V2 emits wallet-attributed PositionDecrease events that serve only as an activity filter, and (iii) fee levels permit dense activity within a six-month window.",
+    )
+    replace_para_text(
+        by_prefix("On Arbitrum One, dense wallet-attributed PositionDecrease"),
+        "On Arbitrum One, GMX V2 PositionDecrease events define the matched sample: wallets with at least three closes (n = 5,521) [23],[53]. Profit-and-loss, success rate, and liquidation are not validation.",
+    )
+    p_closes = find_para(
+        paras(),
+        lambda p: para_text(p).startswith("closes offer dense, wallet-level realized"),
+    )
+    replace_para_text(
+        p_closes,
+        "Under-collateralized lending default labels remain out of scope.",
+    )
+    p_perp_adv = find_para(
+        paras(),
+        lambda p: para_text(p).startswith("Perpetual markets allow leveraged long"),
+    )
+    replace_para_text(
+        p_perp_adv,
+        "This research does not predict trading profit, liquidation, or malicious spenders. The remaining external check is a temporal holdout of future new owner–spender approvals.",
+    )
+    replace_para_text(
+        by_prefix("Primary chain: All on-chain events"),
+        "Primary chain: All on-chain events are drawn from Arbitrum One (chain ID 42161), an Ethereum Layer-2 rollup with dense DeFi activity and public log availability [53]. Restricting to a single chain avoids cross-chain address aliasing—the same private key controlling addresses on multiple chains would otherwise appear as unrelated nodes—and keeps gas-cost and latency regimes comparable across wallets. Arbitrum One is also the deployment venue for GMX V2, whose PositionDecrease events are used only as an activity filter.",
+    )
+    replace_para_text(
+        by_prefix("Figure 3.1 summarizes the end-to-end flow from public logs to"),
+        "Figure 3.1 summarizes the end-to-end flow from public logs to the research tables. Remote stages write immutable parquet; local stages are idempotent given those inputs and a single versioned configuration file.",
+    )
+    replace_para_text(
+        by_prefix("Before comparing reputation rankings, it is useful to characterize"),
+        "Figure 4.1 shows GMX close counts per wallet. The minimum of three closes is a sampling filter. The right tail is a count of repeated PositionDecrease events, not a performance ranking.",
+    )
+    replace_para_text(
+        by_prefix("Figure 4.1: Distribution of GMX V2 PositionDecrease close counts"),
+        "Figure 4.1: Distribution of GMX V2 PositionDecrease close counts per wallet in the matched cohort (n = 5,521). The cohort filter requires at least three closes.",
+    )
+    replace_para_text(
+        by_prefix("Distribution of GMX V2 PositionDecrease close counts per wallet"),
+        "Distribution of GMX V2 PositionDecrease close counts per wallet in the matched cohort (n = 5,521). The cohort filter requires at least three closes.",
+    )
+    replace_para_text(
+        by_prefix("Table 4.10 reports alignment with loss-avoidance"),
+        "Table 4.10 is an artifact table and is not interpreted in the main text.",
+    )
+    replace_para_text(
+        by_prefix("Table 4.12 reports alignment with close-success count"),
+        "Table 4.12 is an artifact table and is not interpreted in the main text.",
+    )
+    replace_para_text(
+        by_exact("Trading success validation frame (GMX V2)"),
+        "GMX V2 as a sampling frame",
+    )
+    toc_gmx = find_para(
+        paras(),
+        lambda p: para_text(p).startswith("Trading success validation frame (GMX V2)"),
+    )
+    replace_para_text(toc_gmx, "GMX V2 as a sampling frame")
+
+    perp_body = find_para(
+        paras(),
+        lambda p: para_text(p).startswith('Perpetual futures (“perps”) are derivative'),
+    )
+    related = find_para(
+        paras(),
+        lambda p: para_text(p).strip() == "Related measurement traditions"
+        and pstyle(p).startswith("Heading"),
+    )
+    perp_head = None
+    cur = perp_body.getprevious()
+    while cur is not None:
+        if etree.QName(cur).localname == "p" and pstyle(cur).startswith("Heading"):
+            perp_head = cur
+            break
+        cur = cur.getprevious()
+    if perp_head is None or "Perpetual markets" not in para_text(perp_head):
+        raise RuntimeError(f"perp heading not found near {para_text(perp_body)[:60]!r}")
+    remove_between(perp_head, related, keep_start=False, keep_stop=True)
+
+    toc_perp = find_para(
+        paras(),
+        lambda p: "Perpetual markets as a validation laboratory" in para_text(p),
+    )
+    remove_para(toc_perp)
+
+    lof_pnl = find_para(
+        paras(),
+        lambda p: para_text(p).startswith("Distribution of GMX realized PnL summaries"),
+    )
+    lof_sr = find_para(
+        paras(),
+        lambda p: para_text(p).startswith("Distribution of GMX close success rates"),
+    )
+    remove_between(lof_pnl, lof_sr, keep_start=False, keep_stop=False)
+
+    fig41 = by_prefix("Figure 4.1: Distribution of GMX V2 PositionDecrease close counts")
+    bench = find_para(
+        paras(),
+        lambda p: para_text(p).strip() == "EndorseRank vs. AWP benchmark (Claim C1)",
+    )
+    remove_between(fig41, bench, keep_start=True, keep_stop=True)
+    summary = new_para_like(
+        fig41,
+        "The close-count figure and the edge-count gap in the dataset table fix two sample constraints. First, the matched cohort is large enough for stable rank statistics (n = 5,521; 365,488 decoded closes). Second, endorsement and transfer graphs differ by nearly an order of magnitude in edge count, so efficiency and alignment claims must be evaluated jointly.",
+    )
+    fig41.addnext(summary)
+
+    # Drop leftover inverse-risk / trading-success interpretation (tables stay).
+    for prefix in (
+        "Among social methods, alignment is weak overall. EndorseRank family mean",
+        "For the primary comparison, the inverse-risk family supports a cautious reading",
+        "success rate remains weak",
+        "GF-PR achieves the highest family mean (0.583)",
+        "The trading-success family thus plays a dual role",
+        "Comparing trading-success means to transfer means",
+        "Figure 4.2 displays the distribution of realized profit-and-loss",
+        "long right tail reflects a minority of highly active traders",
+    ):
+        try:
+            p = by_prefix(prefix)
+        except KeyError:
+            continue
+        if para_has_any_comment(p):
+            raise RuntimeError(f"commented leftover: {prefix}")
+        remove_para(p)
+
+    # Remaining dissertation wording in readable body (not supervisor comments).
+    for p in paras():
+        old = para_text(p)
+        if "dissertation" not in old.lower():
+            continue
+        new = rewrite_dissertation(old)
+        if new != old:
+            replace_para_text(p, new)
 
 
 def inplace_main() -> None:
@@ -1133,6 +1505,7 @@ def inplace_main() -> None:
         comments = etree.fromstring(z.read("word/comments.xml"))
     apply_body_inplace(doc)
     apply_body_pass2(doc)
+    apply_body_pass3(doc)
     n = update_existing_replies(comments)
     try:
         rewrite_zip(
@@ -1148,9 +1521,6 @@ def inplace_main() -> None:
         ) from exc
     force_reply_authors(DST)
     verify(DST)
-    # Word COM Ancestor/Replies is currently flat even on the committed
-    # HEAD file; threading is still recorded in commentsExtended (XML verify).
-    # Do not call Replies.Add here — that would create new top-level balloons.
     print("updated replies", n)
     print("wrote", DST)
 
@@ -1183,7 +1553,9 @@ def main() -> None:
 if __name__ == "__main__":
     import sys
 
-    if "--inplace" in sys.argv:
+    if "--rethread" in sys.argv:
+        rethread_replies(DST)
+    elif "--inplace" in sys.argv:
         inplace_main()
     else:
         main()

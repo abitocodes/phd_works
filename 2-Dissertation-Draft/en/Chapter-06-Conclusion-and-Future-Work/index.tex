@@ -2,11 +2,11 @@
 \chapter{Conclusion and Future Work}
 \label{ch:conclusion}
 
-This chapter synthesizes the dissertation, states the original contribution to knowledge, revisits the research questions, and outlines future work on cross-protocol validation, adversarial manipulation, hybrid methods, and live oracle integration.
+This chapter synthesizes this research, states the original contribution to knowledge, revisits the research questions, and outlines future work on cross-protocol validation, adversarial manipulation, hybrid methods, and live oracle integration.
 
 \dissertationSubheading[sec:summary-findings]{Summary of findings}
 
-This dissertation formulated EndorseRank, a PageRank method on a latest-allowance endorsement graph that produces an on-chain reputation score on Arbitrum One, and evaluated it against Adaptive Weighted PageRank (AWP), the transfer-graph baseline of Do et al.\cend{16}, on an identical matched wallet cohort ($n=5{,}521$). GMX V2 activity defined that sample. Contemporaneous checks used transfer and allowance statistics. A temporal holdout scored wallets through 28~February~2026 and labeled t1 inbound spenders ($n=1{,}335$) by new owner--spender approvals in March--May~2026.
+This research formulated EndorseRank, a PageRank method on a latest-allowance endorsement graph that produces an on-chain reputation score on Arbitrum One, and evaluated it against Adaptive Weighted PageRank (AWP), the transfer-graph baseline of Do et al.\cend{16}, on an identical matched wallet cohort ($n=5{,}521$). GMX V2 activity defined that sample. Contemporaneous checks used transfer and allowance statistics. A temporal holdout scored wallets through 28~February~2026 and labeled t1 inbound spenders ($n=1{,}335$) by new owner--spender approvals in March--May~2026.
 
 The primary findings for the EndorseRank--AWP comparison are as follows.
 
@@ -22,7 +22,7 @@ Collectively, Claims~C1--C4 establish an efficiency--alignment trade-off: Endors
 
 \dissertationSubheading[sec:contribution-knowledge]{Original contribution to knowledge}
 
-This dissertation contributes to on-chain reputation research and DeFi risk assessment in four respects.
+This research contributes to on-chain reputation research and DeFi risk assessment in four respects.
 \begin{itemize}
 \item \textbf{EndorseRank:} An allowance-based endorsement graph model. By treating latest ERC-20 \texttt{approve} and EIP-2612 \texttt{permit} authorizations as directed endorsement edges \cend{18,19}, it extends PageRank's citation metaphor \cend{49,8} from transfer graphs \cend{16} to explicit spending delegation. The model eliminates temporal decay through allowance override semantics and yields a sparse graph ($14{,}727$ edges on the matched cohort) suitable for frequent recomputation.
 \item \textbf{Construct checks and temporal holdout:} Compares EndorseRank and AWP on contemporaneous transfer and allowance statistics \cend{14,54,36} and on t2 new owner--spender approvals after scores are frozen at t1.
@@ -46,7 +46,7 @@ Several extensions follow from the limitations in Chapter~\ref{ch:discussion} an
 
 \item \textbf{Live oracles and governance tooling:} Integration with risk oracles and governance dashboards would test whether EndorseRank's runtime profile ($2.105$\,s on the matched cohort; order-of-magnitude gains on the expanded pool) sustains production refresh cadences. Careful interface design is required so that ordinal graph scores are not over-interpreted as consumer credit ratings. Human-in-the-loop safeguards remain appropriate wherever scores gate access to financial services.
 
-\item \textbf{Collateral-differentiation experiments:} Section~\ref{sub:deploy-industry} argues that protocols can capture value through fee tiers, utilization, and monitoring cost without treating reputation as a collateral substitute. Until controlled evidence exists, collateral reduction remains an adoption hypothesis rather than an empirical claim of this dissertation.
+\item \textbf{Collateral-differentiation experiments:} Section~\ref{sub:deploy-industry} argues that protocols can capture value through fee tiers, utilization, and monitoring cost without treating reputation as a collateral substitute. Until controlled evidence exists, collateral reduction remains an adoption hypothesis rather than an empirical claim of this research.
 
 \item \textbf{Adoption pathway and reputation multiples:} Longitudinal studies of protocols that publish recomputable social ranks would clarify whether a shared ordinal vocabulary spreads across venues in the manner of valuation multiples (Section~\ref{sub:deploy-multiples}). Metrics of interest include cross-protocol score correlation, fee-tier uptake, monitoring-cost deltas, and Sybil-filter efficacy under live reward programs.
 
@@ -55,8 +55,8 @@ Several extensions follow from the limitations in Chapter~\ref{ch:discussion} an
 
 \dissertationSubheading[sec:closing-reflection]{Closing reflection}
 
-On-chain reputation will not dissolve the need for collateral in adversarial, pseudonymous markets \cend{53,26}. It can, however, make behavioral structure legible. This dissertation shows that legibility depends on which edges we choose to read. Transfers tell a story about economic flow; allowances tell a story about delegated authority. PageRank can narrate either story, but not both at once with the same ranking. EndorseRank commits to the authorization narrative and documents its costs and benefits, including a time-split check of later new approvals.
+On-chain reputation will not dissolve the need for collateral in adversarial, pseudonymous markets \cend{53,26}. It can, however, make behavioral structure legible. This research shows that legibility depends on which edges we choose to read. Transfers tell a story about economic flow; allowances tell a story about delegated authority. PageRank can narrate either story, but not both at once with the same ranking. EndorseRank commits to the authorization narrative and documents its costs and benefits, including a time-split check of later new approvals.
 
-The practical upshot is modest and actionable. If a protocol or researcher needs a fast, auditable score of who is trusted to spend, EndorseRank is a credible instrument on Arbitrum One data of the kind studied here. If the goal is to find transfer hubs, AWP remains stronger among social methods. If the goal is to predict trading profits from social graphs alone, that question is outside this dissertation's claims.
+The practical upshot is modest and actionable. If a protocol or researcher needs a fast, auditable score of who is trusted to spend, EndorseRank is a credible instrument on Arbitrum One data of the kind studied here. If the goal is to find transfer hubs, AWP remains stronger among social methods. If the goal is to predict trading profits from social graphs alone, that question is outside this research's claims.
 
-This dissertation reports primary empirical claims C1--C4 addressing RQ1--RQ4 on a matched Arbitrum One wallet cohort ($n=5{,}521$) and a spender holdout ($n=1{,}335$). EndorseRank stands as an efficient, allowance-specific alternative to transfer-based AWP: distinct in ranking geometry (inter-method $\tau=0.316$), aligned with its primary construct (allowance $\tau=0.355$), approximately $8.9\times$ faster on the studied sample, and aligned with future new approvers at $\tau=0.479$. Those properties motivate continued research on authorization-aware trust signals in decentralized markets.
+This research reports primary empirical claims C1--C4 addressing RQ1--RQ4 on a matched Arbitrum One wallet cohort ($n=5{,}521$) and a spender holdout ($n=1{,}335$). EndorseRank stands as an efficient, allowance-specific alternative to transfer-based AWP: distinct in ranking geometry (inter-method $\tau=0.316$), aligned with its primary construct (allowance $\tau=0.355$), approximately $8.9\times$ faster on the studied sample, and aligned with future new approvers at $\tau=0.479$. Those properties motivate continued research on authorization-aware trust signals in decentralized markets.

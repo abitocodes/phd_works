@@ -83,7 +83,7 @@ The damping factor $d$ interpolates between pure graph propagation ($d\to 1$) an
 This section fixes the empirical universe: which chain, which time window, which public tables, which event types, and which wallets enter the primary sample. Downstream graph construction and proxy formulas never invent events outside this universe.
 
 \begin{itemize}
-\item \textbf{Primary chain:} All on-chain events are drawn from Arbitrum One (chain ID $42161$), an Ethereum Layer-2 rollup with dense DeFi activity and public log availability \cend{53}. Restricting to a single chain avoids cross-chain address aliasing---the same private key controlling addresses on multiple chains would otherwise appear as unrelated nodes---and keeps gas-cost and latency regimes comparable across wallets. Arbitrum One is also the deployment venue for GMX V2's high-volume perpetual markets, which supply wallet-attributed realized PnL at a density that lending defaults do not match within scope.
+\item \textbf{Primary chain:} All on-chain events are drawn from Arbitrum One (chain ID $42161$), an Ethereum Layer-2 rollup with dense DeFi activity and public log availability \cend{53}. Restricting to a single chain avoids cross-chain address aliasing---the same private key controlling addresses on multiple chains would otherwise appear as unrelated nodes---and keeps gas-cost and latency regimes comparable across wallets. Arbitrum One is also the deployment venue for GMX V2, whose \texttt{PositionDecrease} events are used only as an activity filter.
 
 \item \textbf{Observation window:} The study window is 2025-12-01 00:00:00 UTC through 2026-05-31 23:59:59 UTC (six calendar months). Exclusive end timestamps in SQL use 2026-06-01 00:00:00 UTC so that the inclusive calendar end is 2026-05-31. This window is long enough to accumulate multiple GMX closes per active trader---the minimum-close filter requires at least three---while remaining tractable for monthly-batched reputation extracts under BigQuery byte budgets. AWP time-decay is anchored at observation end $T_{\mathrm{obs}}=$ 2026-05-31 23:59:59 UTC, so $\Delta t=0$ for events at the window's close and $\Delta t\approx 181$ days for events at the window's open.
 
@@ -124,7 +124,7 @@ Data acquisition and evaluation proceed in three phases that separate expensive 
 
 \dissertationSubheading[sec:pipeline-architecture]{Pipeline architecture}
 
-Figure~\ref{fig:pipeline-architecture} summarizes the end-to-end flow from public logs to dissertation tables. Remote stages write immutable parquet; local stages are idempotent given those inputs and a single versioned configuration file.
+Figure~\ref{fig:pipeline-architecture} summarizes the end-to-end flow from public logs to the research tables. Remote stages write immutable parquet; local stages are idempotent given those inputs and a single versioned configuration file.
 
 \begin{figure}[htbp]
 \centering
@@ -187,7 +187,7 @@ the hash of \texttt{Transfer(address,address,uint256)}. Sender and recipient are
 
 \item \textbf{GMX \texttt{PositionDecrease}:} GMX V2 emits structured events through \texttt{EventEmitter} rather than a minimal ERC-20-style signature \cend{23}. Extraction filters on the emitter address and the verified \texttt{EventLog1} topic~$0$, then decodes key--value fields from the event payload to recover \texttt{account}, \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, and liquidation indicators. Only decreases enter the sampling frame. Increases open or enlarge positions and do not count toward the three-close filter.
 
-\item \textbf{Address normalization and units:} All addresses are lower-cased before joins so that checksummed and non-checksummed hex forms collide correctly. Token amounts are stored as floating-point decimal-adjusted values for weighting; ranking uses relative magnitudes within a cohort rather than absolute USD conversion for allowance and transfer edges. GMX PnL fields exist in the event schema; they are not used as dissertation claims.
+\item \textbf{Address normalization and units:} All addresses are lower-cased before joins so that checksummed and non-checksummed hex forms collide correctly. Token amounts are stored as floating-point decimal-adjusted values for weighting; ranking uses relative magnitudes within a cohort rather than absolute USD conversion for allowance and transfer edges. GMX PnL fields exist in the event schema; they are not used as research claims.
 
 \end{itemize}
 
@@ -340,7 +340,7 @@ These checks measure endorsement received, the construct EndorseRank is designed
 
 \dissertationSubsubheading[sub:proxy-inverse-risk]{Outcome families (not claimed)}
 
-Inverse-risk, trading-success, and liquidation summaries from GMX closes remain in the evaluation artifact for completeness. They are not operational definitions for dissertation claims. The identities below are retained so existing table fragments still compile; the text does not interpret them as evidence of trading skill, credit risk, or malicious spenders. Let $\mathcal{C}(w)$ be GMX closes for wallet $w$, with PnL $x_c$ and liquidation flag $\ell_c\in\{0,1\}$.
+Inverse-risk, trading-success, and liquidation summaries from GMX closes remain in the evaluation artifact for completeness. They are not operational definitions for research claims. The identities below are retained so existing table fragments still compile; the text does not interpret them as evidence of trading skill, credit risk, or malicious spenders. Let $\mathcal{C}(w)$ be GMX closes for wallet $w$, with PnL $x_c$ and liquidation flag $\ell_c\in\{0,1\}$.
 \begin{align}
 \mathrm{loss\_avoidance}(w)
 &=
@@ -534,7 +534,7 @@ This study uses exclusively publicly available blockchain data and does not inte
 
 
 \item\phantomsection\label{sub:responsible-disclosure}
-  \textbf{Responsible disclosure and impact:} Although EndorseRank may inform risk assessment in DeFi contexts, it is not financial advice, credit advice, or a consumer reporting product. Human oversight remains necessary for lending, trading, and compliance decisions. Potential adversarial manipulation (for example, Sybil attacks on $G_{\mathrm{approve}}$ or wash transfers on $G_{\mathrm{transfer}}$) is acknowledged and discussed in Chapter~\ref{ch:discussion}. The study reports aggregated cohort-level findings rather than wallet-level rankings intended for targeting individual users. Any future operational deployment would require additional governance, appeal mechanisms, and fairness monitoring beyond the scope of this dissertation.
+  \textbf{Responsible disclosure and impact:} Although EndorseRank may inform risk assessment in DeFi contexts, it is not financial advice, credit advice, or a consumer reporting product. Human oversight remains necessary for lending, trading, and compliance decisions. Potential adversarial manipulation (for example, Sybil attacks on $G_{\mathrm{approve}}$ or wash transfers on $G_{\mathrm{transfer}}$) is acknowledged and discussed in Chapter~\ref{ch:discussion}. The study reports aggregated cohort-level findings rather than wallet-level rankings intended for targeting individual users. Any future operational deployment would require additional governance, appeal mechanisms, and fairness monitoring beyond the scope of this research.
 
 
 \item\phantomsection\label{sub:methodological-commitments}
