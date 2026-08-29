@@ -70,6 +70,13 @@ reputation:
   observation_start_ts: "2025-12-01 00:00:00 UTC"
   observation_end_ts: "2026-06-01 00:00:00 UTC"
   observation_end: "2026-05-31 23:59:59 UTC"
+  holdout:
+    score_end: "2026-02-28 23:59:59 UTC"
+    outcome_start: "2026-03-01 00:00:00 UTC"
+    outcome_end: "2026-05-31 23:59:59 UTC"
+    bootstrap_resamples: 400
+    bootstrap_seed: 42
+    min_closes: 3
   damping: 0.85
   pagerank_tolerance: 1.0e-8
   max_iterations: 300
@@ -82,6 +89,7 @@ reputation:
     raw_transfers_dir: data/raw/reputation/transfers
     latest_allowances: data/processed/reputation/latest_allowances.parquet
     transfer_events: data/processed/reputation/transfer_events.parquet
+    holdout_summary: data/processed/holdout/eval_summary.json
 
 budget:
   max_bytes_per_query: 161061273600  # 150 GiB per query; abort if dry-run exceeds
