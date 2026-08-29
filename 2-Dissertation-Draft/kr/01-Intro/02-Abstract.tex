@@ -7,12 +7,12 @@
 
 탈중앙화 금융(DeFi) 프로토콜은 자주 갱신할 수 있고, 운영 용어로 해석할 수 있으며, 공개 원장 신호와 대조할 수 있는 온체인 지갑 평판 점수가 필요하다. 전송 그래프 Adaptive Weighted PageRank(AWP)는 그 과제의 문서화된 기준선이지만, 과거 전송 집계는 비용이 크고, 전송량은 명시적 지출 승인과 같지 않다.
 
-본 학위논문은 EndorseRank를 도입한다. Arbitrum One에서 최신 ERC-20 allowance를 간선으로 하는 방향성 보증 그래프에 PageRank를 적용한 점수이다. 나는 동일 지갑 코호트($n=5{,}521$)에서 다섯 대리 지표 계열로 EndorseRank를 AWP와 대비하여 평가한다. 또한 GMX V2 거래 성공 대리 지표를 도입하고, 동일 손익 흐름으로 구축한 보조적 결과 고유 상한인 GF-PR를 추가한다. GF-PR는 배포 가능한 사회적 평판 점수가 아니다.
+본 학위논문은 EndorseRank를 도입한다. Arbitrum One에서 최신 ERC-20 allowance를 간선으로 하는 방향성 보증 그래프에 PageRank를 적용한 점수이다. 나는 EndorseRank를 AWP와 대비하여, GMX V2 활동(포지션 종료 3건 이상)으로만 정의한 매칭 지갑 코호트($n=5{,}521$)에서 평가한다. GMX는 표본 틀이지 거래 실력 검증이 아니다. 동시창 점검은 전송·allowance 국소 통계를 쓴다. 시간 홀드아웃은 2026년 2월 28일까지의 사건으로 점수를 매기고, 2026년 3--5월의 신규 owner--spender 승인으로 라벨을 만든다.
 
 매칭 코호트에서 EndorseRank의 PageRank 벽시계 시간은 $2.105$\,s, AWP는 $18.711$\,s이다($\approx 8.9\times$). allowance 계열 정합은 의도한 구성개념 점검이지 외부 검증이 아니다. EndorseRank 평균 Kendall $\tau=0.355$, AWP는 거의 0이다($-0.030$). 전송 대리 지표에서는 여전히 AWP가 더 가깝다($\tau=0.534$ 대 $0.333$). 방법 간 $\tau=0.316$은 겹치지만 서로 대체할 수 없는 순위를 시사한다.
 
-확장 지갑 풀($N=31{,}612$)에서 EndorseRank는 $n=10{,}000$에서 AWP보다 약 $10.4\times$, 전체 풀에서 약 $9.4\times$ 빠르다. 감쇠, 상위 20개 토큰, 표본 크기 검사는 allowance--전송 상충을 뒤집지 않는다.
+홀드아웃 spender 코호트($n=1{,}335$)에서 EndorseRank는 미래 신규 승인자 수와 Kendall $\tau=0.479$로 정합한다(부트스트랩 95\% CI $0.426$--$0.529$). AWP는 거의 0이다($\tau=0.044$). 222개 spender가 t2에서 적어도 한 쌍의 신규 승인을 받았다. 이는 같은 보증 구성개념의 미래형이지, 거래 이익·청산·악성 spender를 예측한 결과가 아니다.
 
-사회적 방법 가운데 본 체인에서는 전송 대리 지표가 거래 성공 대리 지표보다 평균 정합이 더 높다. GF-PR는 구성상 거래 성공 평균 $\tau$가 가장 높다($0.583$). 낮은 갱신 비용으로 승인 인지 점수가 필요한 프로토콜에는 EndorseRank의 근거가 있고, 전송 허브 탐지가 필요한 프로토콜은 여전히 AWP를 택할 수 있다.
+확장 지갑 풀($N=31{,}612$)에서 EndorseRank는 $n=10{,}000$에서 AWP보다 약 $10.4\times$, 전체 풀에서 약 $9.4\times$ 빠르다. 감쇠, 상위 20개 토큰, 표본 크기 검사는 allowance--전송 상충을 뒤집지 않는다. 낮은 갱신 비용으로 승인 인지 점수가 필요한 프로토콜에는 EndorseRank의 근거가 있고, 전송 허브 탐지가 필요한 프로토콜은 여전히 AWP를 택할 수 있다.
 
-\textbf{\emph{키워드---}} DeFi, EndorseRank, Adaptive Weighted PageRank, 온체인 평판, GMX V2, Arbitrum One, 도메인 정합, Spearman's rho, Kendall's tau, GF-PR(결과 고유 참조)
+\textbf{\emph{키워드---}} DeFi, EndorseRank, Adaptive Weighted PageRank, 온체인 평판, ERC-20 allowance, 시간 홀드아웃, Arbitrum One, Kendall's tau

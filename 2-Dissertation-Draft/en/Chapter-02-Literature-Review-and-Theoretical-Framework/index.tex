@@ -2,7 +2,7 @@
 \chapter{Literature Review and Theoretical Framework}
 \label{ch:literature}
 
-This chapter reviews the conceptual and technical foundations required to interpret EndorseRank, Adaptive Weighted PageRank (AWP), and the supplementary outcome-native reference GF-PR. It begins with blockchain and DeFi primitives for readers who may not specialize in distributed ledgers, then develops graph ranking theory, reputation-system lineage, ERC-20 allowance semantics, GMX V2 trading-success validation, and rank-correlation statistics. A theoretical framework---hyperlink--citation propagation, domain alignment, and computational complexity---motivates the primary EndorseRank versus AWP comparison. Later sections supply a terminology guide, worked example, risk taxonomy, perpetual-market laboratory, AWP in depth, method comparison, and open problems that lead into Chapters~\ref{ch:methodology} and~\ref{ch:results}.
+This chapter reviews the conceptual and technical foundations required to interpret EndorseRank and Adaptive Weighted PageRank (AWP). It begins with blockchain and DeFi primitives for readers who may not specialize in distributed ledgers, then develops graph ranking theory, reputation-system lineage, ERC-20 allowance semantics, the GMX V2 sampling frame, and rank-correlation statistics. A theoretical framework---hyperlink--citation propagation, domain alignment, and computational complexity---motivates the primary EndorseRank versus AWP comparison. Later sections supply a terminology guide, worked example, risk taxonomy, AWP in depth, method comparison, and open problems that lead into Chapters~\ref{ch:methodology} and~\ref{ch:results}.
 
 \dissertationSubheading[sec:blockchain-defi-foundations]{Blockchain and DeFi foundations}
 
@@ -144,15 +144,13 @@ Formally, for each token and owner--spender pair, let $a_{o\to s}$ be the decima
 
 The endorsement interpretation is intentional but imperfect. Users approve routers for convenience, not always as a social judgment of the router's ``trustworthiness.'' Contract addresses and EOAs coexist. Nevertheless, allowances are a clearer authorization signal than passive receipt of transfers, which may reflect market making, airdrops, or routing without any endorsement intent \cend{16}.
 
-\dissertationSubheading[sec:gmx-validation]{Trading success validation frame (GMX V2)}
+\dissertationSubheading[sec:gmx-validation]{GMX V2 as a sampling frame}
 
-On Arbitrum One, dense wallet-attributed \texttt{PositionDecrease} events with realized PnL (\texttt{basePnlUsd}) provide trading-success proxies: close-success count, realized gain proxy, and close success rate \cend{23,53}. Under-collateralized lending default labels are sparse on this chain; GMX V2 perpetual closes offer dense, wallet-level realized outcomes for domain-intuition validation. These proxies parallel Do et al.'s in-degree/in-value logic but target collateralized perpetual trading rather than raw inflows.
+On Arbitrum One, GMX V2 \texttt{PositionDecrease} events identify wallets with repeated perpetual activity \cend{23,53}. This dissertation uses a minimum of three closes only to define the matched evaluation sample. Close-level profit-and-loss is not a validation claim. Under-collateralized lending default labels remain out of scope.
 
-Perpetual markets allow leveraged long and short exposure with funding and liquidation rules \cend{59}. A profitable close is not equivalent to loan repayment, but it is an observable outcome that risk systems may care about when screening active traders. This dissertation treats GMX outcomes as \emph{domain-intuition proxies}, not regulatory ground truth.
+\dissertationSubheading[sub:gf-pr]{What this dissertation does not claim}
 
-\dissertationSubheading[sub:gf-pr]{Supplementary extension: outcome-native reference (GF-PR)}
-
-During the empirical phase, \textbf{GF-PR} (GainFlow PageRank) was added as a supplementary diagnostic to bound trading-outcome proxy alignment. GF-PR builds a directed star graph from the same GMX \texttt{PositionDecrease} stream: a synthetic profit pool node sends edges to wallets with positive realized PnL; wallets send edges to a loss sink for negative closes ($|\text{PnL}|+0.1$) and liquidations ($|\text{PnL}|+1.0$). GF-PR has no wallet-to-wallet social edges; it serves as an \emph{outcome-native ceiling reference} (SRQ1), not a peer to EndorseRank or AWP. High alignment with trading-success proxies is expected by construction and must be interpreted as construct overlap, not superior social reputation.
+Trading-success, inverse-risk, liquidation, and malicious-spender alignments are not used as evidence. An outcome-native PageRank on GMX profit-and-loss (sometimes called GF-PR in the evaluation artifact) was computed during exploratory work; it is circular with those outcomes by construction and is excluded from the claims. The external check that remains is a temporal holdout of future new owner--spender approvals (Chapters~\ref{ch:methodology} and~\ref{ch:results}).
 
 \dissertationSubheading[sec:rank-correlation-theory]{Rank correlation theory}
 
@@ -184,22 +182,22 @@ This study uses hyperlink--citation propagation, construct (domain) alignment, a
 \end{equation}
 with $k=0.01$ and $t_0=180$ days as used for AWP in this study. EndorseRank extends citation-based propagation to ERC-20 approve/permit edges because allowances are explicit, on-chain delegations of spending authority \cend{18,19}. Unlike transfers, which may reflect trading or routing without trust intent, an allowance records explicit authorization that remains in force until revoked or replaced. Graph-based risk models \cend{44} further show that network structure carries information beyond raw activity counts, supporting a directed endorsement graph rather than transfer volume alone.
 
-\item \textbf{Domain alignment framework:} In measurement theory, construct alignment assesses how well an indicator tracks an observable outcome \cend{14}. For rank-based reputation scoring, Spearman's $\rho$ and Kendall's $\tau$ evaluate monotonic and pairwise ordering agreement without assuming a classification threshold \cend{16}. Close-success count from GMX V2 and realized gain proxy serve as observable trading-success measures on Arbitrum One, satisfying the domain-intuition requirement without claiming external loan-repayment ground truth.
+\item \textbf{Domain alignment framework:} In measurement theory, construct alignment assesses how well an indicator tracks an intended construct \cend{14}. For rank-based reputation scoring, Spearman's $\rho$ and Kendall's $\tau$ evaluate monotonic and pairwise ordering agreement without assuming a classification threshold \cend{16}. Contemporaneous transfer and allowance statistics check graph coherence; a temporal holdout of future new approvals is the out-of-window check.
 
 \item \textbf{Computational complexity:} PageRank's per-iteration cost is $O(|E|)$ \cend{49}. Allowance graphs are sparser than transfer graphs (fewer edges $|E|$), yielding lower per-iteration cost and reduced memory, and often fewer iterations in practice---the basis for H3.
 \end{itemize}
 
-Figure~\ref{fig:conceptual-model} presents the conceptual model mapping the primary EndorseRank--AWP comparison to H1--H3 and RQ1--RQ4. GF-PR (dashed) is a supplementary outcome-native ceiling for SRQ1, added during empirical work.
+Figure~\ref{fig:conceptual-model} presents the conceptual model mapping the primary EndorseRank--AWP comparison to H1--H3 and RQ1--RQ4.
 
 \begin{figure}[htbp]
 \centering
 \input{Figures/conceptual-model.tex}
-\caption{Conceptual model: primary EndorseRank vs.\ AWP comparison mapped to reputation structure (H1/RQ1), social-method alignment (H2/RQ2), and computational efficiency (H3/RQ3); RQ4 separately compares transfer versus trading-success validation frames. GF-PR (dashed) is a supplementary outcome-native ceiling reference (SRQ1), not a third peer social method.}
+\caption{Conceptual model: primary EndorseRank vs.\ AWP comparison mapped to reputation structure (H1/RQ1), construct checks (H2/RQ2), computational efficiency (H3/RQ3), and the temporal holdout of future new approvals (RQ4).}
 \label{fig:conceptual-model}
 \end{figure}
 
 \begin{itemize}
-\item \textbf{Supplementary role of GF-PR:} H1 and H3 concern EndorseRank and AWP only. H2/RQ2 compares social-method alignment between EndorseRank and AWP across five proxy families. RQ4 separately compares transfer versus trading-success validation frames. GF-PR bounds the maximum trading-outcome proxy alignment achievable when ranking directly on outcome flow, clarifying construct overlap for SRQ1 without entering the primary hypothesis tests.
+\item \textbf{Holdout, not outcome ranking:} H1 and H3 concern EndorseRank and AWP only. H2/RQ2 compares contemporaneous allowance and transfer checks. RQ4 is a time-split test of future new owner--spender approvals on the spender cohort.
 \end{itemize}
 
 \dissertationSubheading[sub:terminology]{Reader's guide to terminology}
@@ -208,19 +206,19 @@ The definitions in Chapter~\ref{ch:introduction} establish formal constructs; th
 
 \begin{itemize}
 \item \textbf{Primary methods:} EndorseRank (allowance graph) and AWP (transfer graph). Both are social PageRank methods on wallet-to-wallet edges; intended as deployable reputation signals.
-\item \textbf{Supplementary reference:} GF-PR on GMX PnL flow to/from synthetic POOL/SINK nodes; outcome-native ceiling for SRQ1, not a deployable social score.
-\item \textbf{Primary graph construct:} The graph a method is \emph{designed} to rank (e.g., $G_{\text{approve}}$ for EndorseRank). Distinct from validation proxies applied after scoring.
-\item \textbf{Validation proxy:} Observable wallet metric (e.g., in-degree, GMX close-success count) used to test whether rankings align with an external construct \cend{14}.
-\item \textbf{Construct overlap:} When a method's input graph and a validation proxy share the same data source (GF-PR vs.\ trading-outcome proxies), inflating $\tau$ without implying social reputation. GF-PR's trading-success alignment is circular by construction and is reported only as a ceiling diagnostic.
-\item \textbf{Matched wallet cohort:} The primary evaluation sample of $n=5{,}521$ wallets with at least three GMX closes and non-zero reputation-subgraph connectivity.
+\item \textbf{Primary graph construct:} The graph a method is \emph{designed} to rank (e.g., $G_{\text{approve}}$ for EndorseRank). Distinct from checks applied after scoring.
+\item \textbf{Contemporaneous check:} Local transfer or allowance statistics computed in the same window as the score \cend{14}.
+\item \textbf{Temporal holdout:} Scores frozen at t1; labels from t2 new owner--spender approvals on inbound spenders.
+\item \textbf{Matched wallet cohort:} The primary same-window sample of $n=5{,}521$ wallets with at least three GMX closes and non-zero reputation-subgraph connectivity.
+\item \textbf{Spender holdout cohort:} $n=1{,}335$ t1 inbound allowance recipients used for RQ4.
 \item \textbf{Expanded wallet pool:} A larger address set ($N=31{,}612$) used for runtime scaling beyond the matched cohort.
 \end{itemize}
 
 \dissertationSubheading[sec:domain-alignment-metrics]{Domain alignment metrics}
 
-Following Do et al.\cend{16} and Cronbach \& Meehl\cend{14}, construct alignment for rank-based scores uses Spearman's $\rho$ and Kendall's $\tau$ between reputation scores and proxy rankings. This dissertation evaluates \textbf{five proxy families} (transfer, allowance, inverse risk, Sybil-adjusted stability, trading success); see Chapter~\ref{ch:methodology} for operational definitions and formulas. Family-level mean $\tau$ summarizes each construct; per-proxy tables report $\rho$ and $\tau$ for transparency.
+Following Do et al.\cend{16} and Cronbach \& Meehl\cend{14}, construct alignment for rank-based scores uses Spearman's $\rho$ and Kendall's $\tau$ between reputation scores and check rankings. This dissertation reports contemporaneous transfer and allowance checks and a temporal holdout of future new approvals; see Chapter~\ref{ch:methodology} for operational definitions.
 
-The literature reviewed here supports three design choices: (i) PageRank as an interpretable propagation backbone; (ii) allowances as endorsement edges distinct from transfers; and (iii) multi-family rank correlation as validation in the absence of loan-default labels. These choices motivate the remaining sections of this chapter and, later, the operational pipeline in Chapter~\ref{ch:methodology}.
+The literature reviewed here supports three design choices: (i) PageRank as an interpretable propagation backbone; (ii) allowances as endorsement edges distinct from transfers; and (iii) rank correlation plus a time split as the check design. These choices motivate the remaining sections of this chapter and, later, the operational pipeline in Chapter~\ref{ch:methodology}.
 
 \dissertationSubheading[sec:pagerank-worked-example]{Worked example: PageRank on a four-node endorsement graph}
 
@@ -238,17 +236,17 @@ DeFi risk is multi-layered \cend{59,51,26,11}. Smart-contract risk concerns bugs
 
 On-chain reputation scores address only the behavioral layer, and only partially. They do not replace collateral, audits, or oracle design. Their role is to summarize relational structure (who authorizes whom; who pays whom) into an ordinal signal that can be audited and recomputed \cend{48}. EndorseRank targets the authorization facet of behavioral risk; AWP targets the payment-flow facet. Neither claims to predict exploits or governance attacks.
 
-Wash trading and MEV further complicate behavioral measurement \cend{57,15,63}, as do cross-venue arbitrage flows that inflate transfer activity without reflecting durable counterparty relationships \cend{45}. Transfer graphs are especially exposed to artificial volume; allowance graphs are exposed to approval farming. Multi-family validation and Sybil-oriented proxies are partial mitigations, not complete defenses.
+Wash trading and MEV further complicate behavioral measurement \cend{57,15,63}, as do cross-venue arbitrage flows that inflate transfer activity without reflecting durable counterparty relationships \cend{45}. Transfer graphs are especially exposed to artificial volume; allowance graphs are exposed to approval farming. Time-split checks and Sybil-oriented diagnostics are partial mitigations, not complete defenses.
 
-\dissertationSubheading[sec:perp-mechanics]{Perpetual markets as a validation laboratory}
+\dissertationSubheading[sec:perp-mechanics]{Perpetual markets as a sampling laboratory}
 
-Perpetual futures (``perps'') are derivative contracts without expiry, popularized in crypto markets and implemented on-chain by protocols such as GMX \cend{23,28}. Decentralized exchanges and automated market makers provide the broader trading infrastructure in which such venues operate \cend{10,21,41,61}. Traders post collateral, choose long or short exposure, and pay or receive funding. Positions may be reduced or closed voluntarily, or liquidated when collateral is insufficient. Each close emits an on-chain event with realized PnL attributable to a wallet.
+Perpetual futures (``perps'') are derivative contracts without expiry, popularized in crypto markets and implemented on-chain by protocols such as GMX \cend{23,28}. Decentralized exchanges and automated market makers provide the broader trading infrastructure in which such venues operate \cend{10,21,41,61}. Traders post collateral, choose long or short exposure, and pay or receive funding. Positions may be reduced or closed voluntarily. Each close emits an on-chain event attributable to a wallet.
 
-For reputation research, perps offer three advantages over sparse lending defaults on Arbitrum: (i) high event density ($365{,}488$ closes in the study window); (ii) wallet-level attribution; and (iii) signed outcomes (profit, loss, liquidation) that can be turned into oriented proxies. The disadvantage is construct distance from unsecured credit: a profitable trader is not necessarily a good borrower. This dissertation therefore treats GMX outcomes as domain-intuition proxies and reports transfer proxies alongside them (RQ4).
+This dissertation uses that event density only to define an active matched sample ($365{,}488$ closes in the study window; $\geq 3$ closes per wallet). Signed profit-and-loss is not a validation claim. RQ4 uses a temporal holdout of future new approvals, not perpetual profitability.
 
 \dissertationSubheading[sec:related-measurement]{Related measurement traditions}
 
-Beyond blockchain, reputation systems have been studied in e-commerce \cend{52}, peer-to-peer networks \cend{35}, and web spam \cend{27}. Common lessons include: (i) reputation is relational; (ii) cheap identities enable Sybil attacks \cend{17}; (iii) seed sets and normalization limit inflation; and (iv) evaluation requires external criteria, not only internal consistency. EndorseRank inherits (i)--(iii) via PageRank damping and endorsement costs, and addresses (iv) via multi-family rank correlation \cend{14,54,36}.
+Beyond blockchain, reputation systems have been studied in e-commerce \cend{52}, peer-to-peer networks \cend{35}, and web spam \cend{27}. Common lessons include: (i) reputation is relational; (ii) cheap identities enable Sybil attacks \cend{17}; (iii) seed sets and normalization limit inflation; and (iv) evaluation requires external criteria, not only internal consistency. EndorseRank inherits (i)--(iii) via PageRank damping and endorsement costs, and addresses (iv) via contemporaneous construct checks and a temporal holdout \cend{14,54,36}.
 
 Personalized and topic-sensitive PageRank variants \cend{30,32} could, in future work, bias teleportation toward protocol-approved contracts or known-good wallets, analogous to TrustRank seeds. This dissertation uses uniform teleportation for comparability with Do et al.\cend{16}.
 
@@ -268,7 +266,7 @@ From a measurement standpoint, unlimited approvals create heavy-tailed edge weig
 
 Do and Do\cend{16} apply PageRank and HodgeRank to Ethereum transfers as a social-credit signal. Adaptive Weighted PageRank (AWP)\cend{64} uses transfer edges whose weights combine value and recency through a logistic decay. Validation uses inbound degree and inbound value---proxies for ``how much economic attention a wallet receives.'' The framework is attractive because it is fully on-chain, rank-based, and free of off-chain identity.
 
-EndorseRank preserves the PageRank-and-rank-correlation template but replaces the edge semantics. The empirical question is not whether AWP is ``wrong,'' but whether allowance edges yield a different, useful, and cheaper signal. Chapter~\ref{ch:results} tests whether allowance edges produce a construct-distinct, allowance-aligned, and computationally cheaper score, and whether either social method dominates across proxy families.
+EndorseRank preserves the PageRank-and-rank-correlation template but replaces the edge semantics. The empirical question is not whether AWP is ``wrong,'' but whether allowance edges yield a different, useful, and cheaper signal. Chapter~\ref{ch:results} tests whether allowance edges produce a construct-distinct, allowance-aligned, and computationally cheaper score, and whether t1 scores predict t2 new approvals.
 
 \dissertationSubheading[sec:method-comparison-table]{Comparison of graph reputation methods}
 
@@ -288,14 +286,13 @@ EigenTrust & Local trust ratings & Iterative aggregation & P2P file authenticity
 TrustRank & Links from seed goods & Static / seeded & Spam demotion \\
 AWP & Token transfers & Logistic decay & In-degree / in-value \\
 RiskProp & Risk-bearing links & Propagation of risk & Account risk labels \\
-EndorseRank & Latest allowances & Snapshot (override) & Allowance proxies; secondary families \\
-GF-PR (supp.) & PnL flow to POOL/SINK & Outcome-native & Trading-success (overlap) \\
+EndorseRank & Latest allowances & Snapshot (override) & Allowance checks; t2 new approvals \\
 \bottomrule
 \end{tabular}
 }
 \end{table}
 
-The table highlights that EndorseRank's novelty is not the use of PageRank per se, but the choice of latest-allowance endorsement edges as the primary social construct for DeFi wallets, evaluated under a multi-family alignment protocol.
+The table highlights that EndorseRank's novelty is not the use of PageRank per se, but the choice of latest-allowance endorsement edges as the primary social construct for DeFi wallets.
 
 \dissertationSubheading[sec:open-problems]{Open problems motivating this dissertation}
 
@@ -305,9 +302,9 @@ Several open problems in on-chain reputation remain unresolved in the literature
 \item \textbf{Edge semantics:} Which on-chain relations best encode trust or authorization under pseudonymity \cend{48}?
 \item \textbf{Validation without defaults:} How can methods be compared when loan-default labels are scarce \cend{16,14}?
 \item \textbf{Computational cost:} Can reputation scores refresh at interactive latencies as graphs grow \cend{40}?
-\item \textbf{Construct overlap:} How can evaluation avoid mistaking shared inputs for predictive power (SRQ1)?
+\item \textbf{Time-split checks:} How can evaluation avoid mistaking same-window graph statistics for out-of-window evidence?
 \item \textbf{Adversarial robustness:} What is the cost of forging reputation under cheap identities \cend{17}?
 \end{enumerate}
 
-EndorseRank addresses (1)--(3) directly, contributes a diagnostic for (4) via GF-PR, and analyzes (5) at a model level in Chapter~\ref{ch:discussion}. Full empirical adversarial evaluation remains future work.
+EndorseRank addresses (1)--(4) with allowance edges, contemporaneous checks, runtime benchmarks, and a temporal holdout, and analyzes (5) at a model level in Chapter~\ref{ch:discussion}. Full empirical adversarial evaluation remains future work.
 

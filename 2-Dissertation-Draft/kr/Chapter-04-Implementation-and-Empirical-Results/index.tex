@@ -1,312 +1,269 @@
 ﻿% !TEX root = ../main.tex
-\chapter{Implementation and Empirical Results}
+\chapter{구현 및 실증 결과}
 \label{ch:results}
 
-This chapter reports the empirical evaluation of EndorseRank against Adaptive Weighted PageRank (AWP) on Arbitrum One. The analysis proceeds from cohort construction and descriptive distributions, through computational benchmarks and robustness checks, to social-method alignment across five proxy families, inter-method rank divergence, and a supplementary GainFlow PageRank (GF-PR) ceiling analysis. Primary claims C1--C4 address the EndorseRank--AWP comparison; supplementary claim SC1 interprets GF-PR as an outcome-native diagnostic rather than a deployable social reputation method.
+본 장은 Arbitrum One에서 EndorseRank를 Adaptive Weighted PageRank(AWP)와 비교한 실증 평가를 보고한다. 분석은 코호트 구성, 계산 벤치마크와 강건성 검증, 동시기 allowance·전송 검사, 방법 간 순위 분기, 미래 신규 승인의 시간 홀드아웃 순으로 진행한다. 주요 주장 C1--C4는 EndorseRank--AWP 비교를 다룬다. 거래 성공, 역위험, 청산(liquidation), 악성 지출자 정합은 주장이 아니다.
 
-All primary results use an identical matched cohort of $n=5{,}521$ wallets that satisfy both a GMX trading-activity filter and non-zero connectivity in the reputation subgraphs. Runtime scaling is evaluated on an expanded wallet pool of $N=31{,}612$ addresses. Robustness checks vary PageRank damping, restrict the reputation graph to high-volume tokens, and recompute alignment at staged subsample sizes drawn from the expanded pool. Methodological definitions appear in Chapter~\ref{ch:methodology}; the open evaluation pipeline is documented in Appendix~\ref{ch:appendix-eval}. Claims are summarized in Section~\ref{sec:empirical-claims} and mapped to hypotheses and research questions in Table~\ref{tab:hrq-claim-map}.
+동일 창 결과는 GMX 활동 필터($\geq 3$건의 close)와 평판 부분그래프의 비영(非零) 연결성을 만족하는 동일 매칭 코호트 $n=5{,}521$ 지갑을 사용한다. 홀드아웃은 t1 인바운드 지출자($n=1{,}335$)를 사용한다. 런타임 확장성은 확장 지갑 풀 $N=31{,}612$개 주소에서 평가한다. 강건성 검증은 PageRank 감쇠를 변동시키고, 평판 그래프를 고거래량 토큰으로 제한하며, 단계별 부분표본 크기에서 정합을 재계산한다. 방법론적 정의는 제~\ref{ch:methodology}장에 있다. 주장은 제~\ref{sec:empirical-claims}절에서 요약하고 표~\ref{tab:hrq-claim-map}에 대응시킨다.
 
-\dissertationSubheading[sec:dataset]{Dataset}
+\dissertationSubheading[sec:dataset]{데이터셋}
 
-The matched cohort comprises $n=5{,}521$ wallets with at least three GMX V2 \texttt{PositionDecrease} closes and non-zero reputation-subgraph connectivity, drawn from six months of Arbitrum One BigQuery logs spanning 2025-12-01 through 2026-05-31. EndorseRank scores are computed on the latest-allowance endorsement graph $G_{\text{approve}}$; AWP scores are computed on the time-decayed transfer graph $G_{\text{transfer}}$. Five proxy families---transfer, allowance, inverse risk, Sybil-adjusted stability, and trading success---are evaluated against both social methods. GF-PR scores are computed from the same cohort for supplementary analysis only (Section~\ref{sec:gf-pr-ceiling}).
+매칭 코호트는 2025-12-01부터 2026-05-31까지 6개월의 Arbitrum One BigQuery 로그에서, GMX V2 \texttt{PositionDecrease} close가 최소 세 건이고 평판 부분그래프 연결성이 비영인 $n=5{,}521$ 지갑으로 구성된다. EndorseRank 점수는 최신 allowance 보증 그래프 $G_{\text{approve}}$에서, AWP 점수는 시간 감쇠 전송 그래프 $G_{\text{transfer}}$에서 계산한다. 동일 창 주장은 전송 및 allowance 국소 통계를 사용한다. 시간 홀드아웃은 제~\ref{sec:gf-pr-ceiling}절에서 보고한다.
 
-Table~\ref{tab:dataset-stats} summarizes cohort size, event counts, and subgraph edge counts. The endorsement graph is substantially sparser than the transfer graph (14{,}727 vs.\ 137{,}087 edges), a structural difference that underpins both the runtime advantage reported in Section~\ref{sec:benchmark-results} and the construct-specific alignment patterns in Sections~\ref{sec:three-method-alignment}--\ref{sec:proxy-family-detail}.
+표~\ref{tab:dataset-stats}는 코호트 크기, 이벤트 수, 부분그래프 간선 수를 요약한다. 보증 그래프는 전송 그래프보다 현저히 희소하다(14{,}727 대 137{,}087개 간선). 이 구조적 차이는 제~\ref{sec:benchmark-results}절의 런타임 이점과 제~\ref{sec:three-method-alignment}--\ref{sec:proxy-family-detail}절의 구성 개념별 정합 패턴을 뒷받침한다.
 
 \begin{table}[htbp]
 \centering
-\caption{Dataset characteristics for the matched cohort ($n=5{,}521$ wallets with $\geq 3$ GMX closes and non-zero reputation-subgraph connectivity).}
+\caption{매칭 코호트($n=5{,}521$ 지갑, $\geq 3$건의 GMX close, 비영 평판 부분그래프 연결성)의 데이터셋 특성.}
 \label{tab:dataset-stats}
 \begin{tabular}{lr}
 \toprule
-Statistic & Value \\
+통계량 & 값 \\
 \midrule
-Matched wallets & 5{,}521 \\
-GMX \texttt{PositionDecrease} events (decoded) & 365{,}488 \\
-EndorseRank edges (subgraph) & 14{,}727 \\
-AWP edges (subgraph) & 137{,}087 \\
-Observation window & 2025-12-01 -- 2026-05-31 \\
-Min.\ GMX closes per wallet & 3 \\
+매칭 지갑 & 5{,}521 \\
+GMX \texttt{PositionDecrease} 이벤트(디코딩) & 365{,}488 \\
+EndorseRank 간선(부분그래프) & 14{,}727 \\
+AWP 간선(부분그래프) & 137{,}087 \\
+관측 창 & 2025-12-01 -- 2026-05-31 \\
+지갑당 최소 GMX close & 3 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The edge-count asymmetry is not an artifact of incomplete extraction: both graphs are built from the same wallet seed set and the same observation window. EndorseRank retains only the latest decimal-adjusted allowance per owner--spender pair, so repeated approvals collapse to a single directed edge. AWP aggregates transfer history with logistic time-decay, producing many more directed edges among the same wallets. Consequently, differences in scores and alignment are attributable to ranking logic and graph semantics, not to inconsistent sampling.
+간선 수 비대칭은 추출 불완전의 산물이 아니다. 두 그래프는 동일 지갑 시드 집합과 동일 관측 창에서 구축된다. EndorseRank는 소유자--지출자 쌍당 최신 소수점 조정 allowance만 유지하므로, 반복 승인은 단일 방향 간선으로 축소된다. AWP는 로지스틱 시간 감쇠로 전송 이력을 집계하여, 동일 지갑 집합에서 훨씬 많은 방향 간선을 산출한다. 따라서 점수와 정합의 차이는 일관되지 않은 표본추출이 아니라 순위 논리와 그래프 의미에 기인한다.
 
-The matched-cohort design deliberately intersects two filters. The GMX activity filter ($\geq 3$ closes) ensures that trading-success and inverse-risk proxies are defined for every wallet, avoiding undefined rates and unstable count statistics for one-off traders. The reputation-subgraph connectivity filter ensures that both EndorseRank and AWP produce non-degenerate scores: wallets with no approval edges and no transfer edges cannot be ranked meaningfully by either social method. The intersection yields $n=5{,}521$ wallets and 365{,}488 decoded \texttt{PositionDecrease} events over the six-month window. This sample is large enough for stable Kendall $\tau$ estimates at the family level, yet small enough that full PageRank solves remain interactive on commodity hardware---a practical advantage when iterating on evaluation design.
+매칭 코호트 설계는 두 필터의 교집합이다. GMX 활동 필터($\geq 3$건의 close)는 경제적으로 활성인 지갑을 선택하며, 거래 기술 검사가 아니다. 평판 부분그래프 연결성 필터는 EndorseRank와 AWP가 퇴화하지 않은 점수를 산출하도록 한다. 교집합은 $n=5{,}521$ 지갑과 6개월 창에서 디코딩된 \texttt{PositionDecrease} 이벤트 $365{,}488$건을 산출한다. 이 표본은 전송·allowance 검사에 대한 안정적 Kendall $\tau$ 추정에 충분하면서도, 상용 하드웨어에서 전체 PageRank 해가 대화형으로 유지될 만큼 작다.
 
-The observation window (2025-12-01 -- 2026-05-31) is long enough to capture multiple market regimes within a single perpetual-futures venue, but short enough that latest-allowance snapshots remain contemporaneous with transfer histories used by AWP. Longer windows would increase AWP's historical edge accumulation and could further widen the runtime gap; shorter windows would reduce proxy stability for tenure and active-month measures. The chosen window therefore balances recency, activity volume, and comparability between snapshot-based and history-based graphs.
+관측 창(2025-12-01 -- 2026-05-31)은 단일 무기한 선물 거래소에서 여러 시장 체제를 포착할 만큼 길면서도, 최신 allowance 스냅샷이 AWP가 사용하는 전송 이력과 동시기를 유지할 만큼 짧다. 더 긴 창은 AWP의 역사적 간선 축적을 늘리고 런타임 격차를 더 벌릴 수 있으며, 더 짧은 창은 재직 기간과 활성 월 측도의 대리 지표 안정성을 낮춘다. 선택한 창은 따라서 최신성, 활동량, 스냅샷 기반 그래프와 이력 기반 그래프의 비교 가능성 사이의 균형이다.
 
-\dissertationSubsubheading[sub:gmx-activity]{GMX trading activity in the matched cohort}
+\dissertationSubsubheading[sub:gmx-activity]{매칭 코호트의 GMX 활동}
 
-Before comparing reputation rankings, it is useful to characterize the trading-outcome distributions that define the inverse-risk and trading-success proxy families. Figure~\ref{fig:gmx-closes-hist} shows the distribution of GMX close counts per wallet in the matched cohort. The minimum of three closes is enforced by construction; the right tail indicates a minority of highly active traders whose close counts substantially exceed the cohort median. This heterogeneity matters for interpretation: proxies based on close-success \emph{counts} can favor high-activity wallets, whereas rate-based proxies normalize by activity and may yield weaker rank correlations when success rates concentrate near the center of the distribution.
+그림~\ref{fig:gmx-closes-hist}는 지갑당 GMX close 건수를 보여 준다. 최소 세 건의 close는 표본추출 필터이다. 우측 꼬리는 소수 고활동 거래자를 나타낸다. 이들 수치는 표본을 기술하며, 거래 성공 주장이 아니다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{gmx-closes-hist.pdf}}
-\caption{Distribution of GMX V2 \texttt{PositionDecrease} close counts per wallet in the matched cohort ($n=5{,}521$). The cohort filter requires at least three closes; the long right tail reflects a minority of highly active traders.}
+\caption{매칭 코호트($n=5{,}521$)에서 지갑당 GMX V2 \texttt{PositionDecrease} close 건수 분포. 코호트 필터는 최소 세 건의 close를 요구하며, 긴 우측 꼬리는 소수 고활동 거래자를 반영한다.}
 \label{fig:gmx-closes-hist}
 \end{figure}
 
-Figure~\ref{fig:gmx-pnl-hist} displays the distribution of realized profit-and-loss (PnL) summaries used to construct inverse-risk and trading-success proxies. The mass around zero and the presence of both profitable and loss-making tails indicate that the cohort is not dominated by uniformly successful traders. Social reputation methods that align only weakly with PnL-derived proxies are therefore not necessarily failing a validation test; they may be measuring a construct---authorization or transfer centrality---that is only partially related to leveraged trading outcomes over a six-month window.
+그림~\ref{fig:gmx-pnl-hist}는 표본의 실현 손익을 보여 준다. 기술 통계일 뿐이다. 학위논문 주장은 PnL 정합을 사용하지 않는다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{gmx-pnl-hist.pdf}}
-\caption{Distribution of GMX realized PnL summaries in the matched cohort. Heterogeneous profit and loss outcomes motivate treating trading-success proxies as one validation axis among several, rather than as a sole ground truth for social reputation.}
+\caption{매칭 코호트의 GMX 실현 손익 요약 분포. 기술 통계일 뿐이며, 검증 주장이 아니다.}
 \label{fig:gmx-pnl-hist}
 \end{figure}
 
-Figure~\ref{fig:success-rate-hist} shows close success rates. Relative to count-based proxies, success rates compress much of the activity-driven variation and concentrate mass in a narrower band. Weak alignment of social methods with success-rate proxies (Section~\ref{sec:proxy-family-detail}) should be read in this light: when many wallets share similar rates, rank correlation has limited room to rise even if reputation scores are informative on other axes.
+그림~\ref{fig:success-rate-hist}는 표본의 close 성공률을 보여 준다. 그림은 코호트 기술을 위해 유지하며, 주장이 아니다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{success-rate-hist.pdf}}
-\caption{Distribution of GMX close success rates in the matched cohort. Concentration of rates reduces the discriminative power of rate-based trading-success proxies relative to count- or value-based proxies.}
+\caption{매칭 코호트의 GMX close 성공률 분포. 기술 통계일 뿐이며, 검증 주장이 아니다.}
 \label{fig:success-rate-hist}
 \end{figure}
 
-Taken together, the descriptive figures establish three interpretive constraints for later sections. First, the matched cohort is active enough for stable rank statistics ($n=5{,}521$; 365{,}488 decoded closes) but heterogeneous in trading intensity and outcomes. Second, endorsement and transfer graphs differ by nearly an order of magnitude in edge count, so efficiency and alignment claims must be evaluated jointly rather than in isolation. Third, trading-outcome proxies are informative validation axes, not interchangeable substitutes for social-graph constructs; Section~\ref{sec:gf-pr-ceiling} returns to this point when GF-PR inflates trading-family alignment through construct overlap.
+기술 그림을 종합하면 두 제약이 성립한다. 첫째, 매칭 코호트는 안정적 순위 통계에 충분할 만큼 활성이지만($n=5{,}521$; 디코딩된 close $365{,}488$건) 거래 강도는 이질적이다. 둘째, 보증 그래프와 전송 그래프는 간선 수에서 거의 한 자릿수 차이나므로, 효율과 정합 주장은 함께 평가해야 한다. 결과 히스토그램은 예측 증거로 사용하지 않는다.
 
-A fourth constraint follows from the joint reading of Figures~\ref{fig:gmx-closes-hist}--\ref{fig:success-rate-hist}. Count-based and value-based proxies inherit the heavy-tailed activity structure of perpetual trading, so social methods that correlate with activity---especially transfer activity---can appear to predict trading success partly because active wallets trade more often and accumulate more closes. Rate-based proxies partially correct for this, but they also compress signal. Throughout Section~\ref{sec:proxy-family-detail}, family means average across count-, value-, and rate-style proxies; readers should therefore inspect per-proxy rows when adjudicating whether a method aligns with skill-like outcomes or with activity volume.
+\dissertationSubheading[sec:benchmark-results]{EndorseRank 대 AWP 벤치마크 (주장~C1)}
 
-\dissertationSubheading[sec:benchmark-results]{EndorseRank vs.\ AWP benchmark (Claim~C1)}
-
-Claim~C1 asserts that EndorseRank is computationally cheaper than AWP on identical inputs. Table~\ref{tab:benchmark-runtime} reports PageRank solve time, peak memory, iteration count, and edge count on the full matched cohort ($n=5{,}521$). Timing excludes one-time graph construction and reports three-run means from the exported evaluation tables at convergence tolerance $10^{-8}$.\footnote{Excluding graph construction isolates the recurring PageRank solve cost that would dominate incremental score refresh in a deployed scorer. Chapter~\ref{ch:methodology} specifies five independent runs as the intended protocol; the table values remain the empirical record until the repetition count is reconciled.}
+주장~C1은 동일 입력에서 EndorseRank가 AWP보다 계산 비용이 낮다고 진술한다. 표~\ref{tab:benchmark-runtime}는 전체 매칭 코호트($n=5{,}521$)에서 PageRank 해 시간, 최대 메모리, 반복 횟수, 간선 수를 보고한다. 시간은 일회성 그래프 구축을 제외하며, 수렴 허용오차 $10^{-8}$에서 내보낸 평가 표의 3회 실행 평균이다.\footnote{그래프 구축을 제외하면, 배포된 점수기에서 증분 점수 갱신을 지배할 반복 PageRank 해 비용을 분리한다. 제~\ref{ch:methodology}장은 의도된 프로토콜로 5회 독립 실행을 명세한다. 표 값은 반복 횟수가 조정될 때까지의 실증 기록으로 남는다.}
 
 \input{../en/results/tables/benchmark-runtime.tex}
 
-EndorseRank completes in 2.105\,s versus 18.711\,s for AWP, a wall-clock speedup of approximately $8.9\times$. Peak memory follows the same pattern (4.6\,MB vs.\ 38.2\,MB). The dominant driver is graph sparsity: EndorseRank operates on 14{,}727 edges, whereas AWP operates on 137{,}087 edges---roughly $9.3\times$ more edges. Because PageRank's per-iteration cost scales with $|E|$, the sparser endorsement graph reduces both work per iteration and the number of iterations required for convergence (EndorseRank $\approx 37$ iterations; AWP $\approx 100$). The iteration gap is consistent with a better-conditioned, lower-density adjacency structure under latest-allowance semantics: allowance overrides replace historical accumulation, so the operator does not encode long-tailed transfer histories that slow mixing.
+EndorseRank는 $2.105$\,s에 완료되고 AWP는 $18.711$\,s에 완료되어, 벽시계 가속은 약 $8.9\times$이다. 최대 메모리도 동일 패턴을 따른다(4.6\,MB 대 38.2\,MB). 지배적 요인은 그래프 희소성이다. EndorseRank는 $14{,}727$개 간선에서, AWP는 $137{,}087$개 간선에서 동작하여---간선이 대략 $9.3\times$ 더 많다. PageRank의 반복당 비용은 $|E|$에 비례하므로, 더 희소한 보증 그래프는 반복당 작업과 수렴에 필요한 반복 횟수를 모두 줄인다(EndorseRank $\approx 37$회; AWP $\approx 100$회). 반복 격차는 최신 allowance 의미 아래 더 잘 조건화되고 밀도가 낮은 인접 구조와 일치한다. allowance 덮어쓰기가 역사적 축적을 대체하므로, 연산자는 혼합을 늦추는 긴 꼬리 전송 이력을 인코딩하지 않는다.
 
-GF-PR runtime (1.461\,s) is reported in the same table for context only. GF-PR's star graph has 10{,}338 edges and converges in 89 iterations; it is not a peer social method and is not used to support Claim~C1. The primary efficiency comparison is EndorseRank versus AWP on wallet-to-wallet social graphs.
+동일 표의 GF-PR 런타임($1.461$\,s)은 맥락용으로만 보고한다. GF-PR의 스타 그래프는 $10{,}338$개 간선이고 $89$회에 수렴한다. 대등한 사회적 방법이 아니며 주장~C1을 뒷받침하는 데 사용하지 않는다. 일차 효율 비교는 지갑 간 사회 그래프에서 EndorseRank 대 AWP이다.
 
-Memory footprints reinforce the same structural story. EndorseRank's peak memory (4.6\,MB) is nearly an order of magnitude below AWP's (38.2\,MB) under identical profiling. Although absolute megabytes are modest at $n=5{,}521$, the ratio matters for deployment at larger $n$: transfer-graph adjacency, weight vectors, and residual buffers all scale with $|E|$. A method that stores and iterates over roughly $9\times$ fewer edges inherits proportional savings in cache pressure and allocator traffic, not only in arithmetic operations. Iteration counts (37 vs.\ 100) compound this effect: EndorseRank performs fewer passes over a smaller edge list.
+메모리 발자국은 동일 구조적 이야기를 강화한다. 동일 프로파일링 아래 EndorseRank의 최대 메모리(4.6\,MB)는 AWP(38.2\,MB)보다 거의 한 자릿수 낮다. $n=5{,}521$에서 절대 메가바이트는 크지 않지만, 비율은 더 큰 $n$에서의 배포에 중요하다. 전송 그래프 인접, 가중 벡터, 잔차 버퍼는 모두 $|E|$에 따라 스케일한다. 대략 $9\times$ 더 적은 간선을 저장·반복하는 방법은 산술 연산뿐 아니라 캐시 압력과 할당 트래픽에서도 비례 절감을 상속한다. 반복 횟수(37 대 100)는 이 효과를 가중한다. EndorseRank는 더 작은 간선 목록을 더 적게 통과한다.
 
-From a systems perspective, Claim~C1 is therefore multi-dimensional. Wall-clock time is the headline metric for interactive refresh; memory and iterations are the mechanisms that make the headline durable as cohorts grow. A method that was faster only because of an implementation accident---for example, an unfairly optimized sparse kernel applied to one graph but not the other---would be less persuasive. Here both methods use the same PageRank solver, tolerance, and damping default; only the edge lists differ. The efficiency gap is a property of the endorsement representation.
+시스템 관점에서 주장~C1은 따라서 다차원이다. 벽시계 시간은 대화형 갱신의 헤드라인 지표이고, 메모리와 반복은 코호트가 커져도 헤드라인을 지속 가능하게 하는 메커니즘이다. 구현 사고---예를 들어 한 그래프에만 부당하게 최적화된 희소 커널---로만 더 빠른 방법은 설득력이 떨어진다. 여기서 두 방법은 동일 PageRank 해법기, 허용오차, 감쇠 기본값을 사용하며 간선 목록만 다르다. 효율 격차는 보증 표현의 속성이다.
 
-\dissertationSubsubheading[sub:runtime-scaling]{Runtime scaling on the expanded wallet pool}
+\dissertationSubsubheading[sub:runtime-scaling]{확장 지갑 풀에서의 런타임 스케일링}
 
-The runtime advantage is not merely a constant-factor curiosity on a single cohort size. If EndorseRank's edge set remains substantially smaller than AWP's as the wallet pool grows, the speedup should persist under staged scaling. Table~\ref{tab:benchmark-scaling} reports runtime scaling on an expanded wallet pool of $N=31{,}612$ addresses: the GMX-qualified matched cohort unioned with supplemental active wallets drawn from the reputation subgraph. Deterministic SHA256 subsampling yields staged cohorts at $n=10{,}000$ and at full pool size. In-cohort scaling for $n \leq 5{,}521$ is reported in Appendix~\ref{ch:appendix-eval} (Table~\ref{tab:benchmark-scaling-incohort}).
+런타임 이점은 단일 코호트 크기에서의 상수배 호기심이 아니다. 지갑 풀이 커져도 EndorseRank의 간선 집합이 AWP보다 현저히 작다면, 단계별 스케일링에서도 가속이 유지되어야 한다. 표~\ref{tab:benchmark-scaling}는 확장 지갑 풀 $N=31{,}612$개 주소에서의 런타임 스케일링을 보고한다. GMX 자격 매칭 코호트와 평판 부분그래프에서 추출한 보충 활성 지갑의 합집합이다. 결정적 SHA256 부분추출은 $n=10{,}000$과 전체 풀 크기에서 단계별 코호트를 산출한다. $n \leq 5{,}521$의 코호트 내 스케일링은 부록~\ref{ch:appendix-eval}(표~\ref{tab:benchmark-scaling-incohort})에서 보고한다.
 
 \input{../en/results/tables/benchmark-scaling.tex}
 
-At $n=10{,}000$, EndorseRank runs in 1.18\,s versus 12.28\,s for AWP (speedup $\approx 10.4\times$). At full pool size ($N=31{,}612$), EndorseRank runs in 2.29\,s versus 21.40\,s for AWP (speedup $\approx 9.4\times$). These three wall-clock pairs are not interchangeable. The $2.105$\,s vs.\ $18.711$\,s pair is the matched GMX cohort ($n=5{,}521$). The $1.18$\,s vs.\ $12.28$\,s pair is a SHA256 subsample of the expanded pool at $n=10{,}000$. The $2.29$\,s vs.\ $21.40$\,s pair is the full pool. The $1.18$\,s figure is smaller than the matched-cohort $2.105$\,s because the samples differ in wallet mix and solver path, not because PageRank became cheaper at larger $n$ on the same graph. Edge counts at the full pool remain 14{,}727 for EndorseRank and 137{,}087 for AWP---identical to the matched-cohort edge totals in Table~\ref{tab:dataset-stats}---because the reputation subgraph edges among the evaluation wallets are fixed by the extraction; expanding the node set without adding new edges among scored wallets does not inflate $|E|$ for either method in this configuration. That is a graph-construction fact, not a monotonicity failure. The $\approx 10.4\times$ ($n=10{,}000$) versus $\approx 8.9\times$ ($n=5{,}521$) speedups therefore compare different sample definitions. The speedup remains in the $9$--$10\times$ band across both staged pool sizes.
+$n=10{,}000$에서 EndorseRank는 $1.18$\,s, AWP는 $12.28$\,s이다(가속 $\approx 10.4\times$). 전체 풀 크기($N=31{,}612$)에서 EndorseRank는 $2.29$\,s, AWP는 $21.40$\,s이다(가속 $\approx 9.4\times$). 이 세 벽시계 쌍은 상호 교환할 수 없다. $2.105$\,s 대 $18.711$\,s 쌍은 매칭 GMX 코호트($n=5{,}521$)이다. $1.18$\,s 대 $12.28$\,s 쌍은 확장 풀의 $n=10{,}000$ SHA256 부분표본이다. $2.29$\,s 대 $21.40$\,s 쌍은 전체 풀이다. $1.18$\,s가 매칭 코호트 $2.105$\,s보다 작은 이유는 동일 그래프에서 더 큰 $n$이 PageRank를 싸게 만들어서가 아니라, 표본의 지갑 구성과 해법 경로가 다르기 때문이다. 전체 풀의 간선 수는 EndorseRank $14{,}727$, AWP $137{,}087$로 남아---표~\ref{tab:dataset-stats}의 매칭 코호트 간선 합계와 동일하다---평가 지갑 간 평판 부분그래프 간선이 추출로 고정되기 때문이다. 점수화된 지갑 간에 새 간선을 추가하지 않고 노드 집합만 확장하면, 이 구성에서 어느 방법의 $|E|$도 부풀지 않는다. 이는 그래프 구축의 사실이지 단조성 실패가 아니다. 따라서 $\approx 10.4\times$($n=10{,}000$) 대 $\approx 8.9\times$($n=5{,}521$) 가속은 서로 다른 표본 정의를 비교한다. 가속은 두 단계별 풀 크기에서 $9$--$10\times$ 대역에 머문다.
 
-Figure~\ref{fig:runtime-scaling} visualizes the scaling relationship. The curves confirm that AWP's wall-clock cost grows more steeply with $n$, while EndorseRank remains in a low-second regime even at $N=31{,}612$. For protocols that refresh reputation scores frequently---for example, after each batch of new approvals or transfers---an order-of-magnitude reduction in PageRank solve time is operationally material: it lowers the cost of continuous monitoring and makes more frequent re-ranking feasible under the same compute budget.
+그림~\ref{fig:runtime-scaling}은 스케일링 관계를 시각화한다. 곡선은 AWP의 벽시계 비용이 $n$에 따라 더 가파르게 증가하는 반면, EndorseRank는 $N=31{,}612$에서도 낮은 초 단위에 머무름을 확인한다. 신규 승인이나 전송 배치마다 평판 점수를 자주 갱신하는 프로토콜에게, PageRank 해 시간의 한 자릿수 감소는 운영상 실질적이다. 연속 모니터링 비용을 낮추고, 동일 계산 예산에서 더 빈번한 재순위화를 가능하게 한다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{runtime-scaling.pdf}}
-\caption{PageRank wall-clock runtime versus cohort size (log $x$-axis). Solid lines: in-cohort scaling on the matched GMX sample ($n\leq 5{,}521$). Dashed lines: expanded wallet pool ($N=31{,}612$). EndorseRank remains approximately $9$--$10\times$ faster than AWP at $n=10{,}000$ ($\approx 10.4\times$) and at full pool size ($\approx 9.4\times$).}
+\caption{코호트 크기 대비 PageRank 벽시계 런타임(로그 $x$축). 실선: 매칭 GMX 표본의 코호트 내 스케일링($n\leq 5{,}521$). 점선: 확장 지갑 풀($N=31{,}612$). EndorseRank는 $n=10{,}000$에서 약 $9$--$10\times$($\approx 10.4\times$), 전체 풀 크기에서 $\approx 9.4\times$ 더 빠르다.}
 \label{fig:runtime-scaling}
 \end{figure}
 
-Two caveats qualify the efficiency claim. First, the benchmark times PageRank solve on pre-built edge lists; end-to-end pipelines that include BigQuery extraction and edge construction incur additional costs shared or partially shared across methods. Second, memory footprints reported here are modest because the cohort is wallet-filtered; full-chain transfer graphs would increase AWP's absolute cost further and would likely widen, not narrow, the relative gap. Within the scope of this dissertation---matched wallets with reputation-subgraph connectivity---Claim~C1 is supported at both the matched cohort and the expanded pool.
+효율 주장을 한정하는 두 주의가 있다. 첫째, 벤치마크는 미리 구축된 간선 목록에서 PageRank 해를 계측한다. BigQuery 추출과 간선 구축을 포함하는 종단 파이프라인은 방법 간에 공유되거나 부분 공유되는 추가 비용을 부담한다. 둘째, 여기서 보고한 메모리 발자국은 코호트가 지갑 필터되었기 때문에 크지 않다. 전체 체인 전송 그래프는 AWP의 절대 비용을 더 높이고, 상대 격차를 좁히기보다 벌릴 가능성이 크다. 본 학위논문의 범위---평판 부분그래프 연결성을 가진 매칭 지갑---에서 주장~C1은 매칭 코호트와 확장 풀 모두에서 지지된다.
 
-A third caveat concerns what ``faster'' does and does not buy. EndorseRank's speedup does not automatically imply superior risk discrimination. Efficiency is valuable only insofar as the resulting scores remain credible on the constructs a protocol cares about. Section~\ref{sec:three-method-alignment} and Claim~C4 therefore pair the runtime results with alignment results: EndorseRank is not merely cheaper; it is cheaper while preserving credible primary-construct allowance alignment ($\tau=0.355$) and moderate transfer alignment. Protocols that need transfer-hub detection above all else may still prefer AWP and pay the runtime premium; protocols that need authorization-aware scores at low latency have a clear efficiency rationale for EndorseRank.
+셋째 주의는 ``더 빠름''이 사는 것과 사지 않는 것에 관한 것이다. EndorseRank의 가속이 자동으로 우월한 위험 판별을 함의하지는 않는다. 효율은 결과 점수가 프로토콜이 관심하는 구성 개념에서 신뢰할 만할 때에만 가치가 있다. 따라서 제~\ref{sec:three-method-alignment}절과 주장~C4는 런타임 결과를 정합 결과와 짝짓는다. EndorseRank는 단지 더 싼 것이 아니라, 신뢰할 만한 일차 구성 개념 allowance 정합($\tau=0.355$)과 중간 정도 전송 정합을 유지하면서 더 싸다. 전송 허브 탐지를 최우선하는 프로토콜은 여전히 AWP를 선호하고 런타임 프리미엄을 지불할 수 있다. 저지연에서 승인 인식 점수가 필요한 프로토콜에는 EndorseRank의 효율 근거가 명확하다.
 
-\dissertationSubheading[sec:robustness-results]{Robustness checks}
+\dissertationSubheading[sec:robustness-results]{강건성 검증}
 
-Efficiency and alignment results are useful only if they are not artifacts of a single damping choice, a single token mix, or a single sample size. This section reports three robustness checks: PageRank damping sensitivity, restriction to the top-20 ERC-20 token subgraph, and sample-size sensitivity on the expanded wallet pool.
+효율과 정합 결과는 단일 감쇠 선택, 단일 토큰 구성, 단일 표본 크기의 산물이 아닐 때에만 유용하다. 본 절은 세 강건성 검증을 보고한다. PageRank 감쇠 민감도, 상위 20개 ERC-20 토큰 부분그래프로의 제한, 확장 지갑 풀에서의 표본 크기 민감도이다.
 
-\dissertationSubsubheading[sub:damping]{Damping sensitivity}
+\dissertationSubsubheading[sub:damping]{감쇠 민감도}
 
-Table~\ref{tab:robustness-damping} reports mean Kendall $\tau$ for allowance and transfer families under damping $d \in \{0.75, 0.85, 0.95\}$ on the matched cohort, together with corresponding runtimes.
+표~\ref{tab:robustness-damping}는 매칭 코호트에서 감쇠 $d \in \{0.75, 0.85, 0.95\}$ 아래 allowance 및 전송 계열의 평균 Kendall $\tau$와 해당 런타임을 보고한다.
 
 \input{../en/results/tables/robustness-damping.tex}
 
-EndorseRank allowance mean $\tau$ is stable at approximately $0.355$ across all three damping values. Transfer-family $\tau$ for EndorseRank is likewise unchanged at $0.333$. AWP transfer $\tau$ varies only from $0.531$ to $0.536$ (at most $\approx 0.005$), and AWP allowance $\tau$ remains near zero ($-0.031$ to $-0.030$). The construct-specific pattern---EndorseRank leading on allowance, AWP leading on transfer---is therefore not an artifact of the conventional $d=0.85$ setting.
+EndorseRank allowance 평균 $\tau$는 세 감쇠 값에 걸쳐 약 $0.355$로 안정적이다. EndorseRank의 전송 계열 $\tau$ 역시 $0.333$에서 변하지 않는다. AWP 전송 $\tau$는 $0.531$에서 $0.536$까지만 변동하고(최대 $\approx 0.005$), AWP allowance $\tau$는 영에 가깝게 유지된다($-0.031$에서 $-0.030$). 따라서 EndorseRank가 allowance에서, AWP가 전송에서 우세한 구성 개념별 패턴은 관례적 $d=0.85$ 설정의 산물이 아니다.
 
-Figure~\ref{fig:damping-sensitivity} plots these relationships. Flat allowance and transfer curves for EndorseRank indicate that the endorsement operator's ranking is insensitive to moderate changes in the teleportation probability. Runtime decreases slightly as $d$ increases for both methods, consistent with faster mixing when less mass is retained on the graph operator, but the relative speedup remains large throughout the sweep.
+그림~\ref{fig:damping-sensitivity}는 이들 관계를 그린다. EndorseRank의 평탄한 allowance·전송 곡선은 보증 연산자의 순위가 텔레포테이션 확률의 중간 정도 변화에 둔감함을 나타낸다. 두 방법 모두 $d$가 증가하면 런타임이 약간 감소하는데, 그래프 연산자에 질량이 덜 유지될 때 혼합이 빨라지는 것과 일치한다. 상대 가속은 스윕 전반에서 크게 유지된다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{damping-sensitivity.pdf}}
-\caption{Damping sensitivity of mean Kendall $\tau$ for allowance and transfer families ($d \in \{0.75, 0.85, 0.95\}$). EndorseRank allowance alignment remains $\approx 0.355$ across the sweep; AWP transfer alignment varies by at most $\approx 0.005$.}
+\caption{allowance 및 전송 계열 평균 Kendall $\tau$의 감쇠 민감도($d \in \{0.75, 0.85, 0.95\}$). EndorseRank allowance 정합은 스윕에 걸쳐 $\approx 0.355$를 유지하고, AWP 전송 정합은 최대 $\approx 0.005$만 변동한다.}
 \label{fig:damping-sensitivity}
 \end{figure}
 
-The damping result has a methodological implication. Because allowance edges encode a latest snapshot rather than a long historical path structure, changing how much mass teleports does not reorder wallets enough to alter family-level alignment. Protocols adopting EndorseRank can therefore treat $d=0.85$ as a stable default without extensive hyperparameter search for the allowance construct, at least within the range examined here.
+감쇠 결과는 방법론적 함의를 갖는다. allowance 간선이 긴 역사적 경로 구조가 아니라 최신 스냅샷을 인코딩하므로, 텔레포트하는 질량을 바꾸어도 지갑을 계열 수준 정합이 달라질 만큼 재순위화하지 않는다. 따라서 EndorseRank를 채택하는 프로토콜은, 적어도 여기서 검토한 범위에서, allowance 구성 개념에 대한 광범위한 하이퍼파라미터 탐색 없이 $d=0.85$를 안정적 기본값으로 취급할 수 있다.
 
-\dissertationSubsubheading[sub:token-subgraph]{Top-token subgraph}
+\dissertationSubsubheading[sub:token-subgraph]{상위 토큰 부분그래프}
 
-Table~\ref{tab:robustness-tokens} reports family-level mean $\tau$ when reputation graphs are restricted to the top-20 ERC-20 tokens by transfer and allowance volume.
+표~\ref{tab:robustness-tokens}는 전송 및 allowance 거래량 기준 상위 20개 ERC-20 토큰으로 평판 그래프를 제한할 때의 계열 수준 평균 $\tau$를 보고한다.
 
 \input{../en/results/tables/robustness-tokens.tex}
 
-Relative to the full-token matched-cohort results in Table~\ref{tab:alignment-three-methods}, family-level means change only marginally. EndorseRank allowance remains $0.355$; transfer is $0.331$ (vs.\ $0.333$ on the full graph). AWP transfer is $0.532$ (vs.\ $0.534$), and AWP allowance remains near zero ($-0.031$). Trading-success and Sybil-adjusted stability means are likewise within a few thousandths of the full-graph values. The primary alignment pattern is therefore not driven by long-tail tokens with sparse, noisy edges. High-volume tokens---the economically salient core of ERC-20 activity---suffice to reproduce the EndorseRank--AWP contrast.
+표~\ref{tab:alignment-three-methods}의 전체 토큰 매칭 코호트 결과에 비해 계열 수준 평균은 한계적으로만 변한다. EndorseRank allowance는 $0.355$로 남고, 전송은 $0.331$이다(전체 그래프의 $0.333$ 대비). AWP 전송은 $0.532$이고(전체 그래프 $0.534$ 대비), AWP allowance는 영에 가깝다($-0.031$). 산출물에 남는 거래 성공 및 Sybil 조정 안정성 평균 역시 전체 그래프 값의 수천분의 몇 이내이다. 이들은 학위논문 주장이 아니다. 일차 정합 패턴은 따라서 희소하고 잡음 있는 간선을 가진 긴 꼬리 토큰이 주도하지 않는다. ERC-20 활동의 경제적으로 두드러진 핵심인 고거래량 토큰만으로 EndorseRank--AWP 대비를 재현하기에 충분하다.
 
-\dissertationSubsubheading[sub:sample-size]{Sample-size sensitivity}
+\dissertationSubsubheading[sub:sample-size]{표본 크기 민감도}
 
-Table~\ref{tab:robustness-sample-size} summarizes allowance and transfer $\tau$ at staged subsample sizes drawn from the expanded wallet pool ($N=31{,}612$).
+표~\ref{tab:robustness-sample-size}는 확장 지갑 풀($N=31{,}612$)에서 추출한 단계별 부분표본 크기의 allowance 및 전송 $\tau$를 요약한다.
 
 \input{../en/results/tables/robustness-sample-size.tex}
 
-At $n=10{,}000$ and $N=31{,}612$, EndorseRank continues to dominate on allowance and AWP on transfer, with EndorseRank speedups of approximately $9.0\times$ and $9.9\times$, respectively. Absolute $\tau$ values differ from the matched-cohort figures because the expanded pool includes supplemental active wallets that are not GMX-matched; proxies and score supports therefore change with the sample definition. The relevant claim is sensitivity to sample definition, not invariance of every decimal place: the construct-specific winners and the runtime advantage persist under pool expansion and staged subsampling. In-cohort scaling detail for the GMX-matched sample alone appears in Appendix~\ref{ch:appendix-eval}.
+$n=10{,}000$과 $N=31{,}612$에서 EndorseRank는 계속 allowance에서, AWP는 전송에서 우세하며, EndorseRank 가속은 각각 약 $9.0\times$와 $9.9\times$이다. 절대 $\tau$ 값은 매칭 코호트 수치와 다른데, 확장 풀이 GMX 매칭이 아닌 보충 활성 지갑을 포함하므로 대리 지표와 점수 지지가 표본 정의에 따라 변하기 때문이다. 관련 주장은 모든 소수점의 불변성이 아니라 표본 정의에 대한 민감도이다. 구성 개념별 승자와 런타임 이점은 풀 확장과 단계별 부분추출 아래 유지된다. GMX 매칭 표본만의 코호트 내 스케일링 상세는 부록~\ref{ch:appendix-eval}에 있다.
 
-Collectively, the damping and top-token checks support reading Claims~C1--C4 as stable under parameter and token-mix perturbation, while the sample-size check is a sensitivity result: absolute $\tau$ values shift when the sample definition changes from the GMX-matched cohort to the expanded pool, and runtimes shift with damping and $n$. What remains stable is the comparative structure: EndorseRank is faster; EndorseRank wins on allowance; AWP wins on transfer; allowance alignment under EndorseRank is insensitive to damping in $\{0.75, 0.85, 0.95\}$. That comparative structure is what the claims assert.
+종합하면, 감쇠와 상위 토큰 검증은 주장~C1--C4를 매개변수 및 토큰 구성 섭동 아래 안정적으로 읽도록 지지하고, 표본 크기 검증은 민감도 결과이다. 절대 $\tau$ 값은 표본 정의가 GMX 매칭 코호트에서 확장 풀로 바뀌면 이동하고, 런타임은 감쇠와 $n$에 따라 이동한다. 안정적으로 남는 것은 비교 구조이다. EndorseRank가 더 빠르고, EndorseRank가 allowance에서 이기며, AWP가 전송에서 이기고, EndorseRank의 allowance 정합은 $\{0.75, 0.85, 0.95\}$ 감쇠에 둔감하다. 주장이 진술하는 것은 그 비교 구조이다.
 
-\dissertationSubheading[sec:three-method-alignment]{Social-method alignment: EndorseRank vs.\ AWP (Claims~C2--C3)}
+\dissertationSubheading[sec:three-method-alignment]{사회적 방법 정합: EndorseRank 대 AWP (주장~C2--C3)}
 
-Claims~C2 and~C3 address whether EndorseRank and AWP achieve credible domain alignment and whether winners are construct-specific. Table~\ref{tab:alignment-three-methods} reports mean Kendall $\tau$ by proxy family for EndorseRank, AWP, and the supplementary GF-PR reference. Rows~1--2 constitute the primary social-method comparison; row~3 is interpreted only in Section~\ref{sec:gf-pr-ceiling}.
+주장~C2와~C3는 EndorseRank와 AWP가 의도된 구성 개념 검사를 달성하는지, 그리고 승자가 구성 개념별인지를 다룬다. 표~\ref{tab:alignment-three-methods}는 계열별 평균 Kendall $\tau$를 보고한다. 전송과 allowance 행만 주장으로 해석한다. 다른 열은 내보낸 표에 남기며 증거로 판매하지 않는다.
 
 \input{../en/results/tables/alignment-three-methods.tex}
 
-Among social methods, EndorseRank leads on allowance ($\tau=0.355$), while AWP leads on transfer ($\tau=0.534$), Sybil-adjusted stability ($\tau=0.286$), and trading success ($\tau=0.179$). EndorseRank's transfer alignment is moderate ($\tau=0.333$)---credible as a secondary axis, but below AWP. On inverse-risk proxies, both social methods are weak (EndorseRank $0.035$; AWP $0.107$), indicating that neither allowance nor transfer centrality strongly tracks loss-avoidance rankings on this cohort. GF-PR's high inverse-risk ($0.376$) and trading-success ($0.583$) means reflect construct overlap with GMX PnL inputs and are not evidence of superior social reputation.
+EndorseRank는 allowance에서 우세하고($\tau=0.355$), AWP는 전송에서 우세하다($\tau=0.534$). EndorseRank의 전송 정합은 중간 정도이다($\tau=0.333$). AWP의 allowance 정합은 영에 가깝다($-0.030$). 표의 결과 계열 칸은 학위논문 주장이 아니다.
 
-Figure~\ref{fig:alignment-heatmap} provides a compact visual summary of family-level alignment. The heatmap makes the construct-specific pattern immediate: EndorseRank's strongest cell is allowance; AWP's strongest social-method cells are transfer and, secondarily, Sybil-adjusted stability and trading success; GF-PR dominates outcome-native families. The visual separation between social-method cells and GF-PR outcome cells is the empirical signature of Claim~C3 and the caution embodied in SC1.
+그림~\ref{fig:alignment-heatmap}는 allowance 대 전송에서 동일 교차 패턴을 보여 준다. 그림의 결과 고유 칸은 해석하지 않는다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{alignment-heatmap.pdf}}
-\caption{Family-level mean Kendall $\tau$ heatmap for EndorseRank, AWP, and supplementary GF-PR on the matched cohort ($n=5{,}521$). EndorseRank peaks on allowance; AWP peaks on transfer among social methods; GF-PR peaks on trading-outcome families via construct overlap.}
+\caption{매칭 코호트($n=5{,}521$)의 계열 수준 평균 Kendall $\tau$ 히트맵. 주장은 allowance 및 전송 칸만 사용한다.}
 \label{fig:alignment-heatmap}
 \end{figure}
 
-Claim~C2 is supported insofar as both social methods achieve non-negligible alignment on at least one primary construct: EndorseRank on allowance ($\tau \approx 0.35$), and AWP on transfer ($\tau=0.534$). Claim~C3 is supported by the crossed pattern of family winners. No single social method dominates all families; alignment is construct-specific, as predicted when endorsement and transfer encode different wallet relationships.
+주장~C2는 두 사회적 방법이 적어도 하나의 일차 구성 개념에서 무시할 수 없는 정합을 달성하는 한에서 지지된다. EndorseRank는 allowance($\tau \approx 0.35$), AWP는 전송($\tau=0.534$)이다. 주장~C3는 교차 패턴으로 지지된다. 어느 사회적 방법도 두 검사를 모두 지배하지 않는다. EndorseRank의 중간 정도 전송 $\tau=0.333$은 이차 축이다. 창 밖 증거는 거래 성공 $\tau$가 아니라 제~\ref{sec:gf-pr-ceiling}절의 홀드아웃이다.
 
-Reading Table~\ref{tab:alignment-three-methods} requires care on two points. First, family means average heterogeneous proxies; a method can lead on a family mean while trailing on an individual proxy, or vice versa. Section~\ref{sec:proxy-family-detail} therefore reports per-proxy $\rho$ and $\tau$ so that readers can audit the means. Second, primary-construct correlations (EndorseRank with allowance; AWP with transfer) are necessary but not sufficient for a reputation method's usefulness. They confirm that PageRank recovers the graph signal it was given. External usefulness depends on secondary axes---whether endorsement rankings also relate to transfer activity, trading outcomes, or stability---and on whether those secondary relationships are strong enough for a deployment context. EndorseRank's moderate transfer $\tau=0.333$ is encouraging as a secondary axis; its weak trading-success $\tau=0.096$ is a limitation for protocols that hoped allowance endorsement would double as a trading-skill score.
+전송 및 allowance의 대리 지표별 상세는 제~\ref{sec:proxy-family-detail}절에 있다. 방법 간 분기는 제~\ref{sec:rank-divergence}절에서 정량화한다.
 
-The exported summary also includes a liquidation-related column and the GF-PR row. Liquidation-family means are low for both social methods and are not the focus of Claims~C2--C3; they are retained for completeness with the evaluation pipeline. GF-PR's outcome-family dominance is discussed only in Section~\ref{sec:gf-pr-ceiling}. The primary narrative of this section is the EndorseRank--AWP contrast across transfer, allowance, inverse risk, Sybil-adjusted stability, and trading success.
+\dissertationSubheading[sec:proxy-family-detail]{대리 지표 계열 상세}
 
-Per-proxy detail for each family appears in Section~\ref{sec:proxy-family-detail}. Inter-method divergence between EndorseRank and AWP score vectors is quantified in Section~\ref{sec:rank-divergence}.
+다음 소절은 전송 및 allowance 검사에 대한 Spearman $\rho$와 Kendall $\tau$를 보고한다. 결과 계열 표는 산출물에 남기며 주장으로 해석하지 않는다. 검사는 Do et al.\cend{16}을 따라, 상관 전에 더 높은 값이 더 높은 기대 평판을 함의하도록 방향화한다.
 
-\dissertationSubheading[sec:proxy-family-detail]{Proxy family detail}
+\dissertationSubsubheading[sub:transfer-family]{전송 계열 (Do et al.\ 기준선)}
 
-The following subsections report Spearman $\rho$ and Kendall $\tau$ for each proxy within family. Each family is interpreted first for the primary EndorseRank--AWP comparison; supplementary GF-PR notes appear where they clarify construct overlap or ceiling effects. All proxies are oriented so that higher values imply higher expected reputation before correlation, following Do et al.\cend{16} and the operational definitions in Chapter~\ref{ch:methodology}.
-
-\dissertationSubsubheading[sub:transfer-family]{Transfer family (Do et al.\ baseline)}
-
-Table~\ref{tab:alignment-transfer} reports alignment with transfer in-degree and inbound transfer value---the baseline validation axis in Do et al.\cend{16}.
+표~\ref{tab:alignment-transfer}는 전송 인디그리 및 인바운드 전송 가치와의 정합---Do et al.\cend{16}의 기준선 검증 축---을 보고한다.
 
 \input{../en/results/tables/alignment-transfer.tex}
 
-AWP achieves the highest social-method alignment on both transfer proxies: in-degree $\tau=0.617$ ($\rho=0.791$) and in-value $\tau=0.450$ ($\rho=0.610$), for a family mean of $0.534$. This result is expected by construction: AWP ranks on the time-decayed transfer graph, so correlation with transfer centrality is a primary-construct check rather than an independent external validation. The magnitude is nonetheless informative. AWP does not collapse to a trivial identity with in-degree; logistic decay and value weighting produce rankings that agree strongly but not perfectly with simple degree and value summaries.
+AWP는 두 전송 대리 지표에서 사회적 방법 중 가장 높은 정합을 달성한다. 인디그리 $\tau=0.617$($\rho=0.791$), 인밸류 $\tau=0.450$($\rho=0.610$), 계열 평균 $0.534$이다. 이 결과는 구성상 예상된다. AWP는 시간 감쇠 전송 그래프에서 순위화하므로, 전송 중심성과의 상관은 독립된 외부 검증이 아니라 일차 구성 개념 검사이다. 크기는 그럼에도 정보적이다. AWP는 인디그리와의 사소한 항등식으로 붕괴하지 않는다. 로지스틱 감쇠와 가치 가중이, 단순 차수·가치 요약과 강하게 그러나 완전하지는 않게 일치하는 순위를 산출한다.
 
-EndorseRank shows moderate secondary-axis alignment (in-degree $\tau=0.344$; in-value $\tau=0.321$; family mean $0.333$). Wallets that receive substantial transfer activity are somewhat more likely to appear as endorsed spenders, but the relationship is far from deterministic. Allowance delegation and transfer receipt are related economic behaviors---active protocols and market makers tend to attract both---yet they are not interchangeable. The moderate EndorseRank--transfer $\tau$ therefore supports Claim~C2 (credible secondary alignment) without undermining Claim~C3 (AWP remains the transfer-family winner among social methods).
+EndorseRank는 중간 정도 이차 축 정합을 보인다(인디그리 $\tau=0.344$; 인밸류 $\tau=0.321$; 계열 평균 $0.333$). 상당한 전송 활동을 받는 지갑이 보증된 지출자로 나타날 가능성은 다소 높지만, 관계는 결정적이지 않다. allowance 위임과 전송 수령은 관련된 경제 행동이다---활성 프로토콜과 시장 조성자는 둘을 모두 끌어들이는 경향이 있다---그러나 상호 교환 가능하지 않다. 따라서 중간 정도 EndorseRank--전송 $\tau$는 주장~C2(신뢰할 만한 이차 정합)를 지지하면서 주장~C3를 훼손하지 않는다(사회적 방법 중 AWP가 전송 계열 승자로 남는다).
 
-GF-PR is weak on transfer proxies (family mean $0.246$), as expected for a method with no wallet-to-wallet transfer edges. Any residual correlation likely reflects indirect association between profitable GMX traders and transfer activity, not transfer-graph semantics.
+프로토콜의 평판 개념이 인바운드 경제 흐름이라면, 이 증거에서 AWP가 적절한 사회적 방법이다. EndorseRank는 이차 검사로 남는다. 중간 정도 전송 정합은 보증된 지출자가 전송 수령자와 완전히 분리되지 않음을 시사한다.
 
-For RQ4, the transfer family is the Do et al.\ baseline validation frame. Both social methods clear a non-negligible bar on this frame, but AWP's lead is large. If a protocol's notion of reputation is ``wallets that receive economically meaningful transfers,'' AWP is the appropriate social method on this evidence. EndorseRank remains relevant as a secondary check: moderate transfer alignment suggests that endorsed spenders are not an entirely disjoint population from transfer recipients, so allowance-based scores are not orthogonal to economic flow---only imperfectly aligned with it.
+\dissertationSubsubheading[sub:allowance-family]{allowance 계열}
 
-\dissertationSubsubheading[sub:allowance-family]{Allowance family}
-
-Table~\ref{tab:alignment-allowance} reports alignment with spender-side in-approve degree and in-approve value---EndorseRank's primary construct.
+표~\ref{tab:alignment-allowance}는 지출자 측 인승인 차수 및 인승인 가치---EndorseRank의 일차 구성 개념---와의 정합을 보고한다.
 
 \input{../en/results/tables/alignment-allowance.tex}
 
-EndorseRank shows credible primary-construct alignment with both allowance proxies (in-approve degree $\tau=0.356$; in-approve value $\tau=0.354$; family mean $0.355$). As with AWP on transfer, this is a primary-construct check: PageRank on $G_{\text{approve}}$ should correlate with spender-side approval centrality. The allowance-family result is therefore partly a same-construct check, not an independent external criterion. The scientifically informative cell is AWP's near-zero allowance $\tau$, which shows that transfer centrality does not recover authorization. EndorseRank's $\tau \approx 0.355$ is evidence of recoverable graph signal on the graph it was given. The near-equality of degree and value correlations suggests that, on this cohort, being approved by many owners and being approved for large aggregate value convey similar ranking information under latest-allowance semantics.
+EndorseRank는 두 allowance 대리 지표와 신뢰할 만한 일차 구성 개념 정합을 보인다(인승인 차수 $\tau=0.356$; 인승인 가치 $\tau=0.354$; 계열 평균 $0.355$). 전송에서의 AWP와 마찬가지로 이는 일차 구성 개념 검사이다. $G_{\text{approve}}$의 PageRank는 지출자 측 승인 중심성과 상관해야 한다. 따라서 allowance 계열 결과는 부분적으로 동일 구성 개념 검사이며, 독립된 외부 기준이 아니다. 과학적으로 정보적인 칸은 AWP의 영에 가까운 allowance $\tau$로, 전송 중심성이 승인을 복원하지 않음을 보여 준다. EndorseRank의 $\tau \approx 0.355$는 주어진 그래프에서 복원 가능한 그래프 신호의 증거이다. 차수와 가치 상관의 거의 동등함은, 이 코호트에서 많은 소유자에게 승인받는 것과 큰 집계 가치로 승인받는 것이 최신 allowance 의미 아래 유사한 순위 정보를 전달함을 시사한다.
 
-AWP alignment on allowance is near zero and slightly negative ($\tau=-0.030$ for both proxies). Transfer centrality does not identify wallets that receive spending authorization. This dissociation is central to the dissertation's contribution: if transfer-based reputation were a sufficient proxy for endorsement, AWP would show at least moderate allowance alignment. It does not. Protocols that care about explicit spending authorization---for example, which addresses are trusted to move tokens on behalf of others---cannot substitute AWP for an allowance-aware method on this evidence.
+AWP의 allowance 정합은 영에 가깝고 약간 음이다(두 대리 지표 모두 $\tau=-0.030$). 전송 중심성은 지출 승인을 받는 지갑을 식별하지 않는다. 이 분리는 학위논문 기여의 중심에 있다. 전송 기반 평판이 보증의 충분한 대리 지표라면 AWP는 적어도 중간 정도 allowance 정합을 보여야 한다. 그렇지 않다. 명시적 지출 승인---예를 들어 타인을 대신하여 토큰을 이동하도록 신뢰받는 주소---을 중시하는 프로토콜은, 이 증거에서 AWP를 allowance 인식 방법으로 대체할 수 없다.
 
-GF-PR is likewise near zero on allowance (family mean $\approx -0.041$), confirming that outcome-native PnL flow does not encode endorsement structure. The allowance family therefore isolates EndorseRank's distinctive signal among both the social baseline and the supplementary ceiling reference.
+allowance 결과는 동일 창 기여의 실증적 핵심이다. 전송 그래프는 지출 승인을 인코딩하지 않는다. 런타임 결과와 결합하면, allowance 계열은 주장~C4를 지지한다. 더 싼 방법이 승인 검사와 정합하는 유일한 사회적 방법이기도 하다. 제~\ref{sec:gf-pr-ceiling}절의 홀드아웃은 그 신호가 점수 창 이후에도 지속되는지를 검정한다.
 
-The allowance result is the empirical core of EndorseRank's contribution. Prior transfer-based reputation work could not have produced Table~\ref{tab:alignment-allowance}'s pattern, because transfer graphs do not encode spending authorization. By building $G_{\text{approve}}$ from latest allowances and ranking with PageRank, EndorseRank recovers a signal that AWP misses entirely. Combined with the runtime results, the allowance family supports the efficiency--alignment trade-off in Claim~C4: the cheaper method is also the only social method that aligns with authorization proxies.
+\dissertationSubsubheading[sub:inverse-risk-family]{역위험 계열 (주장하지 않음)}
 
-\dissertationSubsubheading[sub:inverse-risk-family]{Inverse-risk family (GMX PnL)}
-
-Table~\ref{tab:alignment-inverse-risk} reports alignment with loss-avoidance, non-loss close rate, and worst-close PnL score.
+표~\ref{tab:alignment-inverse-risk}는 산출물에 남긴다. 학위논문 주장이 아니다.
 
 \input{../en/results/tables/alignment-inverse-risk.tex}
 
-Among social methods, alignment is weak overall. EndorseRank family mean $\tau$ is $0.035$, with individual proxies ranging from $-0.031$ (non-loss close rate) to $0.079$ (loss avoidance). AWP is low-to-moderate (family mean $0.107$), driven by loss avoidance ($\tau=0.165$) and worst-close PnL score ($\tau=0.137$), while non-loss close rate remains negligible ($\tau=0.019$). Transfer activity is modestly associated with avoiding large losses, but neither social method ranks wallets in close agreement with inverse-risk summaries.
+\dissertationSubsubheading[sub:sybil-family]{Sybil 조정 안정성 계열}
 
-GF-PR achieves the highest family mean ($0.376$), with loss avoidance $\tau=0.545$ and worst-close PnL score $\tau=0.478$. This elevation is expected: GF-PR's POOL/SINK star graph is built from the same GMX PnL stream that defines these proxies. High GF-PR $\tau$ on inverse risk is therefore a construct-overlap diagnostic, not evidence that outcome-native ranking measures social reputation. Section~\ref{sec:gf-pr-ceiling} develops this interpretation formally as claim SC1.
-
-For the primary comparison, the inverse-risk family supports a cautious reading of RQ4: social graphs are not strong predictors of loss-avoidance rankings on this six-month GMX window. That finding does not invalidate EndorseRank's allowance alignment; it delimits what social reputation can be expected to explain. Wallets that are central in approval or transfer networks need not be the same wallets that avoid large perpetual losses, and the data confirm that separation.
-
-\dissertationSubsubheading[sub:sybil-family]{Sybil-adjusted stability family}
-
-Table~\ref{tab:alignment-sybil-stability} reports alignment with inbound counterparty ratio, transfer tenure, and active months.
+표~\ref{tab:alignment-sybil-stability}는 인바운드 상대방 비율, 전송 재직 기간, 활성 월과의 정합을 보고한다.
 
 \input{../en/results/tables/alignment-sybil-stability.tex}
 
-AWP exceeds EndorseRank among social methods (family means $0.286$ vs.\ $0.233$). The gap is concentrated in tenure and activity proxies: AWP achieves $\tau=0.436$ on transfer tenure and $\tau=0.482$ on active months, versus $0.297$ and $0.330$ for EndorseRank. Because AWP's edge weights incorporate logistic time-decay over transfer history, wallets with sustained transfer activity naturally receive higher scores, producing alignment with tenure and active-month summaries.
+AWP는 재직 기간과 활성 월에서 EndorseRank를 상회하며, 이는 시간 감쇠 전송 간선에서 예상된다. 인바운드 상대방 비율은 두 방법 모두 약하다. 이 계열은 강건성 노트이며 헤드라인 주장이 아니다.
 
-Inbound counterparty ratio---a proxy intended to favor diverse counterparties over concentrated Sybil-like structures---is weak or negative for both methods (EndorseRank $\tau=0.073$; AWP $\tau=-0.061$). Neither social ranking strongly tracks counterparty diversity on this cohort. GF-PR is weak overall (family mean $0.093$) and strongly negative on inbound counterparty ratio ($\tau=-0.235$), consistent with the absence of transfer-activity semantics in the PnL star graph.
+\dissertationSubsubheading[sub:trading-success-family]{거래 성공 계열 (주장하지 않음)}
 
-The Sybil-adjusted family therefore reinforces AWP's advantage on transfer-derived activity constructs, while showing that neither method currently provides a strong counterparty-diversity signal. Future work could incorporate explicit diversity penalties into $G_{\text{approve}}$ or $G_{\text{transfer}}$; the present results establish the baseline against which such extensions would be judged.
-
-\dissertationSubsubheading[sub:trading-success-family]{Trading-success family}
-
-Table~\ref{tab:alignment-gmx} reports alignment with close-success count, realized gain proxy, and close success rate.
+표~\ref{tab:alignment-gmx}는 산출물에 남긴다. 거래 성공 정합은 학위논문 주장이 아니며 RQ4에 답하는 데 사용하지 않는다.
 
 \input{../en/results/tables/alignment-gmx.tex}
 
-Among social methods, AWP exceeds EndorseRank (family means $0.179$ vs.\ $0.096$). AWP's strongest trading proxies are realized gain ($\tau=0.239$) and close-success count ($\tau=0.224$); close success rate remains weak ($\tau=0.075$). EndorseRank shows the same ordering at lower magnitude (count $\tau=0.149$; realized gain $\tau=0.107$; rate $\tau=0.033$). Transfer-based social propagation therefore aligns more strongly with profitable perpetual closes than allowance-based propagation on this cohort, but both social-method means remain well below their primary-construct alignments.
+\dissertationSubheading[sec:rank-divergence]{순위 분기 (H1 / RQ1)}
 
-GF-PR achieves the highest family mean ($0.583$), including near-perfect alignment with the realized gain proxy ($\rho=1.000$, $\tau=0.999$). That near-identity is the clearest empirical demonstration of construct overlap: when the ranking input and the validation proxy share the same PnL stream, alignment ceases to be an independent test of reputation quality. GF-PR's close-success count ($\tau=0.522$) and success rate ($\tau=0.229$) are also elevated relative to social methods, but the realized-gain cell is decisive for interpretation.
+가설 H1과 연구 질문 RQ1은 동일 표본에서 EndorseRank와 AWP가 의미 있게 다른 지갑 순서를 산출하는지를 묻는다. 두 점수 벡터 간 방법 간 Kendall $\tau$는 매칭 코호트($n=5{,}521$)에서 $0.316$이다. 순위는 관련되나 상호 교환과는 거리가 멀다. 경제적으로 활성인 지갑이 전송 시장과 승인 시장 모두에 참여하는 경향이 있어 상관은 존재하지만, allowance 그래프와 전송 그래프는 서로 다른 관계를 강조하므로 많은 쌍별 순서가 불일치한다.
 
-The trading-success family thus plays a dual role. For Claims~C2--C3, it shows that AWP is the stronger social method on outcome proxies, while EndorseRank retains only weak outcome alignment. For SC1, it shows that GF-PR's ceiling must not be misread as a deployable reputation result. Protocols seeking social endorsement signals should not adopt GF-PR merely because it maximizes trading-family $\tau$.
-
-Comparing trading-success means to transfer means for the same social methods answers RQ4 directly. Transfer proxies yield higher mean $\tau$ than trading-success proxies for both EndorseRank ($0.333$ vs.\ $0.096$) and AWP ($0.534$ vs.\ $0.179$). On this chain and window, the Do et al.\ transfer validation frame is the stronger external check for social reputation methods. That finding does not diminish EndorseRank's allowance-specific validity; it situates trading outcomes as a harder, more weakly related target for social-graph scores. Protocols that require trading-skill discrimination may need features beyond either social graph---or may need to accept that social reputation and trading performance are only loosely coupled in perpetual markets.
-
-\dissertationSubheading[sec:rank-divergence]{Rank divergence (H1 / RQ1)}
-
-Hypothesis H1 and research question RQ1 ask whether EndorseRank and AWP yield meaningfully different wallet orderings on an identical sample. Inter-method Kendall $\tau$ between the two score vectors is $0.316$ on the matched cohort ($n=5{,}521$). The rankings are related but far from interchangeable. Correlation is present because economically active wallets tend to participate in both transfer and approval markets, yet allowance and transfer graphs emphasize different relationships, so many pairwise orderings disagree.
-
-Figure~\ref{fig:score-distributions} shows the marginal distributions of EndorseRank and AWP scores. Both are right-skewed, as is typical for PageRank on sparse directed graphs, but they are not identically shaped. AWP's mass reflects the denser transfer operator; EndorseRank's mass reflects the sparser endorsement operator. Skewness alone does not prove divergence---two methods could share the same ordering with different score scales---but it motivates examining rank-rank relationships directly.
+그림~\ref{fig:score-distributions}는 EndorseRank와 AWP 점수의 주변 분포를 보여 준다. 둘 다 희소 방향 그래프의 PageRank에서 전형적이듯 우측 왜도를 보이나, 형상은 동일하지 않다. AWP의 질량은 더 밀집한 전송 연산자를, EndorseRank의 질량은 더 희소한 보증 연산자를 반영한다. 왜도만으로 분기가 증명되지는 않는다---두 방법이 다른 점수 척도로 동일 순서를 공유할 수 있다---그러나 순위--순위 관계를 직접 검토할 동기를 제공한다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{score-distributions.pdf}}
-\caption{Marginal distributions of EndorseRank and AWP scores on the matched cohort ($n=5{,}521$), shown on a $\log_{10}$ scale for wallets with positive score (EndorseRank excludes $966$ zero-score wallets; AWP excludes $381$). Both are right-skewed PageRank distributions; differences in shape reflect the distinct endorsement and transfer operators.}
+\caption{매칭 코호트($n=5{,}521$)에서 EndorseRank와 AWP 점수의 주변 분포. 양수 점수 지갑을 $\log_{10}$ 척도로 표시한다(EndorseRank는 영점 지갑 $966$개 제외; AWP는 $381$개 제외). 둘 다 우측 왜도 PageRank 분포이며, 형상 차이는 구별되는 보증·전송 연산자를 반영한다.}
 \label{fig:score-distributions}
 \end{figure}
 
-Figure~\ref{fig:rank-scatter} plots EndorseRank ranks against AWP ranks. Points along the diagonal would indicate identical orderings; the observed cloud shows substantial off-diagonal mass. Wallets that rank highly under transfer centrality are not reliably the same wallets that rank highly under allowance endorsement, and vice versa. The inter-method $\tau=0.316$ summarizes this scatter: agreement exceeds chance, but a protocol that substitutes one ranking for the other would mis-order a large fraction of wallet pairs.
+그림~\ref{fig:rank-scatter}는 EndorseRank 순위를 AWP 순위에 대해 그린다. 대각선 위의 점은 동일 순서를 나타낼 것이고, 관측된 구름은 상당한 비대각 질량을 보여 준다. 전송 중심성에서 높게 순위화되는 지갑이 allowance 보증에서 높게 순위화되는 지갑과 신뢰할 만하게 같지 않으며, 그 반대도 성립한다. 방법 간 $\tau=0.316$은 이 산점을 요약한다. 일치는 우연을 초과하지만, 한 순위를 다른 순위로 대체하는 프로토콜은 지갑 쌍의 큰 비율을 오순위화할 것이다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{rank-scatter.pdf}}
-\caption{Rank--rank scatter of EndorseRank versus AWP on the matched cohort. Inter-method Kendall $\tau=0.316$ indicates partial overlap with substantial pairwise disagreement, supporting H1/RQ1 (construct-distinct orderings).}
+\caption{매칭 코호트에서 EndorseRank 대 AWP의 순위--순위 산점도. 방법 간 Kendall $\tau=0.316$은 부분 중첩과 상당한 쌍별 불일치를 나타내며, H1/RQ1(구성 개념상 구별되는 순서)을 지지한다.}
 \label{fig:rank-scatter}
 \end{figure}
 
-Rank divergence is the structural counterpart of construct-specific alignment. If the two methods produced nearly identical orderings, family-level winners in Table~\ref{tab:alignment-three-methods} would be difficult to interpret as construct effects; they could be noise around a shared ranking. The observed $\tau=0.316$, together with EndorseRank's allowance lead and AWP's transfer lead, supports reading the methods as related but distinct reputation instruments. H1 is supported: EndorseRank and AWP yield partially overlapping yet construct-distinct orderings on the matched cohort.
+순위 분기는 구성 개념별 정합의 구조적 대응물이다. 두 방법이 거의 동일한 순서를 산출했다면, 표~\ref{tab:alignment-three-methods}의 계열 수준 승자를 구성 개념 효과로 해석하기 어려울 것이다. 공유 순위 주변의 잡음일 수 있다. 관측된 $\tau=0.316$과 EndorseRank의 allowance 우세, AWP의 전송 우세는 방법을 관련되나 구별되는 평판 도구로 읽도록 지지한다. H1은 지지된다. EndorseRank와 AWP는 매칭 코호트에서 부분적으로 중첩되면서도 구성 개념상 구별되는 순서를 산출한다.
 
-An operational reading of $\tau=0.316$ is that for a randomly chosen pair of wallets, the probability that EndorseRank and AWP agree on which wallet ranks higher is only moderately above chance. Protocols that currently use transfer-based scores cannot assume that switching to allowance-based scores---or blending the two---will preserve existing wallet orderings. Migration would re-rank a substantial fraction of pairs, with the largest disagreements likely concentrated among wallets that are transfer hubs but rarely endorsed as spenders, or endorsed spenders with limited transfer footprints. Figure~\ref{fig:rank-scatter} is consistent with that interpretation: the cloud is positively sloped but wide.
+$\tau=0.316$의 운영적 읽기는, 임의로 고른 지갑 쌍에서 EndorseRank와 AWP가 어느 지갑이 더 높은지에 합의할 확률이 우연보다 중간 정도로만 높다는 것이다. 현재 전송 기반 점수를 쓰는 프로토콜은 allowance 기반 점수로의 전환---또는 둘의 혼합---이 기존 지갑 순서를 보존한다고 가정할 수 없다. 이전은 쌍의 상당한 비율을 재순위화할 것이며, 가장 큰 불일치는 전송 허브이지만 지출자로 거의 보증되지 않는 지갑, 또는 전송 발자국이 제한된 보증 지출자에 집중될 가능성이 크다. 그림~\ref{fig:rank-scatter}는 그 해석과 일치한다. 구름은 양의 기울기를 가지나 넓다.
 
-The divergence result also disciplines rhetoric about ``on-chain reputation'' as a singular object. On this cohort, reputation-from-authorization and reputation-from-transfer are empirically distinct enough that treating them as interchangeable would misstate the evidence. Chapter~\ref{ch:discussion} returns to the practical implication: method choice should follow the trust construct a protocol needs, not a generic preference for any PageRank variant.
+분기 결과는 또한 ``온체인 평판''을 단일 대상으로 하는 수사를 규율한다. 이 코호트에서 승인으로부터의 평판과 전송으로부터의 평판은, 상호 교환으로 취급하면 증거를 왜곡할 만큼 실증적으로 구별된다. 제~\ref{ch:discussion}장은 실무적 함의로 돌아간다. 방법 선택은 임의의 PageRank 변형에 대한 일반적 선호가 아니라, 프로토콜이 필요로 하는 신뢰 구성 개념을 따라야 한다.
 
-\dissertationSubheading[sec:gf-pr-ceiling]{Supplementary GF-PR ceiling analysis (SRQ1 / SC1)}
+\dissertationSubheading[sec:gf-pr-ceiling]{미래 신규 승인의 시간 홀드아웃 (RQ4)}
 
-GF-PR was added during empirical work to bound trading-outcome proxy alignment when ranking directly on outcome flow rather than social edges. Table~\ref{tab:alignment-three-methods} (row~3) shows GF-PR achieving the highest mean $\tau$ on inverse risk ($0.376$) and trading success ($0.583$) among all methods. This pattern is expected by construction: GF-PR's POOL/SINK star graph is built from the same GMX \texttt{PositionDecrease} PnL stream used to define trading-success and inverse-risk proxies. The result illustrates \emph{construct overlap}---shared input semantics inflate alignment without implying that GF-PR measures deployable social reputation.
+점수는 2026년 2월 28일에 고정한다. 라벨은 2026년 3월 1일부터 2026년 5월 31일까지 처음 관측된 신규 소유자--지출자 승인 쌍이며, 지출자 측에서 센다. 주장 코호트는 t1 인바운드 지출자($n=1{,}335$)이며, 그중 $222$개가 적어도 하나의 신규 t2 쌍을 받았다.
 
-Two further observations clarify the ceiling's role. First, GF-PR is weak on allowance and only modest on transfer, confirming that outcome-native flow does not recover social-graph constructs. Second, among social methods on trading-success proxies, AWP ($\tau=0.179$) still exceeds EndorseRank ($0.096$), confirming that transfer-based social propagation aligns more strongly with trading outcomes on this cohort than allowance-based propagation, independent of the GF-PR ceiling.
+미래 신규 승인자와의 EndorseRank Kendall $\tau$는 $0.479$이다(부트스트랩 95\% 신뢰구간 $0.426$--$0.529$; $200$회 재표본). AWP는 $0.044$이다(신뢰구간 $-0.011$--$0.095$). 결과는 미래 시제의 동일 보증 구성 개념이다. 라벨이 점수화된 이벤트로부터 구축되지 않으므로, 동일 창 allowance $\tau=0.355$보다 창 밖 증거로서 더 강하다. 거래 이익, 청산(liquidation), 악성 지출자의 예측이 아니다.
 
-The ceiling is therefore a diagnostic for evaluation design, not a competitor in the primary comparison. When a validation proxy shares inputs with a ranking method, high $\tau$ is uninformative about social reputation quality. Researchers comparing EndorseRank and AWP on trading-outcome families should treat GF-PR's $\tau$ as an upper reference that flags how much alignment is achievable by construction, then interpret social-method $\tau$ values relative to that reference and to each other.
+이 라벨의 GMX 매칭 교집합은 희소하며($12$건) 주장으로 사용하지 않는다. 철회, drain 휴리스틱, Aave 차입자 라벨은 계산되었으나 지지로 보고하지 않는다. 철회와 drain은 보증 읽기에 부호가 틀렸고, 이 지출자 집합의 Aave 이벤트는 비어 있거나 구성 개념이 틀렸다.
 
-The near-perfect GF-PR alignment with the realized-gain proxy ($\tau \approx 0.999$ in Table~\ref{tab:alignment-gmx}) is especially instructive. It shows that the evaluation pipeline can recover extremely high $\tau$ when inputs and proxies coincide, so the moderate social-method values are not an artifact of a broken correlation implementation. Low-to-moderate social-method $\tau$ on trading families reflects limited shared structure between social graphs and GMX outcomes, not an inability of Kendall $\tau$ to detect strong relationships when they exist.
+\dissertationSubheading[sec:empirical-claims]{주요 주장 (C1--C4)}
 
-\textbf{Supplementary claim SC1:} GF-PR sets an outcome-native upper bound on trading-outcome proxy alignment; high GF-PR $\tau$ on the trading-success and inverse-risk families must not be read as evidence that outcome-native ranking replaces social endorsement graphs for reputation deployment.
-
-\dissertationSubheading[sec:empirical-claims]{Primary claims (C1--C4) and supplementary claim (SC1)}
-
-Chapter~4 empirical results support the following claims, aligned with Table~\ref{tab:hrq-claim-map}.
-
-\textbf{Primary claims (EndorseRank vs.\ AWP):}
+제4장 실증 결과는 표~\ref{tab:hrq-claim-map}에 정합하는 다음 주장을 지지한다.
 
 \begin{enumerate}
-\item[\textbf{C1.}] EndorseRank runtime is lower than AWP runtime on identical $n$. On the matched cohort ($n=5{,}521$), EndorseRank completes PageRank in 2.105\,s versus 18.711\,s for AWP (speedup $\approx 8.9\times$), with 14{,}727 vs.\ 137{,}087 edges (Table~\ref{tab:benchmark-runtime}). On the expanded wallet pool, speedups remain $\approx 10.4\times$ at $n=10{,}000$ (1.18\,s vs.\ 12.28\,s) and $\approx 9.4\times$ at $N=31{,}612$ (2.29\,s vs.\ 21.40\,s) (Table~\ref{tab:benchmark-scaling}).
+\item[\textbf{C1.}] 동일 $n$에서 EndorseRank 런타임이 AWP 런타임보다 낮다. 매칭 코호트($n=5{,}521$)에서 EndorseRank는 PageRank를 $2.105$\,s에 완료하고 AWP는 $18.711$\,s에 완료하며(가속 $\approx 8.9\times$), 간선은 $14{,}727$ 대 $137{,}087$개이다(표~\ref{tab:benchmark-runtime}). 확장 지갑 풀에서 가속은 $n=10{,}000$에서 $\approx 10.4\times$($1.18$\,s 대 $12.28$\,s), $N=31{,}612$에서 $\approx 9.4\times$($2.29$\,s 대 $21.40$\,s)로 유지된다(표~\ref{tab:benchmark-scaling}).
 
-\item[\textbf{C2.}] EndorseRank and AWP achieve credible Spearman $\rho$/Kendall $\tau$ on selected proxies under Do et al.'s framework; family-level alignment varies by construct (Tables~\ref{tab:alignment-transfer}--\ref{tab:alignment-gmx}). EndorseRank's allowance mean $\tau=0.355$ and AWP's transfer mean $\tau=0.534$ are the primary-construct anchors; secondary axes are weaker but non-negligible where reported.
+\item[\textbf{C2.}] EndorseRank와 AWP는 동일 창 국소 통계에서 의도된 구성 개념을 복원한다. EndorseRank allowance 평균 $\tau=0.355$; AWP 전송 평균 $\tau=0.534$(표~\ref{tab:alignment-transfer}--\ref{tab:alignment-allowance}). 이들은 구성 개념 검사이며 거래 기술 검사가 아니다.
 
-\item[\textbf{C3.}] \textbf{Construct-specific alignment:} EndorseRank exceeds AWP on allowance proxies ($\tau=0.355$ vs.\ $-0.030$); AWP exceeds EndorseRank on transfer ($\tau=0.534$ vs.\ $0.333$) and on most outcome-based families among social methods, including trading success ($0.179$ vs.\ $0.096$) (Table~\ref{tab:alignment-three-methods}). Inter-method rank agreement is only moderate ($\tau=0.316$), consistent with construct-distinct orderings (Section~\ref{sec:rank-divergence}).
+\item[\textbf{C3.}] \textbf{구성 개념별 정합:} EndorseRank는 allowance에서 AWP를 상회하고($\tau=0.355$ 대 $-0.030$), AWP는 전송에서 EndorseRank를 상회한다($\tau=0.534$ 대 $0.333$). 방법 간 순위 일치는 중간 정도에 불과하다($\tau=0.316$)(제~\ref{sec:rank-divergence}절).
 
-\item[\textbf{C4.}] \textbf{Efficiency--alignment trade-off:} EndorseRank offers $\approx 8.9\times$ lower PageRank runtime than AWP on the matched cohort and $\approx 9$--$10\times$ on expanded-pool scaling (Tables~\ref{tab:benchmark-runtime}, \ref{tab:benchmark-scaling}) while maintaining moderate transfer alignment ($\tau \approx 0.33$) and stronger allowance alignment ($\tau \approx 0.35$). Damping sweeps confirm allowance-family stability at $\approx 0.355$ across $d \in \{0.75, 0.85, 0.95\}$ (Table~\ref{tab:robustness-damping}); top-token and sample-size checks preserve the construct-specific pattern (Tables~\ref{tab:robustness-tokens}, \ref{tab:robustness-sample-size}).
+\item[\textbf{C4.}] \textbf{효율--정합 상충:} EndorseRank는 매칭 코호트에서 AWP보다 PageRank 런타임이 약 $8.9\times$ 낮고, 확장 풀 스케일링에서 약 $9$--$10\times$ 낮으면서, 승인 검사와 정합하는 유일한 사회적 방법으로 남는다. 지출자 홀드아웃($n=1{,}335$)에서 미래 신규 승인자와의 EndorseRank $\tau=0.479$(신뢰구간 $0.426$--$0.529$) 대 AWP $\tau=0.044$이다(제~\ref{sec:gf-pr-ceiling}절).
 \end{enumerate}
 
-\textbf{Supplementary claim:}
+RQ1은 방법 간 $\tau=0.316$으로 다룬다. RQ2는 allowance 대 전송 검사로 다룬다. RQ3는 런타임 표로 다룬다. RQ4는 거래 성공 계열이 아니라 지출자 홀드아웃으로 다룬다.
 
-\begin{enumerate}
-\item[\textbf{SC1.}] GF-PR's highest trading-success mean $\tau$ ($0.583$) and inverse-risk mean $\tau$ ($0.376$) (Table~\ref{tab:alignment-three-methods}, Section~\ref{sec:gf-pr-ceiling}) reflect construct overlap with outcome proxies, not superior social reputation. GF-PR bounds interpretable alignment for EndorseRank and AWP on trading-outcome families (SRQ1) and must not be treated as a deployable substitute for social endorsement graphs.
-\end{enumerate}
+장이 \emph{주장하지 않는} 것 또한 동등하게 중요하다. 어느 점수도 거래 이익, 청산(liquidation), 악성 지출자를 예측한다고 주장하지 않는다. AWP가 구식이 되었다고 주장하지 않는다. AWP는 전송 허브 탐지에서 더 강한 방법으로 남는다. 기여는 구성 개념 인식 비교이다. EndorseRank는 더 싸고, allowance 검사와 정합하며, AWP와 중간 정도로 분기하고, 지출자 홀드아웃에서 이후의 신규 승인을 예측한다.
 
-In summary, the matched-cohort evaluation supports a coherent empirical narrative. EndorseRank is substantially faster than AWP because $G_{\text{approve}}$ is an order of magnitude sparser than $G_{\text{transfer}}$. The two methods produce related but distinct rankings (inter-method $\tau=0.316$) and win on different proxy families: EndorseRank on allowance, AWP on transfer and several social-outcome axes. Robustness checks do not overturn these patterns. GF-PR clarifies the ceiling on trading-outcome alignment under construct overlap, protecting the primary comparison from misinterpretation.
-
-The claims can also be read as answers to the primary research questions. RQ1 is addressed by inter-method $\tau=0.316$ and Figures~\ref{fig:score-distributions}--\ref{fig:rank-scatter}: orderings diverge enough to treat the methods as distinct instruments. RQ2 is addressed by Table~\ref{tab:alignment-three-methods} and the per-family tables: winners are construct-specific. RQ3 is addressed by Tables~\ref{tab:benchmark-runtime}--\ref{tab:benchmark-scaling} and Figure~\ref{fig:runtime-scaling}: EndorseRank is approximately $8.9\times$--$10.4\times$ faster depending on sample definition. RQ4 is addressed by comparing transfer-family means to trading-success means for social methods: transfer proxies yield stronger alignment than trading-success proxies on this cohort (AWP $0.534$ vs.\ $0.179$; EndorseRank $0.333$ vs.\ $0.096$). SRQ1 is addressed by the GF-PR ceiling and SC1.
-
-What the chapter does \emph{not} claim is equally important. It does not claim that EndorseRank predicts leveraged trading profits better than AWP; the opposite is true among social methods on the trading-success family. It does not claim that AWP is obsolete; AWP remains the stronger method for transfer-hub detection and for several activity- and outcome-adjacent proxies. It does not claim that GF-PR is a production reputation score. The contribution is a precise, construct-aware comparison: EndorseRank offers a sparse, authorization-native ranking that is much cheaper to compute, aligns credibly with allowance proxies ($\tau=0.355$), diverges moderately from AWP, and remains stable under the reported robustness checks.
-
-Chapter~\ref{ch:discussion} interprets these findings against RQ1--RQ4 and SRQ1 in greater depth and discusses implications, threats to validity, and limitations.
-
+제~\ref{ch:discussion}장은 이들 발견을 RQ1--RQ4에 비추어 해석하고, 함의, 타당성에 대한 위협, 한계를 논의한다.

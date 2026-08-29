@@ -65,14 +65,14 @@ REPLIES = {
     "3": "Removed the numbered references from the abstract. Citations now begin in the body.",
     "6": "Removed bold from EndorseRank in the abstract. It is now plain body text.",
     "2": "Agreed. Do and Do (2023, IJSI) is PageRank and HodgeRank. AWP is the separate IEEE RIVF paper (Do, Do Van Dung, and Nguyen, 2023; doi:10.1109/rivf60135.2023.10471809). I split that attribution at the first AWP definition and added the RIVF item to References. A full in-text pass (every fused “Do et al. = AWP”) is deferred until after the meeting.",
-    "7": "Rewrote that sentence in the first person: I incorporated the GMX V2 proxies and the GF-PR ceiling reference.",
-    "14": "Added a one-sentence circular-construction caveat next to the GF-PR abbreviation. Collapsing SRQ1, SC1, and the named contribution across chapters is deferred until after the meeting.",
+    "7": "Dropped trading-success proxies and the GF-PR ceiling from the claims. GMX remains a sampling frame only. The external check is now a temporal holdout of future new owner–spender approvals.",
+    "14": "Removed GF-PR / SRQ1 / SC1 from the dissertation claims. Trading-success alignment is not used as evidence.",
     "20": "Split this opening paragraph so each claim has one source: [53] for DeFi intermediation; [48] for the absence of conventional credit histories. A document-wide cluster pass is deferred.",
     "62": "Kept the 2.105 s / 8.9× measurement. Added in red that the speedup is the expected O(|E|) consequence of approval sparsity, that the solver matches AWP, and that C1 is demoted from a headline contribution.",
     "72": "Inserted a Research objectives section (four objectives, mapped to RQ1–RQ4) immediately before Research questions. Chapter 5 mapping of each objective is deferred until after the meeting.",
-    "74": "Re-posed RQ4 in red as a construct-validity observation and noted that AWP–transfer alignment is partly mechanical because the proxies share AWP’s input.",
-    "77": "Added a red paragraph under Contributions stating that the present claim is latest-allowance edges plus a five-proxy comparison, not a new ranking algorithm.",
-    "78": "Acknowledged. I am not inserting a two-page doctoral-scale plan into this working copy. For the meeting I will bring a short plan on (i) methodological development beyond swapping the edge set, (ii) stronger external validity than construct-overlap correlations, and (iii) statistical inference on the reported taus.",
+    "74": "Re-posed RQ4 as a temporal holdout: t1 scores versus t2 new owner–spender approvals on inbound spenders, not transfer versus trading-success.",
+    "77": "Rewrote the contribution paragraph: the claim is latest-allowance edges, same-window allowance versus transfer checks, and a temporal holdout of future new approvals—not a new ranking algorithm and not a five-proxy trading-success contest.",
+    "78": "Implemented a temporal holdout rather than another same-window proxy. Scores freeze at 28 February 2026; labels are new owner–spender approvals in March–May 2026 on t1 inbound spenders (n = 1,335). EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP = 0.044. That is the same endorsement construct in the future tense, with CIs. It is not a trading-profit, liquidation, or malicious-spender result. Method is still stock PageRank; the contribution is the time-split check, not a new solver.",
     "81": "Added the public repository URL, commit 0c70518a35540c8b56be66b52452cb94ca3fb916, the versioned config path, and the machine-readable summary as the table source. I can provide an anonymised archive if required.",
     "82": "Removed the restated 0.316 / 0.355 / 0.534 / 8.9× list from this Contributions sentence and pointed back to Chapter 4. A full de-duplication pass is deferred.",
     "129": "Deleted the uncited 0.10 / 0.35 bands at this heading. I will not invent a precedent. Interpretation will use same-cohort contrasts and, after the meeting, bootstrap intervals.",
@@ -84,9 +84,9 @@ REPLIES = {
     "286": "Explained in red: 10.4× is Table 4.3 (primary scaling, 1.178 s vs 12.277 s). 8.96× is Table 4.6 (sample-size sweep). Same n and seed, not the same experiment. Raw logs after the meeting.",
     "288": "Acknowledged in red: n = 10,000 is a SHA256 subsample (|E| = 7,067). Cohort and full pool both show 14,727 EndorseRank edges because the evaluation-wallet subgraph is fixed, so this design does not scale the quantity that drives PageRank cost.",
     "299": "Rewrote this paragraph in red as sample-definition sensitivity, not robustness. Primary sample remains n = 5,521. The 0.2 swing is no longer described as stability.",
-    "310": "Rewrote the close of this paragraph in red: allowance tau is near a self-correlation with smoothed in-degree; trading-success 0.096 and inverse-risk 0.035 are at noise level. I do not call that construct-specificity. Same honesty in the abstract: allowance-family tau is an intended-construct check, not an external test (0.355 vs AWP -0.030); I no longer write that EndorseRank 'aligns more strongly' as a headline win.",
+    "310": "I keep the honesty you asked for: same-window allowance tau = 0.355 is an intended-construct check, not an external test (AWP is -0.030). I dropped trading-success 0.096 and inverse-risk 0.035 from the claims. The external check is now a holdout of future new approvers on spenders: EndorseRank tau = 0.479 (CI 0.426–0.529) versus AWP 0.044. I do not sell drain, revoke, or Aave liquidation as successes.",
     "349": "Collapsed this subsection to one short paragraph and removed the Akerlof / Graham–Dodd / Basu / Fama–French / Healy–Wahlen cluster from this location.",
-    "378": "Acknowledged: major revision before examination. This working copy only (i) edits what can be fixed in red at the comment sites and (ii) replies on each thread. Still open after the meeting: doctoral-scale plan, CIs, GF-PR collapse, full citation and de-duplication passes, ethics certificate, raw logs, and LaTeX–Word cleanup. I do not have Supervisory_Review_Taehong_Thesis.",
+    "378": "Acknowledged: major revision before examination. This working copy now drops trading-success / GF-PR claims and reports the spender holdout (EndorseRank tau = 0.479, CI 0.426–0.529). Still open: ethics certificate, raw logs, and a full LaTeX–Word cleanup. I do not have Supervisory_Review_Taehong_Thesis.",
     "396": "Added the verified 2023 IEEE RIVF AWP paper after Do and Do (2023). A broader currency pass on older field references is deferred; I will not add unverified replacements.",
 }
 
@@ -272,7 +272,7 @@ def apply_body(doc) -> None:
     p39 = find_para(paras, lambda p: para_has_comment(p, "2"))
     replace_para_text(
         p39,
-        "Decentralized finance protocols allocate capital among pseudonymous wallets and therefore need on-chain reputation scores that are computationally scalable, semantically interpretable, and aligned with operationally relevant on-chain signals such as authorization, transfer activity, and risk-related proxies. The identified problem is that transfer-graph reputation is costly to refresh and does not encode explicit spending authorization. This study introduces EndorseRank, an on-chain reputation score obtained by applying PageRank to a directed endorsement graph of latest ERC-20 allowance edges on Arbitrum One, and compares it with Adaptive Weighted PageRank (AWP), a transfer-graph baseline that uses value-weighted logistic time-decay, using five proxy families on a matched wallet cohort (n = 5,521).",
+        "Decentralized finance protocols allocate capital among pseudonymous wallets and therefore need on-chain reputation scores that can be refreshed often and checked against public ledger signals. The identified problem is that transfer-graph reputation is costly to refresh and does not encode explicit spending authorization. This study introduces EndorseRank, PageRank on latest ERC-20 allowance edges on Arbitrum One, and compares it with Adaptive Weighted PageRank (AWP) on a matched wallet cohort (n = 5,521) defined by GMX activity as a sampling frame only.",
     )
 
     p40 = find_para(
@@ -281,7 +281,7 @@ def apply_body(doc) -> None:
     )
     replace_para_text(
         p40,
-        "On the matched cohort, EndorseRank completes PageRank in 2.105 s versus 18.711 s for AWP (approximately 8.9 times faster). Allowance-family alignment is an intended-construct check, not an external test: EndorseRank mean Kendall tau = 0.355, while AWP is near zero (-0.030). AWP remains closer to transfer proxies (tau = 0.534 versus 0.333). Inter-method rank correlation (tau = 0.316) indicates overlapping but not interchangeable rankings.",
+        "On the matched cohort, EndorseRank completes PageRank in 2.105 s versus 18.711 s for AWP (approximately 8.9 times faster). Allowance-family alignment is an intended-construct check, not an external test: EndorseRank mean Kendall tau = 0.355, while AWP is near zero (-0.030). AWP remains closer to transfer proxies (tau = 0.534 versus 0.333). Inter-method rank correlation (tau = 0.316) indicates overlapping but not interchangeable rankings. On the holdout spender cohort (n = 1,335), EndorseRank aligns with future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is not a prediction of trading profit, liquidation, or malicious spenders.",
     )
 
     p41 = find_para(
@@ -314,7 +314,7 @@ def apply_body(doc) -> None:
     p44 = find_para(paras, lambda p: para_has_comment(p, "7"))
     replace_para_text(
         p44,
-        "I incorporated GMX V2 trading-success proxies to extend domain validation on the same cohort, and I added GainFlow PageRank (GF-PR) only as a supplementary outcome-native ceiling reference built from the same profit-and-loss stream. Among social methods, transfer proxies yield higher mean alignment than trading-success proxies on this chain.",
+        "GMX V2 activity defines the matched sample (at least three PositionDecrease closes). It is not a trading-success test. Trading-success, inverse-risk, liquidation, and GF-PR alignments are not claims.",
     )
 
     p178 = find_para(
@@ -329,7 +329,7 @@ def apply_body(doc) -> None:
     p166 = find_para(paras, lambda p: para_has_comment(p, "20"))
     replace_para_text(
         p166,
-        "Decentralized Finance (DeFi) has transformed how capital is allocated on public blockchains, enabling lending, borrowing, and leveraged trading without traditional financial intermediaries [53]. Yet most credit-like interactions remain highly collateralized because protocols cannot rely on off-chain identity systems or conventional credit histories [48]. In a pseudonymous environment, the operational challenge is to allocate capital safely: distinguishing wallets that manage leveraged exposure reliably from those that exhibit repeated losses, liquidations, or adversarial behavior.",
+        "Decentralized Finance (DeFi) has transformed how capital is allocated on public blockchains, enabling lending, borrowing, and leveraged trading without traditional financial intermediaries [53]. Yet most credit-like interactions remain highly collateralized because protocols cannot rely on off-chain identity systems or conventional credit histories [48]. In a pseudonymous environment, the operational challenge is to allocate capital safely when counterparties are addresses rather than identified persons.",
     )
 
     p193 = find_para(paras, lambda p: para_has_comment(p, "62"))
@@ -341,13 +341,13 @@ def apply_body(doc) -> None:
     p302 = find_para(paras, lambda p: para_has_comment(p, "74"))
     replace_para_text(
         p302,
-        "RQ4. As a construct-validity observation rather than an independent empirical finding: for social reputation methods, do transfer proxies (in-degree/in-value), which share input with the AWP graph, show stronger rank alignment than trading-success proxies from GMX V2 perpetual closes? AWP–transfer alignment is expected to be partly mechanical.",
+        "RQ4. After scores are frozen at 28 February 2026, does EndorseRank predict new owner–spender approvals in March–May 2026 on t1 inbound spenders more strongly than AWP? This is a time-split test of the endorsement construct, not a trading-success contest.",
     )
 
     p308 = find_para(paras, lambda p: para_has_comment(p, "78"))
     replace_para_text(
         p308,
-        "The originality claimed here is not a new ranking algorithm. EndorseRank applies stock PageRank to latest ERC-20 allowance edges and compares that score with AWP on one matched cohort under five proxy families. Whether that edge substitution is a sufficient doctoral contribution is for the supervisory meeting; this draft only makes the present scope explicit.",
+        "The originality claimed here is not a new ranking algorithm. EndorseRank applies stock PageRank to latest ERC-20 allowance edges, compares that score with AWP on same-window allowance and transfer checks, and tests whether t1 scores predict t2 new approvals on inbound spenders. Whether that time-split check is a sufficient doctoral contribution is for the supervisory meeting; this draft only makes the present scope explicit.",
     )
 
     p313 = find_para(paras, lambda p: para_has_comment(p, "81"))
@@ -441,7 +441,7 @@ def apply_body(doc) -> None:
     p1386 = find_para(paras, lambda p: para_has_comment(p, "310"))
     replace_para_text(
         p1386,
-        "This pattern must be read honestly. EndorseRank is essentially a global smoothing of allowance in-degree, so correlating it with allowance in-degree is close to correlating a quantity with itself. On outcomes a protocol would care about, the method is at noise level (trading-success tau = 0.096; inverse-risk tau = 0.035). I do not reframe that weak external validity as a virtue of construct-specificity.",
+        "This pattern must be read honestly. EndorseRank is essentially a global smoothing of allowance in-degree, so correlating it with allowance in-degree is close to correlating a quantity with itself (tau = 0.355). I do not call that an external test. The out-of-window check is future new approvers on spenders: EndorseRank tau = 0.479 (CI 0.426–0.529) versus AWP 0.044. Trading-success and inverse-risk alignments are dropped from the claims.",
     )
 
     # P/E collapse
@@ -475,7 +475,7 @@ def apply_body(doc) -> None:
     p14 = find_para(paras, lambda p: para_has_comment(p, "14"))
     caveat = new_para_like(
         p39,
-        "Note: GF-PR is circular by construction (the same GMX profit-and-loss stream that defines the trading-success proxies). I retain the abbreviation for now; collapsing SRQ1, SC1, and the named contribution is deferred until after the meeting.",
+        "Note: GF-PR and trading-success families are excluded from the dissertation claims. The external check is the temporal holdout of future new approvals.",
     )
     p14.addnext(caveat)
 
@@ -488,7 +488,7 @@ def apply_body(doc) -> None:
     # heading should not be forced red-only if we cloned Heading2 — keep style, still red as requested for new text
     obj_body = new_para_like(
         p39,
-        "Four objectives are derived from the problem statement and map onto the primary research questions. O1: establish whether EndorseRank and AWP produce distinct wallet orderings on one Arbitrum cohort (RQ1). O2: compare construct-specific alignment of the two social methods across the five proxy families (RQ2). O3: measure computational cost of EndorseRank versus AWP at equal n (RQ3). O4: treat the transfer-versus-trading-success contrast as a construct-validity observation rather than as a like-with-like predictive contest (RQ4). Chapter 5 will be revised after the meeting to show how each objective has been met.",
+        "Four objectives are derived from the problem statement and map onto the primary research questions. O1: establish whether EndorseRank and AWP produce distinct wallet orderings on one Arbitrum cohort (RQ1). O2: compare contemporaneous allowance and transfer checks (RQ2). O3: measure computational cost of EndorseRank versus AWP at equal n (RQ3). O4: test whether t1 scores predict t2 new owner–spender approvals on inbound spenders (RQ4).",
     )
     rq_h.addprevious(obj_h)
     rq_h.addprevious(obj_body)
@@ -755,6 +755,406 @@ def verify(path: Path) -> None:
             assert reply_pid in cid_paras
 
 
+def set_comment_text(comment, text: str) -> None:
+    """Replace visible reply text; keep paraId and the annotationRef run."""
+    p = comment.find(qn("p"))
+    if p is None:
+        raise KeyError(f"comment {comment.get(qn('id'))} has no paragraph")
+    sample = first_text_run(p)
+    kept = []
+    for child in list(p):
+        tag = etree.QName(child).localname
+        if tag == "pPr":
+            continue
+        if tag == "r" and child.find(qn("annotationRef")) is not None:
+            kept.append(child)
+            continue
+        p.remove(child)
+    run = make_red_run(text, sample)
+    # Replies are comment text, not body; keep the author's existing run style
+    # but do not force body-red on the comment pane.
+    color = run.find(qn("rPr"))
+    if color is not None:
+        col = color.find(qn("color"))
+        if col is not None:
+            color.remove(col)
+    if kept:
+        kept[-1].addnext(run)
+    else:
+        ppr = p.find(qn("pPr"))
+        if ppr is not None:
+            ppr.addnext(run)
+        else:
+            p.insert(0, run)
+
+
+REPLY_PREFIX_TO_PARENT = {
+    "Rewrote that sentence in the first person": "7",
+    "Added a one-sentence circular-construction caveat": "14",
+    "Re-posed RQ4 in red as a construct-validity": "74",
+    "Added a red paragraph under Contributions stating that the present claim is latest-allowance": "77",
+    "Acknowledged. I am not inserting a two-page": "78",
+    "Rewrote the close of this paragraph in red: allowance tau": "310",
+    "Acknowledged: major revision before examination. This working copy only": "378",
+}
+
+
+def update_existing_replies(comments_root) -> int:
+    target_ids = set(REPLY_PREFIX_TO_PARENT.values())
+    found: set[str] = set()
+    for c in comments_root.findall(qn("comment")):
+        if c.get(qn("author")) != AUTHOR:
+            continue
+        text = "".join(t.text or "" for t in c.iter(qn("t")))
+        parent_id = None
+        for pid in target_ids:
+            if text == REPLIES[pid]:
+                parent_id = pid
+                break
+        if parent_id is None:
+            for prefix, pid in REPLY_PREFIX_TO_PARENT.items():
+                if text.startswith(prefix):
+                    parent_id = pid
+                    break
+        if parent_id is None:
+            continue
+        if text != REPLIES[parent_id]:
+            set_comment_text(c, REPLIES[parent_id])
+        found.add(parent_id)
+    if found != target_ids:
+        raise RuntimeError(f"updated {sorted(found)}, expected {sorted(target_ids)}")
+    return len(found)
+
+
+def apply_body_inplace(doc) -> None:
+    """Patch the already-replied working copy. Do not insert duplicate blocks."""
+    body = doc.find(qn("body"))
+    paras = [p for p in body if etree.QName(p).localname == "p"]
+
+    def by_comment(cid: str):
+        return find_para(paras, lambda p: para_has_comment(p, cid))
+
+    def by_prefix(prefix: str):
+        return find_para(paras, lambda p: para_text(p).startswith(prefix))
+
+    replace_para_text(
+        by_comment("2"),
+        "Decentralized finance protocols allocate capital among pseudonymous wallets and therefore need on-chain reputation scores that can be refreshed often and checked against public ledger signals. The identified problem is that transfer-graph reputation is costly to refresh and does not encode explicit spending authorization. This study introduces EndorseRank, PageRank on latest ERC-20 allowance edges on Arbitrum One, and compares it with Adaptive Weighted PageRank (AWP) on a matched wallet cohort (n = 5,521) defined by GMX activity as a sampling frame only.",
+    )
+    replace_para_text(
+        by_prefix("On the matched cohort, EndorseRank completes PageRank in 2.105"),
+        "On the matched cohort, EndorseRank completes PageRank in 2.105 s versus 18.711 s for AWP (approximately 8.9 times faster). Allowance-family alignment is an intended-construct check, not an external test: EndorseRank mean Kendall tau = 0.355, while AWP is near zero (-0.030). AWP remains closer to transfer proxies (tau = 0.534 versus 0.333). Inter-method rank correlation (tau = 0.316) indicates overlapping but not interchangeable rankings. On the holdout spender cohort (n = 1,335), EndorseRank aligns with future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is not a prediction of trading profit, liquidation, or malicious spenders.",
+    )
+    replace_para_text(
+        by_comment("7"),
+        "GMX V2 activity defines the matched sample (at least three PositionDecrease closes). It is not a trading-success test. Trading-success, inverse-risk, liquidation, and GF-PR alignments are not claims.",
+    )
+    replace_para_text(
+        by_comment("20"),
+        "Decentralized Finance (DeFi) has transformed how capital is allocated on public blockchains, enabling lending, borrowing, and leveraged trading without traditional financial intermediaries [53]. Yet most credit-like interactions remain highly collateralized because protocols cannot rely on off-chain identity systems or conventional credit histories [48]. In a pseudonymous environment, the operational challenge is to allocate capital safely when counterparties are addresses rather than identified persons.",
+    )
+    replace_para_text(
+        by_prefix("This thesis addresses a concrete research problem"),
+        "This thesis addresses a concrete research problem within that setting: whether an on-chain reputation score built from ERC-20 approve/permit allowances—implemented as EndorseRank—can reduce computational cost, represent endorsement semantics more faithfully, and yield a distinct yet credible alignment profile compared with transfer-based Adaptive Weighted PageRank (AWP) on Arbitrum One. The primary empirical comparison is EndorseRank versus AWP on an identical wallet sample, using same-window allowance and transfer checks plus a temporal holdout of future new approvals.",
+    )
+    replace_para_text(
+        by_prefix("Note: GF-PR is circular by construction"),
+        "Note: GF-PR and trading-success families are excluded from the dissertation claims. The external check is the temporal holdout of future new approvals.",
+    )
+    replace_para_text(
+        by_prefix("Four objectives are derived from the problem statement"),
+        "Four objectives are derived from the problem statement and map onto the primary research questions. O1: establish whether EndorseRank and AWP produce distinct wallet orderings on one Arbitrum cohort (RQ1). O2: compare contemporaneous allowance and transfer checks (RQ2). O3: measure computational cost of EndorseRank versus AWP at equal n (RQ3). O4: test whether t1 scores predict t2 new owner–spender approvals on inbound spenders (RQ4).",
+    )
+    replace_para_text(
+        by_prefix("RQ2. Between EndorseRank and AWP"),
+        "RQ2. Between EndorseRank and AWP, which social method aligns more strongly with contemporaneous allowance checks and with transfer checks (Spearman’s ρ, Kendall’s τ)?",
+    )
+    replace_para_text(
+        by_comment("74"),
+        "RQ4. After scores are frozen at 28 February 2026, does EndorseRank predict new owner–spender approvals in March–May 2026 on t1 inbound spenders more strongly than AWP? This is a time-split test of the endorsement construct, not a trading-success contest.",
+    )
+    replace_para_text(
+        by_prefix("SRQ1. What does the supplementary GF-PR"),
+        "SRQ1 is withdrawn. GF-PR is not a dissertation claim. The external check is the temporal holdout under RQ4.",
+    )
+    replace_para_text(
+        by_prefix("RQ1 tests whether allowance and transfer graphs"),
+        "RQ1 tests whether allowance and transfer graphs induce distinct centrality structures, operationalized by inter-method Kendall τ between score vectors. RQ2 evaluates contemporaneous allowance versus transfer checks. RQ3 compares PageRank wall-clock time on identical wallet sets. RQ4 tests whether t1 scores predict t2 new owner–spender approvals on inbound spenders.",
+    )
+    replace_para_text(
+        by_comment("78"),
+        "The originality claimed here is not a new ranking algorithm. EndorseRank applies stock PageRank to latest ERC-20 allowance edges, compares that score with AWP on same-window allowance and transfer checks, and tests whether t1 scores predict t2 new approvals on inbound spenders. Whether that time-split check is a sufficient doctoral contribution is for the supervisory meeting; this draft only makes the present scope explicit.",
+    )
+    replace_para_text(
+        by_prefix("Five-proxy domain alignment evaluation: Compares EndorseRank and AWP on leveraged"),
+        "Holdout of future approvals: After scores freeze at 28 February 2026, new owner–spender pairs in March–May 2026 are the external check on t1 inbound spenders (n = 1,335).",
+    )
+    replace_para_text(
+        by_prefix("DeFi activity. Proxies span transfer centrality"),
+        "EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. Same-window checks remain allowance versus transfer. Trading-success families are not claims.",
+    )
+    p316 = find_para(
+        paras,
+        lambda p: "claims C1–C4 and SC1" in para_text(p) or "claims C1-C4 and SC1" in para_text(p),
+    )
+    replace_para_text(
+        p316,
+        "Open reproducible evaluation pipeline: Links BigQuery extraction, graph construction, PageRank scoring, proxy computation, and LaTeX result tables to a machine-readable summary (Appendix 8.1). The pipeline supports independent verification of claims C1–C4. "
+        f"Repository: {REPO} (commit {COMMIT}). Versioned configuration: A-Skill-Programs/margin_rank/config/margin_config.yaml. Tables are transcribed from the pipeline’s machine-readable evaluation summary. An anonymised archive can be supplied if a private snapshot is required.",
+    )
+    replace_para_text(
+        by_prefix("GF-PR ceiling analysis: Clarifies construct overlap on trading-outcome proxies for the matched"),
+        "Temporal holdout, not GF-PR: The external check is future new approvals, not an outcome-native ceiling. GF-PR and trading-success alignments are excluded from the claims.",
+    )
+    replace_para_text(
+        by_comment("310"),
+        "This pattern must be read honestly. EndorseRank is essentially a global smoothing of allowance in-degree, so correlating it with allowance in-degree is close to correlating a quantity with itself (tau = 0.355). I do not call that an external test. The out-of-window check is future new approvers on spenders: EndorseRank tau = 0.479 (CI 0.426–0.529) versus AWP 0.044. Trading-success and inverse-risk alignments are dropped from the claims.",
+    )
+    replace_para_text(
+        by_prefix("GF-PR is likewise near zero on allowance"),
+        "I do not use GF-PR, trading-success, or inverse-risk alignments as supporting evidence. Same-window allowance tau is an intended-construct check; the external check is the spender holdout.",
+    )
+    replace_para_text(
+        by_prefix("Conceptual model: primary EndorseRank vs. AWP"),
+        "Conceptual model: primary EndorseRank vs. AWP comparison mapped to reputation structure (H1/RQ1), same-window allowance and transfer checks (H2/RQ2), and computational efficiency (H3/RQ3). RQ4 is the temporal holdout of future new approvals.",
+    )
+    replace_para_text(
+        by_prefix("ence (SRQ1), not a third peer social method"),
+        "GF-PR is not a claim and is not a third peer social method.",
+    )
+    replace_para_text(
+        by_prefix("Distribution of GMX realized PnL summaries"),
+        "Distribution of GMX realized PnL summaries in the matched cohort. These figures describe the sample. They are not a trading-success validation axis.",
+    )
+    replace_para_text(
+        by_prefix("Distribution of GMX close success rates"),
+        "Distribution of GMX close success rates in the matched cohort. Close counts define the sampling filter (at least three PositionDecrease events), not a trading-success claim.",
+    )
+    replace_para_text(
+        by_prefix("Table 1.1 summarizes the primary comparison"),
+        "Table 1.1 summarizes the primary comparison. Table 1.3 summarizes hypotheses (H1–H3), research questions (RQ1–RQ4), and Chapter 4 empirical claims (C1–C4). SRQ1 and SC1 are withdrawn.",
+    )
+    replace_para_text(
+        by_prefix("This study tests three primary hypotheses"),
+        "This study tests three primary hypotheses: H1—EndorseRank and AWP yield distinct wallet orderings on the same cohort; H2—the two social methods differ on contemporaneous allowance versus transfer checks; and H3—EndorseRank is computationally more efficient than AWP at equal n. RQ1–RQ4 form the primary comparison. RQ4 is the temporal holdout. SRQ1 is withdrawn.",
+    )
+    replace_para_text(
+        by_prefix("directly. Transfer proxies yield higher mean"),
+        "The out-of-window check is not trading-success tau. On the holdout spender cohort (n = 1,335), EndorseRank aligns with future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is the same endorsement construct in the future tense. It is not a prediction of trading profit, liquidation, or malicious spenders. Matched-cohort intersection events are too sparse to claim.",
+    )
+    replace_para_text(
+        by_prefix("Supplementary GF-PR ceiling analysis"),
+        "Temporal holdout of future new approvals (RQ4)",
+    )
+    replace_para_text(
+        by_prefix("Two further observations clarify the ceiling"),
+        "Two further observations limit over-reading. First, same-window allowance tau = 0.355 is an intended-construct check, not an external test. Second, revoke, drain, and Aave liquidation labels are not sold as successes: they are the wrong sign, the wrong construct, or too sparse.",
+    )
+    replace_para_text(
+        by_prefix("Supplementary claim SC1:"),
+        "Withdrawn: SC1 / GF-PR is not a dissertation claim. The external check that remains is the spender holdout under RQ4.",
+    )
+    replace_para_text(
+        by_prefix("Primary claims (C1–C4) and supplementary claim"),
+        "Primary claims (C1–C4)",
+    )
+    replace_para_text(
+        by_prefix("SC1. GF-PR’s highest trading-success"),
+        "C4. On t1 inbound spenders (n = 1,335), EndorseRank predicts t2 new owner–spender approvals at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529). AWP is 0.044. That holdout is the external check. Trading-success and GF-PR alignments are not claims.",
+    )
+    replace_para_text(
+        by_prefix("faster depending on sample definition"),
+        "faster depending on sample definition. RQ4 is addressed by the spender holdout (EndorseRank tau = 0.479, CI 0.426–0.529; AWP 0.044), not by comparing transfer means to trading-success means. SRQ1 and SC1 are withdrawn.",
+    )
+    replace_para_text(
+        by_prefix("Chapter 5 interprets these findings against RQ1–RQ4 and SRQ1"),
+        "Chapter 5 interprets these findings against RQ1–RQ4 and discusses implications, threats to validity, and limitations. Trading-success and GF-PR are not claims.",
+    )
+    replace_para_text(
+        by_prefix("This chapter interprets the Chapter 4 findings against RQ1–RQ4 and SRQ1"),
+        "This chapter interprets the Chapter 4 findings against RQ1–RQ4, discusses implications for DeFi screening, addresses threats to validity, and states limitations of the EndorseRank–AWP comparison. Headline quantities are inter-method Kendall tau = 0.316, EndorseRank allowance tau = 0.355, AWP transfer tau = 0.534, holdout future-new-approvers tau = 0.479 (CI 0.426–0.529) versus AWP 0.044, and PageRank runtimes of 2.105 s versus 18.711 s. Trading-success and GF-PR alignments are not claims.",
+    )
+    replace_para_text(
+        by_prefix("The primary empirical comparison concerns EndorseRank and AWP"),
+        "The primary empirical comparison concerns EndorseRank and AWP as social reputation methods on wallet-to-wallet graphs. The following subsections interpret each research question in light of same-window allowance and transfer checks, the computational benchmarks, and the temporal holdout.",
+    )
+    replace_para_text(
+        by_prefix("RQ2 asks which social method aligns more strongly with each of the five proxy families"),
+        "RQ2 asks which social method aligns more strongly with contemporaneous allowance checks and with transfer checks. EndorseRank wins on allowance (tau = 0.355); AWP wins on transfer (tau = 0.534). Trading-success and inverse-risk families are not used to answer RQ2.",
+    )
+    replace_para_text(
+        by_prefix("On trading-success proxies derived from GMX V2"),
+        "Trading-success, inverse-risk, liquidation, and malicious-spender alignments are excluded from the findings. GMX activity remains a sampling frame only.",
+    )
+    replace_para_text(
+        by_prefix("0.096 falls in the negligible-noise band"),
+        "Those families remain in the evaluation artifact. They are not used as evidence of trading skill, credit risk, or malicious spenders.",
+    )
+    replace_para_text(
+        by_prefix("RQ4 asks which validation frame yields stronger rank alignment"),
+        "RQ4 asks whether t1 scores predict t2 new owner–spender approvals on inbound spenders. On the spender cohort (n = 1,335), EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is a time-split test of the endorsement construct, not a transfer-versus-trading-success contest.",
+    )
+    replace_para_text(
+        by_prefix("RQ4 therefore favors transfer proxies"),
+        "RQ4 therefore favors the temporal holdout as the out-of-window check. Same-window transfer alignment remains a construct check for AWP, not a substitute for the holdout.",
+    )
+    replace_para_text(
+        by_prefix("Supplementary finding (SRQ1)"),
+        "Non-claims (withdrawn SRQ1 / SC1)",
+    )
+    replace_para_text(
+        by_prefix("0.096 and AWP’s τ = 0.179 should be read"),
+        "I do not read social-method trading-success tau against a GF-PR ceiling. GF-PR is circular with those outcomes. The external check that remains is the spender holdout.",
+    )
+    replace_para_text(
+        by_prefix("The five-proxy framework extends Do et al"),
+        "The remaining validation logic separates same-window allowance and transfer checks from the temporal holdout. EndorseRank aligns with its primary allowance construct (tau = 0.355) and predicts later new approvals on spenders (tau = 0.479). AWP aligns with transfer (tau = 0.534) and is near zero on the holdout (tau = 0.044).",
+    )
+    replace_para_text(
+        by_prefix("GF-PR is suitable only as a diagnostic ceiling"),
+        "GF-PR is not used as a diagnostic ceiling in the claims. Evaluation pipelines may retain the artifact; this dissertation does not sell outcome-native ranking as social validity.",
+    )
+    replace_para_text(
+        by_prefix("Proxy not ground truth:"),
+        "Proxy not ground truth: No under-collateralized lending default labels are available at sufficient density. GMX V2 closes define the matched sample. They are not loan repayment and are not used as a trading-success claim.",
+    )
+    p1746 = find_para(
+        paras,
+        lambda p: para_text(p).startswith("dorseRank") and "0.179" in para_text(p),
+    )
+    replace_para_text(
+        p1746,
+        "Trading-success alignments (formerly 0.096 / 0.179) are dropped from the claims.",
+    )
+    replace_para_text(
+        by_prefix("This thesis formulated EndorseRank"),
+        "This thesis formulated EndorseRank, a PageRank method on a latest-allowance endorsement graph that produces an on-chain reputation score on Arbitrum One, and evaluated it against Adaptive Weighted PageRank (AWP) on an identical matched wallet cohort (n = 5,521). GMX V2 activity is a sampling frame (365,488 decoded PositionDecrease events; at least three closes). Same-window checks are allowance versus transfer. The external check is a temporal holdout of future new approvals on t1 inbound spenders (n = 1,335).",
+    )
+    replace_para_text(
+        by_prefix("On social-method alignment (RQ2)"),
+        "On social-method alignment (RQ2), construct-specific winners emerge. EndorseRank leads on allowance checks (tau = 0.355 versus AWP −0.030); AWP leads on transfer checks (tau = 0.534 versus EndorseRank 0.333). H2 is supported in that construct-specific form.",
+    )
+    replace_para_text(
+        by_prefix("ically, AWP exceeds EndorseRank"),
+        "Trading-success families are not used to support H2.",
+    )
+    replace_para_text(
+        by_prefix("On validation frames (RQ4)"),
+        "On the temporal holdout (RQ4), EndorseRank predicts future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529) versus AWP 0.044. That is not a trading-profit, liquidation, or malicious-spender result.",
+    )
+    replace_para_text(
+        by_prefix("As a supplementary finding (SRQ1)"),
+        "SRQ1 / SC1 are withdrawn. GF-PR is not a deployable social reputation score and is not used as a ceiling claim.",
+    )
+    replace_para_text(
+        by_prefix("Five-proxy domain alignment evaluation: Compares EndorseRank and AWP on leveraged DeFi"),
+        "Same-window and holdout evaluation: Compares EndorseRank and AWP on allowance versus transfer checks and on t2 new owner–spender approvals. The result is a construct-specific map, not a trading-success ranking.",
+    )
+    replace_para_text(
+        by_prefix("GF-PR ceiling analysis: Clarifies construct overlap on trading-outcome proxies (SRQ1)"),
+        "Temporal holdout: t1 scores versus t2 new approvals on inbound spenders (EndorseRank tau = 0.479, CI 0.426–0.529; AWP 0.044). GF-PR is excluded from the claims.",
+    )
+    replace_para_text(
+        by_prefix("This thesis reports primary empirical claims C1–C4"),
+        "This thesis reports primary empirical claims C1–C4 addressing RQ1–RQ4 on a matched Arbitrum One wallet cohort (n = 5,521) and a spender holdout (n = 1,335). EndorseRank is an efficient, allowance-specific alternative to transfer-based AWP: distinct in ranking geometry (inter-method tau = 0.316), aligned with its primary construct (allowance tau = 0.355), faster to compute (2.105 s versus 18.711 s), and predictive of later new approvals (tau = 0.479).",
+    )
+    replace_para_text(
+        by_prefix("Statement: For social methods, transfer proxies align more strongly than trading-success"),
+        "Statement: The external check is the temporal holdout of future new approvals, not transfer versus trading-success.",
+    )
+    replace_para_text(
+        by_prefix("SRQ1 / SC1 — GF-PR ceiling"),
+        "RQ4 — temporal holdout of future new approvals",
+    )
+
+
+def apply_body_pass2(doc) -> None:
+    """Second pass: leftover chapter openings that still sell five-proxy / GF-PR."""
+    body = doc.find(qn("body"))
+    paras = [p for p in body if etree.QName(p).localname == "p"]
+
+    def by_prefix(prefix: str):
+        return find_para(paras, lambda p: para_text(p).startswith(prefix))
+
+    replace_para_text(
+        by_prefix("§4.7"),
+        "§4.7 Holdout of future new approvals. Table 4.2",
+    )
+    replace_para_text(
+        by_prefix("Chapter 3 specifies data sources"),
+        "Chapter 3 specifies data sources, sampling, graph construction for EndorseRank and AWP, same-window allowance and transfer checks, the temporal holdout, computational benchmarks, robustness checks, reproducibility practices, and ethics. It defines the matched wallet cohort, the expanded wallet pool used for scaling, and the operational procedures that produce the Chapter 4 tables.",
+    )
+    replace_para_text(
+        by_prefix("Chapter 4 reports empirical results"),
+        "Chapter 4 reports empirical results: cohort characteristics, runtime and scaling benchmarks (Claim C1), robustness checks, same-window allowance and transfer checks (Claims C2–C3), rank divergence (H1/RQ1), and the temporal holdout of future new approvals (RQ4 / C4). Primary claims are C1–C4. SRQ1 and SC1 are withdrawn.",
+    )
+    replace_para_text(
+        by_prefix("Following Do et al.[16] and Cronbach"),
+        "Following Do et al.[16] and Cronbach & Meehl[14], construct alignment for rank-based scores uses Spearman’s ρ and Kendall’s τ. This dissertation reports same-window allowance and transfer checks plus a temporal holdout of future new approvals. Trading-success, inverse-risk, and liquidation families remain in the artifact and are not claims.",
+    )
+    replace_para_text(
+        by_prefix("This chapter reports the empirical evaluation of EndorseRank against Adaptive Weighted"),
+        "This chapter reports the empirical evaluation of EndorseRank against Adaptive Weighted PageRank (AWP) on Arbitrum One. The analysis proceeds from cohort construction, through computational benchmarks and robustness checks, to contemporaneous allowance and transfer checks, inter-method rank divergence, and a temporal holdout of future new approvals. Primary claims C1–C4 address the EndorseRank–AWP comparison. Trading-success, inverse-risk, liquidation, and GF-PR alignments are not claims.",
+    )
+    replace_para_text(
+        by_prefix("transfer alignment is moderate"),
+        "transfer alignment is moderate (τ = 0.333)—credible as a secondary axis, but below AWP. Inverse-risk and trading-success alignments are not used as evidence. Same-window allowance tau is an intended-construct check; the external check is the spender holdout.",
+    )
+    replace_para_text(
+        by_prefix("GF-PR achieves the highest family mean"),
+        "GF-PR’s near-identity with realized-gain is why that family is excluded: shared PnL input is not an independent test. Those rows stay in the artifact. They are not claims.",
+    )
+    replace_para_text(
+        by_prefix("GF-PR was added during empirical work"),
+        "GF-PR was computed during exploratory work and is excluded from the claims because it is circular with GMX profit-and-loss. The external check that remains is the spender holdout under RQ4 (EndorseRank tau = 0.479, CI 0.426–0.529; AWP 0.044).",
+    )
+    replace_para_text(
+        by_prefix("GF-PR achieves the highest trading-success mean"),
+        "GF-PR is circular with trading-success and inverse-risk proxies by construction. This draft does not use that ceiling as a finding. The external check is the temporal holdout.",
+    )
+    replace_para_text(
+        by_prefix("GF-PR construct overlap:"),
+        "Non-claim: GF-PR shares input semantics with trading-success and inverse-risk proxies. Those alignments are not interpreted as social reputation and are not dissertation claims.",
+    )
+    replace_para_text(
+        by_prefix("Hybrid social and outcome-aware methods:"),
+        "Hybrid social methods: Operators may combine endorsement-graph features with transfer-graph features, or with DeFi-informed representation learning [39], while preserving the auditability emphasized by Packin and Lev-Aretz[48]. Hybrid designs should report construct-specific checks and, where claimed, a time-split holdout rather than a single aggregate trading-success metric.",
+    )
+
+
+def inplace_main() -> None:
+    """Update the existing replied DOCX. Never copy from the review original."""
+    if set(PARENT_ORDER) != set(REPLIES):
+        raise RuntimeError("PARENT_ORDER and REPLIES keys differ")
+    if not DST.exists():
+        raise FileNotFoundError(DST)
+    with zipfile.ZipFile(DST) as z:
+        doc = etree.fromstring(z.read("word/document.xml"))
+        comments = etree.fromstring(z.read("word/comments.xml"))
+    apply_body_inplace(doc)
+    apply_body_pass2(doc)
+    n = update_existing_replies(comments)
+    try:
+        rewrite_zip(
+            DST,
+            {
+                "word/document.xml": serialize(doc),
+                "word/comments.xml": serialize(comments),
+            },
+        )
+    except PermissionError as exc:
+        raise PermissionError(
+            f"Target is locked (Word may have it open): {DST} ({exc})"
+        ) from exc
+    force_reply_authors(DST)
+    verify(DST)
+    # Word COM Ancestor/Replies is currently flat even on the committed
+    # HEAD file; threading is still recorded in commentsExtended (XML verify).
+    # Do not call Replies.Add here — that would create new top-level balloons.
+    print("updated replies", n)
+    print("wrote", DST)
+
+
 def main() -> None:
     if set(PARENT_ORDER) != set(REPLIES):
         raise RuntimeError("PARENT_ORDER and REPLIES keys differ")
@@ -781,4 +1181,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    if "--inplace" in sys.argv:
+        inplace_main()
+    else:
+        main()

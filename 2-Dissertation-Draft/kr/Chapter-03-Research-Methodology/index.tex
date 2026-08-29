@@ -1,59 +1,59 @@
 ﻿% !TEX root = ../main.tex
-\chapter{Research Methodology}
+\chapter{연구 방법론}
 \label{ch:methodology}
 
-This chapter specifies the empirical design used to compare EndorseRank and Adaptive Weighted PageRank (AWP) as social reputation scores on Arbitrum One. The design covers notation, data sources, a three-phase collection strategy, pipeline architecture, event decoding, graph construction algorithms, validation proxies, statistical tests, computational benchmarks, scaling and robustness extensions, reproducibility, and ethics. The primary comparison is between EndorseRank on the ERC-20 allowance graph and AWP on the time-decayed transfer graph \cend{64,49}. GainFlow PageRank (GF-PR) appears only as a supplementary outcome-native ceiling reference and is not treated as a peer social method.
+본 장은 Arbitrum One에서 EndorseRank와 Adaptive Weighted PageRank(AWP)를 사회적 평판 점수로 비교하는 실증 설계를 명세한다. 설계는 기호, 데이터 출처, 3단계 수집 전략, 파이프라인 구조, 이벤트 디코딩, 그래프 구축 알고리즘, 동시기 구성 개념 검사, 시간 홀드아웃, 통계 검정, 계산 벤치마크, 확장성·강건성 확장, 재현성, 윤리를 포함한다. 주요 비교는 ERC-20 allowance 그래프의 EndorseRank와 시간 감쇠 전송 그래프의 AWP이다 \cend{64,49}.
 
-The methodological stance follows construct (domain) alignment: reputation scores are continuous rankings, and validation uses observable wallet-level proxies rather than binary default labels \cend{14,16}. In measurement terms, each ranking method is an indicator of an unobserved reputation construct; proxies are alternative indicators chosen for domain intuition (inbound economic activity, received endorsements, risk-avoiding trading behavior, activity stability, and trading success). Alignment statistics ask whether the ordering induced by a method co-varies with the ordering induced by each proxy on the same wallets. This approach is appropriate when ground-truth loan defaults are sparse and when the scientific claim is comparative---EndorseRank versus AWP---rather than absolute prediction of an external credit bureau label.
+방법론적 입장은 구성 개념(도메인) 정합을 따른다. 평판 점수는 연속 순위이며, 검사는 이항 부도 라벨이 아니라 관측 가능한 지갑 수준 통계를 사용한다 \cend{14,16}. 측정 용어로, 각 순위 방법은 관측되지 않는 평판 구성 개념의 지표이다. 동시기 전송·allowance 통계는 그래프 정합성을 검사한다. 미래 신규 소유자--지출자 승인의 시간 홀드아웃이 창 밖 검사이다. 정합 통계는 방법이 유도한 순서가 동일 지갑에서 각 검사가 유도한 순서와 공변하는지를 묻는다. 이 접근은 과학적 주장이 거래 이익이나 신용 부도의 예측이 아니라 EndorseRank 대 AWP의 비교일 때 적절하다.
 
-All procedures operate on publicly available blockchain logs within a fixed observation window, with deterministic seeds and an open evaluation pipeline so that reported tables can be regenerated from cached parquet. The chapter is organized to move from symbols and data acquisition, through graph and proxy formalisms, to evaluation statistics, computational protocol, and research ethics. Readers primarily interested in empirical outcomes may skim Sections~\ref{sec:notation}--\ref{sec:event-decoding} and focus on Sections~\ref{sec:graph-construction}--\ref{sec:statistical-tests}; readers implementing a replication should follow the full pipeline description and Section~\ref{sec:reproducibility}.
+모든 절차는 고정 관측 창 안의 공개 블록체인 로그에서 작동하며, 결정적 시드와 개방형 평가 파이프라인으로 보고된 표를 캐시된 parquet로부터 재생성할 수 있게 한다. 장은 기호와 데이터 획득에서 그래프·검사 형식화, 평가 통계, 계산 프로토콜, 연구 윤리로 진행한다. 실증 결과에 주로 관심 있는 독자는 제~\ref{sec:notation}--\ref{sec:event-decoding}절을 훑고 제~\ref{sec:graph-construction}--\ref{sec:statistical-tests}절에 집중하면 된다. 재현을 구현하는 독자는 전체 파이프라인 서술과 제~\ref{sec:reproducibility}절을 따라야 한다.
 
-Four principles govern every operational choice.
+네 원칙이 모든 운영 선택을 규율한다.
 \begin{itemize}
-\item \textbf{Same-seed comparability:} EndorseRank and AWP are always scored on identical wallet sets so that differences cannot be attributed to sampling inconsistency.
-\item \textbf{Pre-registration by configuration:} observation window, topic hashes, damping, decay parameters, minimum closes, and benchmark seeds are fixed in configuration before interpreting results.
-\item \textbf{Separation of construction and timing:} graph construction is performed once per cohort; computational benchmarks time only the PageRank solve.
-\item \textbf{Primary versus supplementary scope:} claims C1--C4 and hypotheses H1--H3 concern EndorseRank and AWP; GF-PR enters only SRQ1 as an outcome-native ceiling.
+\item \textbf{동일 시드 비교 가능성:} EndorseRank와 AWP는 항상 동일 지갑 집합에서 점수화하여, 차이를 표본추출 불일치에 돌릴 수 없게 한다.
+\item \textbf{설정에 의한 사전 등록:} 관측 창, 토픽 해시, 감쇠, 감쇠 매개변수, 최소 청산 건수, 벤치마크 시드는 결과를 해석하기 전에 설정에서 고정한다.
+\item \textbf{구축과 타이밍의 분리:} 그래프 구축은 코호트당 한 번 수행하고, 계산 벤치마크는 PageRank 해만 계측한다.
+\item \textbf{주요 범위:} 주장 C1--C4와 가설 H1--H3는 EndorseRank와 AWP에 관련된다. RQ4는 지출자 홀드아웃 코호트를 사용한다. 거래 이익, 청산, 악성 지출자 라벨은 주장이 아니다.
 \end{itemize}
 
-\dissertationSubheading[sec:notation]{Notation}
+\dissertationSubheading[sec:notation]{기호}
 
-Table~\ref{tab:notation-methods} summarizes the operational symbols used throughout this chapter and in Chapters~\ref{ch:results}--\ref{ch:discussion} (a compact front-matter summary appears in Table~\ref{tab:notation}). Vectors are bold; sets are calligraphic when helpful. Wallet addresses are treated as opaque identifiers and are never linked to off-chain identities.
+표~\ref{tab:notation-methods}는 본 장과 제~\ref{ch:results}--\ref{ch:discussion}장에서 사용하는 운영 기호를 요약한다(전면 요약은 표~\ref{tab:notation}). 벡터는 굵게, 집합은 필요할 때 캘리그래피로 쓴다. 지갑 주소는 불투명 식별자로 취급하며 오프체인 신원에 연결하지 않는다.
 
 \begin{table}[htbp]
 \centering
-\caption{Notation for graphs, scores, proxies, and parameters.}
+\caption{그래프, 점수, 대리 지표, 매개변수의 기호.}
 \label{tab:notation-methods}
 \fitwidth{%
 \begin{tabular}{lp{0.72\linewidth}}
 \toprule
-Symbol & Meaning \\
+기호 & 의미 \\
 \midrule
-$\mathcal{W}$ & Matched wallet cohort ($|\mathcal{W}|=n=5{,}521$) \\
-$\mathcal{W}_{\mathrm{pool}}$ & Expanded wallet pool ($|\mathcal{W}_{\mathrm{pool}}|=N=31{,}612$) \\
-$G_{\mathrm{approve}}=(V_A,E_A,w_A)$ & EndorseRank allowance graph \\
-$G_{\mathrm{transfer}}=(V_T,E_T,w_T)$ & AWP transfer graph \\
-$G_{\mathrm{GF\text{-}PR}}$ & Supplementary GF-PR star graph \\
-$w_A(u,v)$ & Latest allowance weight, owner $u\to$ spender $v$ \\
-$w_T(u,v)$ & Time-decayed transfer weight, sender $u\to$ receiver $v$ \\
-$\mathbf{s}_M$ & Reputation score vector for method $M$ \\
-$\mathbf{p}_P$ & Proxy value vector for proxy $P$ \\
-$d$ & PageRank damping factor (default $0.85$) \\
-$\tau_{\mathrm{tol}}$ & PageRank convergence tolerance ($10^{-8}$) \\
-$I_{\max}$ & Maximum PageRank iterations ($300$) \\
-$\sigma(\Delta t)$ & Logistic time-decay on transfer age \\
-$k$, $t_0$ & Decay steepness ($0.01$) and midpoint ($180$ days) \\
-$\Delta t$ & Age of an event in days before observation end \\
-$\varepsilon_{\mathrm{loss}}$, $\varepsilon_{\mathrm{liq}}$ & GF-PR sink additives ($0.1$, $1.0$) \\
-$\rho$ & Spearman's rank correlation \\
-$\tau$ & Kendall's rank correlation \\
-$T_{\mathrm{obs}}$ & Observation end timestamp (2026-05-31 UTC) \\
+$\mathcal{W}$ & 매칭 지갑 코호트 ($|\mathcal{W}|=n=5{,}521$) \\
+$\mathcal{W}_{\mathrm{pool}}$ & 확장 지갑 풀 ($|\mathcal{W}_{\mathrm{pool}}|=N=31{,}612$) \\
+$G_{\mathrm{approve}}=(V_A,E_A,w_A)$ & EndorseRank allowance 그래프 \\
+$G_{\mathrm{transfer}}=(V_T,E_T,w_T)$ & AWP 전송 그래프 \\
+$G_{\mathrm{GF\text{-}PR}}$ & 보조 GF-PR 스타 그래프(주장하지 않음) \\
+$w_A(u,v)$ & 최신 allowance 가중치, 소유자 $u\to$ 지출자 $v$ \\
+$w_T(u,v)$ & 시간 감쇠 전송 가중치, 송신자 $u\to$ 수신자 $v$ \\
+$\mathbf{s}_M$ & 방법 $M$의 평판 점수 벡터 \\
+$\mathbf{p}_P$ & 검사(또는 산출물 대리 지표) $P$의 값 벡터 \\
+$d$ & PageRank 감쇠 계수 (기본 $0.85$) \\
+$\tau_{\mathrm{tol}}$ & PageRank 수렴 허용오차 ($10^{-8}$) \\
+$I_{\max}$ & 최대 PageRank 반복 ($300$) \\
+$\sigma(\Delta t)$ & 전송 연령에 대한 로지스틱 시간 감쇠 \\
+$k$, $t_0$ & 감쇠 기울기 ($0.01$)와 중점 ($180$일) \\
+$\Delta t$ & 관측 종료 전 이벤트 연령(일) \\
+$\varepsilon_{\mathrm{loss}}$, $\varepsilon_{\mathrm{liq}}$ & GF-PR 싱크 가산항 ($0.1$, $1.0$; 주장하지 않음) \\
+$\rho$ & Spearman 순위 상관 \\
+$\tau$ & Kendall 순위 상관 \\
+$T_{\mathrm{obs}}$ & 관측 종료 시각 (2026-05-31 UTC) \\
 \bottomrule
 \end{tabular}
 }
 \end{table}
 
-Unless otherwise stated, PageRank is the weighted formulation of Page et al.\cend{49}: at iteration $t$,
+별도 표기가 없으면 PageRank는 Page et al.\cend{49}의 가중 정식화이다. 반복 $t$에서
 \begin{equation}
 \label{eq:pagerank}
 \mathbf{r}^{(t+1)}
@@ -64,7 +64,7 @@ d\,P^{\top}\mathbf{r}^{(t)}
 +
 d\,\bigl(\mathbf{r}^{(t)\top}\mathbf{1}_{\mathrm{dang}}\bigr)\,\boldsymbol{\pi},
 \end{equation}
-where $P$ is the row-stochastic transition matrix induced by positive edge weights, $\boldsymbol{\pi}$ is the uniform teleportation distribution over nodes, and $\mathbf{1}_{\mathrm{dang}}$ marks dangling nodes (zero out-strength). Explicitly, if $w(u,v)$ denotes the weight of the directed edge $u\to v$ and $s(u)=\sum_v w(u,v)$ is the out-strength, then
+여기서 $P$는 양의 간선 가중치가 유도한 행 확률 전이 행렬, $\boldsymbol{\pi}$는 노드에 대한 균등 텔레포트 분포, $\mathbf{1}_{\mathrm{dang}}$는 댕글링 노드(아웃스트렝스 영)를 표시한다. 명시적으로, $w(u,v)$가 방향 간선 $u\to v$의 가중치이고 $s(u)=\sum_v w(u,v)$가 아웃스트렝스이면
 \begin{equation}
 \label{eq:transition-impl}
 P_{u,v}
@@ -74,57 +74,57 @@ w(u,v)/s(u) & \text{if }s(u)>0,\\
 0 & \text{otherwise.}
 \end{cases}
 \end{equation}
-Dangling mass is redistributed uniformly through the teleportation term, which is the standard treatment in sparse web and transaction graphs. Iteration stops when $\|\mathbf{r}^{(t+1)}-\mathbf{r}^{(t)}\|_1 < \tau_{\mathrm{tol}}$ or after $I_{\max}$ iterations. Scores are renormalized to sum to one over reachable nodes. Dense ranks for alignment are assigned by sorting scores descending (rank $1$ = highest score), with wallet address as a deterministic tie-break when scores are equal.
+댕글링 질량은 텔레포트 항을 통해 균등 재분배되며, 이는 희소 웹·거래 그래프의 표준 처리이다. $\|\mathbf{r}^{(t+1)}-\mathbf{r}^{(t)}\|_1 < \tau_{\mathrm{tol}}$이거나 $I_{\max}$회 반복 후 중단한다. 점수는 도달 가능 노드에 대해 합이 일이 되도록 재정규화한다. 정합용 밀집 순위는 점수를 내림차순으로 정렬하여 부여한다(순위 $1$ = 최고 점수). 점수가 같으면 지갑 주소를 결정적 동점 해소로 사용한다.
 
-The damping factor $d$ interpolates between pure graph propagation ($d\to 1$) and uniform scores ($d\to 0$). The default $d=0.85$ follows the classical web setting and the AWP baseline\cend{64}. Robustness sweeps vary $d$ while holding edge weights fixed (Section~\ref{sec:scaling-robustness}). Tolerance $\tau_{\mathrm{tol}}=10^{-8}$ and $I_{\max}=300$ are intentionally strict relative to interactive analytics settings, so that runtime differences reflect graph structure rather than early stopping.
+감쇠 계수 $d$는 순수 그래프 전파($d\to 1$)와 균등 점수($d\to 0$) 사이를 보간한다. 기본 $d=0.85$는 고전적 웹 설정과 AWP 기준선\cend{64}을 따른다. 강건성 스윕은 간선 가중치를 고정한 채 $d$를 변화시킨다(제~\ref{sec:scaling-robustness}절). 허용오차 $\tau_{\mathrm{tol}}=10^{-8}$와 $I_{\max}=300$은 대화형 분석 설정보다 의도적으로 엄격하여, 런타임 차이가 조기 중단이 아니라 그래프 구조를 반영하게 한다.
 
-\dissertationSubheading[sec:data-sources]{Data sources and sampling}
+\dissertationSubheading[sec:data-sources]{데이터 출처와 표본추출}
 
-This section fixes the empirical universe: which chain, which time window, which public tables, which event types, and which wallets enter the primary sample. Downstream graph construction and proxy formulas never invent events outside this universe.
+본 절은 실증 우주를 고정한다. 어느 체인, 어느 시간 창, 어느 공개 표, 어느 이벤트 유형, 어느 지갑이 주요 표본에 들어가는지. 이후 그래프 구축과 검사 공식은 이 우주 밖의 이벤트를 창작하지 않는다.
 
 \begin{itemize}
-\item \textbf{Primary chain:} All on-chain events are drawn from Arbitrum One (chain ID $42161$), an Ethereum Layer-2 rollup with dense DeFi activity and public log availability \cend{53}. Restricting to a single chain avoids cross-chain address aliasing---the same private key controlling addresses on multiple chains would otherwise appear as unrelated nodes---and keeps gas-cost and latency regimes comparable across wallets. Arbitrum One is also the deployment venue for GMX V2's high-volume perpetual markets, which supply wallet-attributed realized PnL at a density that lending defaults do not match within scope.
+\item \textbf{주요 체인:} 모든 온체인 이벤트는 밀집한 DeFi 활동과 공개 로그를 갖는 이더리움 Layer-2 롤업 Arbitrum One(체인 ID $42161$)에서 추출한다 \cend{53}. 단일 체인으로 제한하면 교차 체인 주소 별칭---동일 개인키가 여러 체인에서 무관한 노드로 보이는 것---을 피하고, 가스 비용과 지연 체제를 지갑 간에 비교 가능하게 유지한다. Arbitrum One은 또한 GMX V2 고유량 무기한 시장의 배포 장소이며, 본 학위논문은 그 이벤트를 매칭 표본의 활동 필터로만 사용한다.
 
-\item \textbf{Observation window:} The study window is 2025-12-01 00:00:00 UTC through 2026-05-31 23:59:59 UTC (six calendar months). Exclusive end timestamps in SQL use 2026-06-01 00:00:00 UTC so that the inclusive calendar end is 2026-05-31. This window is long enough to accumulate multiple GMX closes per active trader---the minimum-close filter requires at least three---while remaining tractable for monthly-batched reputation extracts under BigQuery byte budgets. AWP time-decay is anchored at observation end $T_{\mathrm{obs}}=$ 2026-05-31 23:59:59 UTC, so $\Delta t=0$ for events at the window's close and $\Delta t\approx 181$ days for events at the window's open.
+\item \textbf{관측 창:} 연구 창은 2025-12-01 00:00:00 UTC부터 2026-05-31 23:59:59 UTC까지(여섯 역월)이다. SQL의 배타적 종료 시각은 2026-06-01 00:00:00 UTC를 사용하여 포함적 역일 종료가 2026-05-31이 되게 한다. 이 창은 활성 거래자당 복수 GMX 포지션 종료를 축적하기에 충분하다---최소 종료 필터는 세 건을 요구한다---동시에 BigQuery 바이트 예산 하에서 월별 평판 추출이 가능하다. AWP 시간 감쇠는 관측 종료 $T_{\mathrm{obs}}=$ 2026-05-31 23:59:59 UTC에 고정되므로, 창 종료 이벤트는 $\Delta t=0$, 창 시작 이벤트는 $\Delta t\approx 181$일이다.
 
-\item \textbf{BigQuery source:} Event logs are read from the public dataset
+\item \textbf{BigQuery 출처:} 이벤트 로그는 공개 데이터셋
 \begin{center}
-\texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us.logs}.
+\texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us.logs}
 \end{center}
-Each row corresponds to a contract log entry with block timestamp, emitting address, topics, and data. Queries filter on \texttt{block\_timestamp}, contract address (when applicable), and event topic hashes. The public dataset removes the need for a private archive node while remaining auditable: any researcher with Google Cloud access can re-issue the same SQL against the same table. SQL templates, dry-run cost guardrails, and acquisition metadata are documented in Appendix~\ref{ch:appendix-eval}.
+에서 읽는다. 각 행은 블록 시각, 방출 주소, 토픽, 데이터를 갖는 계약 로그 항목이다. 질의는 \texttt{block\_timestamp}, 계약 주소(해당 시), 이벤트 토픽 해시로 필터한다. 공개 데이터셋은 사설 아카이브 노드를 불필요하게 하면서 감사 가능하다. Google Cloud 접근이 있는 연구자는 동일 표에 동일 SQL을 재발행할 수 있다. SQL 템플릿, 드라이런 비용 가드레일, 획득 메타데이터는 부록~\ref{ch:appendix-eval}에 문서화한다.
 
-\item \textbf{Reputation events:} EndorseRank uses ERC-20 \texttt{Approval} logs \cend{18}, including allowances established via EIP-2612 \texttt{permit} flows that ultimately emit the same \texttt{Approval} event \cend{19}. AWP uses ERC-20 \texttt{Transfer} logs. Both streams are wallet-filtered to the cohort under study: a log is retained if the owner or spender (approvals) or the sender or recipient (transfers) lies in the seed wallet set. Filtering at query time reduces scanned payload relative to full-chain extracts and focuses the reputation subgraph on economically relevant neighbors of the cohort. Extracts run in six monthly batches to respect per-query byte caps and to allow resumable checkpoints if a month fails.
+\item \textbf{평판 이벤트:} EndorseRank는 ERC-20 \texttt{Approval} 로그를 사용하며 \cend{18}, 최종적으로 동일 \texttt{Approval} 이벤트를 방출하는 EIP-2612 \texttt{permit} 흐름으로 설정된 allowance를 포함한다 \cend{19}. AWP는 ERC-20 \texttt{Transfer} 로그를 사용한다. 두 스트림은 연구 대상 코호트로 지갑 필터된다. 로그는 소유자 또는 지출자(승인)나 송신자 또는 수신자(전송)가 시드 지갑 집합에 있으면 유지한다. 질의 시점 필터는 전체 체인 추출 대비 스캔 페이로드를 줄이고, 평판 부분그래프를 코호트의 경제적으로 관련 있는 이웃에 집중시킨다. 추출은 질의당 바이트 상한을 지키고 한 달이 실패해도 재개 가능한 체크포인트를 위해 여섯 월별 배치로 실행한다.
 
-\item \textbf{GMX events:} Trading-success and risk proxies are derived from GMX V2 \texttt{PositionDecrease} events emitted by the GMX \texttt{EventEmitter} at
+\item \textbf{GMX 이벤트:} 매칭 표본은 GMX \texttt{EventEmitter}
 \begin{center}
 \texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}
 \end{center}
-\cend{23}. Traders are identified via the event \texttt{account} field. Realized profit and loss use \texttt{basePnlUsd}; position size changes use \texttt{sizeDeltaUsd} when size-weighted robustness variants are computed; liquidations are flagged from order-type metadata in the decoded payload. GMX is used because it provides dense, wallet-level realized outcomes on collateralized perpetual trading---a domain-intuition validation frame analogous to Do et al.'s use of inbound transfer activity, but targeted at trading success rather than passive inflows \cend{16,53}. Lending-protocol default labels are excluded because under-collateralized lending volume on Arbitrum within scope is insufficient for stable wallet-level labels.
+가 방출하는 GMX V2 \texttt{PositionDecrease} 이벤트로 정의한다 \cend{23}. 거래자는 이벤트 \texttt{account} 필드로 식별한다. 디코딩된 페이로드의 \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, 주문 유형 메타데이터(청산 플래그)는 평가 산출물에 보관하나, 거래 성공·역위험·청산 정합은 학위논문 주장이 아니다. GMX는 반복 활동 지갑을 식별하는 표본 틀이며($\geq 3$건의 포지션 종료), 거래 실력의 정답이 아니다. 범위 안에서 Arbitrum의 저담보 대출 거래량이 안정적 지갑 수준 라벨에 충분하지 않으므로 대출 프로토콜 부도 라벨은 제외한다.
 
-\item \textbf{Matched cohort definition:} The primary alignment sample is the intersection of (i)~wallets with at least three GMX \texttt{PositionDecrease} closes in the observation window and (ii)~wallets with non-zero connectivity in the reputation subgraph induced by approval or transfer edges. The minimum-close threshold $m=3$ excludes one-off traders whose success rates are dominated by sampling noise, while remaining inclusive of active retail participants. The connectivity requirement excludes wallets that appear in GMX events but have no approval or transfer edges touching the reputation extract, for whom social PageRank scores would be uniformly zero and uninformative. After BigQuery extraction and preprocessing, this matched wallet cohort has size $n=5{,}521$. Both EndorseRank and AWP are scored on the same seed set so that differences in alignment and runtime are attributable to ranking logic and graph structure, not to inconsistent sampling.
+\item \textbf{매칭 코호트 정의:} 주요 동일 창 표본은 (i)~관측 창에서 GMX \texttt{PositionDecrease} 종료가 최소 세 건인 지갑과 (ii)~승인 또는 전송 간선이 유도한 평판 부분그래프에서 비영 연결성을 갖는 지갑의 교집합이다. 최소 종료 임계값 $m=3$은 표본 잡음이 지배하는 일회성 거래자를 제외하면서 활성 소매 참가자를 포함한다. 연결성 요건은 GMX 이벤트에는 나타나지만 평판 추출에 닿는 승인·전송 간선이 없어 사회적 PageRank 점수가 균등하게 영이 되는 지갑을 제외한다. BigQuery 추출과 전처리 후 이 매칭 지갑 코호트의 크기는 $n=5{,}521$이다. EndorseRank와 AWP는 동일 시드 집합에서 점수화하여, 정합과 런타임 차이를 순위 논리와 그래프 구조에 귀속시키고 불일치한 표본추출에 귀속시키지 않는다.
 
-\item \textbf{What is not in scope:} The study does not ingest mempool data, off-chain order books, centralized-exchange account maps, or cross-chain bridges. It does not attempt entity resolution across multiple addresses controlled by one actor. It does not use proprietary GMX indexer APIs as the primary source of truth; the public log table is authoritative, and decoding is performed in the open pipeline.
+\item \textbf{범위 밖:} 본 연구는 멤풀 데이터, 오프체인 호가창, 중앙화 거래소 계정 맵, 교차 체인 브리지를 수집하지 않는다. 한 행위자가 통제하는 다수 주소에 대한 개체 해석을 시도하지 않는다. 독점 GMX 인덱서 API를 1차 진실 원천으로 사용하지 않는다. 공개 로그 표가 권위적이며, 디코딩은 개방 파이프라인에서 수행한다.
 
 \end{itemize}
 
-\dissertationSubheading[sec:collection-strategy]{Three-phase collection strategy}
+\dissertationSubheading[sec:collection-strategy]{3단계 수집 전략}
 
-Data acquisition and evaluation proceed in three phases that separate expensive remote scans from local, repeatable analysis. The separation is intentional: once parquet artifacts exist, alignment tables, benchmarks, and robustness sweeps can be regenerated without further cloud cost, which is essential for third-party replication and reanalysis.
+데이터 획득과 평가는 비용이 큰 원격 스캔과 국소·반복 가능 분석을 분리하는 세 단계로 진행한다. 분리는 의도적이다. parquet 산출물이 있으면 정합 표, 벤치마크, 강건성 스윕을 추가 클라우드 비용 없이 재생성할 수 있으며, 이는 제3자 재현과 재분석에 필수이다.
 
 \begin{itemize}
-\item \textbf{Phase 1 (GMX validation stream):} Extract and decode all GMX \texttt{PositionDecrease} logs from the \texttt{EventEmitter} over the full observation window. The extract is not wallet-filtered a priori because eligibility is defined from this stream: every decrease in the window is a candidate label. After decoding, wallets with fewer than three closes form the GMX-eligible set. This stream supplies trading-success, inverse-risk, and liquidation-family proxies. The matched wallet cohort used for primary alignment ($n=5{,}521$) is the GMX-eligible set intersected with non-zero reputation connectivity after Phase~2.
+\item \textbf{1단계 (GMX 표본 스트림):} 전체 관측 창에서 \texttt{EventEmitter}의 모든 GMX \texttt{PositionDecrease} 로그를 추출·디코딩한다. 적격성은 이 스트림에서 정의되므로 추출은 사전에 지갑 필터하지 않는다. 창 안의 모든 감소가 후보이다. 디코딩 후 포지션 종료가 세 건 미만인 지갑을 제외한 집합이 GMX 적격 집합이다. 이 스트림은 매칭 필터를 공급한다. 거래 성공·역위험·청산 계열 요약은 산출물에 남을 수 있으나 주장이 아니다. 주요 동일 창 비교에 사용하는 매칭 지갑 코호트($n=5{,}521$)는 2단계 이후 비영 평판 연결성과의 교집합이다.
 
-\item \textbf{Phase 2 (reputation streams):} For the GMX-eligible set, extract wallet-filtered ERC-20 \texttt{Approval} and \texttt{Transfer} events in monthly batches. The matched wallet cohort is then the subset with non-zero approval or transfer connectivity. Each month is an independent query with its own dry-run estimate and checkpoint, so a failure in one month does not invalidate prior months. Preprocess approvals to latest allowances per owner--spender--token: given multiple approvals for the same triple, only the last timestamp in the window survives, and a final zero allowance removes the edge. Preprocess transfers to decimal-adjusted event tables with timestamps, preserving sender, recipient, value, token, and block time. These tables are the sole inputs to EndorseRank and AWP graph construction for the primary comparison.
+\item \textbf{2단계 (평판 스트림):} GMX 적격 집합에 대해 지갑 필터된 ERC-20 \texttt{Approval} 및 \texttt{Transfer} 이벤트를 월별 배치로 추출한다. 매칭 지갑 코호트는 이후 비영 승인 또는 전송 연결성을 갖는 부분집합이다. 각 월은 자체 드라이런 추정과 체크포인트를 갖는 독립 질의이므로, 한 달의 실패가 이전 달을 무효화하지 않는다. 승인은 소유자--지출자--토큰당 최신 allowance로 전처리한다. 동일 삼중항에 대한 복수 승인이 있으면 창 안의 마지막 시각만 남고, 최종 영 allowance는 간선을 제거한다. 전송은 소수점 조정 이벤트 표로 전처리하여 송신자, 수신자, 가치, 토큰, 블록 시각을 보존한다. 이들 표는 주요 비교를 위한 EndorseRank와 AWP 그래프 구축의 유일한 입력이다.
 
-\item \textbf{Phase 3 (local evaluation):} From cached parquet, compute reputation ranks, five primary proxy families, Spearman and Kendall alignment, computational benchmarks, and scaling/robustness extensions. Supplemental active wallets for the expanded pool are drawn from reputation-subgraph addresses (and optional supplemental parquet) without requiring a full-chain re-scan for every robustness experiment. No additional BigQuery scans are required once the Phase~1 and Phase~2 extracts and any supplemental active-wallet parquet are available.
+\item \textbf{3단계 (국소 평가):} 캐시된 parquet로부터 평판 순위, 동시기 전송·allowance 검사, 시간 홀드아웃 라벨, Spearman 및 Kendall 정합, 계산 벤치마크, 확장성·강건성 확장을 계산한다. 확장 풀용 보충 활성 지갑은 평판 부분그래프 주소(및 선택적 보충 parquet)에서 가져와, 모든 강건성 실험마다 전체 체인 재스캔을 요구하지 않는다. 1단계·2단계 추출과 보충 활성 지갑 parquet가 있으면 추가 BigQuery 스캔은 필요하지 않다.
 
-\item \textbf{Cost guardrails:} Every remote query begins with a mandatory dry-run estimate of bytes processed before extraction. Each query is aborted if the estimate exceeds a $150$\,GiB per-query cap.\footnote{The per-query byte cap is an operational policy of this study's acquisition pipeline, not a property of BigQuery itself.} Operators must pass an explicit confirmation flag before paid scans proceed. Extraction metadata---wallet counts, row counts, bytes processed, and timestamps---is logged in the study's acquisition record (Appendix~\ref{ch:appendix-eval}). These controls implement responsible use of public cloud resources and make the acquisition cost of the study auditable.
+\item \textbf{비용 가드레일:} 모든 원격 질의는 추출 전 처리 바이트의 필수 드라이런 추정으로 시작한다. 추정이 질의당 $150$\,GiB 상한을 초과하면 질의를 중단한다.\footnote{질의당 바이트 상한은 본 연구 획득 파이프라인의 운영 정책이며 BigQuery 자체의 속성이 아니다.} 유료 스캔 전에 운영자는 명시적 확인 플래그를 통과해야 한다. 추출 메타데이터---지갑 수, 행 수, 처리 바이트, 시각---는 연구의 획득 기록에 기록한다(부록~\ref{ch:appendix-eval}). 이들 통제는 공개 클라우드 자원의 책임 있는 사용을 구현하고 연구의 획득 비용을 감사 가능하게 한다.
 
 \end{itemize}
 
-\dissertationSubheading[sec:pipeline-architecture]{Pipeline architecture}
+\dissertationSubheading[sec:pipeline-architecture]{파이프라인 구조}
 
-Figure~\ref{fig:pipeline-architecture} summarizes the end-to-end flow from public logs to dissertation tables. Remote stages write immutable parquet; local stages are idempotent given those inputs and a single versioned configuration file.
+그림~\ref{fig:pipeline-architecture}는 공개 로그에서 학위논문 표까지의 종단 흐름을 요약한다. 원격 단계는 불변 parquet를 쓰고, 국소 단계는 그 입력과 단일 버전 설정 파일이 주어지면 멱등이다.
 
 \begin{figure}[htbp]
 \centering
@@ -137,16 +137,16 @@ Figure~\ref{fig:pipeline-architecture} summarizes the end-to-end flow from publi
   arrow/.style={-{Stealth[length=2.5mm]}, thick}
 ]
 % Top row: remote acquisition (left to right)
-\node[wide] (bq) {BigQuery\\public logs};
-\node[box, right=of bq] (extract) {Extract\\(monthly)};
-\node[box, right=of extract] (decode) {Decode\\events};
+\node[wide] (bq) {BigQuery\\공개 로그};
+\node[box, right=of bq] (extract) {추출\\(월별)};
+\node[box, right=of extract] (decode) {이벤트\\디코딩};
 
 % Bottom row: local evaluation (left to right, continuing the flow)
-\node[box, below=1.6cm of bq] (prep) {Preprocess\\edges};
-\node[box, right=of prep] (ranks) {PageRank\\scores};
-\node[box, right=of ranks] (proxy) {Proxy\\metrics};
-\node[wide, right=of proxy] (align) {Alignment\\\& benchmarks};
-\node[wide, right=of align] (latex) {LaTeX\\export};
+\node[box, below=1.6cm of bq] (prep) {간선\\전처리};
+\node[box, right=of prep] (ranks) {PageRank\\점수};
+\node[box, right=of ranks] (proxy) {검사\\지표};
+\node[wide, right=of proxy] (align) {정합\\및 벤치마크};
+\node[wide, right=of align] (latex) {LaTeX\\내보내기};
 
 \draw[arrow] (bq) -- (extract);
 \draw[arrow] (extract) -- (decode);
@@ -156,50 +156,50 @@ Figure~\ref{fig:pipeline-architecture} summarizes the end-to-end flow from publi
 \draw[arrow] (proxy) -- (align);
 \draw[arrow] (align) -- (latex);
 
-\node[draw, dashed, rounded corners, fit=(bq)(extract)(decode), inner sep=8pt, label=above:{\footnotesize Remote / acquisition}] {};
-\node[draw, dashed, rounded corners, fit=(prep)(ranks)(proxy)(align)(latex), inner sep=8pt, label=below:{\footnotesize Local / reproducible}] {};
+\node[draw, dashed, rounded corners, fit=(bq)(extract)(decode), inner sep=8pt, label=above:{\footnotesize 원격 / 획득}] {};
+\node[draw, dashed, rounded corners, fit=(prep)(ranks)(proxy)(align)(latex), inner sep=8pt, label=below:{\footnotesize 국소 / 재현 가능}] {};
 \end{tikzpicture}
 \end{adjustbox}
-\caption{Evaluation pipeline: public Arbitrum logs are extracted and decoded, reputation edges and GMX outcomes are preprocessed, EndorseRank and AWP ranks are computed, proxies and alignment statistics are evaluated, and LaTeX result fragments are exported.}
+\caption{평가 파이프라인: 공개 Arbitrum 로그를 추출·디코딩하고, 평판 간선과 GMX 표본 이벤트를 전처리하며, EndorseRank와 AWP 순위를 계산하고, 검사와 정합 통계를 평가한 뒤 LaTeX 결과 조각을 내보낸다.}
 \label{fig:pipeline-architecture}
 \end{figure}
 
-Operationally, Phase~1 scripts write GMX raw logs and decoded events; Phase~2 scripts write monthly approval/transfer shards and consolidated latest-allowance and transfer-event tables; Phase~3 scripts read those tables, build graphs, run PageRank, compute proxies, and export the result tables reported in Chapter~\ref{ch:results}. The same pipeline supports offline verification on synthetic fixtures without cloud credentials.
+운영적으로, 1단계 스크립트는 GMX 원시 로그와 디코딩된 이벤트를 쓰고, 2단계 스크립트는 월별 승인/전송 샤드와 통합된 최신 allowance·전송 이벤트 표를 쓰며, 3단계 스크립트는 그 표를 읽어 그래프를 구축하고 PageRank를 실행하며 검사와 홀드아웃을 계산하고 제~\ref{ch:results}장에 보고된 결과 표를 내보낸다. 동일 파이프라인은 클라우드 자격 증명 없이 합성 픽스처에서 오프라인 검증을 지원한다.
 
-\dissertationSubheading[sec:event-decoding]{Event decoding}
+\dissertationSubheading[sec:event-decoding]{이벤트 디코딩}
 
-Blockchain logs store events as topics and a data payload rather than as named fields. Decoding maps each log row to a typed record used by graph construction and proxy computation. Incorrect decoding would silently corrupt both reputation graphs and validation labels; this section therefore records the exact topic hashes and field mappings used in the pipeline.
+블록체인 로그는 명명된 필드가 아니라 토픽과 데이터 페이로드로 이벤트를 저장한다. 디코딩은 각 로그 행을 그래프 구축과 검사 계산이 사용하는 형 있는 레코드로 사상한다. 잘못된 디코딩은 평판 그래프와 표본 라벨을 조용히 오염시키므로, 본 절은 파이프라인에서 사용한 정확한 토픽 해시와 필드 사상을 기록한다.
 
 \begin{itemize}
-\item \textbf{Log anatomy:} An Ethereum-compatible log contains an emitting contract address, an ordered list of topics, and an ABI-encoded data blob. Topic~$0$ is the keccak-256 hash of the event signature string, which uniquely identifies the event type among well-known standards. Indexed parameters occupy subsequent topics as $32$-byte words (addresses are left-padded); non-indexed parameters occupy the data field in ABI order \cend{18}. BigQuery exposes these fields as columns; the pipeline applies topic filters in SQL and performs ABI decoding in Python for fields that require numeric interpretation.
+\item \textbf{로그 해부:} 이더리움 호환 로그는 방출 계약 주소, 순서 있는 토픽 목록, ABI 인코딩 데이터 블롭을 포함한다. 토픽~$0$은 이벤트 서명 문자열의 keccak-256 해시이며, 잘 알려진 표준 가운데 이벤트 유형을 유일하게 식별한다. 인덱싱된 매개변수는 이후 토픽을 $32$바이트 워드로 차지하고(주소는 왼쪽 패딩), 비인덱싱 매개변수는 ABI 순서로 데이터 필드를 차지한다 \cend{18}. BigQuery는 이들 필드를 열로 노출한다. 파이프라인은 SQL에서 토픽 필터를 적용하고, 수치 해석이 필요한 필드는 Python에서 ABI 디코딩을 수행한다.
 
-\item \textbf{ERC-20 \texttt{Approval}:} Topic~$0$ is
+\item \textbf{ERC-20 \texttt{Approval}:} 토픽~$0$은
 \begin{center}
-\texttt{0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925},
+\texttt{0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925}
 \end{center}
-the hash of \texttt{Approval(address,address,uint256)}. Topics~$1$ and~$2$ hold the owner and spender addresses (left-padded); the allowance amount is ABI-decoded from the data field and scaled by the token's decimals. Unlimited approvals (\texttt{type(uint256).max}) are retained as large finite weights after decimal adjustment; they contribute strong endorsement edges, which is intentional: an unlimited approval is a strong on-chain authorization. EIP-2612 \texttt{permit} does not introduce a separate reputation event: successful permits emit the same \texttt{Approval} log, so EndorseRank observes the resulting allowance snapshot regardless of whether authorization was set by an on-chain \texttt{approve} call or an off-chain signature \cend{19}.
+이며, \texttt{Approval(address,address,uint256)}의 해시이다. 토픽~$1$과~$2$는 소유자와 지출자 주소(왼쪽 패딩)를 담고, allowance 금액은 데이터 필드에서 ABI 디코딩한 뒤 토큰 소수점으로 스케일한다. 무제한 승인(\texttt{type(uint256).max})은 소수점 조정 후 큰 유한 가중치로 유지한다. 강한 보증 간선에 기여하며, 이는 의도적이다. 무제한 승인은 강한 온체인 승인이다. EIP-2612 \texttt{permit}은 별도 평판 이벤트를 도입하지 않는다. 성공한 permit은 동일 \texttt{Approval} 로그를 방출하므로, EndorseRank는 승인이 온체인 \texttt{approve} 호출이든 오프체인 서명이든 결과 allowance 스냅샷을 관측한다 \cend{19}.
 
-\item \textbf{ERC-20 \texttt{Transfer}:} Topic~$0$ is
+\item \textbf{ERC-20 \texttt{Transfer}:} 토픽~$0$은
 \begin{center}
-\texttt{0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef},
+\texttt{0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef}
 \end{center}
-the hash of \texttt{Transfer(address,address,uint256)}. Sender and recipient are indexed; value is decimal-adjusted. Mint and burn patterns that use the zero address are retained if they touch cohort wallets, but they are rare relative to wallet-to-wallet transfers in the filtered extract. Self-transfers are retained in the event table but excluded from Sybil-stability inbound-counterparty calculations (Section~\ref{sec:proxy-formulas}), because a wallet transferring to itself does not evidence an external counterparty relationship.
+이며, \texttt{Transfer(address,address,uint256)}의 해시이다. 송신자와 수신자는 인덱싱되고, 가치는 소수점 조정한다. 영 주소를 사용하는 발행·소각 패턴은 코호트 지갑에 닿으면 유지하나, 필터된 추출에서 지갑 대 지갑 전송에 비해 드물다. 자기 전송은 이벤트 표에 유지하되, 외부 상대방 관계를 입증하지 않으므로 Sybil 안정성 인바운드 상대방 계산에서는 제외한다(제~\ref{sec:proxy-formulas}절).
 
-\item \textbf{GMX \texttt{PositionDecrease}:} GMX V2 emits structured events through \texttt{EventEmitter} rather than a minimal ERC-20-style signature \cend{23}. Extraction filters on the emitter address and the verified \texttt{EventLog1} topic~$0$, then decodes key--value fields from the event payload to recover \texttt{account}, \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, and liquidation indicators. Only decreases (closes, partial closes, and liquidations) enter the validation frame; increases open or enlarge positions and do not realize PnL for the success proxies used here. Liquidation flags distinguish forced closes from voluntary ones, which matters for both inverse-risk proxies and GF-PR sink weights.
+\item \textbf{GMX \texttt{PositionDecrease}:} GMX V2는 최소 ERC-20 스타일 서명이 아니라 \texttt{EventEmitter}를 통해 구조화 이벤트를 방출한다 \cend{23}. 추출은 방출자 주소와 검증된 \texttt{EventLog1} 토픽~$0$으로 필터한 뒤, 이벤트 페이로드의 키--값 필드를 디코딩하여 \texttt{account}, \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, 청산 지시자를 복원한다. 감소(종료, 부분 종료, 강제 청산)만 표본 틀에 들어간다. 증가는 포지션을 개설하거나 확대하며 표본 필터의 실현 사건이 아니다. 청산 플래그는 강제 청산과 자발적 종료를 구분한다. 그 필드는 산출물에 남지만 학위논문 주장의 운영 정의가 아니다.
 
-\item \textbf{Address normalization and units:} All addresses are lower-cased before joins so that checksummed and non-checksummed hex forms collide correctly. Token amounts are stored as floating-point decimal-adjusted values for weighting; ranking uses relative magnitudes within a cohort rather than absolute USD conversion for allowance and transfer edges. GMX PnL fields are already denominated in USD units in the protocol's event schema and are used directly for trading-success and risk proxies.
+\item \textbf{주소 정규화와 단위:} 모든 주소는 조인 전 소문자화하여 체크섬·비체크섬 16진 형태가 올바르게 충돌하게 한다. 토큰 금액은 가중을 위해 부동소수점 소수점 조정 값으로 저장한다. 순위는 allowance·전송 간선에 대해 절대 USD 환산이 아니라 코호트 내 상대 크기를 사용한다. GMX PnL 필드는 프로토콜 이벤트 스키마에서 이미 USD 단위이며, 산출물 요약에 직접 쓰일 수 있으나 주장으로 해석하지 않는다.
 
 \end{itemize}
 
-\dissertationSubheading[sec:graph-construction]{Graph construction}
+\dissertationSubheading[sec:graph-construction]{그래프 구축}
 
-EndorseRank and AWP share the PageRank solver in Equation~\eqref{eq:pagerank} but differ in edge semantics. Both methods induce a directed, weighted graph on wallet nodes, restrict attention to the subgraph touching the seed wallet set (edges with at least one endpoint in the cohort, including one-hop neighbors), and emit a score for every cohort wallet (missing nodes receive score $0$ before ranking). Subgraph restriction is important for scalability and for interpretability: the score of a cohort wallet may receive mass from non-cohort neighbors that endorse or transfer to it, but the evaluation reports scores only on $\mathcal{W}$.
+EndorseRank와 AWP는 식~\eqref{eq:pagerank}의 PageRank 솔버를 공유하되 간선 의미론이 다르다. 두 방법 모두 지갑 노드에 방향성 가중 그래프를 유도하고, 시드 지갑 집합에 닿는 부분그래프(적어도 한 끝점이 코호트에 있는 간선, 1홉 이웃 포함)에 주의를 제한하며, 모든 코호트 지갑에 점수를 방출한다(누락 노드는 순위 전 점수 $0$). 부분그래프 제한은 확장성과 해석 가능성에 중요하다. 코호트 지갑의 점수는 이를 보증하거나 전송하는 비코호트 이웃으로부터 질량을 받을 수 있으나, 평가는 $\mathcal{W}$에서만 점수를 보고한다.
 
-The conceptual distinction is endorsement versus flow. An allowance is an explicit, revocable authorization to spend; a transfer is a completed movement of value that may reflect payment, routing, market-making, or wash activity without a trust commitment \cend{16,18}. EndorseRank therefore treats the latest allowance snapshot as a citation-like endorsement graph in the sense of Page et al.\cend{49}. AWP treats historical transfers as time-decayed citations, down-weighting older flows so that recent economic activity dominates.
+개념적 구분은 보증 대 흐름이다. allowance는 명시적이고 철회 가능한 지출 승인이다. 전송은 신뢰 약속 없이 결제, 라우팅, 시장 조성, 워시 활동을 반영할 수 있는 완료된 가치 이동이다 \cend{16,18}. 따라서 EndorseRank는 최신 allowance 스냅샷을 Page et al.\cend{49} 의미의 인용형 보증 그래프로 취급한다. AWP는 과거 전송을 시간 감쇠 인용으로 취급하여, 최근 경제 활동이 지배하도록 오래된 흐름을 하향 가중한다.
 
-\dissertationSubsubheading[sub:endorserank-graph]{EndorseRank allowance graph}
+\dissertationSubsubheading[sub:endorserank-graph]{EndorseRank allowance 그래프}
 
-Let $\mathcal{A}$ be the set of latest allowance records after preprocessing: for each token and owner--spender pair, only the chronologically last \texttt{Approval} in the observation window is retained (zero allowances remove the edge). Across tokens, weights are summed:
+$\mathcal{A}$를 전처리 후 최신 allowance 기록의 집합이라 하자. 각 토큰과 소유자--지출자 쌍에 대해 관측 창에서 시간순 마지막 \texttt{Approval}만 유지한다(영 allowance는 간선을 제거). 토큰에 걸쳐 가중치를 합산한다:
 \begin{equation}
 \label{eq:approve-weight}
 w_A(u,v)
@@ -207,12 +207,12 @@ w_A(u,v)
 \sum_{\mathrm{token}}
 a^{\star}(u,v,\mathrm{token}),
 \end{equation}
-where $a^{\star}$ is the latest decimal-adjusted allowance. The directed edge $u\to v$ encodes owner $u$ endorsing spender $v$. PageRank damping is $d=0.85$. No temporal decay is applied: allowance override semantics replace time-based weighting, because a newer approval supersedes an older one for the same pair \cend{18}.
+여기서 $a^{\star}$는 최신 소수점 조정 allowance이다. 방향 간선 $u\to v$는 소유자 $u$가 지출자 $v$를 보증함을 인코딩한다. PageRank 감쇠는 $d=0.85$이다. 시간 감쇠는 적용하지 않는다. 동일 쌍에 대해 신규 승인이 구 승인을 대체하므로, allowance 덮어쓰기 의미론이 시간 기반 가중을 대체한다 \cend{18}.
 
-Algorithm~\ref{alg:endorserank} formalizes construction and scoring.
+알고리즘~\ref{alg:endorserank}는 구축과 점수화를 형식화한다.
 
 \begin{algorithm}[htbp]
-\caption{EndorseRank graph construction and scoring}
+\caption{EndorseRank 그래프 구축과 점수화}
 \label{alg:endorserank}
 \begin{algorithmic}[1]
 \Require Latest allowances $\mathcal{A}$, seed wallets $\mathcal{W}$, damping $d$, tolerance $\tau_{\mathrm{tol}}$, max iterations $I_{\max}$
@@ -230,9 +230,9 @@ Algorithm~\ref{alg:endorserank} formalizes construction and scoring.
 \end{algorithmic}
 \end{algorithm}
 
-\dissertationSubsubheading[sub:awp-graph]{AWP transfer graph}
+\dissertationSubsubheading[sub:awp-graph]{AWP 전송 그래프}
 
-AWP follows the IEEE RIVF 2023 transfer-graph method\cend{64}: each transfer of value $v$ at age $\Delta t$ days before observation end $T_{\mathrm{obs}}$ contributes a decayed weight
+AWP는 IEEE RIVF 2023 전송 그래프 방법\cend{64}을 따른다. 관측 종료 $T_{\mathrm{obs}}$ 전 연령 $\Delta t$일인 가치 $v$의 각 전송은 감쇠 가중치
 \begin{equation}
 \label{eq:logistic-decay}
 \sigma(\Delta t)
@@ -241,7 +241,7 @@ AWP follows the IEEE RIVF 2023 transfer-graph method\cend{64}: each transfer of 
 \qquad
 k=0.01,\quad t_0=180\text{ days}.
 \end{equation}
-Edge weights aggregate over transfers:
+를 기여한다. 간선 가중치는 전송에 걸쳐 집계된다:
 \begin{equation}
 \label{eq:transfer-weight}
 w_T(u,v)
@@ -249,19 +249,19 @@ w_T(u,v)
 \sum_{e:\,u\to v}
 v_e\,\sigma(\Delta t_e).
 \end{equation}
-Damping is again $d=0.85$. Figure~\ref{fig:logistic-decay-methods} plots $\sigma(\Delta t)$ over the relevant age range: recent transfers retain nearly full weight, while transfers older than the midpoint $t_0$ are smoothly down-weighted.
+감쇠는 다시 $d=0.85$이다. 그림~\ref{fig:logistic-decay-methods}는 관련 연령 범위에서 $\sigma(\Delta t)$를 플롯한다. 최근 전송은 거의 전체 가중치를 유지하고, 중점 $t_0$보다 오래된 전송은 완만히 하향 가중된다.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.8\textwidth]{\figpath{logistic-decay.pdf}}
-\caption{Logistic time-decay $\sigma(\Delta t)$ used by AWP ($k=0.01$, $t_0=180$ days). Horizontal axis is event age in days before 2026-05-31 UTC; vertical axis is the multiplicative weight applied to transfer value.}
+\caption{AWP가 사용하는 로지스틱 시간 감쇠 $\sigma(\Delta t)$ ($k=0.01$, $t_0=180$일). 가로축은 2026-05-31 UTC 전 이벤트 연령(일), 세로축은 전송 가치에 적용하는 곱셈 가중치이다.}
 \label{fig:logistic-decay-methods}
 \end{figure}
 
-Algorithm~\ref{alg:awp} formalizes construction and scoring.
+알고리즘~\ref{alg:awp}는 구축과 점수화를 형식화한다.
 
 \begin{algorithm}[htbp]
-\caption{AWP graph construction and scoring}
+\caption{AWP 그래프 구축과 점수화}
 \label{alg:awp}
 \begin{algorithmic}[1]
 \Require Transfers $\mathcal{T}$, seed wallets $\mathcal{W}$, observation end $T_{\mathrm{obs}}$, parameters $k,t_0,d,\tau_{\mathrm{tol}},I_{\max}$
@@ -278,50 +278,39 @@ Algorithm~\ref{alg:awp} formalizes construction and scoring.
 \end{algorithmic}
 \end{algorithm}
 
-Because $G_{\mathrm{approve}}$ records durable authorizations and $G_{\mathrm{transfer}}$ records historical value flows, the two graphs differ in density and temporal sensitivity. Approvals are relatively rare, high-intent events; transfers are frequent and often mechanical. On the matched cohort, the approval subgraph is substantially sparser than the transfer subgraph (Chapter~\ref{ch:results}), which is the structural basis for the computational-efficiency hypothesis (H3): per-iteration PageRank cost scales with $|E|$, so fewer edges imply faster solves and lower memory for the adjacency structures in Equation~\eqref{eq:transition-impl}.
+$G_{\mathrm{approve}}$는 지속적 승인을 기록하고 $G_{\mathrm{transfer}}$는 과거 가치 흐름을 기록하므로, 두 그래프는 밀도와 시간 민감도가 다르다. 승인은 상대적으로 드물고 의도가 높은 이벤트이며, 전송은 빈번하고 종종 기계적이다. 매칭 코호트에서 승인 부분그래프는 전송 부분그래프보다 실질적으로 희소하다(제~\ref{ch:results}장). 이것이 계산 효율 가설(H3)의 구조적 근거이다. 반복당 PageRank 비용은 $|E|$에 비례하므로, 더 적은 간선은 식~\eqref{eq:transition-impl}의 인접 구조에 대해 더 빠른 해와 더 낮은 메모리를 함의한다.
 
 \begin{itemize}
-\item \textbf{Implementation notes shared by both methods:} Edge lists are stored as triples \texttt{(from\_node, to\_node, weight)} in memory. Duplicate edges are aggregated by summing weights before the solve. Non-positive weights are dropped. The solver builds a sparse compressed-row transition matrix, iterates Equation~\eqref{eq:pagerank}, and returns a dictionary from node identifier to score. Cohort scores are aligned to $\mathcal{W}$ with missing entries set to zero, then converted to dense ranks for correlation.
+\item \textbf{두 방법이 공유하는 구현 주석:} 간선 목록은 메모리에 삼중항 \texttt{(from\_node, to\_node, weight)}로 저장한다. 중복 간선은 해 전에 가중치를 합산하여 집계한다. 비양 가중치는 제거한다. 솔버는 희소 압축 행 전이 행렬을 구축하고 식~\eqref{eq:pagerank}를 반복하며, 노드 식별자에서 점수로의 사전을 반환한다. 코호트 점수는 누락 항목을 영으로 두고 $\mathcal{W}$에 정합한 뒤, 상관을 위해 밀집 순위로 변환한다.
 
 \end{itemize}
 
-\dissertationSubheading[sec:gf-pr-graph]{Supplementary GF-PR graph (extension)}
+\dissertationSubheading[sec:gf-pr-graph]{시간 홀드아웃 프로토콜}
 
-GF-PR is an outcome-native reference built only from GMX \texttt{PositionDecrease} events. It is evaluated solely for supplementary question SRQ1 (construct-overlap diagnostic) and is not a primary peer to EndorseRank or AWP. The method exists to answer a methodological question: if a ranking is allowed to read the same PnL stream that defines trading-success proxies, how high can alignment rise? That ceiling clarifies how much of a social method's trading-success $\tau$ might be attributed to genuine social signal versus residual correlation with outcomes.
+홀드아웃용 점수는 시각이 $T_1=$ 2026년 2월 28일 23:59:59 UTC 이하인 이벤트로부터 계산한다. 라벨은 $T_2^{\mathrm{start}}=$ 2026년 3월 1일부터 $T_2^{\mathrm{end}}=$ 2026년 5월 31일까지의 이벤트를 사용한다. 주장하는 라벨은 최신 양수 t1 스냅샷에 없는, $T_2$의 신규 소유자--지출자 승인 쌍 건수이며 지출자에 귀속한다. 주장하는 코호트는 t1 인바운드 지출자($n=1{,}335$)이다. 그 라벨의 GMX 매칭 교집합은 희소하며(12건 이벤트) 주장이 아니다.
 
-The graph is a directed star with two synthetic nodes, $\mathrm{POOL}$ and $\mathrm{SINK}$. For each close of wallet $w$ with realized PnL $x$ (field \texttt{basePnlUsd}):
-\begin{itemize}
-\item if the close is a liquidation, add weight $|x|+\varepsilon_{\mathrm{liq}}$ on $w\to\mathrm{SINK}$ with $\varepsilon_{\mathrm{liq}}=1.0$;
-\item else if $x>0$, add weight $x$ on $\mathrm{POOL}\to w$;
-\item else if $x<0$, add weight $|x|+\varepsilon_{\mathrm{loss}}$ on $w\to\mathrm{SINK}$ with $\varepsilon_{\mathrm{loss}}=0.1$.
-\end{itemize}
-The additives $\varepsilon_{\mathrm{loss}}$ and $\varepsilon_{\mathrm{liq}}$ break ties when PnL is exactly zero after absolute value and ensure that liquidations contribute strictly more sink mass than ordinary losses of equal magnitude. There are no wallet-to-wallet edges: GF-PR does not encode social endorsement or transfer structure. PageRank with $d=0.85$ propagates mass from $\mathrm{POOL}$ toward profitable wallets and from loss-making wallets toward $\mathrm{SINK}$. High alignment with trading-success proxies is expected by construction and must be interpreted as construct overlap, not as superior social reputation \cend{14}.
+다른 t2 수량(철회율, 승인 후 아웃바운드 유출 휴리스틱, Aave 차입자 청산)은 파이프라인에서 계산되었다. 지지 증거로 보고하지 않는다. 철회와 유출은 보증 해석에 대해 잘못된 부호를 가졌고, 이 지출자 집합에서 Aave 이벤트는 비어 있거나 잘못된 구성 개념이었다.
 
-\dissertationSubheading[sec:proxy-evaluation]{Five-proxy evaluation design}
+\dissertationSubheading[sec:proxy-evaluation]{구성 개념 검사 설계}
 
-Primary evaluation compares EndorseRank and AWP only. For each method $M$ (EndorseRank or AWP) and each proxy $P$, the pipeline computes scores $\mathbf{s}_M$ and proxy values $\mathbf{p}_P$ on the matched cohort, then reports Spearman's $\rho$ and Kendall's $\tau$ between the induced rankings (Section~\ref{sec:statistical-tests}). All proxies are oriented so that higher values imply higher expected reputation before correlation, following the domain-alignment approach of Do et al.\cend{16}. Orientation is part of construct validity: without it, a method that correctly ranks safer traders could appear negatively aligned with a loss-magnitude proxy.
+주요 평가는 EndorseRank와 AWP만을 비교한다. 각 방법 $M$과 각 검사 $P$에 대해 파이프라인은 점수 $\mathbf{s}_M$과 검사 값 $\mathbf{p}_P$를 계산한 뒤 Spearman의 $\rho$와 Kendall의 $\tau$를 보고한다(제~\ref{sec:statistical-tests}절). 검사는 상관 전에 값이 클수록 기대 평판이 높도록 지향하며, Do et al.\cend{16}을 따른다.
 
-Five families structure the primary comparison. They were chosen to span (i)~baselines from prior work, (ii)~within-construct checks for each social graph, and (iii)~outcome-oriented trading and risk measures that are not direct inputs to EndorseRank or AWP:
+두 동시기 계열이 동일 창 비교를 구조화한다.
 \begin{enumerate}
-\item \textbf{Transfer} (Do et al.\ baseline): inbound transfer activity.
-\item \textbf{Allowance}: inbound approval activity (wallet as spender).
-\item \textbf{Inverse risk} (GMX PnL): loss avoidance and non-loss close behavior.
-\item \textbf{Sybil-adjusted stability}: counterparty diversity and activity tenure.
-\item \textbf{Trading success}: GMX close outcomes and realized gains.
+\item \textbf{전송} (Do et al.\ 기준선): 인바운드 전송 활동.
+\item \textbf{Allowance:} 인바운드 승인 활동(지갑이 지출자).
 \end{enumerate}
-Transfer and allowance families are \emph{graph-adjacent}: they are computed from the same event classes that build $G_{\mathrm{transfer}}$ and $G_{\mathrm{approve}}$, but they are simple local statistics (degree and value sums) rather than global PageRank scores. Strong alignment of AWP with transfer proxies, or of EndorseRank with allowance proxies, is therefore evidence of within-construct coherence, not of independent predictive power. Inverse-risk, Sybil-stability, and trading-success families are the more demanding tests for social reputation as a signal of trading behavior and account quality.
+이들은 \emph{그래프 인접}이다. $G_{\mathrm{transfer}}$와 $G_{\mathrm{approve}}$를 구축하는 동일 이벤트 계급에서 계산하되, 전역 PageRank 점수가 아니라 국소 통계이다. AWP의 전송 검사 정합, 또는 EndorseRank의 allowance 검사 정합은 구성 개념 내 정합성이지 독립 예측력이 아니다. Sybil 조정 활동 요약은 강건성 표에 나타날 수 있으나 표제 주장이 아니다. 거래 성공, 역위험, 청산 계열은 주장에서 제외한다.
 
-Family-level mean $\tau$ summarizes construct alignment for the EndorseRank--AWP comparison; the evaluation pipeline records which social method aligns more strongly per family (Appendix~\ref{ch:appendix-eval}). A sixth liquidation family is computed in the codebase for completeness and is mentioned where relevant, but main-text claims use the five families above.
+창 밖 검사는 제~\ref{sec:gf-pr-graph}절의 시간 홀드아웃이다. Packin and Lev-Aretz\cend{48}는 탈중앙화 신용 점수가 불투명해질 수 있다고 경고한다. 명시적 공식을 공개하고(제~\ref{sec:proxy-formulas}절) 동일 창 검사와 시간 분할을 분리하는 것은 그 불투명성에 대응한다.
 
-Supplementary evaluation includes GF-PR only for SRQ1, to diagnose construct overlap on trading-outcome proxies. Lending-protocol default labels remain out of scope. Packin and Lev-Aretz\cend{48} caution that decentralized credit scores can become opaque; the proxy design counters opacity by publishing explicit formulas (Section~\ref{sec:proxy-formulas}) and by separating social methods from outcome-native references.
+\dissertationSubheading[sec:proxy-formulas]{대리 지표의 운영적 정의}
 
-\dissertationSubheading[sec:proxy-formulas]{Operational definitions of proxies}
+$\mathcal{W}$를 매칭 코호트라 하자. GMX 파생 요약에 대해, 디코딩된 이벤트 표에서 포지션 종료가 최소 $m=3$건인 지갑만 적격이며, 비적격 지갑은 $\mathcal{W}$로의 좌조인 후 영을 받는다. 아래 기호는 개방 평가 파이프라인의 대리 지표 계산 모듈과 일치한다.
 
-Let $\mathcal{W}$ be the matched cohort. For GMX-derived proxies, only wallets with at least $m=3$ closes in the decoded event table are eligible; ineligible wallets receive zeros after left-join to $\mathcal{W}$. Notation below matches the proxy-computation module of the open evaluation pipeline.
+\dissertationSubsubheading[sub:proxy-transfer]{전송 계열}
 
-\dissertationSubsubheading[sub:proxy-transfer]{Transfer family}
-
-Let $\mathcal{T}_{\mathrm{in}}(w)$ be inbound transfers to wallet $w$ (any sender). Define
+$\mathcal{T}_{\mathrm{in}}(w)$를 지갑 $w$로의 인바운드 전송(임의 송신자)이라 하자. 정의는
 \begin{align}
 \mathrm{in\_degree}(w)
 &=
@@ -332,11 +321,11 @@ Let $\mathcal{T}_{\mathrm{in}}(w)$ be inbound transfers to wallet $w$ (any sende
 \sum_{e:\,\cdot\to w} v_e.
 \label{eq:in-value}
 \end{align}
-These are the domain-intuition baselines of Do et al.\cend{16}: economically important addresses tend to receive transfers from more counterparties and in larger aggregate value. Unlike PageRank, $\mathrm{in\_degree}$ and $\mathrm{in\_value}$ are strictly local: they ignore the reputation of senders. Comparing AWP (global, time-decayed) to these local baselines tests whether propagation and recency weighting add ordering information beyond raw inflows.
+이다. 이들은 Do et al.\cend{16}의 도메인 직관 기준선이다. 경제적으로 중요한 주소는 더 많은 상대방으로부터, 더 큰 집계 가치로 전송을 받는 경향이 있다. PageRank와 달리 $\mathrm{in\_degree}$와 $\mathrm{in\_value}$는 엄격히 국소적이다. 송신자의 평판을 무시한다. AWP(전역, 시간 감쇠)를 이들 국소 기준선과 비교하는 것은 전파와 최근성 가중이 원시 유입을 넘는 순서 정보를 더하는지를 검정한다.
 
-\dissertationSubsubheading[sub:proxy-allowance]{Allowance family}
+\dissertationSubsubheading[sub:proxy-allowance]{Allowance 계열}
 
-Let $\mathcal{A}_{\mathrm{in}}(w)$ be latest allowances in which $w$ is the spender (owner $\to w$). Define
+$\mathcal{A}_{\mathrm{in}}(w)$를 $w$가 지출자인 최신 allowance(소유자 $\to w$)라 하자. 정의는
 \begin{align}
 \mathrm{in\_approve\_degree}(w)
 &=
@@ -347,11 +336,11 @@ Let $\mathcal{A}_{\mathrm{in}}(w)$ be latest allowances in which $w$ is the spen
 \sum_{u,\mathrm{token}} a^{\star}(u,w,\mathrm{token}).
 \label{eq:in-approve-value}
 \end{align}
-These proxies measure endorsement received, the construct EndorseRank is designed to rank. Strong alignment of EndorseRank with this family is expected and is interpreted as within-construct validity rather than independent trading skill. As with transfer baselines, the allowance proxies are local: they count and sum inbound approvals without propagating through multi-hop endorsement chains. EndorseRank's incremental value, if any, appears when it aligns with non-allowance families while remaining coherent with allowance baselines.
+이다. 이들 검사는 EndorseRank가 순위를 매기도록 설계된 구성 개념인, 수신된 보증을 측정한다. EndorseRank의 이 계열과의 강한 정합은 예상되며 구성 개념 내 타당성으로 해석한다. 전송 기준선과 같이 allowance 검사는 국소적이다. 다홉 보증 사슬을 전파하지 않고 인바운드 승인을 세고 합산한다. 창 밖 증거는 시간 홀드아웃에 유보한다.
 
-\dissertationSubsubheading[sub:proxy-inverse-risk]{Inverse-risk family}
+\dissertationSubsubheading[sub:proxy-inverse-risk]{결과 계열 (주장하지 않음)}
 
-Let $\mathcal{C}(w)$ be the set of non-missing GMX closes for wallet $w$, with PnL $x_c$ and liquidation flag $\ell_c\in\{0,1\}$. A loss close is a non-liquidation close with $x_c<0$. Define
+GMX 포지션 종료로부터의 역위험, 거래 성공, 청산(liquidation) 요약은 완결성을 위해 평가 산출물에 남는다. 학위논문 주장의 운영 정의가 아니다. 아래 항등식은 기존 표 조각이 계속 컴파일되도록 유지한다. 본문은 이를 거래 실력, 신용 위험, 악성 지출자의 증거로 해석하지 않는다. $\mathcal{C}(w)$를 지갑 $w$의 GMX 포지션 종료라 하고, PnL을 $x_c$, 청산 플래그를 $\ell_c\in\{0,1\}$이라 하자.
 \begin{align}
 \mathrm{loss\_avoidance}(w)
 &=
@@ -366,11 +355,10 @@ Let $\mathcal{C}(w)$ be the set of non-missing GMX closes for wallet $w$, with P
 -\min_{c\in\mathcal{C}(w)} x_c.
 \label{eq:worst-close}
 \end{align}
-Equation~\eqref{eq:loss-avoidance} sums absolute loss magnitudes over all negative-PnL closes, including liquidations (higher is better after the sign flip). Equation~\eqref{eq:non-loss-rate} is the fraction of closes that are not ordinary (non-liquidation) losses; liquidations therefore raise $\mathrm{non\_loss\_close\_rate}$ and are not treated as ordinary losses. Equation~\eqref{eq:worst-close} rewards wallets whose worst close is less severe (again after sign flip). Liquidation closes are included in the worst-close minimum but are excluded from the ordinary-loss count in Equation~\eqref{eq:non-loss-rate}, so that forced liquidations are not double-counted as ordinary losses. Inverse-risk proxies are not inputs to EndorseRank or AWP; alignment here is evidence that social structure co-varies with risk-avoiding trading behavior.
 
-\dissertationSubsubheading[sub:proxy-sybil]{Sybil-adjusted stability family}
+\dissertationSubsubheading[sub:proxy-sybil]{Sybil 조정 안정성 계열}
 
-Self-transfers ($u=w$) are excluded from inbound counters. Let $N_{\mathrm{tx}}(w)$ be the number of inbound transfers to $w$ from other addresses and $N_{\mathrm{uniq}}(w)$ the number of distinct inbound counterparties. Let $t_{\min}(w)$ and $t_{\max}(w)$ be the first and last timestamps at which $w$ appears as sender or recipient in the transfer table, and let $M(w)$ be the number of distinct calendar months of activity (inbound months and full-span months, taking the maximum). Define
+자기 전송($u=w$)은 인바운드 계수에서 제외한다. $N_{\mathrm{tx}}(w)$를 다른 주소로부터 $w$로의 인바운드 전송 수, $N_{\mathrm{uniq}}(w)$를 서로 다른 인바운드 상대방 수라 하자. $t_{\min}(w)$와 $t_{\max}(w)$는 전송 표에서 $w$가 송신자 또는 수신자로 나타나는 최초·최종 시각이고, $M(w)$는 활동의 서로 다른 역월 수이다(인바운드 월과 전체 구간 월 중 최댓값). 정의는
 \begin{align}
 \mathrm{inbound\_counterparty\_ratio}(w)
 &=
@@ -378,18 +366,18 @@ Self-transfers ($u=w$) are excluded from inbound counters. Let $N_{\mathrm{tx}}(
 \label{eq:counterparty-ratio}\\
 \mathrm{transfer\_tenure\_days}(w)
 &=
-\frac{t_{\max}(w)-t_{\min}(w)}{86400}\quad\text{(seconds to days)},
+\frac{t_{\max}(w)-t_{\min}(w)}{86400}\quad\text{(초를 일로)},
 \label{eq:tenure}\\
 \mathrm{active\_months}(w)
 &=
 M(w).
 \label{eq:active-months}
 \end{align}
-High counterparty ratio penalizes wallets that receive many transfers from few addresses (a simple Sybil/wash pattern). Tenure and active months capture persistence of on-chain activity within the observation window. These measures are imperfect Sybil defenses---coordinated adversaries can still diversify counterparties---but they operationalize the intuition that durable, multi-counterparty activity is more reputation-relevant than bursty self-dealing \cend{48}.
+이다. 높은 상대방 비율은 소수 주소로부터 많은 전송을 받는 지갑을 벌한다(단순 Sybil/워시 패턴). 재직 기간과 활성 월수는 관측 창 안 온체인 활동의 지속성을 포착한다. 이들 측정은 불완전한 Sybil 방어이다---조정된 적대자는 여전히 상대방을 다양화할 수 있다---그러나 지속적이고 다상대방적인 활동이 폭발적 자기 거래보다 평판에 더 관련된다는 직관을 운영화한다 \cend{48}.
 
-\dissertationSubsubheading[sub:proxy-trading]{Trading-success family}
+\dissertationSubsubheading[sub:proxy-trading]{거래 성공 계열 (주장하지 않음)}
 
-A successful close is a non-liquidation close with $x_c>0$. Define
+산출물 라벨일 뿐이며 주장이 아니다.
 \begin{align}
 \mathrm{close\_success\_count}(w)
 &=
@@ -404,11 +392,10 @@ A successful close is a non-liquidation close with $x_c>0$. Define
 \frac{\mathrm{close\_success\_count}(w)}{|\mathcal{C}(w)|}.
 \label{eq:success-rate}
 \end{align}
-The primary definition of $\mathrm{realized\_gain\_proxy}$ is the raw sum of positive PnL. A size-weighted variant multiplies each positive PnL by $\max(|s_c|,1)$, where $s_c$ is the close's \texttt{sizeDeltaUsd}, and is used only in robustness checks (Section~\ref{sec:scaling-robustness}). These proxies operationalize trading success on GMX V2 perpetual markets \cend{23,53}. They are outcome measures, not social-graph features: neither EndorseRank nor AWP reads \texttt{basePnlUsd} when building edges. Consequently, non-trivial alignment with trading success is the strongest form of domain evidence available in this design short of external credit labels. Count, sum, and rate capture complementary aspects of success---frequency, magnitude, and consistency---so family-level mean $\tau$ is not dominated by a single operationalization.
 
-\dissertationSubsubheading[sub:proxy-liquidation]{Liquidation family (ancillary)}
+\dissertationSubsubheading[sub:proxy-liquidation]{청산 계열 (주장하지 않음)}
 
-For completeness, the pipeline also computes
+산출물 라벨일 뿐이며 주장이 아니다.
 \begin{align}
 \mathrm{liquidation\_free\_rate}(w)
 &=
@@ -423,14 +410,13 @@ For completeness, the pipeline also computes
 \sum_c (1-\ell_c).
 \label{eq:liq-free-closes}
 \end{align}
-These metrics support sensitivity analyses and GF-PR diagnostics but are not part of the five-family primary claims.
 
-\dissertationSubheading[sec:statistical-tests]{Statistical tests}
+\dissertationSubheading[sec:statistical-tests]{통계 검정}
 
-Reputation scores and validation proxies are continuous rank variables, not binary default labels. Following Do et al.\cend{16} and the construct-validity tradition of Cronbach and Meehl\cend{14}, alignment is measured with rank correlations that are invariant to monotonic transforms of either variable.
+평판 점수와 검사 값은 이항 부도 라벨이 아니라 연속 순위 변수이다. Do et al.\cend{16}과 Cronbach and Meehl\cend{14}의 구성 개념 타당성 전통을 따라, 정합은 어느 변수의 단조 변환에도 불변인 순위 상관으로 측정한다.
 
 \begin{itemize}
-\item \textbf{Spearman's $\rho$:} Let $R_i$ and $S_i$ be the dense ranks of score and proxy for wallet $i=1,\ldots,n$. Spearman's coefficient is the Pearson correlation of these ranks:
+\item \textbf{Spearman의 $\rho$:} $R_i$와 $S_i$를 지갑 $i=1,\ldots,n$에 대한 점수와 검사의 밀집 순위라 하자. Spearman 계수는 이들 순위의 Pearson 상관이다:
 \begin{equation}
 \label{eq:spearman-ops}
 \rho
@@ -438,120 +424,119 @@ Reputation scores and validation proxies are continuous rank variables, not bina
 \frac{\sum_{i=1}^{n}(R_i-\bar R)(S_i-\bar S)}
 {\sqrt{\sum_{i=1}^{n}(R_i-\bar R)^2\sum_{i=1}^{n}(S_i-\bar S)^2}}.
 \end{equation}
-Spearman captures monotonic agreement: if higher reputation consistently co-occurs with higher proxy values, $\rho$ is positive even when the relationship is nonlinear in the raw scores.
+Spearman은 단조 일치를 포착한다. 더 높은 평판이 더 높은 검사 값과 일관되게 공존하면, 원시 점수에서 관계가 비선형이어도 $\rho$는 양이다.
 
-\item \textbf{Kendall's $\tau$:} Kendall's coefficient counts concordant and discordant pairs. For all pairs $i<j$,
+\item \textbf{Kendall의 $\tau$:} Kendall 계수는 일치·불일치 쌍을 센다. 모든 쌍 $i<j$에 대해
 \begin{equation}
 \label{eq:kendall-ops}
 \tau
 =
 \frac{2(C-D)}{n(n-1)},
 \end{equation}
-where $C$ is the number of pairs ordered the same way by both rankings and $D$ is the number ordered differently (ties handled by the implementation's standard tie correction). Kendall's $\tau$ is more interpretable as a pairwise ordering probability and is less sensitive to large rank displacements than Spearman in some heavy-tailed settings.
+여기서 $C$는 두 순위가 같은 방향으로 정렬한 쌍의 수, $D$는 다르게 정렬한 쌍의 수이다(동점은 구현의 표준 동점 보정). Kendall의 $\tau$는 쌍별 순서 확률로 더 해석 가능하며, 일부 두꺼운 꼬리 설정에서 Spearman보다 큰 순위 변위에 덜 민감하다.
 
-\item \textbf{Why both:} Spearman summarizes global monotonic association; Kendall emphasizes pairwise order fidelity. Reporting both follows Do et al.\cend{16} and allows readers to verify that family-level conclusions are not an artifact of a single rank statistic. In blockchain reputation settings, score distributions are often heavy-tailed: a few hubs receive large mass while many wallets share near-zero scores. Rank correlations remain well-defined in that regime, whereas Pearson correlation on raw scores would be dominated by hubs.
+\item \textbf{둘을 쓰는 이유:} Spearman은 전역 단조 연관을 요약하고, Kendall은 쌍별 순서 충실도를 강조한다. 둘을 보고하는 것은 Do et al.\cend{16}을 따르며, 계열 수준 결론이 단일 순위 통계의 산물이 아님을 독자가 검증하게 한다. 블록체인 평판 설정에서 점수 분포는 종종 두꺼운 꼬리이다. 소수 허브가 큰 질량을 받고 많은 지갑이 거의 영 점수를 공유한다. 그 체제에서 순위 상관은 잘 정의되는 반면, 원시 점수에 대한 Pearson 상관은 허브에 지배된다.
 
-\item \textbf{Family aggregation:} Family-level summaries use mean $\tau$ across proxies within a family. For example, the transfer-family mean is $\tfrac{1}{2}(\tau_{\mathrm{in\_degree}}+\tau_{\mathrm{in\_value}})$. Method comparisons on the same cohort and proxies are relative, not absolute claims about universal reputation. Uncited absolute $\tau$ cutoffs are not used as decision rules.
+\item \textbf{계열 집계:} 계열 수준 요약은 계열 내 검사에 걸친 평균 $\tau$를 사용한다. 예를 들어 전송 계열 평균은 $\tfrac{1}{2}(\tau_{\mathrm{in\_degree}}+\tau_{\mathrm{in\_value}})$이다. 동일 코호트와 검사에 대한 방법 비교는 보편 평판에 대한 절대 주장이 아니라 상대적이다. 인용되지 않은 절대 $\tau$ 컷오프는 의사결정 규칙으로 사용하지 않는다.
 
-\item \textbf{Uncertainty:} Interval estimates (bootstrap confidence intervals) are not reported in this draft. Comparative point estimates on a fixed cohort are the decision target. Adding interval estimates is planned before the next submission.
+\item \textbf{불확실성:} 구간 추정(부트스트랩 신뢰구간)은 본 초안에서 보고하지 않는다. 고정 코호트의 비교 점추정이 의사결정 대상이다. 다음 제출 전에 구간 추정을 추가할 계획이다.
 
-\item \textbf{Orientation and missingness:} Proxies are pre-oriented so that larger values indicate better reputation. Wallets absent from a proxy source receive zeros after alignment to $\mathcal{W}$, which is conservative for sparse activity and is applied identically to both methods. No wallet is dropped from one method but retained in the other: the correlation sample is always the full matched cohort for primary tables.
+\item \textbf{지향과 결측:} 검사는 값이 클수록 더 나은 평판을 나타내도록 사전 지향한다. 검사 출처에 없는 지갑은 $\mathcal{W}$에 정합한 후 영을 받으며, 이는 희소 활동에 보수적이고 두 방법에 동일하게 적용한다. 한 방법에서만 지갑을 탈락시키지 않는다. 주요 표의 상관 표본은 항상 전체 매칭 코호트이다.
 
-\item \textbf{What is not tested:} The study does not claim causal identification (reputation does not ``cause'' trading success in an interventional sense), does not fit predictive classifiers with train/test splits, and does not report $p$-values as the primary decision criterion. The scientific target is comparative construct alignment and computational cost under a fixed, transparent protocol.
+\item \textbf{검정하지 않는 것:} 본 연구는 인과 식별을 주장하지 않고(평판이 개입적 의미에서 거래 성공을 ``유발''하지 않는다), 훈련/검정 분할의 예측 분류기를 적합하지 않으며, $p$값을 주요 의사결정 기준으로 보고하지 않는다. 과학적 대상은 고정되고 투명한 프로토콜 하에서의 비교 구성 개념 정합과 계산 비용이다.
 
 \end{itemize}
 
-\dissertationSubheading[sec:computational-benchmark]{Computational benchmark (Claim~C1)}
+\dissertationSubheading[sec:computational-benchmark]{계산 벤치마크 (주장~C1)}
 
-Claim~C1 concerns computational efficiency of EndorseRank versus AWP on identical inputs. The benchmark protocol isolates PageRank solve cost from one-time graph construction, because construction cost is dominated by I/O and preprocessing that would be amortized in a deployed scorer that updates incrementally, whereas the iterative solve is the recurring computational core of both methods.
+주장~C1은 동일 입력에서 EndorseRank 대 AWP의 계산 효율에 관련된다. 벤치마크 프로토콜은 일회 그래프 구축으로부터 PageRank 해 비용을 분리한다. 구축 비용은 증분 갱신하는 배포 점수기에서 상각될 I/O와 전처리가 지배하는 반면, 반복 해는 두 방법의 반복적 계산 핵이기 때문이다.
 
 \begin{itemize}
-\item \textbf{Timed quantity:} For each method, edge lists are built once per cohort outside the timed loop. The timed section runs weighted PageRank only, with damping $d=0.85$, tolerance $\tau_{\mathrm{tol}}=10^{-8}$, and at most $I_{\max}=300$ iterations. These numerical settings match the configuration used for alignment scores, so runtime and alignment refer to the same mathematical object.
+\item \textbf{계측 수량:} 각 방법에 대해 간선 목록은 계측 루프 밖에서 코호트당 한 번 구축한다. 계측 구간은 가중 PageRank만 실행하며, 감쇠 $d=0.85$, 허용오차 $\tau_{\mathrm{tol}}=10^{-8}$, 최대 $I_{\max}=300$회 반복이다. 이들 수치 설정은 정합 점수에 사용한 설정과 일치하므로, 런타임과 정합은 동일 수학적 대상을 가리킨다.
 
-\item \textbf{Repetitions and metrics:} The intended protocol repeats each configuration for five independent runs to average out operating-system noise. Chapter~\ref{ch:results} tables currently report three-run means from the exported evaluation artifacts; the two statements will be reconciled to a single repetition count before the next submission. Until then, treat table values as the empirical record and five runs as the intended protocol. Per run, the pipeline records wall-clock solve time, peak memory, and iterations to convergence. Reported statistics are the mean runtime, runtime standard deviation, mean iterations, maximum peak memory across runs, and edge/node counts of the pre-built graph. Edge counts are reported because they are the leading structural explanation for runtime differences under $O(|E|)$ per-iteration complexity \cend{49}.
+\item \textbf{반복과 지표:} 의도된 프로토콜은 운영체제 잡음을 평균하기 위해 각 설정을 다섯 독립 실행으로 반복한다. 제~\ref{ch:results}장 표는 현재 내보낸 평가 산출물의 3회 실행 평균을 보고한다. 두 진술은 다음 제출 전에 단일 반복 횟수로 화해할 것이다. 그때까지 표 값을 실증 기록으로, 다섯 실행을 의도된 프로토콜로 취급한다. 실행마다 파이프라인은 벽시계 해 시간, 최대 메모리, 수렴까지의 반복을 기록한다. 보고 통계는 평균 런타임, 런타임 표준편차, 평균 반복, 실행 간 최대 피크 메모리, 사전 구축 그래프의 간선/노드 수이다. 간선 수는 $O(|E|)$ 반복당 복잡도 하에서 런타임 차이의 선도적 구조 설명이므로 보고한다 \cend{49}.
 
-\item \textbf{Cohorts:} The primary benchmark uses the matched wallet cohort ($n=5{,}521$). Scaling benchmarks use deterministic subsamples of the expanded wallet pool (Section~\ref{sec:scaling-robustness}). GF-PR runtime may be reported parenthetically in Chapter~\ref{ch:results} as supplementary context only and is not part of Claim~C1.
+\item \textbf{코호트:} 주요 벤치마크는 매칭 지갑 코호트($n=5{,}521$)를 사용한다. 확장성 벤치마크는 확장 지갑 풀의 결정적 부분표본을 사용한다(제~\ref{sec:scaling-robustness}절). GF-PR 런타임은 제~\ref{ch:results}장에서 보조 맥락으로만 괄호 보고될 수 있으며 주장~C1의 일부가 아니다.
 
-\item \textbf{Fairness of comparison:} Both methods use the same solver, tolerance, iteration cap, damping (unless a robustness sweep varies $d$), and seed wallet set. Differences therefore reflect graph density and weight structure---allowance snapshots versus time-decayed transfers---rather than implementation asymmetry. Hardware and software versions are recorded in the evaluation manifest so that absolute seconds can be interpreted relative to the experimental machine; speedup ratios (AWP time divided by EndorseRank time) are the preferred comparative summary.
+\item \textbf{비교의 공정성:} 두 방법은 동일 솔버, 허용오차, 반복 상한, 감쇠(강건성 스윕이 $d$를 변화시키지 않는 한), 시드 지갑 집합을 사용한다. 따라서 차이는 구현 비대칭이 아니라 그래프 밀도와 가중 구조---allowance 스냅샷 대 시간 감쇠 전송---를 반영한다. 하드웨어와 소프트웨어 버전은 평가 매니페스트에 기록하여 절대 초를 실험 기계에 상대적으로 해석할 수 있게 한다. 가속비(AWP 시간을 EndorseRank 시간으로 나눈 값)가 선호되는 비교 요약이다.
 
 \end{itemize}
 
-\dissertationSubheading[sec:scaling-robustness]{Scaling and robustness extensions}
+\dissertationSubheading[sec:scaling-robustness]{확장성과 강건성 확장}
 
-Beyond the matched cohort, the study evaluates runtime scaling on a larger address set and stress-tests alignment under parameter and sample perturbations. These extensions support H3 (efficiency at larger $n$) and the stability of family-level conclusions. They are not alternative primary samples: unless otherwise noted, alignment claims in Chapter~\ref{ch:results} refer to the matched cohort, and scaling claims refer to the expanded pool.
+매칭 코호트를 넘어, 본 연구는 더 큰 주소 집합에서 런타임 확장성을 평가하고 매개변수·표본 섭동 하에서 정합을 스트레스 검정한다. 이들 확장은 H3(더 큰 $n$에서의 효율)와 계열 수준 결론의 안정성을 지지한다. 대안 주요 표본이 아니다. 별도 표기가 없으면 제~\ref{ch:results}장의 정합 주장은 매칭 코호트를, 확장성 주장은 확장 풀을 가리킨다.
 
-\dissertationSubsubheading[sub:expanded-pool]{Expanded wallet pool and runtime scaling}
+\dissertationSubsubheading[sub:expanded-pool]{확장 지갑 풀과 런타임 확장성}
 
-The expanded wallet pool $\mathcal{W}_{\mathrm{pool}}$ unions the matched GMX cohort with supplemental active addresses derived from the reputation subgraph (and, when present, supplemental active-wallet parquet), yielding $N=|\mathcal{W}_{\mathrm{pool}}|=31{,}612$ addresses in this study. Supplemental addresses increase graph size for timing experiments without requiring every address to carry GMX labels. Runtime benchmarks at intermediate sizes use deterministic SHA256 subsampling with seed string \texttt{benchmark-tier2-v1}: wallets are ordered by
+확장 지갑 풀 $\mathcal{W}_{\mathrm{pool}}$은 매칭 GMX 코호트와 평판 부분그래프에서 도출한 보충 활성 주소(및 존재할 때 보충 활성 지갑 parquet)를 합하여, 본 연구에서 $N=|\mathcal{W}_{\mathrm{pool}}|=31{,}612$개 주소를 산출한다. 보충 주소는 모든 주소가 GMX 라벨을 가질 것을 요구하지 않고 타이밍 실험의 그래프 크기를 증가시킨다. 중간 크기의 런타임 벤치마크는 시드 문자열 \texttt{benchmark-tier2-v1}의 결정적 SHA256 부분표본을 사용한다. 지갑은
 \begin{center}
-\texttt{SHA256(seed || address)} with seed \texttt{benchmark-tier2-v1}
+\texttt{SHA256(seed || address)}, 시드 \texttt{benchmark-tier2-v1}
 \end{center}
-and the first $n$ addresses form the subsample. The seed string is a fixed configuration constant. Reported stages include $n=10{,}000$ and the full pool $n=N=31{,}612$, always on the same approval and transfer parquet. In-cohort scaling stages with $n\le 5{,}521$ are reported in Appendix~\ref{ch:appendix-eval}. Deterministic hashing avoids the non-reproducibility of pseudorandom draws across library versions.
+로 정렬하고 처음 $n$개 주소가 부분표본을 이룬다. 시드 문자열은 고정 설정 상수이다. 보고 단계는 $n=10{,}000$과 전체 풀 $n=N=31{,}612$를 포함하며, 항상 동일 승인·전송 parquet에서 수행한다. $n\le 5{,}521$인 코호트 내 확장 단계는 부록~\ref{ch:appendix-eval}에서 보고한다. 결정적 해시는 라이브러리 버전에 걸친 의사난수 추출의 비재현성을 피한다.
 
-\dissertationSubsubheading[sub:damping-protocol]{Damping sensitivity}
+\dissertationSubsubheading[sub:damping-protocol]{감쇠 민감도}
 
-PageRank damping is swept over $d\in\{0.75,0.85,0.95\}$ on the matched cohort, holding graphs and proxies fixed. The default $d=0.85$ matches the classical web PageRank setting \cend{49} and the AWP baseline\cend{64}. Lower $d$ increases teleportation and flattens scores; higher $d$ emphasizes multi-hop structure and can slow convergence. The sweep tests whether allowance- and transfer-family alignment are artifacts of a single teleportation weight.
+PageRank 감쇠는 매칭 코호트에서 그래프와 검사를 고정한 채 $d\in\{0.75,0.85,0.95\}$로 스윕한다. 기본 $d=0.85$는 고전적 웹 PageRank 설정 \cend{49}과 AWP 기준선\cend{64}과 일치한다. 낮은 $d$는 텔레포트를 증가시키고 점수를 평탄화하며, 높은 $d$는 다홉 구조를 강조하고 수렴을 늦출 수 있다. 스윕은 allowance·전송 계열 정합이 단일 텔레포트 가중치의 산물인지를 검정한다.
 
-\dissertationSubsubheading[sub:top-tokens]{Top-token subgraph}
+\dissertationSubsubheading[sub:top-tokens]{상위 토큰 부분그래프}
 
-A restricted subgraph retains only the top-$20$ ERC-20 tokens by combined transfer and allowance volume within the observation window. EndorseRank and AWP are recomputed on this subgraph to assess sensitivity to long-tail tokens and possible spam assets. If family-level conclusions reverse when low-volume tokens are removed, the primary result would be fragile to token composition; stability supports interpreting the full-token graphs as representative of major economic activity.
+제한 부분그래프는 관측 창 안에서 전송과 allowance 거래량을 합한 상위 $20$개 ERC-20 토큰만 유지한다. EndorseRank와 AWP를 이 부분그래프에서 재계산하여 롱테일 토큰과 가능한 스팸 자산에 대한 민감도를 평가한다. 저거래량 토큰을 제거할 때 계열 수준 결론이 역전되면 주요 결과는 토큰 구성에 취약하다. 안정성은 전체 토큰 그래프를 주요 경제 활동의 대표로 해석하는 것을 지지한다.
 
-\dissertationSubsubheading[sub:sample-size-protocol]{Sample-size sensitivity}
+\dissertationSubsubheading[sub:sample-size-protocol]{표본 크기 민감도}
 
-Alignment statistics are recomputed on staged subsamples drawn from the expanded wallet pool using the same deterministic seed. Subsamples include supplemental addresses without GMX labels (zeros on outcome proxies), so reported sample-size $\tau$ is interpreted primarily for transfer and allowance families on $\mathcal{W}_{\mathrm{pool}}$; primary claims remain on the matched wallet cohort ($n=5{,}521$). Because rank correlations have sampling variability, modest movement in $\tau$ across sizes is expected; the robustness question is whether EndorseRank and AWP preserve their relative ordering on key graph-adjacent families.
+정합 통계는 동일 결정적 시드를 사용하여 확장 지갑 풀에서 추출한 단계적 부분표본에서 재계산한다. 부분표본은 GMX 라벨이 없는 보충 주소를 포함하므로(결과 산출물에서 영), 보고된 표본 크기 $\tau$는 주로 $\mathcal{W}_{\mathrm{pool}}$의 전송·allowance 계열에 대해 해석한다. 주요 주장은 매칭 지갑 코호트($n=5{,}521$)에 남는다. 순위 상관은 표본 변동이 있으므로 크기에 걸친 $\tau$의 완만한 이동은 예상된다. 강건성 질문은 EndorseRank와 AWP가 핵심 그래프 인접 계열에서 상대 순서를 보존하는가이다.
 
-\dissertationSubsubheading[sub:gmx-proxy-variants]{GMX proxy definition variants}
+\dissertationSubsubheading[sub:gmx-proxy-variants]{GMX 표본 주석}
 
-For trading-success robustness, $\mathrm{realized\_gain\_proxy}$ is computed under both the primary raw-sum definition (Equation~\eqref{eq:realized-gain}) and a size-weighted definition that multiplies positive PnL by $\max(|s_c|,1)$ for close size $s_c$ (\texttt{sizeDeltaUsd}). Size-weighting up-weights large positions and can change the identity of top traders. Primary tables use the raw-sum definition; size-weighted results appear only in robustness tables.
+GMX 포지션 종료는 매칭 코호트를 정의한다($\geq 3$건의 \texttt{PositionDecrease} 이벤트). 실현 이익의 변형 정의는 평가 산출물에 존재하며 주장으로 사용하지 않는다.
 
-\dissertationSubheading[sec:reproducibility]{Reproducibility}
+\dissertationSubheading[sec:reproducibility]{재현성}
 
-All empirical tables in Chapter~\ref{ch:results} are produced by an open evaluation pipeline. After Phase~1--2 parquet artifacts are present, a single evaluation driver recomputes proxies, alignment statistics, and benchmarks from those inputs. Command-line flags select cached BigQuery-derived inputs versus synthetic fixtures, enable damping, top-token, sample-size, and GMX-proxy variant sweeps, and export the result tables reported in Chapter~\ref{ch:results}. Observation window, damping, decay parameters, topic hashes, and benchmark seeds are collected in a single versioned configuration file. Fixture mode supports offline verification without cloud credentials.
+제~\ref{ch:results}장의 모든 실증 표는 개방형 평가 파이프라인이 산출한다. 1--2단계 parquet 산출물이 있으면, 단일 평가 드라이버가 그 입력으로부터 검사, 정합 통계, 벤치마크를 재계산한다. 명령줄 플래그는 캐시된 BigQuery 파생 입력 대 합성 픽스처를 선택하고, 감쇠·상위 토큰·표본 크기 스윕을 가능하게 하며, 제~\ref{ch:results}장에 보고된 결과 표를 내보낸다. 관측 창, 감쇠, 감쇠 매개변수, 토픽 해시, 벤치마크 시드는 단일 버전 설정 파일에 수집한다. 픽스처 모드는 클라우드 자격 증명 없이 오프라인 검증을 지원한다.
 
-Reproducible elements include: deterministic wallet subsampling via SHA256 seeds; fixed PageRank tolerance and iteration caps; explicit proxy formulas in Section~\ref{sec:proxy-formulas}; and logged extraction manifests. Peer reviewers can regenerate alignment and benchmark tables from the same parquet without re-querying BigQuery.
+재현 가능 요소는 다음을 포함한다. SHA256 시드를 통한 결정적 지갑 부분표본; 고정 PageRank 허용오차와 반복 상한; 제~\ref{sec:proxy-formulas}절의 명시적 공식; 기록된 추출 매니페스트. 동료 심사자는 BigQuery를 재질의하지 않고 동일 parquet로부터 정합·벤치마크 표를 재생성할 수 있다.
 
-The evaluation source, versioned configuration, and machine-readable result summary are in the public repository \url{https://github.com/abitocodes/phd_works} at commit \texttt{0c70518a35540c8b56be66b52452cb94ca3fb916}. An anonymised archive can be supplied on request.
+평가 소스, 버전 설정, 기계 판독 가능 결과 요약은 공개 저장소 \url{https://github.com/abitocodes/phd_works}의 커밋 \texttt{0c70518a35540c8b56be66b52452cb94ca3fb916}에 있다. 익명화 아카이브는 요청 시 제공할 수 있다.
 
-\dissertationSubheading[sec:sampling-bias]{Sampling considerations and missingness}
+\dissertationSubheading[sec:sampling-bias]{표본추출 고려와 결측}
 
-The matched cohort is a purposeful sample, not a random sample of all Arbitrum addresses. Eligibility requires GMX activity and reputation-subgraph connectivity, so results speak to \emph{active perpetual traders with observable approval or transfer structure}. Idle wallets, pure holders, and addresses that interact only through non-ERC-20 mechanisms are out of scope by design.
+매칭 코호트는 모든 Arbitrum 주소의 무작위 표본이 아니라 목적 표본이다. 적격성은 GMX 활동과 평판 부분그래프 연결성을 요구하므로, 결과는 \emph{관측 가능한 승인 또는 전송 구조를 가진 활성 무기한 거래자}에 대해 말한다. 유휴 지갑, 순수 보유자, 비 ERC-20 메커니즘만으로 상호작용하는 주소는 설계상 범위 밖이다.
 
-Missingness arises in several forms. Tokens with unknown decimals may be dropped or defaulted during preprocessing; such decisions are logged in the pipeline. Approvals that never emit standard ERC-20 logs (non-standard tokens) are invisible to EndorseRank. Transfers that occur off-chain or through custodial systems never enter AWP. These missingness patterns bias both methods toward on-chain, standard-token activity---acceptable for an on-chain reputation study, but relevant when generalizing to the full user population of a protocol.
+결측은 여러 형태로 발생한다. 소수점을 알 수 없는 토큰은 전처리 중 탈락하거나 기본값 처리될 수 있으며, 그러한 결정은 파이프라인에 기록한다. 표준 ERC-20 로그를 방출하지 않는 승인(비표준 토큰)은 EndorseRank에 보이지 않는다. 오프체인 또는 수탁 시스템을 통한 전송은 AWP에 들어가지 않는다. 이들 결측 패턴은 두 방법을 온체인·표준 토큰 활동으로 편향시킨다. 온체인 평판 연구에는 수용 가능하나, 프로토콜의 전체 사용자 집단으로 일반화할 때 관련된다.
 
-Supplemental addresses in the expanded wallet pool ($N=31{,}612$) increase coverage for runtime tests but do not automatically carry GMX labels. Alignment claims therefore remain anchored to the matched cohort ($n=5{,}521$), while scaling claims use the pool.
+확장 지갑 풀($N=31{,}612$)의 보충 주소는 런타임 검정의 커버리지를 높이지만 GMX 라벨을 자동으로 갖지 않는다. 따라서 정합 주장은 매칭 코호트($n=5{,}521$)에 고정되고, 확장성 주장은 풀을 사용한다.
 
-\dissertationSubheading[sec:implementation-notes]{Implementation notes}
+\dissertationSubheading[sec:implementation-notes]{구현 주석}
 
-PageRank is implemented with sparse adjacency lists and power iteration in Python, with optional NumPy vectorization for score updates. Graphs are built once per configuration; timed benchmarks exclude I/O and preprocessing. Randomness enters only through optional fixture generation; real-data evaluation is deterministic given parquet inputs and configuration seeds. Floating-point differences across machines are expected to be negligible relative to the reported $\tau$ precision (three decimal places).
+PageRank는 Python에서 희소 인접 목록과 거듭제곱 반복으로 구현하며, 점수 갱신에 선택적 NumPy 벡터화를 사용한다. 그래프는 설정당 한 번 구축하고, 계측 벤치마크는 I/O와 전처리를 제외한다. 무작위성은 선택적 픽스처 생성으로만 들어간다. 실데이터 평가는 parquet 입력과 설정 시드가 주어지면 결정적이다. 기계 간 부동소수점 차이는 보고된 $\tau$ 정밀도(소수점 셋째 자리)에 비해 무시할 수 있을 것으로 기대한다.
 
-Figures are generated from the same evaluation artifacts as the tables, so reported numerics and plots remain consistent.
+그림은 표와 동일 평가 산출물에서 생성하므로, 보고된 수치와 플롯은 일관성을 유지한다.
 
-\dissertationSubheading[sec:ethics]{Ethics}
+\dissertationSubheading[sec:ethics]{윤리}
 
-This study uses exclusively publicly available blockchain data and does not intervene with human participants. Institutional ethics review was completed before empirical data collection. The clearance confirmation is retained in the research record; the certificate number will be inserted when the institutional copy is at hand.
+본 연구는 공개 블록체인 데이터만을 사용하며 인간 참가자에 개입하지 않는다. 제도적 윤리 심사는 실증 데이터 수집 전에 완료되었다. 허가 확인은 연구 기록에 보관한다. 증명서 번호는 기관 사본이 확보되면 삽입한다.
 
 \begin{itemize}
 \item\phantomsection\label{sub:privacy-anonymity}
-  \textbf{Privacy and anonymity:} Arbitrum One addresses are pseudonymous identifiers, not inherently linked to real-world identities \cend{48}. Pseudonymity is not anonymity: determined adversaries can sometimes link addresses to persons through exchange deposits, public profiles, or clustering heuristics. This study deliberately refrains from such linkage. Collection is restricted to on-chain events---\texttt{Approval}, \texttt{Transfer}, and GMX \texttt{PositionDecrease}---with no scraping or integration of off-chain personal data such as IP addresses, exchange KYC records, social-media handles, or deanonymization graphs. No attempt was made to cluster addresses into real-world entities, to publish address-level rankings that could reasonably identify individuals, or to combine wallet histories with external identity providers. Reported results are cohort-level aggregates (correlations, runtimes, family means), not leaderboards of named users. Where examples are discussed in prose, they refer to abstract roles (e.g., ``high-allowance spenders'') rather than concrete addresses.
+  \textbf{프라이버시와 익명성:} Arbitrum One 주소는 가명 식별자이며 본질적으로 실세계 신원에 연결되지 않는다 \cend{48}. 가명성은 익명성이 아니다. 결의된 적대자는 거래소 입금, 공개 프로필, 클러스터링 휴리스틱을 통해 주소를 개인에 연결할 수 있다. 본 연구는 그러한 연결을 의도적으로 삼간다. 수집은 온체인 이벤트---\texttt{Approval}, \texttt{Transfer}, GMX \texttt{PositionDecrease}---에 제한되며, IP 주소, 거래소 KYC 기록, 소셜미디어 핸들, 비익명화 그래프와 같은 오프체인 개인 데이터의 스크레이핑이나 통합이 없다. 주소를 실세계 개체로 클러스터하거나, 개인을 합리적으로 식별할 수 있는 주소 수준 순위를 출판하거나, 지갑 이력을 외부 신원 제공자와 결합하려는 시도는 하지 않았다. 보고 결과는 명명된 사용자의 리더보드가 아니라 코호트 수준 집계(상관, 런타임, 계열 평균)이다. 산문에서 예가 논의될 때, 구체적 주소가 아니라 추상 역할(예: ``높은 allowance를 받는 지출자'')을 가리킨다.
 
 
 \item\phantomsection\label{sub:data-minimization}
-  \textbf{Data minimization:} Only fields required for graph construction and proxies are retained in processed tables (addresses, token amounts, timestamps, GMX PnL fields, liquidation flags). Raw logs are stored for auditability of the research pipeline but are not redistributed as a deanonymization aid. Query filters are wallet-scoped where possible to avoid indiscriminate full-chain dumps beyond the study design.
+  \textbf{데이터 최소화:} 처리 표에는 그래프 구축과 검사에 필요한 필드만 유지한다(주소, 토큰 금액, 시각, GMX PnL 필드, 청산 플래그). 원시 로그는 연구 파이프라인의 감사 가능성을 위해 저장하되 비익명화 보조물로 재배포하지 않는다. 질의 필터는 가능한 한 지갑 범위로 두어 연구 설계를 넘는 무차별 전체 체인 덤프를 피한다.
 
 
 \item\phantomsection\label{sub:data-usage-compliance}
-  \textbf{Data usage and compliance:} All queries targeted public datasets under \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us} in accordance with Google Cloud terms of service and rate limits. Dry-run byte estimates and per-query caps limit unnecessary scanning. No transactions were broadcast, no smart contracts were called in ways that could disrupt network operations, and no privileged or non-public indexer access was used.
+  \textbf{데이터 사용과 준수:} 모든 질의는 Google Cloud 서비스 약관과 속도 제한에 따라 \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us} 하의 공개 데이터셋을 대상으로 하였다. 드라이런 바이트 추정과 질의당 상한은 불필요한 스캔을 제한한다. 거래를 방송하지 않았고, 네트워크 운영을 교란할 수 있는 방식으로 스마트 계약을 호출하지 않았으며, 특권 또는 비공개 인덱서 접근을 사용하지 않았다.
 
 
 \item\phantomsection\label{sub:fairness-transparency}
-  \textbf{Fairness and transparency:} Graph reputation systems can systematically undervalue new entrants, low-volume participants, or wallets that avoid public approvals \cend{48}. EndorseRank and AWP were therefore audited for such structural biases: allowance graphs favor addresses that receive spending authority; transfer graphs favor addresses embedded in value-flow networks. Limitations---including cold-start effects, Sybil susceptibility of approval graphs, and construct overlap for GF-PR---are discussed in Chapter~\ref{ch:discussion}. All code paths, parameter choices, and evaluation metrics are documented in the open pipeline (Appendix~\ref{ch:appendix-eval}) to enable peer review and independent replication.
+  \textbf{공정성과 투명성:} 그래프 평판 시스템은 신규 진입자, 저거래량 참가자, 공개 승인을 피하는 지갑을 체계적으로 저평가할 수 있다 \cend{48}. 따라서 EndorseRank와 AWP는 그러한 구조적 편향에 대해 감사하였다. allowance 그래프는 지출 권한을 받는 주소를 선호하고, 전송 그래프는 가치 흐름 네트워크에 임베드된 주소를 선호한다. 한계---콜드스타트 효과, 승인 그래프의 Sybil 취약성, 탐색적 결과 고유 순위의 구성 개념 중첩---는 제~\ref{ch:discussion}장에서 논의한다. 모든 코드 경로, 매개변수 선택, 평가 지표는 개방 파이프라인(부록~\ref{ch:appendix-eval})에 문서화하여 동료 심사와 독립 재현을 가능하게 한다.
 
 
 \item\phantomsection\label{sub:responsible-disclosure}
-  \textbf{Responsible disclosure and impact:} Although EndorseRank may inform risk assessment in DeFi contexts, it is not financial advice, credit advice, or a consumer reporting product. Human oversight remains necessary for lending, trading, and compliance decisions. Potential adversarial manipulation (for example, Sybil attacks on $G_{\mathrm{approve}}$ or wash transfers on $G_{\mathrm{transfer}}$) is acknowledged and discussed in Chapter~\ref{ch:discussion}. The study reports aggregated cohort-level findings rather than wallet-level rankings intended for targeting individual users. Any future operational deployment would require additional governance, appeal mechanisms, and fairness monitoring beyond the scope of this dissertation.
+  \textbf{책임 있는 공개와 영향:} EndorseRank가 DeFi 맥락의 위험 평가에 정보를 제공할 수 있으나, 금융 조언, 신용 조언, 소비자 보고 상품이 아니다. 대출, 거래, 준수 결정에는 인간 감독이 남는다. 잠재적 적대 조작(예: $G_{\mathrm{approve}}$에 대한 Sybil 공격 또는 $G_{\mathrm{transfer}}$에 대한 워시 전송)은 인정하며 제~\ref{ch:discussion}장에서 논의한다. 본 연구는 개별 사용자를 표적으로 하는 지갑 수준 순위가 아니라 집계된 코호트 수준 발견을 보고한다. 향후 운영 배포는 본 학위논문 범위를 넘는 추가 거버넌스, 이의 제기 메커니즘, 공정성 모니터링을 요구할 것이다.
 
 
 \item\phantomsection\label{sub:methodological-commitments}
-  \textbf{Summary of methodological commitments:} The design fixes the chain, window, cohort rules, graph formulas, proxy definitions, and statistical tests before interpreting results. Primary claims compare only EndorseRank and AWP on the matched wallet cohort; the expanded pool and robustness sweeps test efficiency and stability; GF-PR bounds outcome-native alignment for SRQ1. Chapter~\ref{ch:results} reports the empirical outcomes of this protocol.
+  \textbf{방법론적 약속의 요약:} 설계는 결과를 해석하기 전에 체인, 창, 코호트 규칙, 그래프 공식, 검사 정의, 통계 검정을 고정한다. 주요 주장은 매칭 지갑 코호트에서 EndorseRank와 AWP만을 비교한다. 확장 풀과 강건성 스윕은 효율과 안정성을 검정한다. RQ4는 지출자 홀드아웃 코호트를 사용한다. 거래 이익, 청산, 악성 지출자 라벨은 주장이 아니다. 제~\ref{ch:results}장은 이 프로토콜의 실증 결과를 보고한다.
 \end{itemize}
-

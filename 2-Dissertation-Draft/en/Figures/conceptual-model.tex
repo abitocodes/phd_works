@@ -9,16 +9,15 @@
 \node[box] (center) at (0,3.2) {Primary comparison: EndorseRank vs AWP};
 
 \node[smallbox] (rep) at (-5,1.2) {Reputation\\Structure};
-\node[smallbox] (risk) at (0,1.2) {Trading Success\\Alignment};
+\node[smallbox] (risk) at (0,1.2) {Construct\\Checks};
 \node[smallbox] (eff) at (5,1.2) {Computational\\Efficiency};
 
 \node[smallbox] (h1) at (-5,-1.0) {H1 / RQ1\\EndorseRank--AWP\\divergence};
-\node[smallbox] (h2) at (0,-1.0) {H2 / RQ2\\Social-method\\alignment};
+\node[smallbox] (h2) at (0,-1.0) {H2 / RQ2\\Allowance vs\\transfer};
 \node[smallbox] (h3) at (5,-1.0) {H3 / RQ3\\EndorseRank\\efficiency};
 
-\node[refbox] (gfref) at (0,-3.0) {Supplementary: GF-PR\\outcome-native ceiling (SRQ1)};
+\node[refbox] (hold) at (0,-3.0) {RQ4: temporal holdout\\future new approvals};
 
-% Vertical arrows from center bottom to each pillar (aligned, not fan-out from one point)
 \draw[arrow] (center.south -| rep.north) -- (rep.north);
 \draw[arrow] (center.south) -- (risk.north);
 \draw[arrow] (center.south -| eff.north) -- (eff.north);
@@ -27,6 +26,5 @@
 \draw[arrow] (risk.south) -- (h2.north);
 \draw[arrow] (eff.south) -- (h3.north);
 
-% Longer dashed link to GF-PR (gap ~1.0cm)
-\draw[arrow, dashed] (h2.south) -- (gfref.north);
+\draw[arrow, dashed] (h2.south) -- (hold.north);
 \end{tikzpicture}

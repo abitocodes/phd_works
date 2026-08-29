@@ -2,13 +2,13 @@
 \chapter{Implementation and Empirical Results}
 \label{ch:results}
 
-This chapter reports the empirical evaluation of EndorseRank against Adaptive Weighted PageRank (AWP) on Arbitrum One. The analysis proceeds from cohort construction and descriptive distributions, through computational benchmarks and robustness checks, to social-method alignment across five proxy families, inter-method rank divergence, and a supplementary GainFlow PageRank (GF-PR) ceiling analysis. Primary claims C1--C4 address the EndorseRank--AWP comparison; supplementary claim SC1 interprets GF-PR as an outcome-native diagnostic rather than a deployable social reputation method.
+This chapter reports the empirical evaluation of EndorseRank against Adaptive Weighted PageRank (AWP) on Arbitrum One. The analysis proceeds from cohort construction, through computational benchmarks and robustness checks, to contemporaneous allowance and transfer checks, inter-method rank divergence, and a temporal holdout of future new approvals. Primary claims C1--C4 address the EndorseRank--AWP comparison. Trading-success, inverse-risk, liquidation, and malicious-spender alignments are not claims.
 
-All primary results use an identical matched cohort of $n=5{,}521$ wallets that satisfy both a GMX trading-activity filter and non-zero connectivity in the reputation subgraphs. Runtime scaling is evaluated on an expanded wallet pool of $N=31{,}612$ addresses. Robustness checks vary PageRank damping, restrict the reputation graph to high-volume tokens, and recompute alignment at staged subsample sizes drawn from the expanded pool. Methodological definitions appear in Chapter~\ref{ch:methodology}; the open evaluation pipeline is documented in Appendix~\ref{ch:appendix-eval}. Claims are summarized in Section~\ref{sec:empirical-claims} and mapped to hypotheses and research questions in Table~\ref{tab:hrq-claim-map}.
+All same-window results use an identical matched cohort of $n=5{,}521$ wallets that satisfy a GMX activity filter ($\geq 3$ closes) and non-zero connectivity in the reputation subgraphs. The holdout uses t1 inbound spenders ($n=1{,}335$). Runtime scaling is evaluated on an expanded wallet pool of $N=31{,}612$ addresses. Robustness checks vary PageRank damping, restrict the reputation graph to high-volume tokens, and recompute alignment at staged subsample sizes. Methodological definitions appear in Chapter~\ref{ch:methodology}. Claims are summarized in Section~\ref{sec:empirical-claims} and mapped in Table~\ref{tab:hrq-claim-map}.
 
 \dissertationSubheading[sec:dataset]{Dataset}
 
-The matched cohort comprises $n=5{,}521$ wallets with at least three GMX V2 \texttt{PositionDecrease} closes and non-zero reputation-subgraph connectivity, drawn from six months of Arbitrum One BigQuery logs spanning 2025-12-01 through 2026-05-31. EndorseRank scores are computed on the latest-allowance endorsement graph $G_{\text{approve}}$; AWP scores are computed on the time-decayed transfer graph $G_{\text{transfer}}$. Five proxy families---transfer, allowance, inverse risk, Sybil-adjusted stability, and trading success---are evaluated against both social methods. GF-PR scores are computed from the same cohort for supplementary analysis only (Section~\ref{sec:gf-pr-ceiling}).
+The matched cohort comprises $n=5{,}521$ wallets with at least three GMX V2 \texttt{PositionDecrease} closes and non-zero reputation-subgraph connectivity, drawn from six months of Arbitrum One BigQuery logs spanning 2025-12-01 through 2026-05-31. EndorseRank scores are computed on the latest-allowance endorsement graph $G_{\text{approve}}$; AWP scores are computed on the time-decayed transfer graph $G_{\text{transfer}}$. Same-window claims use transfer and allowance local statistics. The temporal holdout is reported in Section~\ref{sec:gf-pr-ceiling}.
 
 Table~\ref{tab:dataset-stats} summarizes cohort size, event counts, and subgraph edge counts. The endorsement graph is substantially sparser than the transfer graph (14{,}727 vs.\ 137{,}087 edges), a structural difference that underpins both the runtime advantage reported in Section~\ref{sec:benchmark-results} and the construct-specific alignment patterns in Sections~\ref{sec:three-method-alignment}--\ref{sec:proxy-family-detail}.
 
@@ -32,13 +32,13 @@ Min.\ GMX closes per wallet & 3 \\
 
 The edge-count asymmetry is not an artifact of incomplete extraction: both graphs are built from the same wallet seed set and the same observation window. EndorseRank retains only the latest decimal-adjusted allowance per owner--spender pair, so repeated approvals collapse to a single directed edge. AWP aggregates transfer history with logistic time-decay, producing many more directed edges among the same wallets. Consequently, differences in scores and alignment are attributable to ranking logic and graph semantics, not to inconsistent sampling.
 
-The matched-cohort design deliberately intersects two filters. The GMX activity filter ($\geq 3$ closes) ensures that trading-success and inverse-risk proxies are defined for every wallet, avoiding undefined rates and unstable count statistics for one-off traders. The reputation-subgraph connectivity filter ensures that both EndorseRank and AWP produce non-degenerate scores: wallets with no approval edges and no transfer edges cannot be ranked meaningfully by either social method. The intersection yields $n=5{,}521$ wallets and 365{,}488 decoded \texttt{PositionDecrease} events over the six-month window. This sample is large enough for stable Kendall $\tau$ estimates at the family level, yet small enough that full PageRank solves remain interactive on commodity hardware---a practical advantage when iterating on evaluation design.
+The matched-cohort design intersects two filters. The GMX activity filter ($\geq 3$ closes) selects economically active wallets; it is not a trading-skill test. The reputation-subgraph connectivity filter ensures that both EndorseRank and AWP produce non-degenerate scores. The intersection yields $n=5{,}521$ wallets and 365{,}488 decoded \texttt{PositionDecrease} events over the six-month window. This sample is large enough for stable Kendall $\tau$ estimates on transfer and allowance checks, yet small enough that full PageRank solves remain interactive on commodity hardware.
 
 The observation window (2025-12-01 -- 2026-05-31) is long enough to capture multiple market regimes within a single perpetual-futures venue, but short enough that latest-allowance snapshots remain contemporaneous with transfer histories used by AWP. Longer windows would increase AWP's historical edge accumulation and could further widen the runtime gap; shorter windows would reduce proxy stability for tenure and active-month measures. The chosen window therefore balances recency, activity volume, and comparability between snapshot-based and history-based graphs.
 
-\dissertationSubsubheading[sub:gmx-activity]{GMX trading activity in the matched cohort}
+\dissertationSubsubheading[sub:gmx-activity]{GMX activity in the matched cohort}
 
-Before comparing reputation rankings, it is useful to characterize the trading-outcome distributions that define the inverse-risk and trading-success proxy families. Figure~\ref{fig:gmx-closes-hist} shows the distribution of GMX close counts per wallet in the matched cohort. The minimum of three closes is enforced by construction; the right tail indicates a minority of highly active traders whose close counts substantially exceed the cohort median. This heterogeneity matters for interpretation: proxies based on close-success \emph{counts} can favor high-activity wallets, whereas rate-based proxies normalize by activity and may yield weaker rank correlations when success rates concentrate near the center of the distribution.
+Figure~\ref{fig:gmx-closes-hist} shows GMX close counts per wallet. The minimum of three closes is a sampling filter. The right tail indicates a minority of highly active traders. These figures describe the sample; they are not trading-success claims.
 
 \begin{figure}[htbp]
 \centering
@@ -47,27 +47,25 @@ Before comparing reputation rankings, it is useful to characterize the trading-o
 \label{fig:gmx-closes-hist}
 \end{figure}
 
-Figure~\ref{fig:gmx-pnl-hist} displays the distribution of realized profit-and-loss (PnL) summaries used to construct inverse-risk and trading-success proxies. The mass around zero and the presence of both profitable and loss-making tails indicate that the cohort is not dominated by uniformly successful traders. Social reputation methods that align only weakly with PnL-derived proxies are therefore not necessarily failing a validation test; they may be measuring a construct---authorization or transfer centrality---that is only partially related to leveraged trading outcomes over a six-month window.
+Figure~\ref{fig:gmx-pnl-hist} shows realized profit-and-loss in the sample. It is descriptive only. Dissertation claims do not use PnL alignment.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{gmx-pnl-hist.pdf}}
-\caption{Distribution of GMX realized PnL summaries in the matched cohort. Heterogeneous profit and loss outcomes motivate treating trading-success proxies as one validation axis among several, rather than as a sole ground truth for social reputation.}
+\caption{Distribution of GMX realized PnL summaries in the matched cohort. Descriptive only; not a validation claim.}
 \label{fig:gmx-pnl-hist}
 \end{figure}
 
-Figure~\ref{fig:success-rate-hist} shows close success rates. Relative to count-based proxies, success rates compress much of the activity-driven variation and concentrate mass in a narrower band. Weak alignment of social methods with success-rate proxies (Section~\ref{sec:proxy-family-detail}) should be read in this light: when many wallets share similar rates, rank correlation has limited room to rise even if reputation scores are informative on other axes.
+Figure~\ref{fig:success-rate-hist} shows close success rates in the sample. The figure is retained for cohort description and is not a claim.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{success-rate-hist.pdf}}
-\caption{Distribution of GMX close success rates in the matched cohort. Concentration of rates reduces the discriminative power of rate-based trading-success proxies relative to count- or value-based proxies.}
+\caption{Distribution of GMX close success rates in the matched cohort. Descriptive only; not a validation claim.}
 \label{fig:success-rate-hist}
 \end{figure}
 
-Taken together, the descriptive figures establish three interpretive constraints for later sections. First, the matched cohort is active enough for stable rank statistics ($n=5{,}521$; 365{,}488 decoded closes) but heterogeneous in trading intensity and outcomes. Second, endorsement and transfer graphs differ by nearly an order of magnitude in edge count, so efficiency and alignment claims must be evaluated jointly rather than in isolation. Third, trading-outcome proxies are informative validation axes, not interchangeable substitutes for social-graph constructs; Section~\ref{sec:gf-pr-ceiling} returns to this point when GF-PR inflates trading-family alignment through construct overlap.
-
-A fourth constraint follows from the joint reading of Figures~\ref{fig:gmx-closes-hist}--\ref{fig:success-rate-hist}. Count-based and value-based proxies inherit the heavy-tailed activity structure of perpetual trading, so social methods that correlate with activity---especially transfer activity---can appear to predict trading success partly because active wallets trade more often and accumulate more closes. Rate-based proxies partially correct for this, but they also compress signal. Throughout Section~\ref{sec:proxy-family-detail}, family means average across count-, value-, and rate-style proxies; readers should therefore inspect per-proxy rows when adjudicating whether a method aligns with skill-like outcomes or with activity volume.
+Taken together, the descriptive figures establish two constraints. First, the matched cohort is active enough for stable rank statistics ($n=5{,}521$; 365{,}488 decoded closes) but heterogeneous in trading intensity. Second, endorsement and transfer graphs differ by nearly an order of magnitude in edge count, so efficiency and alignment claims must be evaluated jointly. Outcome histograms are not used as prediction evidence.
 
 \dissertationSubheading[sec:benchmark-results]{EndorseRank vs.\ AWP benchmark (Claim~C1)}
 
@@ -147,32 +145,28 @@ Collectively, the damping and top-token checks support reading Claims~C1--C4 as 
 
 \dissertationSubheading[sec:three-method-alignment]{Social-method alignment: EndorseRank vs.\ AWP (Claims~C2--C3)}
 
-Claims~C2 and~C3 address whether EndorseRank and AWP achieve credible domain alignment and whether winners are construct-specific. Table~\ref{tab:alignment-three-methods} reports mean Kendall $\tau$ by proxy family for EndorseRank, AWP, and the supplementary GF-PR reference. Rows~1--2 constitute the primary social-method comparison; row~3 is interpreted only in Section~\ref{sec:gf-pr-ceiling}.
+Claims~C2 and~C3 address whether EndorseRank and AWP achieve intended-construct checks and whether winners are construct-specific. Table~\ref{tab:alignment-three-methods} reports mean Kendall $\tau$ by family. Only transfer and allowance rows are interpreted as claims. Other columns remain in the exported table and are not sold as evidence.
 
 \input{results/tables/alignment-three-methods.tex}
 
-Among social methods, EndorseRank leads on allowance ($\tau=0.355$), while AWP leads on transfer ($\tau=0.534$), Sybil-adjusted stability ($\tau=0.286$), and trading success ($\tau=0.179$). EndorseRank's transfer alignment is moderate ($\tau=0.333$)---credible as a secondary axis, but below AWP. On inverse-risk proxies, both social methods are weak (EndorseRank $0.035$; AWP $0.107$), indicating that neither allowance nor transfer centrality strongly tracks loss-avoidance rankings on this cohort. GF-PR's high inverse-risk ($0.376$) and trading-success ($0.583$) means reflect construct overlap with GMX PnL inputs and are not evidence of superior social reputation.
+EndorseRank leads on allowance ($\tau=0.355$), while AWP leads on transfer ($\tau=0.534$). EndorseRank's transfer alignment is moderate ($\tau=0.333$). AWP's allowance alignment is near zero ($-0.030$). Outcome-family cells in the table are not dissertation claims.
 
-Figure~\ref{fig:alignment-heatmap} provides a compact visual summary of family-level alignment. The heatmap makes the construct-specific pattern immediate: EndorseRank's strongest cell is allowance; AWP's strongest social-method cells are transfer and, secondarily, Sybil-adjusted stability and trading success; GF-PR dominates outcome-native families. The visual separation between social-method cells and GF-PR outcome cells is the empirical signature of Claim~C3 and the caution embodied in SC1.
+Figure~\ref{fig:alignment-heatmap} shows the same crossed pattern on allowance versus transfer. Outcome-native cells in the figure are not interpreted.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{alignment-heatmap.pdf}}
-\caption{Family-level mean Kendall $\tau$ heatmap for EndorseRank, AWP, and supplementary GF-PR on the matched cohort ($n=5{,}521$). EndorseRank peaks on allowance; AWP peaks on transfer among social methods; GF-PR peaks on trading-outcome families via construct overlap.}
+\caption{Family-level mean Kendall $\tau$ heatmap on the matched cohort ($n=5{,}521$). Claims use allowance and transfer cells only.}
 \label{fig:alignment-heatmap}
 \end{figure}
 
-Claim~C2 is supported insofar as both social methods achieve non-negligible alignment on at least one primary construct: EndorseRank on allowance ($\tau \approx 0.35$), and AWP on transfer ($\tau=0.534$). Claim~C3 is supported by the crossed pattern of family winners. No single social method dominates all families; alignment is construct-specific, as predicted when endorsement and transfer encode different wallet relationships.
+Claim~C2 is supported insofar as both social methods achieve non-negligible alignment on at least one primary construct: EndorseRank on allowance ($\tau \approx 0.35$), and AWP on transfer ($\tau=0.534$). Claim~C3 is supported by the crossed pattern: no single social method dominates both checks. EndorseRank's moderate transfer $\tau=0.333$ is a secondary axis. Out-of-window evidence is the holdout in Section~\ref{sec:gf-pr-ceiling}, not trading-success $\tau$.
 
-Reading Table~\ref{tab:alignment-three-methods} requires care on two points. First, family means average heterogeneous proxies; a method can lead on a family mean while trailing on an individual proxy, or vice versa. Section~\ref{sec:proxy-family-detail} therefore reports per-proxy $\rho$ and $\tau$ so that readers can audit the means. Second, primary-construct correlations (EndorseRank with allowance; AWP with transfer) are necessary but not sufficient for a reputation method's usefulness. They confirm that PageRank recovers the graph signal it was given. External usefulness depends on secondary axes---whether endorsement rankings also relate to transfer activity, trading outcomes, or stability---and on whether those secondary relationships are strong enough for a deployment context. EndorseRank's moderate transfer $\tau=0.333$ is encouraging as a secondary axis; its weak trading-success $\tau=0.096$ is a limitation for protocols that hoped allowance endorsement would double as a trading-skill score.
-
-The exported summary also includes a liquidation-related column and the GF-PR row. Liquidation-family means are low for both social methods and are not the focus of Claims~C2--C3; they are retained for completeness with the evaluation pipeline. GF-PR's outcome-family dominance is discussed only in Section~\ref{sec:gf-pr-ceiling}. The primary narrative of this section is the EndorseRank--AWP contrast across transfer, allowance, inverse risk, Sybil-adjusted stability, and trading success.
-
-Per-proxy detail for each family appears in Section~\ref{sec:proxy-family-detail}. Inter-method divergence between EndorseRank and AWP score vectors is quantified in Section~\ref{sec:rank-divergence}.
+Per-proxy detail for transfer and allowance appears in Section~\ref{sec:proxy-family-detail}. Inter-method divergence is quantified in Section~\ref{sec:rank-divergence}.
 
 \dissertationSubheading[sec:proxy-family-detail]{Proxy family detail}
 
-The following subsections report Spearman $\rho$ and Kendall $\tau$ for each proxy within family. Each family is interpreted first for the primary EndorseRank--AWP comparison; supplementary GF-PR notes appear where they clarify construct overlap or ceiling effects. All proxies are oriented so that higher values imply higher expected reputation before correlation, following Do et al.\cend{16} and the operational definitions in Chapter~\ref{ch:methodology}.
+The following subsections report Spearman $\rho$ and Kendall $\tau$ for transfer and allowance checks. Outcome-family tables remain in the artifact and are not interpreted as claims. Checks are oriented so that higher values imply higher expected reputation before correlation, following Do et al.\cend{16}.
 
 \dissertationSubsubheading[sub:transfer-family]{Transfer family (Do et al.\ baseline)}
 
@@ -184,9 +178,7 @@ AWP achieves the highest social-method alignment on both transfer proxies: in-de
 
 EndorseRank shows moderate secondary-axis alignment (in-degree $\tau=0.344$; in-value $\tau=0.321$; family mean $0.333$). Wallets that receive substantial transfer activity are somewhat more likely to appear as endorsed spenders, but the relationship is far from deterministic. Allowance delegation and transfer receipt are related economic behaviors---active protocols and market makers tend to attract both---yet they are not interchangeable. The moderate EndorseRank--transfer $\tau$ therefore supports Claim~C2 (credible secondary alignment) without undermining Claim~C3 (AWP remains the transfer-family winner among social methods).
 
-GF-PR is weak on transfer proxies (family mean $0.246$), as expected for a method with no wallet-to-wallet transfer edges. Any residual correlation likely reflects indirect association between profitable GMX traders and transfer activity, not transfer-graph semantics.
-
-For RQ4, the transfer family is the Do et al.\ baseline validation frame. Both social methods clear a non-negligible bar on this frame, but AWP's lead is large. If a protocol's notion of reputation is ``wallets that receive economically meaningful transfers,'' AWP is the appropriate social method on this evidence. EndorseRank remains relevant as a secondary check: moderate transfer alignment suggests that endorsed spenders are not an entirely disjoint population from transfer recipients, so allowance-based scores are not orthogonal to economic flow---only imperfectly aligned with it.
+If a protocol's notion of reputation is inbound economic flow, AWP is the appropriate social method on this evidence. EndorseRank remains a secondary check: moderate transfer alignment suggests that endorsed spenders are not entirely disjoint from transfer recipients.
 
 \dissertationSubsubheading[sub:allowance-family]{Allowance family}
 
@@ -198,21 +190,13 @@ EndorseRank shows credible primary-construct alignment with both allowance proxi
 
 AWP alignment on allowance is near zero and slightly negative ($\tau=-0.030$ for both proxies). Transfer centrality does not identify wallets that receive spending authorization. This dissociation is central to the dissertation's contribution: if transfer-based reputation were a sufficient proxy for endorsement, AWP would show at least moderate allowance alignment. It does not. Protocols that care about explicit spending authorization---for example, which addresses are trusted to move tokens on behalf of others---cannot substitute AWP for an allowance-aware method on this evidence.
 
-GF-PR is likewise near zero on allowance (family mean $\approx -0.041$), confirming that outcome-native PnL flow does not encode endorsement structure. The allowance family therefore isolates EndorseRank's distinctive signal among both the social baseline and the supplementary ceiling reference.
+The allowance result is the empirical core of the same-window contribution. Transfer graphs do not encode spending authorization. Combined with the runtime results, the allowance family supports Claim~C4: the cheaper method is also the only social method that aligns with authorization checks. The holdout in Section~\ref{sec:gf-pr-ceiling} tests whether that signal persists after the score window.
 
-The allowance result is the empirical core of EndorseRank's contribution. Prior transfer-based reputation work could not have produced Table~\ref{tab:alignment-allowance}'s pattern, because transfer graphs do not encode spending authorization. By building $G_{\text{approve}}$ from latest allowances and ranking with PageRank, EndorseRank recovers a signal that AWP misses entirely. Combined with the runtime results, the allowance family supports the efficiency--alignment trade-off in Claim~C4: the cheaper method is also the only social method that aligns with authorization proxies.
+\dissertationSubsubheading[sub:inverse-risk-family]{Inverse-risk family (not claimed)}
 
-\dissertationSubsubheading[sub:inverse-risk-family]{Inverse-risk family (GMX PnL)}
-
-Table~\ref{tab:alignment-inverse-risk} reports alignment with loss-avoidance, non-loss close rate, and worst-close PnL score.
+Table~\ref{tab:alignment-inverse-risk} remains in the artifact. It is not a dissertation claim.
 
 \input{results/tables/alignment-inverse-risk.tex}
-
-Among social methods, alignment is weak overall. EndorseRank family mean $\tau$ is $0.035$, with individual proxies ranging from $-0.031$ (non-loss close rate) to $0.079$ (loss avoidance). AWP is low-to-moderate (family mean $0.107$), driven by loss avoidance ($\tau=0.165$) and worst-close PnL score ($\tau=0.137$), while non-loss close rate remains negligible ($\tau=0.019$). Transfer activity is modestly associated with avoiding large losses, but neither social method ranks wallets in close agreement with inverse-risk summaries.
-
-GF-PR achieves the highest family mean ($0.376$), with loss avoidance $\tau=0.545$ and worst-close PnL score $\tau=0.478$. This elevation is expected: GF-PR's POOL/SINK star graph is built from the same GMX PnL stream that defines these proxies. High GF-PR $\tau$ on inverse risk is therefore a construct-overlap diagnostic, not evidence that outcome-native ranking measures social reputation. Section~\ref{sec:gf-pr-ceiling} develops this interpretation formally as claim SC1.
-
-For the primary comparison, the inverse-risk family supports a cautious reading of RQ4: social graphs are not strong predictors of loss-avoidance rankings on this six-month GMX window. That finding does not invalidate EndorseRank's allowance alignment; it delimits what social reputation can be expected to explain. Wallets that are central in approval or transfer networks need not be the same wallets that avoid large perpetual losses, and the data confirm that separation.
 
 \dissertationSubsubheading[sub:sybil-family]{Sybil-adjusted stability family}
 
@@ -220,25 +204,13 @@ Table~\ref{tab:alignment-sybil-stability} reports alignment with inbound counter
 
 \input{results/tables/alignment-sybil-stability.tex}
 
-AWP exceeds EndorseRank among social methods (family means $0.286$ vs.\ $0.233$). The gap is concentrated in tenure and activity proxies: AWP achieves $\tau=0.436$ on transfer tenure and $\tau=0.482$ on active months, versus $0.297$ and $0.330$ for EndorseRank. Because AWP's edge weights incorporate logistic time-decay over transfer history, wallets with sustained transfer activity naturally receive higher scores, producing alignment with tenure and active-month summaries.
+AWP exceeds EndorseRank on tenure and active months, as expected from time-decayed transfer edges. Inbound counterparty ratio is weak for both methods. This family is a robustness note, not a headline claim.
 
-Inbound counterparty ratio---a proxy intended to favor diverse counterparties over concentrated Sybil-like structures---is weak or negative for both methods (EndorseRank $\tau=0.073$; AWP $\tau=-0.061$). Neither social ranking strongly tracks counterparty diversity on this cohort. GF-PR is weak overall (family mean $0.093$) and strongly negative on inbound counterparty ratio ($\tau=-0.235$), consistent with the absence of transfer-activity semantics in the PnL star graph.
+\dissertationSubsubheading[sub:trading-success-family]{Trading-success family (not claimed)}
 
-The Sybil-adjusted family therefore reinforces AWP's advantage on transfer-derived activity constructs, while showing that neither method currently provides a strong counterparty-diversity signal. Future work could incorporate explicit diversity penalties into $G_{\text{approve}}$ or $G_{\text{transfer}}$; the present results establish the baseline against which such extensions would be judged.
-
-\dissertationSubsubheading[sub:trading-success-family]{Trading-success family}
-
-Table~\ref{tab:alignment-gmx} reports alignment with close-success count, realized gain proxy, and close success rate.
+Table~\ref{tab:alignment-gmx} remains in the artifact. Trading-success alignment is not a dissertation claim and is not used to answer RQ4.
 
 \input{results/tables/alignment-gmx.tex}
-
-Among social methods, AWP exceeds EndorseRank (family means $0.179$ vs.\ $0.096$). AWP's strongest trading proxies are realized gain ($\tau=0.239$) and close-success count ($\tau=0.224$); close success rate remains weak ($\tau=0.075$). EndorseRank shows the same ordering at lower magnitude (count $\tau=0.149$; realized gain $\tau=0.107$; rate $\tau=0.033$). Transfer-based social propagation therefore aligns more strongly with profitable perpetual closes than allowance-based propagation on this cohort, but both social-method means remain well below their primary-construct alignments.
-
-GF-PR achieves the highest family mean ($0.583$), including near-perfect alignment with the realized gain proxy ($\rho=1.000$, $\tau=0.999$). That near-identity is the clearest empirical demonstration of construct overlap: when the ranking input and the validation proxy share the same PnL stream, alignment ceases to be an independent test of reputation quality. GF-PR's close-success count ($\tau=0.522$) and success rate ($\tau=0.229$) are also elevated relative to social methods, but the realized-gain cell is decisive for interpretation.
-
-The trading-success family thus plays a dual role. For Claims~C2--C3, it shows that AWP is the stronger social method on outcome proxies, while EndorseRank retains only weak outcome alignment. For SC1, it shows that GF-PR's ceiling must not be misread as a deployable reputation result. Protocols seeking social endorsement signals should not adopt GF-PR merely because it maximizes trading-family $\tau$.
-
-Comparing trading-success means to transfer means for the same social methods answers RQ4 directly. Transfer proxies yield higher mean $\tau$ than trading-success proxies for both EndorseRank ($0.333$ vs.\ $0.096$) and AWP ($0.534$ vs.\ $0.179$). On this chain and window, the Do et al.\ transfer validation frame is the stronger external check for social reputation methods. That finding does not diminish EndorseRank's allowance-specific validity; it situates trading outcomes as a harder, more weakly related target for social-graph scores. Protocols that require trading-skill discrimination may need features beyond either social graph---or may need to accept that social reputation and trading performance are only loosely coupled in perpetual markets.
 
 \dissertationSubheading[sec:rank-divergence]{Rank divergence (H1 / RQ1)}
 
@@ -268,44 +240,30 @@ An operational reading of $\tau=0.316$ is that for a randomly chosen pair of wal
 
 The divergence result also disciplines rhetoric about ``on-chain reputation'' as a singular object. On this cohort, reputation-from-authorization and reputation-from-transfer are empirically distinct enough that treating them as interchangeable would misstate the evidence. Chapter~\ref{ch:discussion} returns to the practical implication: method choice should follow the trust construct a protocol needs, not a generic preference for any PageRank variant.
 
-\dissertationSubheading[sec:gf-pr-ceiling]{Supplementary GF-PR ceiling analysis (SRQ1 / SC1)}
+\dissertationSubheading[sec:gf-pr-ceiling]{Temporal holdout of future new approvals (RQ4)}
 
-GF-PR was added during empirical work to bound trading-outcome proxy alignment when ranking directly on outcome flow rather than social edges. Table~\ref{tab:alignment-three-methods} (row~3) shows GF-PR achieving the highest mean $\tau$ on inverse risk ($0.376$) and trading success ($0.583$) among all methods. This pattern is expected by construction: GF-PR's POOL/SINK star graph is built from the same GMX \texttt{PositionDecrease} PnL stream used to define trading-success and inverse-risk proxies. The result illustrates \emph{construct overlap}---shared input semantics inflate alignment without implying that GF-PR measures deployable social reputation.
+Scores are frozen at 28~February~2026. Labels are new owner--spender approval pairs first observed from 1~March~2026 through 31~May~2026, counted on the spender. The claimed cohort is t1 inbound spenders ($n=1{,}335$), of whom 222 received at least one new t2 pair.
 
-Two further observations clarify the ceiling's role. First, GF-PR is weak on allowance and only modest on transfer, confirming that outcome-native flow does not recover social-graph constructs. Second, among social methods on trading-success proxies, AWP ($\tau=0.179$) still exceeds EndorseRank ($0.096$), confirming that transfer-based social propagation aligns more strongly with trading outcomes on this cohort than allowance-based propagation, independent of the GF-PR ceiling.
+EndorseRank Kendall $\tau$ with future new approvers is $0.479$ (bootstrap 95\% CI $0.426$--$0.529$; 200 resamples). AWP is $0.044$ (CI $-0.011$--$0.095$). The result is the same endorsement construct in the future tense. It is stronger as out-of-window evidence than the same-window allowance $\tau=0.355$, because the labels are not built from the scored events. It is not a prediction of trading profit, liquidation, or malicious spenders.
 
-The ceiling is therefore a diagnostic for evaluation design, not a competitor in the primary comparison. When a validation proxy shares inputs with a ranking method, high $\tau$ is uninformative about social reputation quality. Researchers comparing EndorseRank and AWP on trading-outcome families should treat GF-PR's $\tau$ as an upper reference that flags how much alignment is achievable by construction, then interpret social-method $\tau$ values relative to that reference and to each other.
+The GMX-matched intersection of this label is sparse (12 events) and is not used as a claim. Revoke, drain-heuristic, and Aave-borrower labels were computed and are not reported as support: revoke and drain had the wrong sign for an endorsement reading, and Aave events on this spender set were empty or the wrong construct.
 
-The near-perfect GF-PR alignment with the realized-gain proxy ($\tau \approx 0.999$ in Table~\ref{tab:alignment-gmx}) is especially instructive. It shows that the evaluation pipeline can recover extremely high $\tau$ when inputs and proxies coincide, so the moderate social-method values are not an artifact of a broken correlation implementation. Low-to-moderate social-method $\tau$ on trading families reflects limited shared structure between social graphs and GMX outcomes, not an inability of Kendall $\tau$ to detect strong relationships when they exist.
-
-\textbf{Supplementary claim SC1:} GF-PR sets an outcome-native upper bound on trading-outcome proxy alignment; high GF-PR $\tau$ on the trading-success and inverse-risk families must not be read as evidence that outcome-native ranking replaces social endorsement graphs for reputation deployment.
-
-\dissertationSubheading[sec:empirical-claims]{Primary claims (C1--C4) and supplementary claim (SC1)}
+\dissertationSubheading[sec:empirical-claims]{Primary claims (C1--C4)}
 
 Chapter~4 empirical results support the following claims, aligned with Table~\ref{tab:hrq-claim-map}.
-
-\textbf{Primary claims (EndorseRank vs.\ AWP):}
 
 \begin{enumerate}
 \item[\textbf{C1.}] EndorseRank runtime is lower than AWP runtime on identical $n$. On the matched cohort ($n=5{,}521$), EndorseRank completes PageRank in 2.105\,s versus 18.711\,s for AWP (speedup $\approx 8.9\times$), with 14{,}727 vs.\ 137{,}087 edges (Table~\ref{tab:benchmark-runtime}). On the expanded wallet pool, speedups remain $\approx 10.4\times$ at $n=10{,}000$ (1.18\,s vs.\ 12.28\,s) and $\approx 9.4\times$ at $N=31{,}612$ (2.29\,s vs.\ 21.40\,s) (Table~\ref{tab:benchmark-scaling}).
 
-\item[\textbf{C2.}] EndorseRank and AWP achieve credible Spearman $\rho$/Kendall $\tau$ on selected proxies under Do et al.'s framework; family-level alignment varies by construct (Tables~\ref{tab:alignment-transfer}--\ref{tab:alignment-gmx}). EndorseRank's allowance mean $\tau=0.355$ and AWP's transfer mean $\tau=0.534$ are the primary-construct anchors; secondary axes are weaker but non-negligible where reported.
+\item[\textbf{C2.}] EndorseRank and AWP recover their intended constructs on same-window local statistics: EndorseRank allowance mean $\tau=0.355$; AWP transfer mean $\tau=0.534$ (Tables~\ref{tab:alignment-transfer}--\ref{tab:alignment-allowance}). These are construct checks, not trading-skill tests.
 
-\item[\textbf{C3.}] \textbf{Construct-specific alignment:} EndorseRank exceeds AWP on allowance proxies ($\tau=0.355$ vs.\ $-0.030$); AWP exceeds EndorseRank on transfer ($\tau=0.534$ vs.\ $0.333$) and on most outcome-based families among social methods, including trading success ($0.179$ vs.\ $0.096$) (Table~\ref{tab:alignment-three-methods}). Inter-method rank agreement is only moderate ($\tau=0.316$), consistent with construct-distinct orderings (Section~\ref{sec:rank-divergence}).
+\item[\textbf{C3.}] \textbf{Construct-specific alignment:} EndorseRank exceeds AWP on allowance ($\tau=0.355$ vs.\ $-0.030$); AWP exceeds EndorseRank on transfer ($\tau=0.534$ vs.\ $0.333$). Inter-method rank agreement is only moderate ($\tau=0.316$) (Section~\ref{sec:rank-divergence}).
 
-\item[\textbf{C4.}] \textbf{Efficiency--alignment trade-off:} EndorseRank offers $\approx 8.9\times$ lower PageRank runtime than AWP on the matched cohort and $\approx 9$--$10\times$ on expanded-pool scaling (Tables~\ref{tab:benchmark-runtime}, \ref{tab:benchmark-scaling}) while maintaining moderate transfer alignment ($\tau \approx 0.33$) and stronger allowance alignment ($\tau \approx 0.35$). Damping sweeps confirm allowance-family stability at $\approx 0.355$ across $d \in \{0.75, 0.85, 0.95\}$ (Table~\ref{tab:robustness-damping}); top-token and sample-size checks preserve the construct-specific pattern (Tables~\ref{tab:robustness-tokens}, \ref{tab:robustness-sample-size}).
+\item[\textbf{C4.}] \textbf{Efficiency--alignment trade-off:} EndorseRank offers $\approx 8.9\times$ lower PageRank runtime than AWP on the matched cohort and $\approx 9$--$10\times$ on expanded-pool scaling while remaining the only social method that aligns with authorization checks. On the spender holdout ($n=1{,}335$), EndorseRank $\tau=0.479$ with future new approvers (CI $0.426$--$0.529$) versus AWP $\tau=0.044$ (Section~\ref{sec:gf-pr-ceiling}).
 \end{enumerate}
 
-\textbf{Supplementary claim:}
+RQ1 is addressed by inter-method $\tau=0.316$. RQ2 is addressed by allowance versus transfer checks. RQ3 is addressed by the runtime tables. RQ4 is addressed by the spender holdout, not by trading-success families.
 
-\begin{enumerate}
-\item[\textbf{SC1.}] GF-PR's highest trading-success mean $\tau$ ($0.583$) and inverse-risk mean $\tau$ ($0.376$) (Table~\ref{tab:alignment-three-methods}, Section~\ref{sec:gf-pr-ceiling}) reflect construct overlap with outcome proxies, not superior social reputation. GF-PR bounds interpretable alignment for EndorseRank and AWP on trading-outcome families (SRQ1) and must not be treated as a deployable substitute for social endorsement graphs.
-\end{enumerate}
+What the chapter does \emph{not} claim is equally important. It does not claim that either score predicts trading profit, liquidation, or malicious spenders. It does not claim that AWP is obsolete; AWP remains the stronger method for transfer-hub detection. The contribution is a construct-aware comparison: EndorseRank is cheaper, aligns with allowance checks, diverges moderately from AWP, and predicts later new approvals on the spender holdout.
 
-In summary, the matched-cohort evaluation supports a coherent empirical narrative. EndorseRank is substantially faster than AWP because $G_{\text{approve}}$ is an order of magnitude sparser than $G_{\text{transfer}}$. The two methods produce related but distinct rankings (inter-method $\tau=0.316$) and win on different proxy families: EndorseRank on allowance, AWP on transfer and several social-outcome axes. Robustness checks do not overturn these patterns. GF-PR clarifies the ceiling on trading-outcome alignment under construct overlap, protecting the primary comparison from misinterpretation.
-
-The claims can also be read as answers to the primary research questions. RQ1 is addressed by inter-method $\tau=0.316$ and Figures~\ref{fig:score-distributions}--\ref{fig:rank-scatter}: orderings diverge enough to treat the methods as distinct instruments. RQ2 is addressed by Table~\ref{tab:alignment-three-methods} and the per-family tables: winners are construct-specific. RQ3 is addressed by Tables~\ref{tab:benchmark-runtime}--\ref{tab:benchmark-scaling} and Figure~\ref{fig:runtime-scaling}: EndorseRank is approximately $8.9\times$--$10.4\times$ faster depending on sample definition. RQ4 is addressed by comparing transfer-family means to trading-success means for social methods: transfer proxies yield stronger alignment than trading-success proxies on this cohort (AWP $0.534$ vs.\ $0.179$; EndorseRank $0.333$ vs.\ $0.096$). SRQ1 is addressed by the GF-PR ceiling and SC1.
-
-What the chapter does \emph{not} claim is equally important. It does not claim that EndorseRank predicts leveraged trading profits better than AWP; the opposite is true among social methods on the trading-success family. It does not claim that AWP is obsolete; AWP remains the stronger method for transfer-hub detection and for several activity- and outcome-adjacent proxies. It does not claim that GF-PR is a production reputation score. The contribution is a precise, construct-aware comparison: EndorseRank offers a sparse, authorization-native ranking that is much cheaper to compute, aligns credibly with allowance proxies ($\tau=0.355$), diverges moderately from AWP, and remains stable under the reported robustness checks.
-
-Chapter~\ref{ch:discussion} interprets these findings against RQ1--RQ4 and SRQ1 in greater depth and discusses implications, threats to validity, and limitations.
+Chapter~\ref{ch:discussion} interprets these findings against RQ1--RQ4 and discusses implications, threats to validity, and limitations.
