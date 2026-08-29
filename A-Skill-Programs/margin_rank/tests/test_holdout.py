@@ -107,6 +107,65 @@ def test_future_new_and_revoke_labels() -> None:
     assert row["future_new_approvers"] == 1
     assert row["future_revoke_count"] == 1
     assert row["future_revoke_rate"] == 1.0
+    assert row["future_keep_rate"] == 0.0
+    assert row["future_revoke_value"] == 10.0
+
+
+def test_drain_and_aave_labels() -> None:
+    from holdout import future_aave_labels, future_drain_labels
+
+    owner = "0x" + "1" * 40
+    spender = "0x" + "2" * 40
+    token = "0x" + "3" * 40
+    start = pd.Timestamp("2026-03-01", tz="UTC")
+    end = pd.Timestamp("2026-05-31", tz="UTC")
+    approvals = pd.DataFrame(
+        [
+            {
+                "block_timestamp": "2026-04-01T00:00:00Z",
+                "block_number": 1,
+                "log_index": 0,
+                "token_address": token,
+                "owner": owner,
+                "spender": spender,
+                "value": 100.0,
+            }
+        ]
+    )
+    transfers = pd.DataFrame(
+        [
+            {
+                "block_timestamp": "2026-04-01T02:00:00Z",
+                "from_address": owner,
+                "to_address": "0x" + "9" * 40,
+                "token_address": token,
+                "value": 80.0,
+            }
+        ]
+    )
+    drain = future_drain_labels(approvals, transfers, start, end, [spender])
+    assert drain.iloc[0]["future_drain_owners"] == 1
+    assert drain.iloc[0]["future_no_drain"] == 0
+
+    aave = pd.DataFrame(
+        [
+            {
+                "user": spender,
+                "event_type": "borrow",
+                "block_timestamp": "2026-04-01T00:00:00Z",
+            },
+            {
+                "user": spender,
+                "event_type": "liquidation_call",
+                "block_timestamp": "2026-04-02T00:00:00Z",
+            },
+        ]
+    )
+    labs = future_aave_labels(aave, start, end, [spender, "0x" + "8" * 40])
+    by = labs.set_index("wallet")
+    assert by.loc[spender, "future_aave_liq_count"] == 1
+    assert by.loc[spender, "future_aave_not_liquidated"] == 0
+    assert pd.isna(by.loc["0x" + "8" * 40, "future_aave_not_liquidated"])
 
 
 def test_run_holdout_fixtures_is_t1_vs_t2() -> None:

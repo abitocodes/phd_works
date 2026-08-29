@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Build Taehong_Thesis_Reviewed_Moulla_Attipoe.replied.docx from the review original."""
+"""Build Taehong_Thesis_Reviewed_Moulla_Attipoe.replied.docx from the review original.
+
+Red body edits are written in XML. Threaded replies are stamped with
+desktop Word (win32com Replies.Add) so they nest under existing comments.
+Hand-written commentRange marks alone are treated as new comments.
+"""
 from __future__ import annotations
 
 import hashlib
 import shutil
 import zipfile
 from copy import deepcopy
-from datetime import datetime, timezone
 from pathlib import Path
 
 from lxml import etree
@@ -17,7 +21,6 @@ DST = DIR / "Taehong_Thesis_Reviewed_Moulla_Attipoe.replied.docx"
 
 AUTHOR = "Taehong Kwon"
 INITIALS = "TK"
-COMMENT_DATE = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 COMMIT = "0c70518a35540c8b56be66b52452cb94ca3fb916"
 REPO = "https://github.com/abitocodes/phd_works"
 
@@ -25,7 +28,6 @@ W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 W14 = "{http://schemas.microsoft.com/office/word/2010/wordml}"
 W15 = "{http://schemas.microsoft.com/office/word/2012/wordml}"
 W16CID = "{http://schemas.microsoft.com/office/word/2016/wordml/cid}"
-W16CEX = "{http://schemas.microsoft.com/office/word/2018/wordml/cex}"
 XML_SPACE = "{http://www.w3.org/XML/1998/namespace}space"
 
 PARENT_ORDER = [
@@ -82,7 +84,7 @@ REPLIES = {
     "286": "Explained in red: 10.4× is Table 4.3 (primary scaling, 1.178 s vs 12.277 s). 8.96× is Table 4.6 (sample-size sweep). Same n and seed, not the same experiment. Raw logs after the meeting.",
     "288": "Acknowledged in red: n = 10,000 is a SHA256 subsample (|E| = 7,067). Cohort and full pool both show 14,727 EndorseRank edges because the evaluation-wallet subgraph is fixed, so this design does not scale the quantity that drives PageRank cost.",
     "299": "Rewrote this paragraph in red as sample-definition sensitivity, not robustness. Primary sample remains n = 5,521. The 0.2 swing is no longer described as stability.",
-    "310": "Rewrote the close of this paragraph in red: allowance tau is near a self-correlation with smoothed in-degree; trading-success 0.096 and inverse-risk 0.035 are at noise level. I do not call that construct-specificity.",
+    "310": "Rewrote the close of this paragraph in red: allowance tau is near a self-correlation with smoothed in-degree; trading-success 0.096 and inverse-risk 0.035 are at noise level. I do not call that construct-specificity. Same honesty in the abstract: allowance-family tau is an intended-construct check, not an external test (0.355 vs AWP -0.030); I no longer write that EndorseRank 'aligns more strongly' as a headline win.",
     "349": "Collapsed this subsection to one short paragraph and removed the Akerlof / Graham–Dodd / Basu / Fama–French / Healy–Wahlen cluster from this location.",
     "378": "Acknowledged: major revision before examination. This working copy only (i) edits what can be fixed in red at the comment sites and (ii) replies on each thread. Still open after the meeting: doctoral-scale plan, CIs, GF-PR collapse, full citation and de-duplication passes, ethics certificate, raw logs, and LaTeX–Word cleanup. I do not have Supervisory_Review_Taehong_Thesis.",
     "396": "Added the verified 2023 IEEE RIVF AWP paper after Do and Do (2023). A broader currency pass on older field references is deferred; I will not add unverified replacements.",
@@ -208,46 +210,21 @@ def para_has_comment(p, cid: str) -> bool:
     return False
 
 
-def collect_para_ids(roots) -> set[str]:
-    found: set[str] = set()
-    for root in roots:
-        for el in root.iter():
-            pid = el.get(f"{W14}paraId")
-            if pid:
-                found.add(pid.upper())
-            for attr, val in el.attrib.items():
-                if attr.endswith("paraId") and val:
-                    found.add(val.upper())
-    return found
-
-
-def collect_durable(root) -> set[str]:
-    found = set()
-    for el in root.iter():
-        for attr, val in el.attrib.items():
-            if attr.endswith("durableId") and val:
-                found.add(val.upper())
-    return found
-
-
-def next_hex(used: set[str], start: int) -> str:
-    n = start
-    while True:
-        h = f"{n:08X}"
-        if h not in used:
-            used.add(h)
-            return h
-        n += 1
-
-
 def parent_para_id(comment, ext_ids: set[str]) -> str:
+    """Return the parent thread id Word already registered in commentsExtended.
+
+    [MS-DOCX] commentEx/@paraId is the last paragraph of the associated comment.
+    Multi-paragraph supervisor comments (14, 128, 240) have a different first
+    paraId; paraIdParent must match the commentsEx entry, not the first para.
+    """
     pids = []
     for p in comment.findall(qn("p")):
         pid = p.get(f"{W14}paraId")
         if pid:
             pids.append(pid)
+    ext_upper = {x.upper() for x in ext_ids if x}
     for pid in reversed(pids):
-        if pid.upper() in {x.upper() for x in ext_ids}:
+        if pid.upper() in ext_upper:
             return pid
     if pids:
         return pids[-1]
@@ -260,60 +237,6 @@ def add_person(people_root) -> None:
             return
     person = people_root.makeelement(f"{W15}person", {f"{W15}author": AUTHOR})
     people_root.append(person)
-
-
-def add_reply_comment(comments_root, cid: str, para_id: str, text: str) -> None:
-    c = comments_root.makeelement(
-        qn("comment"),
-        {
-            qn("id"): cid,
-            qn("author"): AUTHOR,
-            qn("date"): COMMENT_DATE,
-            qn("initials"): INITIALS,
-        },
-    )
-    p = comments_root.makeelement(
-        qn("p"),
-        {f"{W14}paraId": para_id, f"{W14}textId": "77777777"},
-    )
-    ppr = comments_root.makeelement(qn("pPr"), {})
-    ps = comments_root.makeelement(qn("pStyle"), {qn("val"): "CommentText"})
-    ppr.append(ps)
-    p.append(ppr)
-    ref_r = comments_root.makeelement(qn("r"), {})
-    ref_rpr = comments_root.makeelement(qn("rPr"), {})
-    ref_rpr.append(comments_root.makeelement(qn("rStyle"), {qn("val"): "CommentReference"}))
-    ref_r.append(ref_rpr)
-    ref_r.append(comments_root.makeelement(qn("annotationRef"), {}))
-    p.append(ref_r)
-    tr = comments_root.makeelement(qn("r"), {})
-    t = comments_root.makeelement(qn("t"), {})
-    t.text = text
-    tr.append(t)
-    p.append(tr)
-    c.append(p)
-    comments_root.append(c)
-
-
-def add_reply_range(body, parent_id: str, new_id: str) -> None:
-    refs = [
-        el
-        for el in body.iter(qn("commentReference"))
-        if el.get(qn("id")) == parent_id
-    ]
-    if not refs:
-        raise KeyError(f"no commentReference for {parent_id}")
-    ref_run = refs[-1].getparent()
-    parent = ref_run.getparent()
-    idx = list(parent).index(ref_run)
-    start = parent.makeelement(qn("commentRangeStart"), {qn("id"): new_id})
-    end = parent.makeelement(qn("commentRangeEnd"), {qn("id"): new_id})
-    new_run = parent.makeelement(qn("r"), {})
-    cref = parent.makeelement(qn("commentReference"), {qn("id"): new_id})
-    new_run.append(cref)
-    parent.insert(idx + 1, start)
-    parent.insert(idx + 2, end)
-    parent.insert(idx + 3, new_run)
 
 
 def new_para_like(template, text: str):
@@ -336,7 +259,7 @@ def rewrite_zip(path: Path, updates: dict[str, bytes]) -> None:
                 zout.writestr(item, data)
         tmp.replace(path)
     except PermissionError:
-        alt = path.with_name(path.stem + ".replied.unlocked.docx")
+        alt = DIR / "Taehong_Thesis_Reviewed_Moulla_Attipoe.replied.unlocked.docx"
         if tmp.exists():
             tmp.replace(alt)
         raise PermissionError(str(alt))
@@ -358,7 +281,7 @@ def apply_body(doc) -> None:
     )
     replace_para_text(
         p40,
-        "On the matched cohort, EndorseRank completes PageRank in 2.105 s versus 18.711 s for AWP (approximately 8.9 times faster) and aligns more strongly with allowance proxies (mean Kendall tau = 0.355 versus -0.030 for AWP). AWP aligns more strongly with transfer proxies (tau = 0.534 versus 0.333 for EndorseRank). Inter-method rank correlation (tau = 0.316) indicates partially overlapping yet construct-distinct social reputation structures.",
+        "On the matched cohort, EndorseRank completes PageRank in 2.105 s versus 18.711 s for AWP (approximately 8.9 times faster). Allowance-family alignment is an intended-construct check, not an external test: EndorseRank mean Kendall tau = 0.355, while AWP is near zero (-0.030). AWP remains closer to transfer proxies (tau = 0.534 versus 0.333). Inter-method rank correlation (tau = 0.316) indicates overlapping but not interchangeable rankings.",
     )
 
     p41 = find_para(
@@ -582,56 +505,182 @@ def apply_body(doc) -> None:
     do_ref.addnext(awp_ref)
 
 
-def apply_replies(doc, comments, comments_ex, comments_ids, comments_ext, people) -> None:
-    body = doc.find(qn("body"))
-    ext_ids = {
-        el.get(f"{W15}paraId")
-        for el in comments_ex
-        if el.get(f"{W15}paraId")
-    }
-    used_para = collect_para_ids([doc, comments, comments_ex])
-    used_dur = collect_durable(comments_ids) | collect_durable(comments_ext)
-    add_person(people)
+def norm_comment_text(s: str) -> str:
+    return " ".join((s or "").replace("\r", " ").replace("\x07", " ").split())
 
-    by_id = {c.get(qn("id")): c for c in comments.findall(qn("comment"))}
-    next_cid = 1001
-    para_n = 0xA1000001
-    dur_n = 0xB1000001
 
-    for parent_id in PARENT_ORDER:
-        parent = by_id[parent_id]
-        parent_pid = parent_para_id(parent, ext_ids)
-        new_cid = str(next_cid)
-        next_cid += 1
-        new_para = next_hex(used_para, para_n)
-        para_n += 1
-        new_dur = next_hex(used_dur, dur_n)
-        dur_n += 1
-        add_reply_comment(comments, new_cid, new_para, REPLIES[parent_id])
-        ex = comments_ex.makeelement(
-            f"{W15}commentEx",
-            {
-                f"{W15}paraId": new_para,
-                f"{W15}paraIdParent": parent_pid,
-                f"{W15}done": "0",
-            },
+def xml_id_by_text(comments_root) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for c in comments_root.findall(qn("comment")):
+        text = "".join(t.text or "" for t in c.iter(qn("t")))
+        mapping[norm_comment_text(text)] = c.get(qn("id"))
+    return mapping
+
+
+def match_parent_id(word_text: str, id_by_text: dict[str, str]) -> str | None:
+    wt = norm_comment_text(word_text)
+    if wt in id_by_text:
+        return id_by_text[wt]
+    for xt, pid in id_by_text.items():
+        if wt[:50] and (wt[:50] in xt or xt[:50] in wt):
+            return pid
+    return None
+
+
+def stamp_replies_with_word(path: Path, id_by_text: dict[str, str]) -> None:
+    """Let Word create real threaded replies (COM Replies.Add).
+
+    Hand-written commentsExtended + range marks are not enough for this
+    Word build: it still shows those as new top-level comments. Word's own
+    reply writer produces a thread the Comments pane will nest.
+    """
+    import pythoncom
+    import win32com.client
+
+    pythoncom.CoInitialize()
+    word = win32com.client.DispatchEx("Word.Application")
+    word.Visible = False
+    word.DisplayAlerts = 0
+    doc = None
+    try:
+        try:
+            doc = word.Documents.Open(str(path), False, False, False)
+        except Exception as exc:
+            raise PermissionError(
+                f"Word could not open {path}. Close the file in Word and rerun. ({exc})"
+            ) from exc
+        parents = []
+        for i in range(1, doc.Comments.Count + 1):
+            c = doc.Comments(i)
+            try:
+                if c.Ancestor is not None:
+                    continue
+                if c.Replies.Count >= 1:
+                    continue
+            except Exception:
+                pass
+            parents.append(c)
+        if len(parents) != 27:
+            raise RuntimeError(f"expected 27 parent comments, got {len(parents)}")
+        added = 0
+        for c in parents:
+            parent_id = match_parent_id(c.Range.Text, id_by_text)
+            if parent_id is None or parent_id not in REPLIES:
+                raise KeyError(f"unmatched Word comment: {norm_comment_text(c.Range.Text)[:80]!r}")
+            reply = c.Replies.Add(c.Range, REPLIES[parent_id])
+            reply.Author = AUTHOR
+            reply.Initial = INITIALS
+            added += 1
+        if added != 27:
+            raise RuntimeError(f"added {added} replies, expected 27")
+        doc.Save()
+        doc.Close(False)
+        doc = None
+    finally:
+        if doc is not None:
+            try:
+                doc.Close(False)
+            except Exception:
+                pass
+        word.Quit()
+        pythoncom.CoUninitialize()
+
+
+def force_reply_authors(path: Path) -> None:
+    reply_norm = {norm_comment_text(t) for t in REPLIES.values()}
+    with zipfile.ZipFile(path) as z:
+        names = z.namelist()
+        comments = etree.fromstring(z.read("word/comments.xml"))
+        people = (
+            etree.fromstring(z.read("word/people.xml"))
+            if "word/people.xml" in names
+            else None
         )
-        comments_ex.append(ex)
-        cid_el = comments_ids.makeelement(
-            f"{W16CID}commentId",
-            {f"{W16CID}paraId": new_para, f"{W16CID}durableId": new_dur},
-        )
-        comments_ids.append(cid_el)
-        ext_el = comments_ext.makeelement(
-            f"{W16CEX}commentExtensible",
-            {f"{W16CEX}durableId": new_dur, f"{W16CEX}dateUtc": COMMENT_DATE},
-        )
-        comments_ext.append(ext_el)
-        add_reply_range(body, parent_id, new_cid)
+    n = 0
+    changed = False
+    for c in comments.findall(qn("comment")):
+        text = norm_comment_text("".join(t.text or "" for t in c.iter(qn("t"))))
+        if text not in reply_norm:
+            continue
+        n += 1
+        if c.get(qn("author")) != AUTHOR:
+            c.set(qn("author"), AUTHOR)
+            changed = True
+        if c.get(qn("initials")) != INITIALS:
+            c.set(qn("initials"), INITIALS)
+            changed = True
+    if n != 27:
+        raise RuntimeError(f"expected 27 reply comments to author-stamp, got {n}")
+    updates: dict[str, bytes] = {}
+    if changed:
+        updates["word/comments.xml"] = serialize(comments)
+    if people is not None:
+        before = [p.get(f"{W15}author") for p in people]
+        add_person(people)
+        after = [p.get(f"{W15}author") for p in people]
+        if after != before:
+            updates["word/people.xml"] = serialize(people)
+    if updates:
+        rewrite_zip(path, updates)
+
+
+def verify_word_threads(path: Path) -> None:
+    import pythoncom
+    import win32com.client
+
+    pythoncom.CoInitialize()
+    word = win32com.client.DispatchEx("Word.Application")
+    word.Visible = False
+    word.DisplayAlerts = 0
+    doc = None
+    try:
+        doc = word.Documents.Open(str(path), False, True, False, "", "", True, "", "", 0, 0, False, False)
+        n_parent = 0
+        n_reply = 0
+        n_tk = 0
+        for i in range(1, doc.Comments.Count + 1):
+            c = doc.Comments(i)
+            ancestor = None
+            try:
+                ancestor = c.Ancestor
+            except Exception:
+                ancestor = None
+            if ancestor is None:
+                n_parent += 1
+                if c.Replies.Count != 1:
+                    raise AssertionError(f"parent {i} {c.Author!r} replies={c.Replies.Count}")
+            else:
+                n_reply += 1
+                if c.Author == AUTHOR:
+                    n_tk += 1
+        print("Word top-level", n_parent, "replies", n_reply, "Taehong Kwon replies", n_tk)
+        assert n_parent == 27
+        assert n_reply == 27
+        assert n_tk == 27
+        doc.Close(False)
+        doc = None
+    finally:
+        if doc is not None:
+            try:
+                doc.Close(False)
+            except Exception:
+                pass
+        word.Quit()
+        pythoncom.CoUninitialize()
 
 
 def serialize(root) -> bytes:
     return etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True)
+
+
+def document_comment_ids(doc) -> set[str]:
+    ids: set[str] = set()
+    for tag in ("commentRangeStart", "commentRangeEnd", "commentReference"):
+        for el in doc.iter(qn(tag)):
+            cid = el.get(qn("id"))
+            if cid:
+                ids.add(cid)
+    return ids
 
 
 def verify(path: Path) -> None:
@@ -642,6 +691,7 @@ def verify(path: Path) -> None:
             "word/comments.xml",
             "word/commentsExtended.xml",
             "word/people.xml",
+            "word/commentsIds.xml",
         ]:
             data = z.read(name)
             assert b"ns0:" not in data
@@ -667,41 +717,66 @@ def verify(path: Path) -> None:
         assert len(tk) == 27
         assert red >= 15
         assert AUTHOR in authors
-        # replies linked
+        assert "Moulla, Donatien Koulla" in authors
+        assert "Attipoe, David Sena" in authors
+
+        comment_ids = {c.get(qn("id")) for c in all_c}
+        body_ids = document_comment_ids(doc)
+        print("document comment ids", len(body_ids))
+        assert comment_ids <= body_ids
+
         ex = etree.fromstring(z.read("word/commentsExtended.xml"))
+        ex_by_para = {
+            el.get(f"{W15}paraId"): el for el in ex if el.get(f"{W15}paraId")
+        }
+        ext_ids = set(ex_by_para)
+        parent_pids = {parent_para_id(c, ext_ids) for c in others}
         parents = [
             el.get(f"{W15}paraIdParent")
             for el in ex
             if el.get(f"{W15}paraIdParent")
         ]
         assert len(parents) == 27, len(parents)
+        linked: set[str] = set()
+        for reply in tk:
+            reply_pid = parent_para_id(reply, ext_ids)
+            reply_ex = ex_by_para[reply_pid]
+            got = reply_ex.get(f"{W15}paraIdParent")
+            assert got in parent_pids, (reply.get(qn("id")), got)
+            linked.add(got)
+            assert reply.get(qn("author")) == AUTHOR
+            assert reply.get(qn("initials")) == INITIALS
+        assert linked == parent_pids
+
+        cids = etree.fromstring(z.read("word/commentsIds.xml"))
+        cid_paras = {el.get(f"{W16CID}paraId") for el in cids}
+        for reply in tk:
+            reply_pid = parent_para_id(reply, ext_ids)
+            assert reply_pid in cid_paras
 
 
 def main() -> None:
+    if set(PARENT_ORDER) != set(REPLIES):
+        raise RuntimeError("PARENT_ORDER and REPLIES keys differ")
     if not SRC.exists():
         raise FileNotFoundError(SRC)
-    shutil.copy2(SRC, DST)
+    try:
+        shutil.copy2(SRC, DST)
+    except PermissionError as exc:
+        raise PermissionError(
+            f"Target is locked (Word may have it open): {DST}"
+        ) from exc
     with zipfile.ZipFile(DST) as z:
         doc = etree.fromstring(z.read("word/document.xml"))
         comments = etree.fromstring(z.read("word/comments.xml"))
-        comments_ex = etree.fromstring(z.read("word/commentsExtended.xml"))
-        comments_ids = etree.fromstring(z.read("word/commentsIds.xml"))
-        comments_ext = etree.fromstring(z.read("word/commentsExtensible.xml"))
-        people = etree.fromstring(z.read("word/people.xml"))
 
+    id_by_text = xml_id_by_text(comments)
     apply_body(doc)
-    apply_replies(doc, comments, comments_ex, comments_ids, comments_ext, people)
-
-    updates = {
-        "word/document.xml": serialize(doc),
-        "word/comments.xml": serialize(comments),
-        "word/commentsExtended.xml": serialize(comments_ex),
-        "word/commentsIds.xml": serialize(comments_ids),
-        "word/commentsExtensible.xml": serialize(comments_ext),
-        "word/people.xml": serialize(people),
-    }
-    rewrite_zip(DST, updates)
+    rewrite_zip(DST, {"word/document.xml": serialize(doc)})
+    stamp_replies_with_word(DST, id_by_text)
+    force_reply_authors(DST)
     verify(DST)
+    verify_word_threads(DST)
     print("wrote", DST)
 
 

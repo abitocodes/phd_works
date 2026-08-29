@@ -17,13 +17,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from common import load_config, save_json  # noqa: E402
 from holdout import (  # noqa: E402
+    EXTERNAL_LABELS,
     HOLDOUT_LABELS,
     build_holdout_fixture_frames,
+    classify_external_result,
     correlate_holdout,
     filter_transfers_as_of,
+    future_aave_labels,
     future_approval_labels,
+    future_drain_labels,
     future_gmx_labels,
     holdout_bounds,
+    label_prevalence,
     latest_positive_as_of,
     load_approval_events,
     load_transfer_events,
@@ -64,6 +69,7 @@ def run_holdout(
     decoded: pd.DataFrame,
     matched: list[str] | None,
     extra_scores: dict[str, dict[str, float]] | None = None,
+    aave_events: pd.DataFrame | None = None,
 ) -> dict:
     score_end, outcome_start, outcome_end = holdout_bounds(config)
     ho = config["reputation"]["holdout"]
@@ -95,12 +101,28 @@ def run_holdout(
         approvals, latest_t1, outcome_start, outcome_end, wallets
     )
     gmx = future_gmx_labels(decoded, outcome_start, outcome_end, wallets, min_closes)
-    merged = frame.merge(labels, on="wallet", how="left").merge(gmx, on="wallet", how="left")
+    drain = future_drain_labels(
+        approvals, transfers, outcome_start, outcome_end, wallets
+    )
+    aave = future_aave_labels(aave_events, outcome_start, outcome_end, wallets)
+    merged = (
+        frame.merge(labels, on="wallet", how="left")
+        .merge(gmx, on="wallet", how="left")
+        .merge(drain, on="wallet", how="left")
+        .merge(aave, on="wallet", how="left")
+    )
 
     methods = list(scores.keys())
     alignment = correlate_holdout(
         merged, methods, labels=HOLDOUT_LABELS, n_resamples=n_boot, seed=seed
     )
+    prevalence = label_prevalence(merged, EXTERNAL_LABELS + ("future_drain_owners", "future_aave_liq_count"))
+    verdicts: dict[str, dict[str, str]] = {}
+    for method in methods:
+        verdicts[method] = {}
+        for lab in EXTERNAL_LABELS:
+            stat = alignment["methods"].get(method, {}).get(lab, {})
+            verdicts[method][lab] = classify_external_result(stat, prevalence.get(lab))
     return {
         "protocol": "t1_score_vs_t2_label",
         "score_end": str(score_end),
@@ -111,6 +133,8 @@ def run_holdout(
         "n_t1_transfers": int(len(transfers_t1)),
         "methods": methods,
         "alignment": alignment,
+        "prevalence": prevalence,
+        "verdicts": verdicts,
         "at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -123,10 +147,21 @@ def main() -> int:
         help="Use synthetic events that straddle the holdout cutoff.",
     )
     parser.add_argument("--n-wallets", type=int, default=48)
+    parser.add_argument("--bootstrap", type=int, default=None)
+    parser.add_argument(
+        "--cohort",
+        choices=("matched", "spenders"),
+        default="matched",
+        help="matched = GMX rankings ∩ t1 graph; spenders = t1 inbound allowance recipients.",
+    )
     args = parser.parse_args()
 
     config = load_config()
+    if args.bootstrap is not None:
+        config["reputation"]["holdout"]["bootstrap_resamples"] = args.bootstrap
     out_path = Path(config["reputation"]["paths"]["holdout_summary"])
+    if not args.fixtures and args.cohort == "spenders":
+        out_path = out_path.with_name("eval_summary_spenders.json")
 
     if args.fixtures:
         frames = build_holdout_fixture_frames(n_wallets=args.n_wallets)
@@ -147,19 +182,41 @@ def main() -> int:
             print(f"Missing {decoded_path}; use --fixtures or run the GMX decode step.")
             return 1
         decoded = pd.read_parquet(decoded_path)
+        aave_path = Path(config["paths"]["aave_events"])
+        aave = pd.read_parquet(aave_path) if aave_path.exists() else None
+        if args.cohort == "spenders":
+            score_end, _, _ = holdout_bounds(config)
+            latest_t1 = latest_positive_as_of(approvals, score_end)
+            matched = sorted(set(latest_t1["spender"].astype(str).str.lower()))
+        else:
+            matched = _load_matched_wallets(config)
         summary = run_holdout(
-            config, approvals, transfers, decoded, _load_matched_wallets(config)
+            config,
+            approvals,
+            transfers,
+            decoded,
+            matched,
+            aave_events=aave,
         )
         summary["source"] = "local_parquet"
+        summary["cohort"] = args.cohort
 
     save_json(out_path, summary)
-    print(f"holdout n={summary['n_wallets']} methods={summary['methods']}")
-    for method, labels in summary["alignment"]["methods"].items():
-        new = labels.get("future_new_approvers", {})
+    print(f"holdout n={summary['n_wallets']} methods={summary['methods']} source={summary.get('source')}")
+    for lab, prev in summary.get("prevalence", {}).items():
         print(
-            f"  {method:12s} future_new_approvers tau="
-            f"{new.get('kendall_tau')} ci=({new.get('ci_low')}, {new.get('ci_high')}) n={new.get('n')}"
+            f"  prevalence {lab}: defined={prev.get('n_defined')} nonzero={prev.get('n_nonzero')} mean={prev.get('mean')}"
         )
+    for method in summary["methods"]:
+        print(f"== {method}")
+        for lab in EXTERNAL_LABELS:
+            stat = summary["alignment"]["methods"].get(method, {}).get(lab, {})
+            verdict = summary.get("verdicts", {}).get(method, {}).get(lab)
+            print(
+                f"  {lab:28s} tau={stat.get('kendall_tau')} "
+                f"ci=({stat.get('ci_low')}, {stat.get('ci_high')}) "
+                f"n={stat.get('n')} [{verdict}]"
+            )
     print(f"wrote {out_path}")
     return 0
 

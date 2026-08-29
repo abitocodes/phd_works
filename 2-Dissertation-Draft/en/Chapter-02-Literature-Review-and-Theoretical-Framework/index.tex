@@ -65,7 +65,7 @@ From a measurement perspective, allowances are sparser than transfers: many tran
 
 \dissertationSubheading[sec:graph-reputation]{Graph-based on-chain reputation}
 
-PageRank and variants rank nodes by propagated influence through directed edges \cend{49,8}. Do et al.\cend{16} apply Adaptive Weighted PageRank (AWP) to Ethereum transaction graphs, weighting edges by transfer value and logistic time-decay. They validate scores against \textbf{in-degree} and \textbf{in-value}---count and sum of inbound transfers---as domain-intuition proxies for economic importance. Lin et al.\cend{44} show that transaction connectivity alone can miss risk-relevant structure unless risk signals propagate through the network, motivating refined graph semantics beyond vanilla PageRank. Broader DeFi credit-scoring literature includes prospect-theory and blockchain-based models \cend{29} and machine-learning pipelines on lending protocols \cend{39}; Packin and Lev-Aretz\cend{48} emphasize auditability constraints under pseudonymity. EndorseRank stays within interpretable graph propagation rather than black-box predictive scoring.
+PageRank and variants rank nodes by propagated influence through directed edges \cend{49,8}. Do and Do\cend{16} apply PageRank and HodgeRank to Ethereum transaction graphs as a social-credit measure. Adaptive Weighted PageRank (AWP)\cend{64} is a related transfer-graph ranking method that weights edges by transfer value and logistic time-decay and validates scores against \textbf{in-degree} and \textbf{in-value}---count and sum of inbound transfers---as domain-intuition proxies for economic importance. Lin et al.\cend{44} show that transaction connectivity alone can miss risk-relevant structure unless risk signals propagate through the network, motivating refined graph semantics beyond vanilla PageRank. Broader DeFi credit-scoring literature includes prospect-theory and blockchain-based models \cend{29} and machine-learning pipelines on lending protocols \cend{39}; Packin and Lev-Aretz\cend{48} emphasize auditability constraints under pseudonymity. EndorseRank stays within interpretable graph propagation rather than black-box predictive scoring.
 
 Graph-based approaches are attractive because they (i) use only public data, (ii) produce continuous scores suitable for ranking, and (iii) admit complexity analysis in terms of edge counts. They are limited by Sybil attacks \cend{17}, wash trading, and the gap between graph centrality and economic default risk. This dissertation does not claim that PageRank scores are credit scores in the regulatory sense; it claims that allowance-based and transfer-based rankings can be compared rigorously on shared proxies.
 
@@ -170,18 +170,14 @@ Kendall's $\tau$ \cend{36} counts concordant and discordant pairs. For all pairs
 \tau = \frac{2(C - D)}{n(n-1)},
 \label{eq:kendall}
 \end{equation}
-where $C$ ($D$) is the number of concordant (discordant) pairs, with tie corrections in the $\tau$-b variant. Kendall's $\tau$ is often more interpretable for pairwise ordering agreement and is the primary family-level summary in Chapter~\ref{ch:results}.
-
-\dissertationSubsubheading[sub:alignment-bands]{Interpretation bands}
-
-There is no universal cutoff for ``strong'' $\tau$ in blockchain ranking studies. This dissertation uses operational bands for narrative clarity: $|\tau|<0.10$ negligible noise; $0.10$--$0.35$ weak-to-moderate; $\geq 0.35$ substantively meaningful in comparable PageRank/blockchain studies. Values are compared \emph{relatively} across methods on the same cohort rather than against an absolute clinical threshold.
+where $C$ ($D$) is the number of concordant (discordant) pairs, with tie corrections in the $\tau$-b variant. Kendall's $\tau$ is often more interpretable for pairwise ordering agreement and is the primary family-level summary in Chapter~\ref{ch:results}. Values are compared relatively across methods on the same cohort rather than against an uncited absolute threshold.
 
 \dissertationSubheading[sec:theoretical-framework]{Theoretical framework}
 
 This study uses hyperlink--citation propagation, construct (domain) alignment, and computational complexity as the bases for comparing EndorseRank and AWP across reputation structure (H1), social-method alignment (H2), and computational efficiency (H3).
 
 \begin{itemize}
-\item \textbf{Hyperlink--citation semantics:} The original PageRank algorithm \cend{49} treats inbound hyperlinks as citations. Do et al.\cend{16} apply this logic to Ethereum transfers with time-decayed edge weights. Figure~\ref{fig:logistic-decay-methods} (Chapter~\ref{ch:methodology}) plots the logistic decay
+\item \textbf{Hyperlink--citation semantics:} The original PageRank algorithm \cend{49} treats inbound hyperlinks as citations. Do and Do\cend{16} apply this logic to Ethereum transfers; AWP\cend{64} uses time-decayed transfer edge weights. Figure~\ref{fig:logistic-decay-methods} (Chapter~\ref{ch:methodology}) plots the logistic decay
 \begin{equation}
 \sigma(\Delta t)=\frac{1}{1+\exp\bigl(k(\Delta t-t_0)\bigr)}
 \label{eq:logistic}
@@ -215,8 +211,7 @@ The definitions in Chapter~\ref{ch:introduction} establish formal constructs; th
 \item \textbf{Supplementary reference:} GF-PR on GMX PnL flow to/from synthetic POOL/SINK nodes; outcome-native ceiling for SRQ1, not a deployable social score.
 \item \textbf{Primary graph construct:} The graph a method is \emph{designed} to rank (e.g., $G_{\text{approve}}$ for EndorseRank). Distinct from validation proxies applied after scoring.
 \item \textbf{Validation proxy:} Observable wallet metric (e.g., in-degree, GMX close-success count) used to test whether rankings align with an external construct \cend{14}.
-\item \textbf{Construct overlap:} When a method's input graph and a validation proxy share the same data source (GF-PR vs.\ trading-outcome proxies), inflating $\tau$ without implying social reputation.
-\item \textbf{Alignment bands (Kendall $\tau$):} $|\tau|<0.10$ negligible noise; $0.10$--$0.35$ weak-to-moderate; $\geq 0.35$ substantively meaningful in comparable PageRank/blockchain studies; values are compared \emph{relatively} across methods on the same cohort.
+\item \textbf{Construct overlap:} When a method's input graph and a validation proxy share the same data source (GF-PR vs.\ trading-outcome proxies), inflating $\tau$ without implying social reputation. GF-PR's trading-success alignment is circular by construction and is reported only as a ceiling diagnostic.
 \item \textbf{Matched wallet cohort:} The primary evaluation sample of $n=5{,}521$ wallets with at least three GMX closes and non-zero reputation-subgraph connectivity.
 \item \textbf{Expanded wallet pool:} A larger address set ($N=31{,}612$) used for runtime scaling beyond the matched cohort.
 \end{itemize}
@@ -269,9 +264,9 @@ Unlimited approvals (\texttt{type(uint256).max}) are a well-known user-experienc
 
 From a measurement standpoint, unlimited approvals create heavy-tailed edge weights. Decimal adjustment and optional winsorization can moderate extremes; this dissertation sums decimal-adjusted latest allowances and relies on PageRank's normalization by out-strength so that a single huge approval does not automatically dominate unless the owner has few outgoing endorsements.
 
-\dissertationSubheading[sec:awp-in-depth]{AWP in depth: what Do et al.\ measure}
+\dissertationSubheading[sec:awp-in-depth]{AWP in depth: what the transfer-graph baseline measures}
 
-Do et al.\cend{16} propose Adaptive Weighted PageRank on Ethereum transfers as a social-credit signal. Edges are transfers; weights combine value and recency through a logistic decay. Validation uses inbound degree and inbound value---proxies for ``how much economic attention a wallet receives.'' The framework is attractive because it is fully on-chain, rank-based, and free of off-chain identity.
+Do and Do\cend{16} apply PageRank and HodgeRank to Ethereum transfers as a social-credit signal. Adaptive Weighted PageRank (AWP)\cend{64} uses transfer edges whose weights combine value and recency through a logistic decay. Validation uses inbound degree and inbound value---proxies for ``how much economic attention a wallet receives.'' The framework is attractive because it is fully on-chain, rank-based, and free of off-chain identity.
 
 EndorseRank preserves the PageRank-and-rank-correlation template but replaces the edge semantics. The empirical question is not whether AWP is ``wrong,'' but whether allowance edges yield a different, useful, and cheaper signal. Chapter~\ref{ch:results} tests whether allowance edges produce a construct-distinct, allowance-aligned, and computationally cheaper score, and whether either social method dominates across proxy families.
 

@@ -2,7 +2,7 @@
 \chapter{Research Methodology}
 \label{ch:methodology}
 
-This chapter specifies the empirical design used to compare EndorseRank and Adaptive Weighted PageRank (AWP) as social reputation scores on Arbitrum One. The design covers notation, data sources, a three-phase collection strategy, pipeline architecture, event decoding, graph construction algorithms, validation proxies, statistical tests, computational benchmarks, scaling and robustness extensions, reproducibility, and ethics. The primary comparison is between EndorseRank on the ERC-20 allowance graph and AWP on the time-decayed transfer graph \cend{16,49}. GainFlow PageRank (GF-PR) appears only as a supplementary outcome-native ceiling reference and is not treated as a peer social method.
+This chapter specifies the empirical design used to compare EndorseRank and Adaptive Weighted PageRank (AWP) as social reputation scores on Arbitrum One. The design covers notation, data sources, a three-phase collection strategy, pipeline architecture, event decoding, graph construction algorithms, validation proxies, statistical tests, computational benchmarks, scaling and robustness extensions, reproducibility, and ethics. The primary comparison is between EndorseRank on the ERC-20 allowance graph and AWP on the time-decayed transfer graph \cend{64,49}. GainFlow PageRank (GF-PR) appears only as a supplementary outcome-native ceiling reference and is not treated as a peer social method.
 
 The methodological stance follows construct (domain) alignment: reputation scores are continuous rankings, and validation uses observable wallet-level proxies rather than binary default labels \cend{14,16}. In measurement terms, each ranking method is an indicator of an unobserved reputation construct; proxies are alternative indicators chosen for domain intuition (inbound economic activity, received endorsements, risk-avoiding trading behavior, activity stability, and trading success). Alignment statistics ask whether the ordering induced by a method co-varies with the ordering induced by each proxy on the same wallets. This approach is appropriate when ground-truth loan defaults are sparse and when the scientific claim is comparative---EndorseRank versus AWP---rather than absolute prediction of an external credit bureau label.
 
@@ -76,7 +76,7 @@ w(u,v)/s(u) & \text{if }s(u)>0,\\
 \end{equation}
 Dangling mass is redistributed uniformly through the teleportation term, which is the standard treatment in sparse web and transaction graphs. Iteration stops when $\|\mathbf{r}^{(t+1)}-\mathbf{r}^{(t)}\|_1 < \tau_{\mathrm{tol}}$ or after $I_{\max}$ iterations. Scores are renormalized to sum to one over reachable nodes. Dense ranks for alignment are assigned by sorting scores descending (rank $1$ = highest score), with wallet address as a deterministic tie-break when scores are equal.
 
-The damping factor $d$ interpolates between pure graph propagation ($d\to 1$) and uniform scores ($d\to 0$). The default $d=0.85$ follows the classical web setting and the AWP baseline of Do et al.\cend{16}. Robustness sweeps vary $d$ while holding edge weights fixed (Section~\ref{sec:scaling-robustness}). Tolerance $\tau_{\mathrm{tol}}=10^{-8}$ and $I_{\max}=300$ are intentionally strict relative to interactive analytics settings, so that runtime differences reflect graph structure rather than early stopping.
+The damping factor $d$ interpolates between pure graph propagation ($d\to 1$) and uniform scores ($d\to 0$). The default $d=0.85$ follows the classical web setting and the AWP baseline\cend{64}. Robustness sweeps vary $d$ while holding edge weights fixed (Section~\ref{sec:scaling-robustness}). Tolerance $\tau_{\mathrm{tol}}=10^{-8}$ and $I_{\max}=300$ are intentionally strict relative to interactive analytics settings, so that runtime differences reflect graph structure rather than early stopping.
 
 \dissertationSubheading[sec:data-sources]{Data sources and sampling}
 
@@ -232,7 +232,7 @@ Algorithm~\ref{alg:endorserank} formalizes construction and scoring.
 
 \dissertationSubsubheading[sub:awp-graph]{AWP transfer graph}
 
-AWP follows Do et al.\cend{16}: each transfer of value $v$ at age $\Delta t$ days before observation end $T_{\mathrm{obs}}$ contributes a decayed weight
+AWP follows the IEEE RIVF 2023 transfer-graph method\cend{64}: each transfer of value $v$ at age $\Delta t$ days before observation end $T_{\mathrm{obs}}$ contributes a decayed weight
 \begin{equation}
 \label{eq:logistic-decay}
 \sigma(\Delta t)
@@ -451,7 +451,9 @@ where $C$ is the number of pairs ordered the same way by both rankings and $D$ i
 
 \item \textbf{Why both:} Spearman summarizes global monotonic association; Kendall emphasizes pairwise order fidelity. Reporting both follows Do et al.\cend{16} and allows readers to verify that family-level conclusions are not an artifact of a single rank statistic. In blockchain reputation settings, score distributions are often heavy-tailed: a few hubs receive large mass while many wallets share near-zero scores. Rank correlations remain well-defined in that regime, whereas Pearson correlation on raw scores would be dominated by hubs.
 
-\item \textbf{Family aggregation:} Family-level summaries use mean $\tau$ across proxies within a family. For example, the transfer-family mean is $\tfrac{1}{2}(\tau_{\mathrm{in\_degree}}+\tau_{\mathrm{in\_value}})$. Method comparisons on the same cohort and proxies are relative, not absolute claims about universal reputation. Chapter~\ref{ch:literature} notes interpretive bands used in related PageRank studies ($|\tau|<0.10$ negligible; $0.10$--$0.35$ weak-to-moderate; $\geq 0.35$ substantively meaningful); these bands guide discussion but do not replace the primary EndorseRank-versus-AWP contrast on identical inputs.
+\item \textbf{Family aggregation:} Family-level summaries use mean $\tau$ across proxies within a family. For example, the transfer-family mean is $\tfrac{1}{2}(\tau_{\mathrm{in\_degree}}+\tau_{\mathrm{in\_value}})$. Method comparisons on the same cohort and proxies are relative, not absolute claims about universal reputation. Uncited absolute $\tau$ cutoffs are not used as decision rules.
+
+\item \textbf{Uncertainty:} Interval estimates (bootstrap confidence intervals) are not reported in this draft. Comparative point estimates on a fixed cohort are the decision target. Adding interval estimates is planned before the next submission.
 
 \item \textbf{Orientation and missingness:} Proxies are pre-oriented so that larger values indicate better reputation. Wallets absent from a proxy source receive zeros after alignment to $\mathcal{W}$, which is conservative for sparse activity and is applied identically to both methods. No wallet is dropped from one method but retained in the other: the correlation sample is always the full matched cohort for primary tables.
 
@@ -466,7 +468,7 @@ Claim~C1 concerns computational efficiency of EndorseRank versus AWP on identica
 \begin{itemize}
 \item \textbf{Timed quantity:} For each method, edge lists are built once per cohort outside the timed loop. The timed section runs weighted PageRank only, with damping $d=0.85$, tolerance $\tau_{\mathrm{tol}}=10^{-8}$, and at most $I_{\max}=300$ iterations. These numerical settings match the configuration used for alignment scores, so runtime and alignment refer to the same mathematical object.
 
-\item \textbf{Repetitions and metrics:} Each configuration is repeated for five independent runs to average out operating-system noise. Per run, the pipeline records wall-clock solve time, peak memory, and iterations to convergence. Reported statistics are the mean runtime, runtime standard deviation, mean iterations, maximum peak memory across runs, and edge/node counts of the pre-built graph. Edge counts are reported because they are the leading structural explanation for runtime differences under $O(|E|)$ per-iteration complexity \cend{49}.
+\item \textbf{Repetitions and metrics:} The intended protocol repeats each configuration for five independent runs to average out operating-system noise. Chapter~\ref{ch:results} tables currently report three-run means from the exported evaluation artifacts; the two statements will be reconciled to a single repetition count before the next submission. Until then, treat table values as the empirical record and five runs as the intended protocol. Per run, the pipeline records wall-clock solve time, peak memory, and iterations to convergence. Reported statistics are the mean runtime, runtime standard deviation, mean iterations, maximum peak memory across runs, and edge/node counts of the pre-built graph. Edge counts are reported because they are the leading structural explanation for runtime differences under $O(|E|)$ per-iteration complexity \cend{49}.
 
 \item \textbf{Cohorts:} The primary benchmark uses the matched wallet cohort ($n=5{,}521$). Scaling benchmarks use deterministic subsamples of the expanded wallet pool (Section~\ref{sec:scaling-robustness}). GF-PR runtime may be reported parenthetically in Chapter~\ref{ch:results} as supplementary context only and is not part of Claim~C1.
 
@@ -488,7 +490,7 @@ and the first $n$ addresses form the subsample. The seed string is a fixed confi
 
 \dissertationSubsubheading[sub:damping-protocol]{Damping sensitivity}
 
-PageRank damping is swept over $d\in\{0.75,0.85,0.95\}$ on the matched cohort, holding graphs and proxies fixed. The default $d=0.85$ matches the classical web PageRank setting \cend{49} and Do et al.\cend{16}. Lower $d$ increases teleportation and flattens scores; higher $d$ emphasizes multi-hop structure and can slow convergence. The sweep tests whether allowance- and transfer-family alignment are artifacts of a single teleportation weight.
+PageRank damping is swept over $d\in\{0.75,0.85,0.95\}$ on the matched cohort, holding graphs and proxies fixed. The default $d=0.85$ matches the classical web PageRank setting \cend{49} and the AWP baseline\cend{64}. Lower $d$ increases teleportation and flattens scores; higher $d$ emphasizes multi-hop structure and can slow convergence. The sweep tests whether allowance- and transfer-family alignment are artifacts of a single teleportation weight.
 
 \dissertationSubsubheading[sub:top-tokens]{Top-token subgraph}
 
@@ -508,6 +510,8 @@ All empirical tables in Chapter~\ref{ch:results} are produced by an open evaluat
 
 Reproducible elements include: deterministic wallet subsampling via SHA256 seeds; fixed PageRank tolerance and iteration caps; explicit proxy formulas in Section~\ref{sec:proxy-formulas}; and logged extraction manifests. Peer reviewers can regenerate alignment and benchmark tables from the same parquet without re-querying BigQuery.
 
+The evaluation source, versioned configuration, and machine-readable result summary are in the public repository \url{https://github.com/abitocodes/phd_works} at commit \texttt{0c70518a35540c8b56be66b52452cb94ca3fb916}. An anonymised archive can be supplied on request.
+
 \dissertationSubheading[sec:sampling-bias]{Sampling considerations and missingness}
 
 The matched cohort is a purposeful sample, not a random sample of all Arbitrum addresses. Eligibility requires GMX activity and reputation-subgraph connectivity, so results speak to \emph{active perpetual traders with observable approval or transfer structure}. Idle wallets, pure holders, and addresses that interact only through non-ERC-20 mechanisms are out of scope by design.
@@ -524,7 +528,7 @@ Figures are generated from the same evaluation artifacts as the tables, so repor
 
 \dissertationSubheading[sec:ethics]{Ethics}
 
-This study uses exclusively publicly available blockchain data and does not intervene with human participants. Ethics clearance and data-handling procedures were approved by the institution prior to empirical data collection; the exemption or clearance confirmation is retained as part of the research record.
+This study uses exclusively publicly available blockchain data and does not intervene with human participants. Institutional ethics review was completed before empirical data collection. The clearance confirmation is retained in the research record; the certificate number will be inserted when the institutional copy is at hand.
 
 \begin{itemize}
 \item\phantomsection\label{sub:privacy-anonymity}
