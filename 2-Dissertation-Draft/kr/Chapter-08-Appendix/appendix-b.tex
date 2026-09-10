@@ -56,12 +56,6 @@ WHERE block_timestamp >= TIMESTAMP('2025-12-01')
 
 후처리에서는 토큰 소수점을 적용하고, 시간 감쇠 간선 가중치를 구축하며, PageRank 이전에 노드를 평가 표본으로 제한한다.
 
-\dissertationSubheading[sec:sql-gmx]{GMX PositionDecrease 추출 패턴}
-
-GMX V2 이벤트는 \texttt{EventEmitter} 계약에서 읽는다. 파이프라인은 이미터 주소
-\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}
-로 필터링하고, 키--값 필드를 디코딩하여 \texttt{account}, \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, 청산(liquidation) 플래그를 복원한다. 프록시 계산에는 \texttt{PositionDecrease} 행만 들어간다. close가 세 번 미만인 지갑은 매칭 코호트에서 제외한다.
-
 \dissertationSubheading[sec:config-keys]{설정 키}
 
 파이프라인 매개변수는 단일 버전 관리 설정 파일에 모인다. 주요 키는 다음과 같다.
@@ -70,8 +64,6 @@ GMX V2 이벤트는 \texttt{EventEmitter} 계약에서 읽는다. 파이프라�
 \item 관측 구간 시작·종료 타임스탬프;
 \item PageRank 감쇠, 허용오차, 최대 반복 횟수;
 \item 로지스틱 감쇠 $k$와 $t_0$;
-\item GMX 이미터 주소 및 topic 필터;
-\item 코호트 적격성을 위한 최소 close 수($m=3$);
 \item 벤치마크 반복 횟수 및 부분표본 시드;
 \item 중간 산출물과 LaTeX 조각의 출력 위치.
 \end{itemize}
@@ -89,10 +81,9 @@ GMX V2 이벤트는 \texttt{EventEmitter} 계약에서 읽는다. 파이프라�
 제~\ref{ch:results}장 표를 읽을 때, 다음 체크리스트는 흔한 오독을 줄인다.
 
 \begin{enumerate}
-\item 행이 \emph{사회적} 방법(EndorseRank, AWP)인지 보조 GF-PR 참조인지 식별한다.
-\item 각 계열을 의도된 구성체(allowance 대 transfer 대 결과)에 대응시킨다.
+\item 행이 사회적 방법(EndorseRank 또는 AWP)인지 식별한다.
+\item 각 계열을 의도된 구성체(allowance 대 transfer)에 대응시킨다.
 \item 절대 $\tau$ 임계값보다 동일 코호트에서의 상대 비교를 우선한다.
-\item 거래 성공 및 역위험에서의 GF-PR 고값을 구성체 중첩 진단(SRQ1)으로 취급한다.
 \item 런타임 표를 사전 구축된 간선에 대한 PageRank 해법 시간으로 읽고, 종단 간 ETL 시간으로 읽지 않는다.
 \item 점 추정치를 일반화하기 전에 강건성 표를 확인한다.
 \end{enumerate}

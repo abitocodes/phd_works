@@ -66,14 +66,14 @@ REPLIES = {
     "3": "Removed the numbered references from the abstract. Citations now begin in the body.",
     "6": "Removed bold from EndorseRank in the abstract. It is now plain body text.",
     "2": "Agreed. Do and Do (2023, IJSI) is PageRank and HodgeRank. AWP is the separate IEEE RIVF paper (Do, Do Van Dung, and Nguyen, 2023; doi:10.1109/rivf60135.2023.10471809). I split that attribution at the first AWP definition and added the RIVF item to References. A full in-text pass (every fused “Do et al. = AWP”) is deferred until after the meeting.",
-    "7": "Dropped trading-success proxies and the GF-PR ceiling from the claims. GMX remains a sampling frame only. The external check is now a temporal holdout of future new owner–spender approvals.",
-    "14": "Removed GF-PR / SRQ1 / SC1 from the research claims. Trading-success alignment is not used as evidence.",
+    "7": "Dropped GMX trading-success, inverse-risk, liquidation, and GF-PR from the claims. The matched sample is now wallets with non-zero endorsement- and transfer-graph connectivity (n = 5,521). The external check is a temporal holdout of future new owner–spender approvals.",
+    "14": "Removed GF-PR / SRQ1 / SC1 from the research claims. The remaining external check is the temporal holdout.",
     "20": "Split this opening paragraph so each claim has one source: [53] for DeFi intermediation; [48] for the absence of conventional credit histories. A document-wide cluster pass is deferred.",
     "62": "Kept the 2.105 s / 8.9× measurement. Added in red that the speedup is the expected O(|E|) consequence of approval sparsity, that the solver matches AWP, and that C1 is demoted from a headline contribution.",
     "72": "Inserted a Research objectives section (four objectives, mapped to RQ1–RQ4) immediately before Research questions. Chapter 5 mapping of each objective is deferred until after the meeting.",
-    "74": "Re-posed RQ4 as a temporal holdout: t1 scores versus t2 new owner–spender approvals on inbound spenders, not transfer versus trading-success.",
-    "77": "Rewrote the contribution paragraph: the claim is latest-allowance edges, same-window allowance versus transfer checks, and a temporal holdout of future new approvals—not a new ranking algorithm and not a five-proxy trading-success contest.",
-    "78": "Implemented a temporal holdout rather than another same-window proxy. Scores freeze at 28 February 2026; labels are new owner–spender approvals in March–May 2026 on t1 inbound spenders (n = 1,335). EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP = 0.044. That is the same endorsement construct in the future tense, with CIs. It is not a trading-profit, liquidation, or malicious-spender result. Method is still stock PageRank; the contribution is the time-split check, not a new solver.",
+    "74": "Re-posed RQ4 as a temporal holdout: t1 scores versus t2 new owner–spender approvals on inbound spenders.",
+    "77": "Rewrote the contribution paragraph: the claim is latest-allowance edges, same-window allowance versus transfer checks, and a temporal holdout of future new approvals—not a new ranking algorithm.",
+    "78": "Implemented a temporal holdout rather than another same-window proxy. Scores freeze at 28 February 2026; labels are new owner–spender approvals in March–May 2026 on t1 inbound spenders (n = 1,335). EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP = 0.044. That is the same endorsement construct in the future tense, with CIs. Method is still stock PageRank; the contribution is the time-split check, not a new solver.",
     "81": "Added the public repository URL, commit 0c70518a35540c8b56be66b52452cb94ca3fb916, the versioned config path, and the machine-readable summary as the table source. I can provide an anonymised archive if required.",
     "82": "Removed the restated 0.316 / 0.355 / 0.534 / 8.9× list from this Contributions sentence and pointed back to Chapter 4. A full de-duplication pass is deferred.",
     "129": "Deleted the uncited 0.10 / 0.35 bands at this heading. I will not invent a precedent. Interpretation will use same-cohort contrasts and, after the meeting, bootstrap intervals.",
@@ -85,9 +85,9 @@ REPLIES = {
     "286": "Explained in red: 10.4× is Table 4.3 (primary scaling, 1.178 s vs 12.277 s). 8.96× is Table 4.6 (sample-size sweep). Same n and seed, not the same experiment. Raw logs after the meeting.",
     "288": "Acknowledged in red: n = 10,000 is a SHA256 subsample (|E| = 7,067). Cohort and full pool both show 14,727 EndorseRank edges because the evaluation-wallet subgraph is fixed, so this design does not scale the quantity that drives PageRank cost.",
     "299": "Rewrote this paragraph in red as sample-definition sensitivity, not robustness. Primary sample remains n = 5,521. The 0.2 swing is no longer described as stability.",
-    "310": "I keep the honesty you asked for: same-window allowance tau = 0.355 is an intended-construct check, not an external test (AWP is -0.030). I dropped trading-success 0.096 and inverse-risk 0.035 from the claims. The external check is now a holdout of future new approvers on spenders: EndorseRank tau = 0.479 (CI 0.426–0.529) versus AWP 0.044. I do not sell drain, revoke, or Aave liquidation as successes.",
+    "310": "I keep the honesty you asked for: same-window allowance tau = 0.355 is an intended-construct check, not an external test (AWP is -0.030). The external check is now a holdout of future new approvers on spenders: EndorseRank tau = 0.479 (CI 0.426–0.529) versus AWP 0.044.",
     "349": "Collapsed this subsection to one short paragraph and removed the Akerlof / Graham–Dodd / Basu / Fama–French / Healy–Wahlen cluster from this location.",
-    "378": "Acknowledged: major revision before examination. This working copy now drops trading-success / GF-PR claims and reports the spender holdout (EndorseRank tau = 0.479, CI 0.426–0.529). Still open: ethics certificate, raw logs, and a full LaTeX–Word cleanup. I do not have Supervisory_Review_Taehong_Thesis.",
+    "378": "Acknowledged: major revision before examination. This working copy now reports the connectivity cohort (n = 5,521) and the spender holdout (EndorseRank tau = 0.479, CI 0.426–0.529). Still open: ethics certificate, raw logs, and a full LaTeX–Word cleanup. I do not have Supervisory_Review_Taehong_Thesis.",
     "396": "Added the verified 2023 IEEE RIVF AWP paper after Do and Do (2023). A broader currency pass on older field references is deferred; I will not add unverified replacements.",
 }
 
@@ -275,7 +275,7 @@ def apply_body(doc) -> None:
     p39 = find_para(paras, lambda p: para_has_comment(p, "2"))
     replace_para_text(
         p39,
-        "Decentralized finance protocols allocate capital among pseudonymous wallets and therefore need on-chain reputation scores that can be refreshed often and checked against public ledger signals. The identified problem is that transfer-graph reputation is costly to refresh and does not encode explicit spending authorization. This study introduces EndorseRank, PageRank on latest ERC-20 allowance edges on Arbitrum One, and compares it with Adaptive Weighted PageRank (AWP) on a matched wallet cohort (n = 5,521) defined by GMX activity as a sampling frame only.",
+        "Decentralized finance protocols allocate capital among pseudonymous wallets and therefore need on-chain reputation scores that can be refreshed often and checked against public ledger signals. The identified problem is that transfer-graph reputation is costly to refresh and does not encode explicit spending authorization. This study introduces EndorseRank, PageRank on latest ERC-20 allowance edges on Arbitrum One, and compares it with Adaptive Weighted PageRank (AWP) on a matched wallet cohort (n = 5,521) with non-zero endorsement- and transfer-graph connectivity.",
     )
 
     p40 = find_para(
@@ -284,7 +284,7 @@ def apply_body(doc) -> None:
     )
     replace_para_text(
         p40,
-        "On the matched cohort, EndorseRank completes PageRank in 2.105 s versus 18.711 s for AWP (approximately 8.9 times faster). Allowance-family alignment is an intended-construct check, not an external test: EndorseRank mean Kendall tau = 0.355, while AWP is near zero (-0.030). AWP remains closer to transfer proxies (tau = 0.534 versus 0.333). Inter-method rank correlation (tau = 0.316) indicates overlapping but not interchangeable rankings. On the holdout spender cohort (n = 1,335), EndorseRank aligns with future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is not a prediction of trading profit, liquidation, or malicious spenders.",
+        "On the matched cohort, EndorseRank completes PageRank in 2.105 s versus 18.711 s for AWP (approximately 8.9 times faster). Allowance-family alignment is an intended-construct check, not an external test: EndorseRank mean Kendall tau = 0.355, while AWP is near zero (-0.030). AWP remains closer to transfer proxies (tau = 0.534 versus 0.333). Inter-method rank correlation (tau = 0.316) indicates overlapping but not interchangeable rankings. On the holdout spender cohort (n = 1,335), EndorseRank aligns with future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044.",
     )
 
     p41 = find_para(
@@ -317,7 +317,7 @@ def apply_body(doc) -> None:
     p44 = find_para(paras, lambda p: para_has_comment(p, "7"))
     replace_para_text(
         p44,
-        "GMX V2 activity defines the matched sample (at least three PositionDecrease closes). It is not a trading-success test. Trading-success, inverse-risk, liquidation, and GF-PR alignments are not claims.",
+        "The matched sample is wallets with non-zero endorsement- and transfer-graph connectivity in the observation window (n = 5,521). Contemporaneous checks use allowance and transfer local statistics. A temporal holdout tests whether t1 scores predict t2 new owner–spender approvals.",
     )
 
     p178 = find_para(
@@ -344,7 +344,7 @@ def apply_body(doc) -> None:
     p302 = find_para(paras, lambda p: para_has_comment(p, "74"))
     replace_para_text(
         p302,
-        "RQ4. After scores are frozen at 28 February 2026, does EndorseRank predict new owner–spender approvals in March–May 2026 on t1 inbound spenders more strongly than AWP? This is a time-split test of the endorsement construct, not a trading-success contest.",
+        "RQ4. After scores are frozen at 28 February 2026, does EndorseRank predict new owner–spender approvals in March–May 2026 on t1 inbound spenders more strongly than AWP?",
     )
 
     p308 = find_para(paras, lambda p: para_has_comment(p, "78"))
@@ -444,7 +444,7 @@ def apply_body(doc) -> None:
     p1386 = find_para(paras, lambda p: para_has_comment(p, "310"))
     replace_para_text(
         p1386,
-        "This pattern must be read honestly. EndorseRank is essentially a global smoothing of allowance in-degree, so correlating it with allowance in-degree is close to correlating a quantity with itself (tau = 0.355). I do not call that an external test. The out-of-window check is future new approvers on spenders: EndorseRank tau = 0.479 (CI 0.426–0.529) versus AWP 0.044. Trading-success and inverse-risk alignments are dropped from the claims.",
+        "This pattern must be read honestly. EndorseRank is essentially a global smoothing of allowance in-degree, so correlating it with allowance in-degree is close to correlating a quantity with itself (tau = 0.355). I do not call that an external test. The out-of-window check is future new approvers on spenders: EndorseRank tau = 0.479 (CI 0.426–0.529) versus AWP 0.044.",
     )
 
     # P/E collapse
@@ -478,7 +478,7 @@ def apply_body(doc) -> None:
     p14 = find_para(paras, lambda p: para_has_comment(p, "14"))
     caveat = new_para_like(
         p39,
-        "Note: GF-PR and trading-success families are excluded from the research claims. The external check is the temporal holdout of future new approvals.",
+        "Note: The external check is the temporal holdout of future new approvals on t1 inbound spenders.",
     )
     p14.addnext(caveat)
 
@@ -930,13 +930,20 @@ def set_comment_text(comment, text: str) -> None:
 
 REPLY_PREFIX_TO_PARENT = {
     "Rewrote that sentence in the first person": "7",
+    "Dropped trading-success proxies and the GF-PR ceiling": "7",
+    "Dropped GMX trading-success, inverse-risk": "7",
     "Added a one-sentence circular-construction caveat": "14",
     "Removed GF-PR / SRQ1 / SC1 from the": "14",
     "Re-posed RQ4 in red as a construct-validity": "74",
+    "Re-posed RQ4 as a temporal holdout": "74",
     "Added a red paragraph under Contributions stating that the present claim is latest-allowance": "77",
+    "Rewrote the contribution paragraph": "77",
     "Acknowledged. I am not inserting a two-page": "78",
+    "Implemented a temporal holdout rather than another": "78",
     "Rewrote the close of this paragraph in red: allowance tau": "310",
+    "I keep the honesty you asked for": "310",
     "Acknowledged: major revision before examination. This working copy only": "378",
+    "Acknowledged: major revision before examination. This working copy now": "378",
 }
 
 
@@ -973,7 +980,10 @@ def apply_body_inplace(doc) -> None:
     paras = [p for p in body if etree.QName(p).localname == "p"]
 
     def by_comment(cid: str):
-        return find_para(paras, lambda p: para_has_comment(p, cid))
+        try:
+            return find_para(paras, lambda p: para_has_comment(p, cid))
+        except KeyError:
+            return None
 
     def by_prefix(prefix: str):
         try:
@@ -982,19 +992,19 @@ def apply_body_inplace(doc) -> None:
             return None
 
     replace_para_text(
-        by_comment("2"),
-        "Decentralized finance protocols allocate capital among pseudonymous wallets and therefore need on-chain reputation scores that can be refreshed often and checked against public ledger signals. The identified problem is that transfer-graph reputation is costly to refresh and does not encode explicit spending authorization. This study introduces EndorseRank, PageRank on latest ERC-20 allowance edges on Arbitrum One, and compares it with Adaptive Weighted PageRank (AWP) on a matched wallet cohort (n = 5,521) defined by GMX activity as a sampling frame only.",
+        by_prefix("Decentralized finance protocols allocate capital among pseudonymous wallets"),
+        "Decentralized finance protocols allocate capital among pseudonymous wallets and therefore need on-chain reputation scores that can be refreshed often and checked against public ledger signals. The identified problem is that transfer-graph reputation is costly to refresh and does not encode explicit spending authorization. This study introduces EndorseRank, PageRank on latest ERC-20 allowance edges on Arbitrum One, and compares it with Adaptive Weighted PageRank (AWP) on a matched wallet cohort (n = 5,521) with non-zero endorsement- and transfer-graph connectivity.",
     )
     replace_para_text(
         by_prefix("On the matched cohort, EndorseRank completes PageRank in 2.105"),
-        "On the matched cohort, EndorseRank completes PageRank in 2.105 s versus 18.711 s for AWP (approximately 8.9 times faster). Allowance-family alignment is an intended-construct check, not an external test: EndorseRank mean Kendall tau = 0.355, while AWP is near zero (-0.030). AWP remains closer to transfer proxies (tau = 0.534 versus 0.333). Inter-method rank correlation (tau = 0.316) indicates overlapping but not interchangeable rankings. On the holdout spender cohort (n = 1,335), EndorseRank aligns with future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is not a prediction of trading profit, liquidation, or malicious spenders.",
+        "On the matched cohort, EndorseRank completes PageRank in 2.105 s versus 18.711 s for AWP (approximately 8.9 times faster). Allowance-family alignment is an intended-construct check, not an external test: EndorseRank mean Kendall tau = 0.355, while AWP is near zero (-0.030). AWP remains closer to transfer proxies (tau = 0.534 versus 0.333). Inter-method rank correlation (tau = 0.316) indicates overlapping but not interchangeable rankings. On the holdout spender cohort (n = 1,335), EndorseRank aligns with future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044.",
     )
     replace_para_text(
-        by_comment("7"),
-        "GMX V2 activity defines the matched sample (at least three PositionDecrease closes). It is not a trading-success test. Trading-success, inverse-risk, liquidation, and GF-PR alignments are not claims.",
+        by_prefix("GMX V2 activity defines the matched sample"),
+        "The matched sample is wallets with non-zero endorsement- and transfer-graph connectivity in the observation window (n = 5,521). Contemporaneous checks use allowance and transfer local statistics. A temporal holdout tests whether t1 scores predict t2 new owner–spender approvals.",
     )
     replace_para_text(
-        by_comment("20"),
+        by_prefix("Decentralized Finance (DeFi) has transformed how capital is allocated"),
         "Decentralized Finance (DeFi) has transformed how capital is allocated on public blockchains, enabling lending, borrowing, and leveraged trading without traditional financial intermediaries [53]. Yet most credit-like interactions remain highly collateralized because protocols cannot rely on off-chain identity systems or conventional credit histories [48]. In a pseudonymous environment, the operational challenge is to allocate capital safely when counterparties are addresses rather than identified persons.",
     )
     replace_para_text(
@@ -1003,7 +1013,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("Note: GF-PR is circular by construction"),
-        "Note: GF-PR and trading-success families are excluded from the research claims. The external check is the temporal holdout of future new approvals.",
+        "Note: The external check is the temporal holdout of future new approvals on t1 inbound spenders.",
     )
     replace_para_text(
         by_prefix("Four objectives are derived from the problem statement"),
@@ -1014,8 +1024,8 @@ def apply_body_inplace(doc) -> None:
         "RQ2. Between EndorseRank and AWP, which social method aligns more strongly with contemporaneous allowance checks and with transfer checks (Spearman’s ρ, Kendall’s τ)?",
     )
     replace_para_text(
-        by_comment("74"),
-        "RQ4. After scores are frozen at 28 February 2026, does EndorseRank predict new owner–spender approvals in March–May 2026 on t1 inbound spenders more strongly than AWP? This is a time-split test of the endorsement construct, not a trading-success contest.",
+        by_prefix("RQ4. After scores are frozen at 28 February 2026"),
+        "RQ4. After scores are frozen at 28 February 2026, does EndorseRank predict new owner–spender approvals in March–May 2026 on t1 inbound spenders more strongly than AWP?",
     )
     replace_para_text(
         by_prefix("SRQ1. What does the supplementary GF-PR"),
@@ -1026,7 +1036,7 @@ def apply_body_inplace(doc) -> None:
         "RQ1 tests whether allowance and transfer graphs induce distinct centrality structures, operationalized by inter-method Kendall τ between score vectors. RQ2 evaluates contemporaneous allowance versus transfer checks. RQ3 compares PageRank wall-clock time on identical wallet sets. RQ4 tests whether t1 scores predict t2 new owner–spender approvals on inbound spenders.",
     )
     replace_para_text(
-        by_comment("78"),
+        by_prefix("The originality claimed here is not a new ranking algorithm"),
         "The originality claimed here is not a new ranking algorithm. EndorseRank applies stock PageRank to latest ERC-20 allowance edges, compares that score with AWP on same-window allowance and transfer checks, and tests whether t1 scores predict t2 new approvals on inbound spenders. Whether that time-split check is a sufficient doctoral contribution is for the supervisory meeting; this draft only makes the present scope explicit.",
     )
     replace_para_text(
@@ -1035,7 +1045,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("DeFi activity. Proxies span transfer centrality"),
-        "EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. Same-window checks remain allowance versus transfer. Trading-success families are not claims.",
+        "EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. Same-window checks remain allowance versus transfer.",
     )
     try:
         p316 = find_para(
@@ -1051,15 +1061,15 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("GF-PR ceiling analysis: Clarifies construct overlap on trading-outcome proxies for the matched"),
-        "Temporal holdout, not GF-PR: The external check is future new approvals, not an outcome-native ceiling. GF-PR and trading-success alignments are excluded from the claims.",
+        "Temporal holdout: The external check is future new owner–spender approvals on t1 inbound spenders.",
     )
     replace_para_text(
-        by_comment("310"),
-        "This pattern must be read honestly. EndorseRank is essentially a global smoothing of allowance in-degree, so correlating it with allowance in-degree is close to correlating a quantity with itself (tau = 0.355). I do not call that an external test. The out-of-window check is future new approvers on spenders: EndorseRank tau = 0.479 (CI 0.426–0.529) versus AWP 0.044. Trading-success and inverse-risk alignments are dropped from the claims.",
+        by_prefix("This pattern must be read honestly"),
+        "This pattern must be read honestly. EndorseRank is essentially a global smoothing of allowance in-degree, so correlating it with allowance in-degree is close to correlating a quantity with itself (tau = 0.355). I do not call that an external test. The out-of-window check is future new approvers on spenders: EndorseRank tau = 0.479 (CI 0.426–0.529) versus AWP 0.044.",
     )
     replace_para_text(
         by_prefix("GF-PR is likewise near zero on allowance"),
-        "I do not use GF-PR, trading-success, or inverse-risk alignments as supporting evidence. Same-window allowance tau is an intended-construct check; the external check is the spender holdout.",
+        "Same-window allowance tau is an intended-construct check; the external check is the spender holdout.",
     )
     replace_para_text(
         by_prefix("Conceptual model: primary EndorseRank vs. AWP"),
@@ -1071,11 +1081,11 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("Distribution of GMX realized PnL summaries"),
-        "Distribution of GMX realized PnL summaries in the matched cohort. These figures describe the sample. They are not a trading-success validation axis.",
+        "List of figures: GMX profit-and-loss panels are withdrawn from this working copy.",
     )
     replace_para_text(
         by_prefix("Distribution of GMX close success rates"),
-        "Distribution of GMX close success rates in the matched cohort. Close counts define the sampling filter (at least three PositionDecrease events), not a trading-success claim.",
+        "List of figures: GMX close-success panels are withdrawn from this working copy.",
     )
     replace_para_text(
         by_prefix("Table 1.1 summarizes the primary comparison"),
@@ -1087,7 +1097,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("directly. Transfer proxies yield higher mean"),
-        "The out-of-window check is not trading-success tau. On the holdout spender cohort (n = 1,335), EndorseRank aligns with future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is the same endorsement construct in the future tense. It is not a prediction of trading profit, liquidation, or malicious spenders. Matched-cohort intersection events are too sparse to claim.",
+        "On the holdout spender cohort (n = 1,335), EndorseRank aligns with future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is the same endorsement construct in the future tense.",
     )
     replace_para_text(
         by_prefix("Supplementary GF-PR ceiling analysis"),
@@ -1107,19 +1117,19 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("SC1. GF-PR’s highest trading-success"),
-        "C4. On t1 inbound spenders (n = 1,335), EndorseRank predicts t2 new owner–spender approvals at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529). AWP is 0.044. That holdout is the external check. Trading-success and GF-PR alignments are not claims.",
+        "C4. On t1 inbound spenders (n = 1,335), EndorseRank predicts t2 new owner–spender approvals at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529). AWP is 0.044. That holdout is the external check.",
     )
     replace_para_text(
         by_prefix("faster depending on sample definition"),
-        "faster depending on sample definition. RQ4 is addressed by the spender holdout (EndorseRank tau = 0.479, CI 0.426–0.529; AWP 0.044), not by comparing transfer means to trading-success means. SRQ1 and SC1 are withdrawn.",
+        "faster depending on sample definition. RQ4 is addressed by the spender holdout (EndorseRank tau = 0.479, CI 0.426–0.529; AWP 0.044). SRQ1 and SC1 are withdrawn.",
     )
     replace_para_text(
         by_prefix("Chapter 5 interprets these findings against RQ1–RQ4 and SRQ1"),
-        "Chapter 5 interprets these findings against RQ1–RQ4 and discusses implications, threats to validity, and limitations. Trading-success and GF-PR are not claims.",
+        "Chapter 5 interprets these findings against RQ1–RQ4 and discusses implications, threats to validity, and limitations.",
     )
     replace_para_text(
         by_prefix("This chapter interprets the Chapter 4 findings against RQ1–RQ4 and SRQ1"),
-        "This chapter interprets the Chapter 4 findings against RQ1–RQ4, discusses implications for DeFi screening, addresses threats to validity, and states limitations of the EndorseRank–AWP comparison. Headline quantities are inter-method Kendall tau = 0.316, EndorseRank allowance tau = 0.355, AWP transfer tau = 0.534, holdout future-new-approvers tau = 0.479 (CI 0.426–0.529) versus AWP 0.044, and PageRank runtimes of 2.105 s versus 18.711 s. Trading-success and GF-PR alignments are not claims.",
+        "This chapter interprets the Chapter 4 findings against RQ1–RQ4, discusses implications for DeFi screening, addresses threats to validity, and states limitations of the EndorseRank–AWP comparison. Headline quantities are inter-method Kendall tau = 0.316, EndorseRank allowance tau = 0.355, AWP transfer tau = 0.534, holdout future-new-approvers tau = 0.479 (CI 0.426–0.529) versus AWP 0.044, and PageRank runtimes of 2.105 s versus 18.711 s.",
     )
     replace_para_text(
         by_prefix("The primary empirical comparison concerns EndorseRank and AWP"),
@@ -1127,11 +1137,11 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("RQ2 asks which social method aligns more strongly with each of the five proxy families"),
-        "RQ2 asks which social method aligns more strongly with contemporaneous allowance checks and with transfer checks. EndorseRank wins on allowance (tau = 0.355); AWP wins on transfer (tau = 0.534). Trading-success and inverse-risk families are not used to answer RQ2.",
+        "RQ2 asks which social method aligns more strongly with contemporaneous allowance checks and with transfer checks. EndorseRank wins on allowance (tau = 0.355); AWP wins on transfer (tau = 0.534).",
     )
     replace_para_text(
         by_prefix("On trading-success proxies derived from GMX V2"),
-        "Trading-success, inverse-risk, liquidation, and malicious-spender alignments are excluded from the findings. GMX activity remains a sampling frame only.",
+        "Same-window findings use allowance and transfer checks. The out-of-window check is the temporal holdout of future new approvals.",
     )
     replace_para_text(
         by_prefix("0.096 falls in the negligible-noise band"),
@@ -1139,7 +1149,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("RQ4 asks which validation frame yields stronger rank alignment"),
-        "RQ4 asks whether t1 scores predict t2 new owner–spender approvals on inbound spenders. On the spender cohort (n = 1,335), EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is a time-split test of the endorsement construct, not a transfer-versus-trading-success contest.",
+        "RQ4 asks whether t1 scores predict t2 new owner–spender approvals on inbound spenders. On the spender cohort (n = 1,335), EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044.",
     )
     replace_para_text(
         by_prefix("RQ4 therefore favors transfer proxies"),
@@ -1163,7 +1173,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("Proxy not ground truth:"),
-        "Proxy not ground truth: No under-collateralized lending default labels are available at sufficient density. GMX V2 closes define the matched sample. They are not loan repayment and are not used as a trading-success claim.",
+        "Proxy not ground truth: No under-collateralized lending default labels are available at sufficient density. The matched sample is wallets with non-zero endorsement- and transfer-graph connectivity (n = 5,521).",
     )
     try:
         p1746 = find_para(
@@ -1178,7 +1188,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("This thesis formulated EndorseRank"),
-        "This thesis formulated EndorseRank, a PageRank method on a latest-allowance endorsement graph that produces an on-chain reputation score on Arbitrum One, and evaluated it against Adaptive Weighted PageRank (AWP) on an identical matched wallet cohort (n = 5,521). GMX V2 activity is a sampling frame (365,488 decoded PositionDecrease events; at least three closes). Same-window checks are allowance versus transfer. The external check is a temporal holdout of future new approvals on t1 inbound spenders (n = 1,335).",
+        "This thesis formulated EndorseRank, a PageRank method on a latest-allowance endorsement graph that produces an on-chain reputation score on Arbitrum One, and evaluated it against Adaptive Weighted PageRank (AWP) on an identical matched wallet cohort (n = 5,521) with non-zero endorsement- and transfer-graph connectivity. Same-window checks are allowance versus transfer. The external check is a temporal holdout of future new approvals on t1 inbound spenders (n = 1,335).",
     )
     replace_para_text(
         by_prefix("On social-method alignment (RQ2)"),
@@ -1190,7 +1200,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("On validation frames (RQ4)"),
-        "On the temporal holdout (RQ4), EndorseRank predicts future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529) versus AWP 0.044. That is not a trading-profit, liquidation, or malicious-spender result.",
+        "On the temporal holdout (RQ4), EndorseRank predicts future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529) versus AWP 0.044.",
     )
     replace_para_text(
         by_prefix("As a supplementary finding (SRQ1)"),
@@ -1198,7 +1208,7 @@ def apply_body_inplace(doc) -> None:
     )
     replace_para_text(
         by_prefix("Five-proxy domain alignment evaluation: Compares EndorseRank and AWP on leveraged DeFi"),
-        "Same-window and holdout evaluation: Compares EndorseRank and AWP on allowance versus transfer checks and on t2 new owner–spender approvals. The result is a construct-specific map, not a trading-success ranking.",
+        "Same-window and holdout evaluation: Compares EndorseRank and AWP on allowance versus transfer checks and on t2 new owner–spender approvals.",
     )
     replace_para_text(
         by_prefix("GF-PR ceiling analysis: Clarifies construct overlap on trading-outcome proxies (SRQ1)"),
@@ -1243,35 +1253,35 @@ def apply_body_pass2(doc) -> None:
     )
     replace_para_text(
         by_prefix("Following Do et al.[16] and Cronbach"),
-        "Following Do et al.[16] and Cronbach & Meehl[14], construct alignment for rank-based scores uses Spearman’s ρ and Kendall’s τ. This research reports same-window allowance and transfer checks plus a temporal holdout of future new approvals. Trading-success, inverse-risk, and liquidation families remain in the artifact and are not claims.",
+        "Following Do et al.[16] and Cronbach & Meehl[14], construct alignment for rank-based scores uses Spearman’s ρ and Kendall’s τ. This research reports same-window allowance and transfer checks plus a temporal holdout of future new approvals.",
     )
     replace_para_text(
         by_prefix("This chapter reports the empirical evaluation of EndorseRank against Adaptive Weighted"),
-        "This chapter reports the empirical evaluation of EndorseRank against Adaptive Weighted PageRank (AWP) on Arbitrum One. The analysis proceeds from cohort construction, through computational benchmarks and robustness checks, to contemporaneous allowance and transfer checks, inter-method rank divergence, and a temporal holdout of future new approvals. Primary claims C1–C4 address the EndorseRank–AWP comparison. Trading-success, inverse-risk, liquidation, and GF-PR alignments are not claims.",
+        "This chapter reports the empirical evaluation of EndorseRank against Adaptive Weighted PageRank (AWP) on Arbitrum One. The analysis proceeds from cohort construction, through computational benchmarks and robustness checks, to contemporaneous allowance and transfer checks, inter-method rank divergence, and a temporal holdout of future new approvals. Primary claims C1–C4 address the EndorseRank–AWP comparison.",
     )
     replace_para_text(
         by_prefix("transfer alignment is moderate"),
-        "transfer alignment is moderate (τ = 0.333)—credible as a secondary axis, but below AWP. Inverse-risk and trading-success alignments are not used as evidence. Same-window allowance tau is an intended-construct check; the external check is the spender holdout.",
+        "transfer alignment is moderate (τ = 0.333)—credible as a secondary axis, but below AWP. Same-window allowance tau is an intended-construct check; the external check is the spender holdout.",
     )
     replace_para_text(
         by_prefix("GF-PR achieves the highest family mean"),
-        "GF-PR’s near-identity with realized-gain is why that family is excluded: shared PnL input is not an independent test. Those rows stay in the artifact. They are not claims.",
+        "Same-window checks remain allowance versus transfer. The external check is the spender holdout.",
     )
     replace_para_text(
         by_prefix("GF-PR was added during empirical work"),
-        "GF-PR was computed during exploratory work and is excluded from the claims because it is circular with GMX profit-and-loss. The external check that remains is the spender holdout under RQ4 (EndorseRank tau = 0.479, CI 0.426–0.529; AWP 0.044).",
+        "The external check that remains is the spender holdout under RQ4 (EndorseRank tau = 0.479, CI 0.426–0.529; AWP 0.044).",
     )
     replace_para_text(
         by_prefix("GF-PR achieves the highest trading-success mean"),
-        "GF-PR is circular with trading-success and inverse-risk proxies by construction. This draft does not use that ceiling as a finding. The external check is the temporal holdout.",
+        "The external check is the temporal holdout of future new approvals, not an outcome-native ceiling.",
     )
     replace_para_text(
         by_prefix("GF-PR construct overlap:"),
-        "Non-claim: GF-PR shares input semantics with trading-success and inverse-risk proxies. Those alignments are not interpreted as social reputation and are not research claims.",
+        "Same-window checks are allowance versus transfer. The external check is the temporal holdout.",
     )
     replace_para_text(
         by_prefix("Hybrid social and outcome-aware methods:"),
-        "Hybrid social methods: Operators may combine endorsement-graph features with transfer-graph features, or with DeFi-informed representation learning [39], while preserving the auditability emphasized by Packin and Lev-Aretz[48]. Hybrid designs should report construct-specific checks and, where claimed, a time-split holdout rather than a single aggregate trading-success metric.",
+        "Hybrid social methods: Operators may combine endorsement-graph features with transfer-graph features, or with DeFi-informed representation learning [39], while preserving the auditability emphasized by Packin and Lev-Aretz[48]. Hybrid designs should report construct-specific checks and, where claimed, a time-split holdout.",
     )
 
 
@@ -1350,38 +1360,42 @@ def apply_body_pass3(doc) -> None:
         return [p for p in body.iter(qn("p"))]
 
     def by_prefix(prefix: str):
-        return find_para(paras(), lambda p: para_text(p).startswith(prefix))
+        try:
+            return find_para(paras(), lambda p: para_text(p).startswith(prefix))
+        except KeyError:
+            return None
 
     def by_exact(text: str):
-        return find_para(paras(), lambda p: para_text(p).strip() == text)
+        try:
+            return find_para(paras(), lambda p: para_text(p).strip() == text)
+        except KeyError:
+            return None
+
+    def try_find(pred):
+        try:
+            return find_para(paras(), pred)
+        except KeyError:
+            return None
 
     replace_para_text(
         by_prefix("Arbitrum One is an EVM-compatible optimistic rollup"),
-        "Arbitrum One is an EVM-compatible optimistic rollup widely used for DeFi activity, including GMX V2 [23]. For this research, Arbitrum One is the empirical setting because (i) ERC-20 Approval and Transfer logs are available in public BigQuery datasets, (ii) GMX V2 emits wallet-attributed PositionDecrease events that serve only as an activity filter, and (iii) fee levels permit dense activity within a six-month window.",
+        "Arbitrum One is an EVM-compatible optimistic rollup widely used for DeFi activity [23]. For this research, Arbitrum One is the empirical setting because (i) ERC-20 Approval and Transfer logs are available in public BigQuery datasets and (ii) fee levels permit dense activity within a six-month window.",
     )
     replace_para_text(
         by_prefix("On Arbitrum One, dense wallet-attributed PositionDecrease"),
-        "On Arbitrum One, GMX V2 PositionDecrease events define the matched sample: wallets with at least three closes (n = 5,521) [23],[53]. Profit-and-loss, success rate, and liquidation are not validation.",
-    )
-    p_closes = find_para(
-        paras(),
-        lambda p: para_text(p).startswith("closes offer dense, wallet-level realized"),
+        "On Arbitrum One, the matched sample is wallets with non-zero endorsement- and transfer-graph connectivity (n = 5,521) [23],[53]. Contemporaneous checks use allowance and transfer local statistics.",
     )
     replace_para_text(
-        p_closes,
+        try_find(lambda p: para_text(p).startswith("closes offer dense, wallet-level realized")),
         "Under-collateralized lending default labels remain out of scope.",
     )
-    p_perp_adv = find_para(
-        paras(),
-        lambda p: para_text(p).startswith("Perpetual markets allow leveraged long"),
-    )
     replace_para_text(
-        p_perp_adv,
-        "This research does not predict trading profit, liquidation, or malicious spenders. The remaining external check is a temporal holdout of future new owner–spender approvals.",
+        try_find(lambda p: para_text(p).startswith("Perpetual markets allow leveraged long")),
+        "The remaining external check is a temporal holdout of future new owner–spender approvals.",
     )
     replace_para_text(
         by_prefix("Primary chain: All on-chain events"),
-        "Primary chain: All on-chain events are drawn from Arbitrum One (chain ID 42161), an Ethereum Layer-2 rollup with dense DeFi activity and public log availability [53]. Restricting to a single chain avoids cross-chain address aliasing—the same private key controlling addresses on multiple chains would otherwise appear as unrelated nodes—and keeps gas-cost and latency regimes comparable across wallets. Arbitrum One is also the deployment venue for GMX V2, whose PositionDecrease events are used only as an activity filter.",
+        "Primary chain: All on-chain events are drawn from Arbitrum One (chain ID 42161), an Ethereum Layer-2 rollup with dense DeFi activity and public log availability [53]. Restricting to a single chain avoids cross-chain address aliasing—the same private key controlling addresses on multiple chains would otherwise appear as unrelated nodes—and keeps gas-cost and latency regimes comparable across wallets. The chain is the sole empirical venue for this comparison.",
     )
     replace_para_text(
         by_prefix("Figure 3.1 summarizes the end-to-end flow from public logs to"),
@@ -1389,15 +1403,15 @@ def apply_body_pass3(doc) -> None:
     )
     replace_para_text(
         by_prefix("Before comparing reputation rankings, it is useful to characterize"),
-        "Figure 4.1 shows GMX close counts per wallet. The minimum of three closes is a sampling filter. The right tail is a count of repeated PositionDecrease events, not a performance ranking.",
+        "The matched cohort (n = 5,521) is wallets with non-zero endorsement- and transfer-graph connectivity in the observation window. Endorsement and transfer graphs differ by nearly an order of magnitude in edge count (14,727 versus 137,087), so efficiency and alignment claims are evaluated jointly.",
     )
     replace_para_text(
         by_prefix("Figure 4.1: Distribution of GMX V2 PositionDecrease close counts"),
-        "Figure 4.1: Distribution of GMX V2 PositionDecrease close counts per wallet in the matched cohort (n = 5,521). The cohort filter requires at least three closes.",
+        "Figure 4.1 is withdrawn. The matched cohort is defined by non-zero endorsement- and transfer-graph connectivity (n = 5,521).",
     )
     replace_para_text(
         by_prefix("Distribution of GMX V2 PositionDecrease close counts per wallet"),
-        "Distribution of GMX V2 PositionDecrease close counts per wallet in the matched cohort (n = 5,521). The cohort filter requires at least three closes.",
+        "The matched cohort is wallets with non-zero endorsement- and transfer-graph connectivity (n = 5,521).",
     )
     replace_para_text(
         by_prefix("Table 4.10 reports alignment with loss-avoidance"),
@@ -1409,61 +1423,62 @@ def apply_body_pass3(doc) -> None:
     )
     replace_para_text(
         by_exact("Trading success validation frame (GMX V2)"),
-        "GMX V2 as a sampling frame",
+        "Matched cohort (connectivity)",
     )
-    toc_gmx = find_para(
-        paras(),
-        lambda p: para_text(p).startswith("Trading success validation frame (GMX V2)"),
+    replace_para_text(
+        by_exact("GMX V2 as a sampling frame"),
+        "Matched cohort (connectivity)",
     )
-    replace_para_text(toc_gmx, "GMX V2 as a sampling frame")
+    replace_para_text(
+        try_find(lambda p: para_text(p).startswith("Trading success validation frame (GMX V2)")),
+        "Matched cohort (connectivity)",
+    )
 
-    perp_body = find_para(
-        paras(),
+    perp_body = try_find(
         lambda p: para_text(p).startswith('Perpetual futures (“perps”) are derivative'),
     )
-    related = find_para(
-        paras(),
+    related = try_find(
         lambda p: para_text(p).strip() == "Related measurement traditions"
         and pstyle(p).startswith("Heading"),
     )
-    perp_head = None
-    cur = perp_body.getprevious()
-    while cur is not None:
-        if etree.QName(cur).localname == "p" and pstyle(cur).startswith("Heading"):
-            perp_head = cur
-            break
-        cur = cur.getprevious()
-    if perp_head is None or "Perpetual markets" not in para_text(perp_head):
-        raise RuntimeError(f"perp heading not found near {para_text(perp_body)[:60]!r}")
-    remove_between(perp_head, related, keep_start=False, keep_stop=True)
+    if perp_body is not None and related is not None:
+        perp_head = None
+        cur = perp_body.getprevious()
+        while cur is not None:
+            if etree.QName(cur).localname == "p" and pstyle(cur).startswith("Heading"):
+                perp_head = cur
+                break
+            cur = cur.getprevious()
+        if perp_head is not None and "Perpetual markets" in para_text(perp_head):
+            remove_between(perp_head, related, keep_start=False, keep_stop=True)
 
-    toc_perp = find_para(
-        paras(),
+    toc_perp = try_find(
         lambda p: "Perpetual markets as a validation laboratory" in para_text(p),
     )
-    remove_para(toc_perp)
+    if toc_perp is not None:
+        remove_para(toc_perp)
 
-    lof_pnl = find_para(
-        paras(),
+    lof_pnl = try_find(
         lambda p: para_text(p).startswith("Distribution of GMX realized PnL summaries"),
     )
-    lof_sr = find_para(
-        paras(),
+    lof_sr = try_find(
         lambda p: para_text(p).startswith("Distribution of GMX close success rates"),
     )
-    remove_between(lof_pnl, lof_sr, keep_start=False, keep_stop=False)
+    if lof_pnl is not None and lof_sr is not None:
+        remove_between(lof_pnl, lof_sr, keep_start=False, keep_stop=False)
 
     fig41 = by_prefix("Figure 4.1: Distribution of GMX V2 PositionDecrease close counts")
-    bench = find_para(
-        paras(),
+    if fig41 is None:
+        fig41 = by_prefix("Figure 4.1 is withdrawn")
+    bench = try_find(
         lambda p: para_text(p).strip() == "EndorseRank vs. AWP benchmark (Claim C1)",
     )
-    remove_between(fig41, bench, keep_start=True, keep_stop=True)
-    summary = new_para_like(
-        fig41,
-        "The close-count figure and the edge-count gap in the dataset table fix two sample constraints. First, the matched cohort is large enough for stable rank statistics (n = 5,521; 365,488 decoded closes). Second, endorsement and transfer graphs differ by nearly an order of magnitude in edge count, so efficiency and alignment claims must be evaluated jointly.",
-    )
-    fig41.addnext(summary)
+    if fig41 is not None and bench is not None:
+        remove_between(fig41, bench, keep_start=True, keep_stop=True)
+        replace_para_text(
+            fig41,
+            "The matched cohort (n = 5,521) has non-zero endorsement- and transfer-graph connectivity. Endorsement and transfer graphs differ by nearly an order of magnitude in edge count (14,727 versus 137,087), so efficiency and alignment claims are evaluated jointly.",
+        )
 
     # Drop leftover inverse-risk / trading-success interpretation (tables stay).
     for prefix in (
@@ -1480,6 +1495,8 @@ def apply_body_pass3(doc) -> None:
             p = by_prefix(prefix)
         except KeyError:
             continue
+        if p is None:
+            continue
         if para_has_any_comment(p):
             raise RuntimeError(f"commented leftover: {prefix}")
         remove_para(p)
@@ -1494,6 +1511,668 @@ def apply_body_pass3(doc) -> None:
             replace_para_text(p, new)
 
 
+def apply_body_pass4(doc) -> None:
+    """Strip remaining GMX / GF-PR / PositionDecrease narrative. Keep connectivity + holdout."""
+    body = doc.find(qn("body"))
+
+    def paras():
+        return [p for p in body.iter(qn("p"))]
+
+    def try_find(pred):
+        try:
+            return find_para(paras(), pred)
+        except KeyError:
+            return None
+
+    def try_prefix(prefix: str, new: str) -> None:
+        replace_para_text(
+            try_find(lambda p: para_text(p).startswith(prefix)),
+            new,
+        )
+
+    def try_exact(old: str, new: str) -> None:
+        replace_para_text(
+            try_find(lambda p: para_text(p).strip() == old),
+            new,
+        )
+
+    replacements = [
+        (
+            "Keywords— DeFi, EndorseRank",
+            "Keywords— DeFi, EndorseRank, Adaptive Weighted PageRank, On-Chain Reputation, ERC-20 allowance, temporal holdout, Arbitrum One, Kendall’s tau",
+        ),
+        (
+            "Evaluation pipeline: public Arbitrum logs are extracted and decoded, reputation edges and GMX outcomes",
+            "Evaluation pipeline: public Arbitrum logs are extracted and decoded, reputation edges are preprocessed, EndorseRank and AWP ranks are computed, allowance and transfer checks are evaluated, and LaTeX result fragments",
+        ),
+        (
+            "PageRank wall-clock runtime versus cohort size (log x-axis). Solid lines: in-cohort scaling on the matched GMX sample",
+            "PageRank wall-clock runtime versus cohort size (log x-axis). Solid lines: in-cohort scaling on the matched cohort (n ≤ 5,521). Dashed lines: expanded wallet pool (N = 31,612). EndorseRank remains approximately 9–10× faster than AWP",
+        ),
+        (
+            "Dataset characteristics for the matched cohort (n = 5,521 wallets with ≥ 3 GMX",
+            "Dataset characteristics for the matched cohort (n = 5,521 wallets with non-zero reputation-subgraph connectivity).",
+        ),
+        (
+            "ank and AWP are social reputation graphs; GF-PR is an outcome-native GMX PnL",
+            "EndorseRank and AWP are social reputation graphs on allowance and transfer edges.",
+        ),
+        (
+            "star baseline (construct overlap on GMX proxies).",
+            "Same-window checks are allowance versus transfer.",
+        ),
+        (
+            "Domain alignment with inverse-risk proxies from GMX realized PnL",
+            "Withdrawn inverse-risk alignment table (not a research claim).",
+        ),
+        (
+            "Domain alignment with GMX V2 margin-trading success proxies",
+            "Withdrawn trading-success alignment table (not a research claim).",
+        ),
+        (
+            "matched GMX cohort).",
+            "matched cohort).",
+        ),
+        (
+            "GF-PRGainFlow PageRank",
+            "AWPAdaptive Weighted PageRank LPLiquidity Provider",
+        ),
+        (
+            "making, or passive receipt",
+            "making, or passive receipt; an allowance is an explicit delegation of spending authority. Treating allowances as endorsement edges aligns PageRank’s citation metaphor [49] with a trust-like act that protocols already rely on for token interactions. Whether that semantic difference produces rankings that are merely different, or differently aligned with authorization and transfer checks, is an empirical question. This research answers that question on Arbitrum One using a matched sample of wallets with non-zero endorsement- and transfer-graph connectivity (n = 5,521).",
+        ),
+        (
+            "1The matched cohort is the intersection",
+            "1The matched cohort is wallets with non-zero connectivity in the reputation subgraphs (n = 5,521). Runtime scaling uses a larger expanded wallet pool (N = 31,612).",
+        ),
+        (
+            "The research problem is therefore comparative and evaluative:",
+            "The research problem is therefore comparative and evaluative: on an identical Arbitrum One wallet sample with non-zero endorsement- and transfer-graph connectivity, does EndorseRank produce wallet orderings that are construct-distinct from AWP, align credibly with allowance and transfer checks, and do so at substantially lower computational cost? The primary comparison is EndorseRank versus AWP.",
+        ),
+        (
+            "Smart contract: Self-executing program code",
+            "Smart contract: Self-executing program code deployed on a blockchain that enforces agreement terms without a trusted intermediary [9],[55]. In this research, smart contracts are the source of ERC-20 allowance logs and transfer logs.",
+        ),
+        (
+            "On-chain credit risk: Observable adverse outcomes",
+            "On-chain credit risk: Observable adverse outcomes such as authorization abuse or repeated losses on public blockchains [44]. This research uses allowance and transfer checks plus a temporal holdout, not loan-repayment ground truth.",
+        ),
+        (
+            "GMX V2 perpetual swap position:",
+            "Matched wallet cohort: The primary evaluation sample of n = 5,521 wallets with non-zero endorsement- and transfer-graph connectivity.",
+        ),
+        (
+            "During empirical analysis, GF-PR (GainFlow PageRank) was added",
+            "The remaining external check is a temporal holdout of future new owner–spender approvals (Chapters 3 and 4).",
+        ),
+        (
+            "This dissertation thesis focuses on Arbitrum One",
+            "This research focuses on Arbitrum One over the observation window 2025-12-01 to 2026-05-31. The primary empirical sample is a matched wallet cohort of n = 5,521 addresses with non-zero endorsement- and transfer-graph connectivity, comprising 14,727 EndorseRank edges and 137,087 AWP edges. Runtime scaling is reported on an expanded wallet pool (N = 31,612). Robustness checks examine damping sensitivity, top-token subgraphs, and sample-size sensitivity.",
+        ),
+        (
+            "This thesis thesis focuses on Arbitrum One",
+            "This research focuses on Arbitrum One over the observation window 2025-12-01 to 2026-05-31. The primary empirical sample is a matched wallet cohort of n = 5,521 addresses with non-zero endorsement- and transfer-graph connectivity, comprising 14,727 EndorseRank edges and 137,087 AWP edges. Runtime scaling is reported on an expanded wallet pool (N = 31,612). Robustness checks examine damping sensitivity, top-token subgraphs, and sample-size sensitivity.",
+        ),
+        (
+            "Generalization beyond Arbitrum One, GMX V2",
+            "Generalization beyond Arbitrum One and the six-month window is not claimed. Token-decimal normalization, price oracles, and permit-versus-approve coverage may affect edge weights. Adversarial manipulation of allowances or transfers remains a threat discussed in Chapter 5; Sybil-adjusted proxies partially address but do not eliminate that risk [17].",
+        ),
+        (
+            "Chapter 2 reviews graph-based on-chain reputation, ERC-20 allowance semantics, and GMX V2",
+            "Chapter 2 reviews graph-based on-chain reputation and ERC-20 allowance semantics. It develops the theoretical framework—hyperlink propagation, domain alignment, and computational complexity—that motivates the primary EndorseRank versus AWP comparison.",
+        ),
+        (
+            "This chapter reviews the conceptual and technical foundations required to interpret EndorseRank, Adaptive Weighted PageRank (AWP), and the supplementary outcome-native reference GF-PR.",
+            "This chapter reviews the conceptual and technical foundations required to interpret EndorseRank and Adaptive Weighted PageRank (AWP). It begins with blockchain and DeFi primitives for readers who may not specialize in distributed ledgers, then develops graph ranking theory, reputation-system lineage, ERC-20 allowance semantics, and rank-correlation statistics. A theoretical framework—hyperlink–citation propagation, domain alignment, and computational complexity—motivates the primary EndorseRank versus AWP comparison. Later sections supply a terminology guide, worked example, risk taxonomy, AWP in depth, method comparison, and open problems that lead into Chapters 3 and 4.",
+        ),
+        (
+            "On Arbitrum One, GMX V2 PositionDecrease events define the matched sample",
+            "On Arbitrum One, the matched sample is wallets with non-zero endorsement- and transfer-graph connectivity (n = 5,521) [23],[53]. Contemporaneous checks use allowance and transfer local statistics.",
+        ),
+        (
+            "During the empirical phase, GF-PR (GainFlow PageRank) was added",
+            "The remaining external check is a temporal holdout of future new owner–spender approvals.",
+        ),
+        (
+            "Domain alignment framework: In measurement theory, construct alignment assesses how well an indicator tracks an observable outcome",
+            "Domain alignment framework: In measurement theory, construct alignment assesses how well an indicator tracks an intended construct [14]. For rank-based reputation scoring, Spearman’s ρ and Kendall’s τ evaluate monotonic and pairwise ordering agreement without assuming a classification threshold [16]. Contemporaneous transfer and allowance statistics check graph coherence; a temporal holdout of future new approvals is the out-of-window check.",
+        ),
+        (
+            "Supplementary reference: GF-PR on GMX PnL flow",
+            "Temporal holdout: Scores frozen at t1; labels from t2 new owner–spender approvals on inbound spenders.",
+        ),
+        (
+            "Validation proxy: Observable wallet metric (e.g., in-degree, GMX close-success count)",
+            "Contemporaneous check: Local transfer or allowance statistics computed in the same window as the score [14].",
+        ),
+        (
+            "Matched wallet cohort: The primary evaluation sample of n = 5,521 wallets with at least three GMX closes",
+            "Matched wallet cohort: The primary evaluation sample of n = 5,521 wallets with non-zero endorsement- and transfer-graph connectivity.",
+        ),
+        (
+            "31 23:59:59 UTC (six calendar months).",
+            "31 23:59:59 UTC (six calendar months). Exclusive end timestamps in SQL use 2026-06-01 00:00:00 UTC so that the inclusive calendar end is 2026-05-31. This window is long enough for monthly-batched reputation extracts under BigQuery byte budgets and short enough that latest-allowance snapshots remain contemporaneous with transfer histories.",
+        ),
+        (
+            "GMX events: Trading-success and risk proxies",
+            "Reputation events: EndorseRank uses ERC-20 Approval logs. AWP uses ERC-20 Transfer logs. Both streams are wallet-filtered to the cohort under study.",
+        ),
+        (
+            "HYPERLINK \\l \"_bookmark156\"[23]. Traders are identified",
+            "The public log table is authoritative. Decoding is performed in the open pipeline [23],[53].",
+        ),
+        (
+            "Matched cohort definition: The primary alignment sample is the intersection",
+            "Matched cohort definition: The primary alignment sample is wallets with non-zero connectivity in the reputation subgraph induced by approval or transfer edges. After BigQuery extraction and preprocessing, this matched wallet cohort has size n = 5,521. Both EndorseRank and AWP are scored on the same seed",
+        ),
+        (
+            "What is not in scope: The study does not ingest mempool data",
+            "What is not in scope: The study does not ingest mempool data, off-chain order books, centralized-exchange account maps, or cross-chain bridges. It does not attempt entity resolution across multiple addresses controlled by one actor. The public log table is authoritative, and decoding is performed in the open pipeline.",
+        ),
+        (
+            "Phase 1 (GMX validation stream):",
+            "Phase 1 (reputation streams): Extract wallet-filtered ERC-20 Approval and Transfer events in monthly batches. The matched wallet cohort is the subset with non-zero approval or transfer connectivity (n = 5,521). Each month is an independent query with its own dry-run estimate and checkpoint, so a failure in one month does not invalidate prior months.",
+        ),
+        (
+            "Phase 2 (reputation streams): For the GMX-eligible set",
+            "Phase 2 (local evaluation): From cached parquet, compute reputation ranks, transfer and allowance checks, Spearman and Kendall alignment, computational benchmarks, and scaling/robustness extensions. No additional BigQuery scans are required once the Phase 1 extracts are available.",
+        ),
+        (
+            "Figure 3.1: Evaluation pipeline: public Arbitrum logs are extracted and decoded, reputation edges and GMX outcomes",
+            "Figure 3.1: Evaluation pipeline: public Arbitrum logs are extracted and decoded, reputation edges are preprocessed, EndorseRank and AWP ranks are computed, allowance and transfer checks are evaluated, and LaTeX result fragments are exported.",
+        ),
+        (
+            "Operationally, Phase 1 scripts write GMX raw logs",
+            "Operationally, Phase 1 scripts write monthly approval/transfer shards and consolidated latest-allowance and transfer-event tables.",
+        ),
+        (
+            "GMX PositionDecrease: GMX V2 emits structured events",
+            "Address and event decoding: ERC-20 Approval and Transfer logs are identified by standard topic-0 hashes and restricted to the evaluation wallet list.",
+        ),
+        (
+            "Address normalization and units: All addresses are lower-cased",
+            "Address normalization and units: All addresses are lower-cased before joins so that checksummed and non-checksummed hex forms collide correctly. Token amounts are stored as floating-point decimal-adjusted values for weighting; ranking uses relative magnitudes within a cohort rather than absolute USD conversion for allowance and transfer edges.",
+        ),
+        (
+            "GF-PR is an outcome-native reference built only from GMX PositionDecrease",
+            "The remaining external check is a temporal holdout of future new owner–spender approvals on t1 inbound spenders (n = 1,335).",
+        ),
+        (
+            "Inverse risk (GMX PnL):",
+            "Allowance checks: latest-allowance in-degree and related local statistics.",
+        ),
+        (
+            "Trading success: GMX close outcomes",
+            "Transfer checks: inbound transfer count and value statistics.",
+        ),
+        (
+            "Let W be the matched cohort. For GMX-derived proxies",
+            "Let W be the matched cohort. Allowance and transfer checks are defined on wallets with non-zero reputation-subgraph connectivity.",
+        ),
+        (
+            "Let C(w) be the set of non-missing GMX closes",
+            "Contemporaneous checks use allowance and transfer local statistics. Outcome-native close series are not used.",
+        ),
+        (
+            "The primary definition of realized_gain_proxy",
+            "Same-window claims use allowance and transfer checks. The external check is the temporal holdout under RQ4.",
+        ),
+        (
+            "The expanded wallet pool Wpool unions the matched GMX cohort",
+            "The expanded wallet pool Wpool unions the matched cohort with supplemental active addresses derived from the reputation subgraph, yielding N = |Wpool| = 31,612 addresses in this study. Supplemental addresses increase graph size for timing experiments. Runtime benchmarks at intermediate sizes use deterministic SHA256 subsampling with seed string benchmark-tier2-v1: wallets are ordered by",
+        ),
+        (
+            "Alignment statistics are recomputed on staged subsamples drawn from the expanded wallet pool using the same deterministic seed. Subsamples include supplemental addresses without GMX",
+            "Alignment statistics are recomputed on staged subsamples drawn from the expanded wallet pool using the same deterministic seed. Reported sample-size τ is interpreted primarily for transfer and allowance families on Wpool; primary claims remain on the matched wallet cohort (n = 5,521). Because rank correlations have sampling variability, modest movement in τ across sizes is expected; the robustness question is whether EndorseRank and AWP preserve their relative ordering on key graph-adjacent families.",
+        ),
+        (
+            "GMX proxy definition variants",
+            "Holdout label definition",
+        ),
+        (
+            "All empirical tables in Chapter 4 are produced by an open evaluation pipeline.",
+            "All empirical tables in Chapter 4 are produced by an open evaluation pipeline. After Phase 1 parquet artifacts are present, a single evaluation driver recomputes checks, alignment statistics, and benchmarks from those inputs. Observation window, damping, decay parameters, and benchmark seeds are collected in a single versioned configuration file. Fixture mode supports offline verification without cloud credentials.",
+        ),
+        (
+            "The matched cohort is a purposeful sample, not a random sample of all Arbitrum addresses. El-igibility requires GMX activity",
+            "The matched cohort is a purposeful sample, not a random sample of all Arbitrum addresses. Eligibility requires reputation-subgraph connectivity, so results speak to wallets with observable approval or transfer structure. Idle wallets, pure holders, and addresses that interact only through non-ERC-20 mechanisms are out of scope by design.",
+        ),
+        (
+            "The matched cohort is a purposeful sample, not a random sample of all Arbitrum addresses. Eligibility requires GMX activity",
+            "The matched cohort is a purposeful sample, not a random sample of all Arbitrum addresses. Eligibility requires reputation-subgraph connectivity, so results speak to wallets with observable approval or transfer structure. Idle wallets, pure holders, and addresses that interact only through non-ERC-20 mechanisms are out of scope by design.",
+        ),
+        (
+            "Supplemental addresses in the expanded wallet pool (N = 31,612) increase coverage for runtime tests but do not automatically carry GMX labels.",
+            "Supplemental addresses in the expanded wallet pool (N = 31,612) increase coverage for runtime tests. Alignment claims remain anchored to the matched cohort (n = 5,521), while scaling claims use the pool.",
+        ),
+        (
+            "Privacy and anonymity: Arbitrum One addresses are pseudonymous identifiers",
+            "Privacy and anonymity: Arbitrum One addresses are pseudonymous identifiers, not inherently linked to real-world identities [48]. Pseudonymity is not anonymity: determined adversaries can sometimes link addresses to persons through exchange deposits, public profiles, or clustering heuristics. This study deliberately refrains from such linkage. Collection is restricted to on-chain events—Approval and Transfer—with no scraping or integration of off-chain personal data such as IP addresses, exchange KYC records, social-media handles, or deanonymization graphs. No attempt was made to cluster addresses into real-world entities, to publish address-level rankings that could reasonably",
+        ),
+        (
+            "Data minimization: Only fields required for graph construction and proxies are retained",
+            "Data minimization: Only fields required for graph construction and checks are retained in processed tables (addresses, token amounts, timestamps). Raw logs are stored for auditability of the research pipeline but are not redistributed as a deanonymization aid. Query filters are wallet-scoped where possible to avoid indiscriminate full-chain dumps beyond the study design.",
+        ),
+        (
+            "All primary results use an identical matched cohort of n = 5,521 wallets that satisfy both a GMX trading-activity filter",
+            "All same-window results use an identical matched cohort of n = 5,521 wallets with non-zero connectivity in the reputation subgraphs. The holdout uses t1 inbound spenders (n = 1,335). Runtime scaling is evaluated on an expanded wallet pool of N = 31,612 addresses. Robustness checks vary PageRank damping, restrict the reputation graph to high-volume tokens, and recompute alignment at staged subsample sizes. Methodological definitions appear in Chapter 3. Claims are summarized in Section 4.8 and mapped to hypotheses and research questions in Table 1.3.",
+        ),
+        (
+            "The matched cohort comprises n = 5,521 wallets with at least three GMX",
+            "The matched cohort comprises n = 5,521 wallets with non-zero endorsement- and transfer-graph connectivity, drawn from six months of Arbitrum One BigQuery logs spanning 2025-12-01 through 2026-05-31. EndorseRank scores are computed on the latest-allowance endorsement graph Gapprove; AWP scores are computed on the time-decayed transfer graph Gtransfer. Same-window claims use transfer and allowance local statistics.",
+        ),
+        (
+            "Table 4.1: Dataset characteristics for the matched cohort (n = 5,521 wallets with ≥ 3 GMX closes",
+            "Table 4.1: Dataset characteristics for the matched cohort (n = 5,521 wallets with non-zero reputation-subgraph connectivity).",
+        ),
+        (
+            "GMX PositionDecrease events (decoded)",
+            "—",
+        ),
+        (
+            "Min. GMX closes per wallet",
+            "—",
+        ),
+        (
+            "The matched-cohort design deliberately intersects two filters. The GMX activity filter",
+            "The matched-cohort design requires non-zero reputation-subgraph connectivity so that both EndorseRank and AWP produce non-degenerate scores. The sample is large enough for stable Kendall τ estimates, yet small enough that full PageRank solves remain interactive on commodity hardware.",
+        ),
+        (
+            "ensures that trading-success and inverse-risk proxies are defined",
+            "Wallets with no approval edges and no transfer edges cannot be ranked meaningfully by either social method. The connectivity filter yields n = 5,521 wallets over the six-month window.",
+        ),
+        (
+            "GMX trading activity in the matched cohort",
+            "Matched cohort connectivity",
+        ),
+        (
+            "Figure 4.1 shows GMX close counts per wallet.",
+            "The matched cohort (n = 5,521) is wallets with non-zero endorsement- and transfer-graph connectivity. Endorsement and transfer graphs differ by nearly an order of magnitude in edge count (14,727 versus 137,087).",
+        ),
+        (
+            "GMX closes per wallet (winsorized at 99th percentile)",
+            "—",
+        ),
+        (
+            "The close-count figure and the edge-count gap",
+            "The edge-count gap in the dataset table fixes a sample constraint: endorsement and transfer graphs differ by nearly an order of magnitude in edge count (14,727 versus 137,087), so efficiency and alignment claims must be evaluated jointly. The matched cohort is large enough for stable rank statistics (n = 5,521).",
+        ),
+        (
+            "The runtime advantage is not merely a constant-factor curiosity",
+            "The runtime advantage is not merely a constant-factor curiosity on a single cohort size. If EndorseRank’s edge set remains substantially smaller than AWP’s as the wallet pool grows, the speedup should persist under staged scaling. Table 4.3 reports runtime scaling on an expanded wallet pool of N = 31,612 addresses: the matched cohort unioned with supplemental active wallets drawn from the reputation subgraph. Deterministic SHA256 subsampling yields staged cohorts at n = 10,000 and at full pool size. In-cohort scaling for n ≤ 5,521 is reported in Appendix 8.1 (Table 8.1).",
+        ),
+        (
+            "Figure 4.4: PageRank wall-clock runtime versus cohort size (log x-axis). Solid lines: in-cohort scaling on the matched GMX sample",
+            "Figure 4.4: PageRank wall-clock runtime versus cohort size (log x-axis). Solid lines: in-cohort scaling on the matched cohort (n ≤ 5,521). Dashed lines: expanded wallet pool (N = 31,612). EndorseRank remains approximately 9–10× faster than AWP at n = 10,000 (≈ 10.4×) and at full pool size (≈ 9.4×).",
+        ),
+        (
+            "active wallets that are not GMX-matched",
+            "active wallets outside the matched cohort; proxies and score supports therefore change with the sample definition. The relevant robustness claim is ordinal and comparative: the construct-specific winners and the runtime advantage persist under pool expansion and staged subsampling. In-cohort scaling detail for the matched sample alone appears in Appendix 8.1.",
+        ),
+        (
+            "Table 4.7: Mean Kendall τ by proxy family across 3 PageRank methods",
+            "Table 4.7: Mean Kendall τ for allowance and transfer checks (n = 5,521). Runtime = mean PageRank wall time. EndorseRank and AWP are social reputation graphs.",
+        ),
+        (
+            "GF-PR is weak on transfer proxies (family mean 0.246)",
+            "Same-window transfer alignment remains a construct check for AWP, not a substitute for the holdout.",
+        ),
+        (
+            "Inverse-risk family (GMX PnL)",
+            "Allowance and transfer checks",
+        ),
+        (
+            "Table 4.10: Domain alignment with inverse-risk proxies from GMX realized PnL",
+            "Table 4.10 is withdrawn from the claims. Same-window evidence is allowance versus transfer.",
+        ),
+        (
+            "Table 4.12: Domain alignment with GMX V2 margin-trading success proxies",
+            "Table 4.12 is withdrawn from the claims. The external check is the spender holdout.",
+        ),
+        (
+            "cially instructive. It shows that the evaluation pipeline can recover extremely high τ",
+            "The holdout is the out-of-window check. Same-window allowance tau is an intended-construct check.",
+        ),
+        (
+            "Hybrid deployments are feasible: EndorseRank for continuous authorization-aware monitoring, AWP for periodic transfer-hub audits, and GMX-linked outcome metrics",
+            "Hybrid deployments are feasible: EndorseRank for continuous authorization-aware monitoring and AWP for periodic transfer-hub audits [23],[53]. The open pipeline enables cross-protocol replication on any ERC-20 chain with allowance logs (Appendix 8.1). Integration with live risk oracles and governance tooling remains future work (Chapter 6), but the efficiency profile of En-",
+        ),
+        (
+            "Perpetual DEX operators: Protocols such as GMX V2 earn primarily from trading fees",
+            "Protocol operators: Operators face a continuous decision problem: which wallets to prioritize for monitoring or feature access when reputation must be refreshed frequently. EndorseRank fits this loop because allowance τ = 0.355 aligns the score with authorization activity and PageRank completes in 2.105 s on the matched cohort, enabling frequent updates without transfer-history aggregation.",
+        ),
+        (
+            "Cohort selection: The matched wallet cohort requires at least three GMX closes",
+            "Cohort selection: The matched wallet cohort requires non-zero reputation-subgraph connectivity (n = 5,521). Results may not extend to addresses absent from allowance and transfer subgraphs.",
+        ),
+        (
+            "Single protocol and chain: Evidence is limited to Arbitrum One and GMX V2.",
+            "Single chain: Evidence is limited to Arbitrum One. Generalization to other Layer-1 or Layer-2 chains requires re-validation [28],[53],[59].",
+        ),
+        (
+            "31,612) supports efficiency claims at larger n; alignment results remain anchored to the matched cohort with GMX outcomes.",
+            "31,612) supports efficiency claims at larger n; alignment results remain anchored to the matched connectivity cohort. Efficiency gains should not be assumed to preserve the same τ profile at arbitrary population sizes without further alignment studies.",
+        ),
+        (
+            "Cross-protocol and cross-chain validation: Replication on other perpetual markets",
+            "Cross-protocol and cross-chain validation: Replication on other Layer-2 or Layer-1 networks would test whether the allowance–transfer trade-off generalizes beyond Arbitrum One [53],[59]. Where lending default labels are denser, credit-ground-truth validation can complement the holdout used here [26],[44].",
+        ),
+        (
+            "Trading-success labels: Decode GMX V2 PositionDecrease events",
+            "Holdout labels: After scores freeze at 28 February 2026, new owner–spender pairs in March–May 2026 are the external check on t1 inbound spenders (n = 1,335).",
+        ),
+        (
+            "ERC-20 Approval and Transfer events are identified by their standard topic-0 hashes and re-stricted to logs whose owner/spender or from/to address lies in the evaluation wallet list, so scan cost scales with the cohort rather than the full chain. Monthly batching keeps each query under the operational byte cap. GMX V2 events are read from the EventEmitter contract at",
+            "ERC-20 Approval and Transfer events are identified by their standard topic-0 hashes and restricted to logs whose owner/spender or from/to address lies in the evaluation wallet list, so scan cost scales with the cohort rather than the full chain. Monthly batching keeps each query under the operational byte cap. Representative SQL patterns appear in Appendix 8.2.",
+        ),
+        (
+            "Table 8.1: In-cohort runtime scaling (SHA256 seed benchmark-scale-v1; n ≤ 5,521 matched GMX cohort).",
+            "Table 8.1: In-cohort runtime scaling (SHA256 seed benchmark-scale-v1; n ≤ 5,521 matched cohort).",
+        ),
+        (
+            "Min. GMX closes3Cohort eligibility Observation window2025-12-01 – 2026-05-31 UTC inclusive",
+            "Cohort eligibility: non-zero reputation-subgraph connectivity. Observation window: 2025-12-01 – 2026-05-31 UTC inclusive.",
+        ),
+        (
+            "GMX PositionDecrease extraction pattern",
+            "Approval and Transfer extraction pattern",
+        ),
+        (
+            "GMX V2 events are read from the EventEmitter contract.",
+            "ERC-20 Approval and Transfer events are read from the public BigQuery log table. The pipeline filters on standard topic-0 hashes and the evaluation wallet list. Wallets without approval or transfer connectivity are excluded from the matched cohort.",
+        ),
+        (
+            "GMX emitter address and topic filters;",
+            "Approval and Transfer topic filters;",
+        ),
+        (
+            "GMX closes (decoded)",
+            "—",
+        ),
+        (
+            "Table 8.4 reports family-level mean Kendall τ for seven methods",
+            "Appendix 8.4 runtime and allowance/transfer checks remain available for the social methods. Outcome-native columns are not interpreted as claims.",
+        ),
+        (
+            "that results generalize beyond Arbitrum One, GMX V2",
+            "that results generalize beyond Arbitrum One and the study window without replication;",
+        ),
+        (
+            "Decoded GMX close events with PnL and liquidation flags.",
+            "Decoded ERC-20 Approval and Transfer events used for graph construction.",
+        ),
+        (
+            "GF-PR was computed during exploratory work",
+            "The external check that remains is the spender holdout under RQ4 (EndorseRank tau = 0.479, CI 0.426–0.529; AWP 0.044).",
+        ),
+        (
+            "This research does not predict trading profit",
+            "The remaining external check is a temporal holdout of future new owner–spender approvals.",
+        ),
+        (
+            "SRQ1 is withdrawn. GF-PR is not a research claim.",
+            "SRQ1 is withdrawn. The external check is the temporal holdout under RQ4.",
+        ),
+        (
+            "GF-PR is not a claim and is not a third peer social method.",
+            "The primary comparison is EndorseRank versus AWP. The external check is the temporal holdout.",
+        ),
+        (
+            "Withdrawn: SC1 / GF-PR is not a research claim.",
+            "Withdrawn: SC1 is not a research claim. The external check that remains is the spender holdout under RQ4.",
+        ),
+        (
+            "SRQ1 / SC1 are withdrawn. GF-PR is not a deployable social reputation score",
+            "SRQ1 / SC1 are withdrawn. The external check that remains is the spender holdout.",
+        ),
+        (
+            "Temporal holdout: t1 scores versus t2 new approvals on inbound spenders (EndorseRank tau = 0.479, CI 0.426–0.529; AWP 0.044). GF-PR is excluded from the claims.",
+            "Temporal holdout: t1 scores versus t2 new approvals on inbound spenders (EndorseRank tau = 0.479, CI 0.426–0.529; AWP 0.044).",
+        ),
+        (
+            "I do not read social-method trading-success tau against a GF-PR ceiling.",
+            "The external check that remains is the spender holdout.",
+        ),
+        (
+            "GF-PR is not used as a diagnostic ceiling in the claims.",
+            "The remaining validation logic separates same-window allowance and transfer checks from the temporal holdout.",
+        ),
+        (
+            "Trading-success alignments (formerly 0.096 / 0.179) are dropped from the claims.",
+            "Same-window checks remain allowance versus transfer. The external check is the spender holdout.",
+        ),
+        (
+            "Trading-success families are not used to support H2.",
+            "H2 is supported in the construct-specific form: allowance versus transfer.",
+        ),
+    ]
+    for prefix, new in replacements:
+        try_prefix(prefix, new)
+
+    try_exact("GMX V2 as a sampling frame", "Matched cohort (connectivity)")
+    try_exact("GMX", "—")
+    try_exact("365,488", "—")
+    try_exact("GMX PositionDecrease extraction pattern135", "Approval and Transfer extraction")
+
+    # Phrase sweep on leftover body (keep the GMX bibliography item).
+    phrases = (
+        ("defined by GMX activity as a sampling frame only", "with non-zero endorsement- and transfer-graph connectivity"),
+        ("GMX V2 activity is a sampling frame (365,488 decoded PositionDecrease events; at least three closes). ", ""),
+        ("GMX V2 activity defines the matched sample (at least three PositionDecrease closes). ", ""),
+        ("at least three GMX V2 PositionDecrease closes", "non-zero endorsement- and transfer-graph connectivity"),
+        ("at least three GMX PositionDecrease closes", "non-zero endorsement- and transfer-graph connectivity"),
+        ("at least three GMX PositionDecrease events", "non-zero endorsement- and transfer-graph connectivity"),
+        ("at least three GMX closes", "non-zero endorsement- and transfer-graph connectivity"),
+        ("≥ 3 GMX closes", "non-zero reputation-subgraph connectivity"),
+        ("; 365,488 decoded closes", ""),
+        ("; 365,488 decoded PositionDecrease events", ""),
+        ("; 365,488 PositionDecrease events", ""),
+        ("365,488 decoded closes", "the connectivity cohort"),
+        ("365,488 decoded PositionDecrease events", "the connectivity cohort"),
+        ("365,488 PositionDecrease events", "the connectivity cohort"),
+        (" and GMX V2 perpetual trading", ""),
+        (", GMX V2,", ","),
+        (" and GMX V2", ""),
+        ("including GMX V2 [23]", "[23]"),
+        ("GMX-matched", "matched"),
+        ("matched GMX sample", "matched cohort"),
+        ("matched GMX cohort", "matched cohort"),
+        ("GMX-qualified matched cohort", "matched cohort"),
+        ("with GMX outcomes", ""),
+        ("and GMX outcomes", ""),
+        ("GMX-linked outcome metrics as separate risk dash-boards rather than as substitutes for social scores ", ""),
+        ("GMX-eligible set", "evaluation wallet list"),
+        ("PositionDecrease events that serve only as an activity filter", "public Approval and Transfer logs"),
+        ("whose PositionDecrease events are used only as an activity filter", "the sole empirical venue for this comparison"),
+        ("circular with GMX profit-and-loss", "not used as a research claim"),
+        ("from GMX realized PnL", ""),
+        ("from the same GMX profit-and-loss stream", "from outcome streams"),
+        ("from the same GMX PositionDecrease stream", "from outcome streams"),
+        ("outcome-native GMX PnL star baseline", "withdrawn outcome-native baseline"),
+        ("construct overlap on GMX proxies", "not a social-graph claim"),
+        ("GMX success by construction", "outcome columns that are not claims"),
+        ("and GMX V2. Generaliza-tion", ". Generalization"),
+        ("beyond Arbitrum One and GMX V2", "beyond Arbitrum One"),
+        ("Cross-chain GMX deployments and alternative L2s offer natural replication sites with comparable event schemas.", "Alternative L2s offer natural replication sites."),
+        ("GMX V2 closes define the matched sample. ", ""),
+        ("It is not a trading-success test. ", ""),
+        ("Trading-success, inverse-risk, liquidation, and GF-PR alignments are not claims.", "Contemporaneous checks use allowance and transfer local statistics."),
+        ("Trading-success and GF-PR alignments are not claims.", ""),
+        ("Trading-success families are not claims.", ""),
+        ("GF-PR and trading-success families are excluded from the research claims. ", ""),
+        ("GF-PR and trading-success alignments are excluded from the claims.", ""),
+    )
+    for p in paras():
+        old = para_text(p)
+        if old.startswith("GMX. (n.d.)"):
+            continue
+        new = old
+        for a, b in phrases:
+            if a in new:
+                new = new.replace(a, b)
+        if new != old:
+            replace_para_text(p, new)
+
+
+def apply_body_pass5(doc) -> None:
+    """Second sweep: leftover GF-PR/GMX headings, notes, and exact table cells."""
+    body = doc.find(qn("body"))
+
+    def paras():
+        return [p for p in body.iter(qn("p"))]
+
+    def replace_all_exact(old: str, new: str) -> None:
+        for p in paras():
+            if para_text(p).strip() == old:
+                replace_para_text(p, new)
+
+    def replace_all_prefix(prefix: str, new: str) -> None:
+        for p in paras():
+            if para_text(p).startswith(prefix):
+                replace_para_text(p, new)
+
+    def replace_all_contains(needle: str, new: str) -> None:
+        for p in paras():
+            t = para_text(p)
+            if t.startswith("GMX. (n.d.)"):
+                continue
+            if needle in t:
+                replace_para_text(p, new)
+
+    prefix_map = [
+        ("Supplementary extension (GF-PR)", "Temporal holdout of future new approvals"),
+        ("Supplementary extension: outcome-native reference (GF-PR)", "Temporal holdout of future new approvals"),
+        ("Supplementary GF-PR graph (extension)", "Temporal holdout of future new approvals"),
+        ("Supplementary GF-PR ceiling analysis", "Temporal holdout of future new approvals (RQ4)"),
+        ("SRQ1 / SC1 — GF-PR ceiling", "RQ4 — temporal holdout of future new approvals"),
+        (" Family-level mean Kendall τ heatmap for EndorseRank, AWP, and supplementary GF-PR", "Family-level mean Kendall τ heatmap for EndorseRank and AWP on the matched cohort (n = 5,521). EndorseRank peaks on allowance;"),
+        ("AWP peaks on transfer among social methods; GF-PR peaks", "AWP peaks on transfer. Same-window checks are allowance versus transfer."),
+        ("Mean Kendall τ by proxy family: EndorseRank, AWP, and GF-PR", "Mean Kendall τ by proxy family: EndorseRank and AWP (n = 5,521)."),
+        ("Note: GF-PR", "Note: The external check is the temporal holdout of future new approvals on t1 inbound spenders."),
+        ("SRQ1What does GF-PR ceiling imply", "RQ4. After scores are frozen at 28 February 2026, does EndorseRank predict t2 new owner–spender approvals?"),
+        ("SC1Supplementary GF-PR", "C4 Spender holdout of future new approvals"),
+        ("Temporal holdout, not GF-PR:", "Temporal holdout: The external check is future new approvals on t1 inbound spenders."),
+        ("on this chain for reliable ground-truth validation.", "Constructs and ethics are defined in Chapters 1 and 3. Same-window transfer alignment does not diminish EndorseRank’s allowance-specific validity or runtime advantage. The external check is the temporal holdout. Extended baselines archived for future comparison are excluded from the main narrative (Appendix 8.1)."),
+        ("Figure 2.3 presents the conceptual model mapping the primary EndorseRank–AWP comparison to H1–H3 and RQ1–RQ4. GF-PR", "Figure 2.3 presents the conceptual model mapping the primary EndorseRank–AWP comparison to H1–H3 and RQ1–RQ4. The remaining external check is the temporal holdout."),
+        ("Supplementary role of GF-PR:", "Holdout, not outcome ranking: H1 and H3 concern EndorseRank and AWP only. H2/RQ2 compares contemporaneous allowance and transfer checks. RQ4 is a time-split test of future new owner–spender approvals on the spender cohort."),
+        ("Primary comparison: EndorseRank vs AWPTrading Success Alignment", "Primary comparison: EndorseRank vs AWP. Computational efficiency H3/RQ3. Reputation structure H1/RQ1. Construct checks H2/RQ2. Temporal holdout RQ4."),
+        ("Supplementary: GF-PR outcome-native ceiling (SRQ1)", "Temporal holdout of future new approvals (RQ4)"),
+        ("Figure 2.3: Conceptual model:", "Figure 2.3: Conceptual model: primary EndorseRank vs. AWP comparison mapped to reputation structure (H1/RQ1), construct checks (H2/RQ2), computational efficiency (H3/RQ3), and the temporal holdout of future new approvals (RQ4)."),
+        ("Construct overlap: When a method’s input graph", "Contemporaneous check: Local transfer or allowance statistics computed in the same window as the score."),
+        ("EndorseRank addresses (1)–(3) directly, contributes a diagnostic for (4) via GF-PR", "EndorseRank addresses (1)–(4) with allowance edges, contemporaneous checks, runtime benchmarks, and a temporal holdout, and analyzes"),
+        ("This chapter specifies the empirical design used to compare EndorseRank and Adaptive Weighted PageRank (AWP) as social reputation scores on Arbitrum One.", "This chapter specifies the empirical design used to compare EndorseRank and Adaptive Weighted PageRank (AWP) as social reputation scores on Arbitrum One. The design covers notation, data sources, a two-phase collection strategy, pipeline architecture, event decoding, graph construction algorithms, contemporaneous checks, statistical tests, computational benchmarks, scaling and robustness extensions, reproducibility, and ethics. The primary comparison is between EndorseRank on the ERC-20 allowance graph and AWP on the time-decayed transfer graph [16],[49]."),
+        ("Primary versus supplementary scope:", "Primary scope: claims C1–C4 and hypotheses H1–H3 concern EndorseRank and AWP. RQ4 is the temporal holdout."),
+        ("GGF-PRSupplementary GF-PR star graph", "Gapprove Directed endorsement graph from latest ERC-20 allowances"),
+        ("εloss, εliqGF-PR sink additives (0.1, 1.0)", "—"),
+        ("Traders are identified via the event account field.", "The public log table is authoritative. Decoding is performed in the open pipeline [23],[53]. Lending-protocol default labels remain out of scope."),
+        ("The additives εloss and εliq break ties", "Same-window checks use allowance and transfer local statistics. Outcome-native sink additives are not used."),
+        ("Supplementary evaluation includes GF-PR only for SRQ1", "Supplementary evaluation is the temporal holdout under RQ4. Lending-protocol default labels remain out of scope. Packin and Lev-Aretz[48] caution that decentralized credit scores can become opaque; the design counters opacity by publishing explicit formulas and by separating same-window checks from the holdout."),
+        ("These metrics support sensitivity analyses and GF-PR diagnostics", "These metrics support sensitivity analyses but are not part of the primary claims."),
+        ("Cohorts: The primary benchmark uses the matched wallet cohort (n = 5,521). Scaling benchmarks use deterministic subsamples of the expanded wallet pool (Section 3.12). GF-PR runtime", "Cohorts: The primary benchmark uses the matched wallet cohort (n = 5,521). Scaling benchmarks use deterministic subsamples of the expanded wallet pool (Section 3.12)."),
+        ("Fairness and transparency: Graph reputation systems can systematically undervalue new entrants", "Fairness and transparency: Graph reputation systems can systematically undervalue new entrants, low-volume participants, or wallets that avoid public approvals [48]. EndorseRank and AWP were therefore audited for such structural biases: allowance graphs favor addresses that receive spending authority; transfer graphs favor addresses embedded in value-flow networks. Limitations—including cold-start effects and Sybil susceptibility of approval graphs—are discussed in Chapter 5. All code paths, parameter choices, and evaluation metrics are documented in the open pipeline (Appendix 8.1) to enable peer review and independent replication."),
+        ("Summary of methodological commitments:", "Summary of methodological commitments: The design fixes the chain, window, cohort rules, graph formulas, check definitions, and statistical tests before interpreting results. Primary claims compare only EndorseRank and AWP on the matched wallet cohort and the spender holdout; the expanded pool and robustness sweeps test efficiency and stability. Chapter 4 reports the empirical outcomes of this protocol."),
+        ("GF-PR runtime (1.461 s) is reported", "The primary efficiency comparison is EndorseRank versus AWP on wallet-to-wallet social graphs (2.105 s versus 18.711 s)."),
+        ("Claims C2 and C3 address whether EndorseRank and AWP achieve credible domain alignment", "Claims C2 and C3 address whether EndorseRank and AWP achieve credible domain alignment and whether winners are construct-specific. Same-window evidence is allowance versus transfer."),
+        ("Figure 4.6 provides a compact visual summary of family-level alignment.", "Figure 4.6 provides a compact visual summary of family-level alignment. The heatmap makes the construct-specific pattern immediate: EndorseRank’s strongest cell is allowance; AWP’s strongest cell is transfer."),
+        ("Figure 4.6: Family-level mean Kendall τ heatmap for EndorseRank, AWP, and supplementary GF-PR", "Figure 4.6: Family-level mean Kendall τ heatmap for EndorseRank and AWP on the matched cohort (n = 5,521). EndorseRank peaks on allowance; AWP peaks on transfer."),
+        ("The exported summary also includes a liquidation-related column and the GF-PR row.", "The primary narrative of this section is the EndorseRank–AWP contrast across transfer and allowance checks."),
+        ("The following subsections report Spearman ρ and Kendall τ for each proxy within family.", "The following subsections report Spearman ρ and Kendall τ for allowance and transfer checks. All checks are oriented so that higher values imply higher expected reputation before correlation, following Do et al.[16] and the operational definitions in Chapter 3."),
+        ("I do not use GF-PR, trading-success, or inverse-risk alignments as supporting evidence.", "Same-window allowance tau is an intended-construct check; the external check is the spender holdout."),
+        ("GF-PR’s near-identity with realized-gain", "Same-window checks remain allowance versus transfer. The external check is the spender holdout."),
+        ("The ceiling is therefore a diagnostic for evaluation design", "The holdout is the out-of-window check. Same-window allowance tau is an intended-construct check."),
+        ("The near-perfect GF-PR alignment", "The holdout is the out-of-window check."),
+        ("In summary, the matched-cohort evaluation supports a coherent empirical narrative.", "In summary, the matched-cohort evaluation supports a coherent empirical narrative. EndorseRank is substantially faster than AWP because Gapprove is an order of magnitude sparser than Gtransfer. The two methods produce related but distinct rankings (inter-method τ = 0.316) and win on different checks: EndorseRank on allowance, AWP on transfer. Robustness checks do not overturn these patterns."),
+        ("What the chapter does not claim is equally important.", "The contribution is a construct-aware comparison: EndorseRank offers a sparse, authorization-native ranking that is much cheaper to compute, aligns with allowance checks (τ = 0.355), diverges moderately from AWP, and predicts later new approvals on the spender holdout."),
+        ("Chapter 5 interprets these findings against RQ1–RQ4 and discusses implications, threats to validity, and limitations. Trading-success and GF-PR", "Chapter 5 interprets these findings against RQ1–RQ4 and discusses implications, threats to validity, and limitations."),
+        ("Trading-success, inverse-risk, liquidation, and malicious-spender alignments are excluded from the findings. GMX activity remains a sampling frame only.", "Same-window findings use allowance and transfer checks. The out-of-window check is the temporal holdout of future new approvals."),
+        ("GF-PR is circular with trading-success", "The external check is the temporal holdout of future new approvals, not an outcome-native ceiling."),
+        ("Non-claim: GF-PR shares input semantics", "Same-window checks are allowance versus transfer. The external check is the temporal holdout."),
+        ("The practical upshot is modest and actionable.", "The practical upshot is modest and actionable. If a protocol or researcher needs a fast, auditable score of who is trusted to spend, EndorseRank is a credible instrument on Arbitrum One data of the kind studied here. If the goal is to find transfer hubs, AWP remains stronger among social methods."),
+        ("Reputation graphs and scores: Extract ERC-20 Approval and Transfer logs", "Reputation graphs and scores: Extract ERC-20 Approval and Transfer logs for cohort wallets in monthly batches (per-query dry-run and a 150 GiB abort cap). Build the latest-allowance endorsement graph and the time-decayed transfer graph, then compute EndorseRank and AWP scores by power iteration (damping d = 0.85, tolerance 10−8, at most 300 iterations)."),
+        ("Table 8.2 restates family-level mean τ from Table 4.7", "Table 8.2 restates family-level mean τ from Table 4.7 in columnar form for EndorseRank and AWP. The main narrative uses Table 4.7."),
+        ("Table 8.2: Mean Kendall τ by proxy family: EndorseRank, AWP, and GF-PR", "Table 8.2: Mean Kendall τ by proxy family: EndorseRank and AWP (n = 5,521)."),
+        ("GF-PR loss εloss0.1Ordinary loss edge boost", "—"),
+        ("GF-PR liquidation εliq1.0Liquidation edge boost", "Expanded pool subsample seed benchmark-tier2-v1. Deterministic SHA256 seed."),
+        ("GMX PositionDecrease extraction pattern", "Approval and Transfer extraction pattern"),
+        ("Identify whether a row is a social method (EndorseRank, AWP) or the supplementary GF-PR reference.", "Identify whether a row is EndorseRank or AWP."),
+        ("Treat GF-PR highs on trading-success and inverse-risk as construct-overlap diagnostics (SRQ1).", "Treat the spender holdout as the external check (RQ4)."),
+        ("Cronbach and Meehl[14] distinguish criterion-related validity from construct validity.", "Cronbach and Meehl[14] distinguish criterion-related validity from construct validity. In the absence of a gold-standard default label, this research pursues a construct-oriented strategy: each method is tested against checks that operationalize its intended meaning (allowance receipt for EndorseRank; inbound transfer activity for AWP). High within-construct τ supports interpretation; low cross-construct τ is not automatically failure—it may indicate discriminant validity."),
+        ("GF-PR trading-success mean τ", "—"),
+        ("GF-PR inverse-risk mean τ", "—"),
+        ("GF-PR’s dominance on outcome families remains a construct-overlap warning, identical to Chapter 4.", "Same-window evidence remains allowance versus transfer, identical to Chapter 4."),
+        ("Focusing the dissertationthesis on EndorseRank, AWP, and supplementary GF-PR serves three goals:", "Focusing this research on EndorseRank and AWP serves three goals:"),
+        ("Honest use of GF-PR:", "Honest use of the holdout: The external check is future new approvals, not an outcome-native ceiling."),
+        ("The decision to keep only EndorseRank, AWP, and supplementary GF-PR in Chapters 4–5 was made after inspecting the seven-method and six-Aave matrices. Criteria were:", "The decision to keep only EndorseRank and AWP in Chapters 4–5 keeps the primary comparison focused. Criteria were:"),
+        ("Under these criteria, EndorseRank (allowance), AWP (transfer), and GF-PR (outcome-native ceil-ing) form a minimal sufficient set.", "Under these criteria, EndorseRank (allowance) and AWP (transfer) form a minimal sufficient set. Archive tables remain available for readers who want the broader landscape without diluting the primary claims."),
+        ("Statement: GF-PR bounds trading-outcome alignment via construct overlap.", "Statement: The external check is the temporal holdout of future new approvals."),
+        ("Evidence: Table 4.7 row GF-PR:", "Evidence: spender holdout, EndorseRank tau = 0.479 (CI 0.426–0.529); AWP 0.044."),
+        ("that GF-PR is a deployable social reputation score;", "that an outcome-native score is a deployable social reputation score;"),
+        ("Merged wallet-ranking table — scores for ER, AWP, GF-PR.", "Merged wallet-ranking table — scores for EndorseRank and AWP."),
+        ("This dissertationthesis focuses on Arbitrum One", "This research focuses on Arbitrum One over the observation window 2025-12-01 to 2026-05-31. The primary empirical sample is a matched wallet cohort of n = 5,521 addresses with non-zero endorsement- and transfer-graph connectivity, comprising 14,727 EndorseRank edges and 137,087 AWP edges. Runtime scaling is reported on an expanded wallet pool (N = 31,612)."),
+        ("This dissertation thesis focuses on Arbitrum One", "This research focuses on Arbitrum One over the observation window 2025-12-01 to 2026-05-31. The primary empirical sample is a matched wallet cohort of n = 5,521 addresses with non-zero endorsement- and transfer-graph connectivity, comprising 14,727 EndorseRank edges and 137,087 AWP edges. Runtime scaling is reported on an expanded wallet pool (N = 31,612)."),
+    ]
+    for prefix, new in prefix_map:
+        replace_all_prefix(prefix, new)
+
+    replace_all_exact("GF-PR", "—")
+    replace_all_exact("GMX", "—")
+    replace_all_exact("365,488", "—")
+    replace_all_exact("GF-PR (supp.)", "—")
+
+    # Concatenated table blobs that still name GMX/GF-PR: drop the leftover tokens only.
+    token_swaps = (
+        ("GF-PR", "—"),
+        ("GMX", "—"),
+        ("PositionDecrease", "Approval/Transfer"),
+        ("365,488", "—"),
+    )
+    for p in paras():
+        old = para_text(p)
+        if old.startswith("GMX. (n.d.)"):
+            continue
+        new = old
+        for a, b in token_swaps:
+            if a in new:
+                new = new.replace(a, b)
+        if new != old:
+            replace_para_text(p, new)
+
+    leftover_prefix = [
+        ("RQ4Transfer vs. trading-success validation frame", "RQ4 Temporal holdout of future new approvals"),
+        ("Transfer and allowance families are graph-adjacent:", "Transfer and allowance families are graph-adjacent: they are computed from the same event classes that build Gtransfer and Gapprove, but they are simple local statistics (degree and value sums) rather than global PageRank scores. Strong alignment of AWP with transfer checks, or of EndorseRank with allowance checks, is therefore evidence of within-construct coherence."),
+        ("w with realized PnL x (field basePnlUsd):", "Contemporaneous checks use allowance and transfer local statistics."),
+        ("Equation (3.10) sums absolute loss magnitudes", "Same-window claims use allowance and transfer checks. Outcome-native close series are not used."),
+        ("For trading-success robustness, realized_gain_proxy", "Robustness checks vary damping, top-token subgraphs, and sample size. Primary claims remain on allowance versus transfer and the spender holdout."),
+        ("Reading Table 4.7 requires care on two points.", "Reading Table 4.7 requires care. Family means average heterogeneous checks. Primary-construct correlations (EndorseRank with allowance; AWP with transfer) confirm that PageRank recovers the graph signal it was given. EndorseRank’s moderate transfer τ = 0.333 is a secondary axis. The external check is the spender holdout (τ = 0.479 versus AWP 0.044)."),
+        ("The out-of-window check is not trading-success tau.", "On the holdout spender cohort (n = 1,335), EndorseRank aligns with future new approvers at Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is the same endorsement construct in the future tense."),
+        ("RQ4: Transfer versus trading-success validation frames", "RQ4: Temporal holdout of future new approvals"),
+        ("RQ4 asks whether t1 scores predict t2 new owner–spender approvals on inbound spenders. On the spender cohort (n = 1,335), EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044. That is a time-split test of the endorsement construct, not a transfer-versus-trading-success contest.", "RQ4 asks whether t1 scores predict t2 new owner–spender approvals on inbound spenders. On the spender cohort (n = 1,335), EndorseRank Kendall tau = 0.479 (bootstrap 95% CI 0.426–0.529); AWP is 0.044."),
+        ("alignment is therefore evidence of construct overlap", "The external check that remains is the spender holdout."),
+        ("Protocols that emphasize explicit spending authorization", "Protocols that emphasize explicit spending authorization—token vaults, allowance-gated integrations, or risk engines that treat approvals as trust acts—may prefer EndorseRank. The method’s allowance τ = 0.355, sparse graph (14,727 edges), and 2.105 s PageRank time support frequent recomputation. Pool scaling (≈ 10.4× at n = 10,000; ≈ 9.4× at N = 31,612) indicates that the efficiency advantage persists beyond the matched cohort."),
+        ("The practical value of EndorseRank and AWP is not that either score predicts trading profit", "The practical value of EndorseRank and AWP is that both supply a cheap, standardized, and independently recomputable ordinal signal that protocols can plug into operational decisions. Value capture is hypothesized to run through fees, utilization, and monitoring cost, rather than through reducing collateral."),
+        ("Lending protocols: Lending markets seek higher capital utilization", "Lending protocols: Lending markets seek higher capital utilization without abandoning collateralization [5],[26]. Reputation can enter as an auxiliary signal for interest-rate or fee tiers and review cadence on already-collateralized positions, not as a substitute for collateral. EndorseRank is the natural social input when the protocol already relies on ERC-20 approvals for deposits and borrows (Section 2.7)."),
+        ("the product differentiator relative to opaque machine-learning scores [48]. Providers should disclose weak trading-success alignment", "the product differentiator relative to opaque machine-learning scores [48]. Providers should disclose Sybil exposure alongside any dashboard that surfaces ranks."),
+        ("Ethically, scores must not be presented as identity", "Ethically, scores must not be presented as identity, creditworthiness in the consumer-lending sense, or proof of unique personhood [17]. They are ordinal indicators of on-chain graph position under specified edge semantics. Deployments that gate access to financial services should disclose the graph definition, observation window, and known failure modes—including Sybil exposure. Regulatory regimes that require explainability favor graph propagation over opaque machine-learning scores [39],[48], provided operators resist overclaiming predictive power for loan default."),
+        ("Same-window and holdout evaluation: Compares EndorseRank and AWP on allowance versus transfer checks and on t2 new owner–spender approvals. The result is a construct-specific map, not a trading-success ranking.", "Same-window and holdout evaluation: Compares EndorseRank and AWP on allowance versus transfer checks and on t2 new owner–spender approvals."),
+        ("Hybrid social methods: Operators may combine endorsement-graph features with transfer-graph features, or with DeFi-informed representation learning [39], while preserving the auditability emphasized by Packin and Lev-Aretz[48]. Hybrid designs should report construct-specific checks and, where claimed, a time-split holdout rather than a single aggregate trading-success metric.", "Hybrid social methods: Operators may combine endorsement-graph features with transfer-graph features, or with DeFi-informed representation learning [39], while preserving the auditability emphasized by Packin and Lev-Aretz[48]. Hybrid designs should report construct-specific checks and, where claimed, a time-split holdout."),
+        (" Collateral-differentiation experiments:", "Collateral-differentiation experiments: Section 5.4.4 argues that protocols can capture value through fee tiers, utilization, and monitoring cost without treating reputation as a collateral substitute. Until such evidence exists, collateral reduction remains an adoption hypothesis rather than an empirical claim of this research."),
+        ("LLInverse risk:", "—"),
+        ("PnLc < 0", "—"),
+        ("Trading success: close_success_count", "—"),
+        ("Lc max(PnLc, 0)", "—"),
+        ("ER trading-success mean τ", "ER holdout Kendall τ"),
+        ("AWP trading-success mean τ", "AWP holdout Kendall τ"),
+        ("Statement: The external check is the temporal holdout of future new approvals, not transfer versus trading-success.", "Statement: The external check is the temporal holdout of future new approvals."),
+        ("Evidence: Table 4.7: transfer means 0.333 (ER) and 0.534 (AWP) exceed trading-success means 0.096 (ER) and 0.179 (AWP).", "Evidence: holdout EndorseRank tau = 0.479 (CI 0.426–0.529); AWP 0.044. Same-window transfer means 0.333 (ER) and 0.534 (AWP)."),
+        ("PnL flow to POOL/SINK", "—"),
+        ("——PnLstar (POOL→wallet, wallet→SINK)", "—"),
+        ("This elevation is expected:", "Same-window checks remain allowance versus transfer. The external check is the spender holdout."),
+        ("−0.235), consistent with the absence of transfer-activity semantics in the PnL star graph.", "Same-window transfer alignment remains a construct check for AWP."),
+    ]
+    for prefix, new in leftover_prefix:
+        replace_all_prefix(prefix, new)
+
+
 def inplace_main() -> None:
     """Update the existing replied DOCX. Never copy from the review original."""
     if set(PARENT_ORDER) != set(REPLIES):
@@ -1506,6 +2185,8 @@ def inplace_main() -> None:
     apply_body_inplace(doc)
     apply_body_pass2(doc)
     apply_body_pass3(doc)
+    apply_body_pass4(doc)
+    apply_body_pass5(doc)
     n = update_existing_replies(comments)
     try:
         rewrite_zip(

@@ -56,12 +56,6 @@ WHERE block_timestamp >= TIMESTAMP('2025-12-01')
 
 Post-processing applies token decimals, builds time-decayed edge weights, and restricts nodes to the evaluation sample before PageRank.
 
-\dissertationSubheading[sec:sql-gmx]{GMX PositionDecrease extraction pattern}
-
-GMX V2 events are read from the \texttt{EventEmitter} contract. The pipeline filters on the emitter address
-\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}
-and decodes key--value fields to recover \texttt{account}, \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, and liquidation flags. Only \texttt{PositionDecrease} rows enter proxy computation. Wallets with fewer than three closes are excluded from the matched cohort.
-
 \dissertationSubheading[sec:config-keys]{Configuration keys}
 
 The pipeline's parameters are collected in a single versioned configuration file. Salient keys include:
@@ -70,8 +64,6 @@ The pipeline's parameters are collected in a single versioned configuration file
 \item observation window start and end timestamps;
 \item PageRank damping, tolerance, and maximum iterations;
 \item logistic decay $k$ and $t_0$;
-\item GMX emitter address and topic filters;
-\item minimum closes for cohort eligibility ($m=3$);
 \item benchmark repetition count and subsample seeds;
 \item output locations for intermediate artifacts and LaTeX fragments.
 \end{itemize}
@@ -89,10 +81,9 @@ Memory is dominated by edge lists and score vectors. Peak solve memory of $4.6$\
 When reading Chapter~\ref{ch:results} tables, the following checklist reduces common misreadings:
 
 \begin{enumerate}
-\item Identify whether a row is a \emph{social} method (EndorseRank, AWP) or the supplementary GF-PR reference.
-\item Match each family to its intended construct (allowance vs.\ transfer vs.\ outcome).
+\item Identify whether a row is a social method (EndorseRank or AWP).
+\item Match each family to its intended construct (allowance vs.\ transfer).
 \item Prefer relative comparisons on the same cohort over absolute $\tau$ thresholds.
-\item Treat GF-PR highs on trading-success and inverse-risk as construct-overlap diagnostics (SRQ1).
 \item Read runtime tables as PageRank solve time on pre-built edges, not end-to-end ETL time.
 \item Confirm robustness tables before generalizing a point estimate.
 \end{enumerate}

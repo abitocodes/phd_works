@@ -2,7 +2,7 @@
 \chapter{Literature Review and Theoretical Framework}
 \label{ch:literature}
 
-This chapter reviews the conceptual and technical foundations required to interpret EndorseRank and Adaptive Weighted PageRank (AWP). It begins with blockchain and DeFi primitives for readers who may not specialize in distributed ledgers, then develops graph ranking theory, reputation-system lineage, ERC-20 allowance semantics, the GMX V2 sampling frame, and rank-correlation statistics. A theoretical framework---hyperlink--citation propagation, domain alignment, and computational complexity---motivates the primary EndorseRank versus AWP comparison. Later sections supply a terminology guide, worked example, risk taxonomy, AWP in depth, method comparison, and open problems that lead into Chapters~\ref{ch:methodology} and~\ref{ch:results}.
+This chapter reviews the conceptual and technical foundations required to interpret EndorseRank and Adaptive Weighted PageRank (AWP). It begins with blockchain and DeFi primitives for readers who may not specialize in distributed ledgers, then develops graph ranking theory, reputation-system lineage, ERC-20 allowance semantics, and rank-correlation statistics. A theoretical framework---hyperlink--citation propagation, domain alignment, and computational complexity---motivates the primary EndorseRank versus AWP comparison. Later sections supply a terminology guide, worked example, risk taxonomy, AWP in depth, method comparison, and open problems that lead into Chapters~\ref{ch:methodology} and~\ref{ch:results}.
 
 \dissertationSubheading[sec:blockchain-defi-foundations]{Blockchain and DeFi foundations}
 
@@ -20,7 +20,7 @@ Traditional credit scoring links legal persons to repayment histories. On public
 
 Ethereum mainnet provides security and liquidity but faces throughput and fee constraints under demand \cend{7,22}. Layer-2 (L2) protocols execute transactions off the base layer (or in a compressed form) and periodically post commitments to Ethereum, aiming to inherit security while reducing cost \cend{25,26}. Optimistic rollups such as Arbitrum assume correctness unless challenged during a dispute window \cend{34}.
 
-Arbitrum One is an EVM-compatible optimistic rollup widely used for DeFi activity, including GMX V2 \cend{23}. For this research, Arbitrum One is the empirical setting because (i) ERC-20 \texttt{Approval} and \texttt{Transfer} logs are available in public BigQuery datasets, (ii) GMX V2 emits wallet-attributed \texttt{PositionDecrease} events that serve only as an activity filter, and (iii) fee levels permit dense activity within a six-month window. Results should not be assumed to transfer automatically to other L2s or to Ethereum mainnet without re-validation, but the methodological template---allowance graph versus transfer graph, proxy families, rank correlation---is chain-agnostic wherever equivalent logs exist.
+Arbitrum One is an EVM-compatible optimistic rollup widely used for DeFi activity \cend{23}. For this research, Arbitrum One is the empirical setting because (i) ERC-20 \texttt{Approval} and \texttt{Transfer} logs are available in public BigQuery datasets and (ii) fee levels permit dense activity within a six-month window. Results should not be assumed to transfer automatically to other L2s or to Ethereum mainnet without re-validation, but the methodological template---allowance graph versus transfer graph, proxy families, rank correlation---is chain-agnostic wherever equivalent logs exist.
 
 \dissertationSubheading[sec:erc20-allowance-lifecycle]{ERC-20 tokens and the allowance lifecycle}
 
@@ -144,13 +144,9 @@ Formally, for each token and owner--spender pair, let $a_{o\to s}$ be the decima
 
 The endorsement interpretation is intentional but imperfect. Users approve routers for convenience, not always as a social judgment of the router's ``trustworthiness.'' Contract addresses and EOAs coexist. Nevertheless, allowances are a clearer authorization signal than passive receipt of transfers, which may reflect market making, airdrops, or routing without any endorsement intent \cend{16}.
 
-\dissertationSubheading[sec:gmx-validation]{GMX V2 as a sampling frame}
-
-On Arbitrum One, GMX V2 \texttt{PositionDecrease} events define the matched sample: wallets with at least three closes ($n=5{,}521$) \cend{23,53}. Profit-and-loss, success rate, and liquidation are not validation. Under-collateralized lending default labels remain out of scope.
-
 \dissertationSubheading[sub:gf-pr]{What this research does not claim}
 
-This research does not predict trading profit, liquidation, or malicious spenders. The remaining external check is a temporal holdout of future new owner--spender approvals (Chapters~\ref{ch:methodology} and~\ref{ch:results}).
+The remaining external check is a temporal holdout of future new owner--spender approvals (Chapters~\ref{ch:methodology} and~\ref{ch:results}).
 
 \dissertationSubheading[sec:rank-correlation-theory]{Rank correlation theory}
 
@@ -209,7 +205,7 @@ The definitions in Chapter~\ref{ch:introduction} establish formal constructs; th
 \item \textbf{Primary graph construct:} The graph a method is \emph{designed} to rank (e.g., $G_{\text{approve}}$ for EndorseRank). Distinct from checks applied after scoring.
 \item \textbf{Contemporaneous check:} Local transfer or allowance statistics computed in the same window as the score \cend{14}.
 \item \textbf{Temporal holdout:} Scores frozen at t1; labels from t2 new owner--spender approvals on inbound spenders.
-\item \textbf{Matched wallet cohort:} The primary same-window sample of $n=5{,}521$ wallets with at least three GMX closes and non-zero reputation-subgraph connectivity.
+\item \textbf{Matched wallet cohort:} The primary same-window sample of $n=5{,}521$ wallets with non-zero endorsement- and transfer-graph connectivity.
 \item \textbf{Spender holdout cohort:} $n=1{,}335$ t1 inbound allowance recipients used for RQ4.
 \item \textbf{Expanded wallet pool:} A larger address set ($N=31{,}612$) used for runtime scaling beyond the matched cohort.
 \end{itemize}

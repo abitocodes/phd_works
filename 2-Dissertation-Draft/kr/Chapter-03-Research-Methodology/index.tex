@@ -2,18 +2,18 @@
 \chapter{연구 방법론}
 \label{ch:methodology}
 
-본 장은 Arbitrum One에서 EndorseRank와 Adaptive Weighted PageRank(AWP)를 사회적 평판 점수로 비교하는 실증 설계를 명세한다. 설계는 기호, 데이터 출처, 3단계 수집 전략, 파이프라인 구조, 이벤트 디코딩, 그래프 구축 알고리즘, 동시기 구성 개념 검사, 시간 홀드아웃, 통계 검정, 계산 벤치마크, 확장성·강건성 확장, 재현성, 윤리를 포함한다. 주요 비교는 ERC-20 allowance 그래프의 EndorseRank와 시간 감쇠 전송 그래프의 AWP이다 \cend{64,49}.
+본 장은 Arbitrum One에서 EndorseRank와 Adaptive Weighted PageRank(AWP)를 사회적 평판 점수로 비교하는 실증 설계를 명세한다. 설계는 기호, 데이터 출처, 2단계 수집 전략, 파이프라인 구조, 이벤트 디코딩, 그래프 구축 알고리즘, 동시기 구성 개념 검사, 시간 홀드아웃, 통계 검정, 계산 벤치마크, 확장성·강건성 확장, 재현성, 윤리를 포함한다. 주요 비교는 ERC-20 allowance 그래프의 EndorseRank와 시간 감쇠 전송 그래프의 AWP이다 \cend{64,49}.
 
-방법론적 입장은 구성 개념(도메인) 정합을 따른다. 평판 점수는 연속 순위이며, 검사는 이항 부도 라벨이 아니라 관측 가능한 지갑 수준 통계를 사용한다 \cend{14,16}. 측정 용어로, 각 순위 방법은 관측되지 않는 평판 구성 개념의 지표이다. 동시기 전송·allowance 통계는 그래프 정합성을 검사한다. 미래 신규 소유자--지출자 승인의 시간 홀드아웃이 창 밖 검사이다. 정합 통계는 방법이 유도한 순서가 동일 지갑에서 각 검사가 유도한 순서와 공변하는지를 묻는다. 이 접근은 과학적 주장이 거래 이익이나 신용 부도의 예측이 아니라 EndorseRank 대 AWP의 비교일 때 적절하다.
+방법론적 입장은 구성 개념(도메인) 정합을 따른다. 평판 점수는 연속 순위이며, 검사는 이항 부도 라벨이 아니라 관측 가능한 지갑 수준 통계를 사용한다 \cend{14,16}. 측정 용어로, 각 순위 방법은 관측되지 않는 평판 구성 개념의 지표이다. 동시기 전송·allowance 통계는 그래프 정합성을 검사한다. 미래 신규 소유자--지출자 승인의 시간 홀드아웃이 창 밖 검사이다. 정합 통계는 방법이 유도한 순서가 동일 지갑에서 각 검사가 유도한 순서와 공변하는지를 묻는다. 이 접근은 과학적 주장이 EndorseRank 대 AWP의 비교일 때 적절하다.
 
 모든 절차는 고정 관측 창 안의 공개 블록체인 로그에서 작동하며, 결정적 시드와 개방형 평가 파이프라인으로 보고된 표를 캐시된 parquet로부터 재생성할 수 있게 한다. 장은 기호와 데이터 획득에서 그래프·검사 형식화, 평가 통계, 계산 프로토콜, 연구 윤리로 진행한다. 실증 결과에 주로 관심 있는 독자는 제~\ref{sec:notation}--\ref{sec:event-decoding}절을 훑고 제~\ref{sec:graph-construction}--\ref{sec:statistical-tests}절에 집중하면 된다. 재현을 구현하는 독자는 전체 파이프라인 서술과 제~\ref{sec:reproducibility}절을 따라야 한다.
 
 네 원칙이 모든 운영 선택을 규율한다.
 \begin{itemize}
 \item \textbf{동일 시드 비교 가능성:} EndorseRank와 AWP는 항상 동일 지갑 집합에서 점수화하여, 차이를 표본추출 불일치에 돌릴 수 없게 한다.
-\item \textbf{설정에 의한 사전 등록:} 관측 창, 토픽 해시, 감쇠, 감쇠 매개변수, 최소 청산 건수, 벤치마크 시드는 결과를 해석하기 전에 설정에서 고정한다.
+\item \textbf{설정에 의한 사전 등록:} 관측 창, 토픽 해시, 감쇠, 감쇠 매개변수, 벤치마크 시드는 결과를 해석하기 전에 설정에서 고정한다.
 \item \textbf{구축과 타이밍의 분리:} 그래프 구축은 코호트당 한 번 수행하고, 계산 벤치마크는 PageRank 해만 계측한다.
-\item \textbf{주요 범위:} 주장 C1--C4와 가설 H1--H3는 EndorseRank와 AWP에 관련된다. RQ4는 지출자 홀드아웃 코호트를 사용한다. 거래 이익, 청산, 악성 지출자 라벨은 주장이 아니다.
+\item \textbf{주요 범위:} 주장 C1--C4와 가설 H1--H3는 EndorseRank와 AWP에 관련된다. RQ4는 지출자 홀드아웃 코호트를 사용한다.
 \end{itemize}
 
 \dissertationSubheading[sec:notation]{기호}
@@ -33,7 +33,6 @@ $\mathcal{W}$ & 매칭 지갑 코호트 ($|\mathcal{W}|=n=5{,}521$) \\
 $\mathcal{W}_{\mathrm{pool}}$ & 확장 지갑 풀 ($|\mathcal{W}_{\mathrm{pool}}|=N=31{,}612$) \\
 $G_{\mathrm{approve}}=(V_A,E_A,w_A)$ & EndorseRank allowance 그래프 \\
 $G_{\mathrm{transfer}}=(V_T,E_T,w_T)$ & AWP 전송 그래프 \\
-$G_{\mathrm{GF\text{-}PR}}$ & 보조 GF-PR 스타 그래프(주장하지 않음) \\
 $w_A(u,v)$ & 최신 allowance 가중치, 소유자 $u\to$ 지출자 $v$ \\
 $w_T(u,v)$ & 시간 감쇠 전송 가중치, 송신자 $u\to$ 수신자 $v$ \\
 $\mathbf{s}_M$ & 방법 $M$의 평판 점수 벡터 \\
@@ -44,7 +43,6 @@ $I_{\max}$ & 최대 PageRank 반복 ($300$) \\
 $\sigma(\Delta t)$ & 전송 연령에 대한 로지스틱 시간 감쇠 \\
 $k$, $t_0$ & 감쇠 기울기 ($0.01$)와 중점 ($180$일) \\
 $\Delta t$ & 관측 종료 전 이벤트 연령(일) \\
-$\varepsilon_{\mathrm{loss}}$, $\varepsilon_{\mathrm{liq}}$ & GF-PR 싱크 가산항 ($0.1$, $1.0$; 주장하지 않음) \\
 $\rho$ & Spearman 순위 상관 \\
 $\tau$ & Kendall 순위 상관 \\
 $T_{\mathrm{obs}}$ & 관측 종료 시각 (2026-05-31 UTC) \\
@@ -83,9 +81,9 @@ w(u,v)/s(u) & \text{if }s(u)>0,\\
 본 절은 실증 우주를 고정한다. 어느 체인, 어느 시간 창, 어느 공개 표, 어느 이벤트 유형, 어느 지갑이 주요 표본에 들어가는지. 이후 그래프 구축과 검사 공식은 이 우주 밖의 이벤트를 창작하지 않는다.
 
 \begin{itemize}
-\item \textbf{주요 체인:} 모든 온체인 이벤트는 밀집한 DeFi 활동과 공개 로그를 갖는 이더리움 Layer-2 롤업 Arbitrum One(체인 ID $42161$)에서 추출한다 \cend{53}. 단일 체인으로 제한하면 교차 체인 주소 별칭---동일 개인키가 여러 체인에서 무관한 노드로 보이는 것---을 피하고, 가스 비용과 지연 체제를 지갑 간에 비교 가능하게 유지한다. Arbitrum One은 또한 GMX V2의 배포 장소이며, 본 연구는 \texttt{PositionDecrease} 이벤트를 매칭 표본의 활동 필터로만 사용한다.
+\item \textbf{주요 체인:} 모든 온체인 이벤트는 밀집한 DeFi 활동과 공개 로그를 갖는 이더리움 Layer-2 롤업 Arbitrum One(체인 ID $42161$)에서 추출한다 \cend{53}. 단일 체인으로 제한하면 교차 체인 주소 별칭---동일 개인키가 여러 체인에서 무관한 노드로 보이는 것---을 피하고, 가스 비용과 지연 체제를 지갑 간에 비교 가능하게 유지한다. 이 체인은 본 연구의 유일한 실증 현장이다.
 
-\item \textbf{관측 창:} 연구 창은 2025-12-01 00:00:00 UTC부터 2026-05-31 23:59:59 UTC까지(여섯 역월)이다. SQL의 배타적 종료 시각은 2026-06-01 00:00:00 UTC를 사용하여 포함적 역일 종료가 2026-05-31이 되게 한다. 이 창은 활성 거래자당 복수 GMX 포지션 종료를 축적하기에 충분하다---최소 종료 필터는 세 건을 요구한다---동시에 BigQuery 바이트 예산 하에서 월별 평판 추출이 가능하다. AWP 시간 감쇠는 관측 종료 $T_{\mathrm{obs}}=$ 2026-05-31 23:59:59 UTC에 고정되므로, 창 종료 이벤트는 $\Delta t=0$, 창 시작 이벤트는 $\Delta t\approx 181$일이다.
+\item \textbf{관측 창:} 연구 창은 2025-12-01 00:00:00 UTC부터 2026-05-31 23:59:59 UTC까지(여섯 역월)이다. SQL의 배타적 종료 시각은 2026-06-01 00:00:00 UTC를 사용하여 포함적 역일 종료가 2026-05-31이 되게 한다. 이 창은 BigQuery 바이트 예산 하에서 월별 평판 추출이 가능하다. AWP 시간 감쇠는 관측 종료 $T_{\mathrm{obs}}=$ 2026-05-31 23:59:59 UTC에 고정되므로, 창 종료 이벤트는 $\Delta t=0$, 창 시작 이벤트는 $\Delta t\approx 181$일이다.
 
 \item \textbf{BigQuery 출처:} 이벤트 로그는 공개 데이터셋
 \begin{center}
@@ -95,28 +93,20 @@ w(u,v)/s(u) & \text{if }s(u)>0,\\
 
 \item \textbf{평판 이벤트:} EndorseRank는 ERC-20 \texttt{Approval} 로그를 사용하며 \cend{18}, 최종적으로 동일 \texttt{Approval} 이벤트를 방출하는 EIP-2612 \texttt{permit} 흐름으로 설정된 allowance를 포함한다 \cend{19}. AWP는 ERC-20 \texttt{Transfer} 로그를 사용한다. 두 스트림은 연구 대상 코호트로 지갑 필터된다. 로그는 소유자 또는 지출자(승인)나 송신자 또는 수신자(전송)가 시드 지갑 집합에 있으면 유지한다. 질의 시점 필터는 전체 체인 추출 대비 스캔 페이로드를 줄이고, 평판 부분그래프를 코호트의 경제적으로 관련 있는 이웃에 집중시킨다. 추출은 질의당 바이트 상한을 지키고 한 달이 실패해도 재개 가능한 체크포인트를 위해 여섯 월별 배치로 실행한다.
 
-\item \textbf{GMX 이벤트:} 매칭 표본은 GMX \texttt{EventEmitter}
-\begin{center}
-\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}
-\end{center}
-가 방출하는 GMX V2 \texttt{PositionDecrease} 이벤트로 정의한다 \cend{23}. 거래자는 이벤트 \texttt{account} 필드로 식별한다. 디코딩된 페이로드의 \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, 주문 유형 메타데이터(청산 플래그)는 평가 산출물에 보관하나, 거래 성공·역위험·청산 정합은 연구 주장이 아니다. GMX는 반복 활동 지갑을 식별하는 표본 틀이며($\geq 3$건의 포지션 종료), 거래 실력의 정답이 아니다. 범위 안에서 Arbitrum의 저담보 대출 거래량이 안정적 지갑 수준 라벨에 충분하지 않으므로 대출 프로토콜 부도 라벨은 제외한다.
+\item \textbf{매칭 코호트 정의:} 주요 동일 창 표본은 관측 창에서 승인 또는 전송 간선이 유도한 평판 부분그래프에서 비영 연결성을 갖는 지갑이다. BigQuery 추출과 전처리 후 이 매칭 지갑 코호트의 크기는 $n=5{,}521$이다. EndorseRank와 AWP는 동일 시드 집합에서 점수화하여, 정합과 런타임 차이를 순위 논리와 그래프 구조에 귀속시키고 불일치한 표본추출에 귀속시키지 않는다.
 
-\item \textbf{매칭 코호트 정의:} 주요 동일 창 표본은 (i)~관측 창에서 GMX \texttt{PositionDecrease} 종료가 최소 세 건인 지갑과 (ii)~승인 또는 전송 간선이 유도한 평판 부분그래프에서 비영 연결성을 갖는 지갑의 교집합이다. 최소 종료 임계값 $m=3$은 표본 잡음이 지배하는 일회성 거래자를 제외하면서 활성 소매 참가자를 포함한다. 연결성 요건은 GMX 이벤트에는 나타나지만 평판 추출에 닿는 승인·전송 간선이 없어 사회적 PageRank 점수가 균등하게 영이 되는 지갑을 제외한다. BigQuery 추출과 전처리 후 이 매칭 지갑 코호트의 크기는 $n=5{,}521$이다. EndorseRank와 AWP는 동일 시드 집합에서 점수화하여, 정합과 런타임 차이를 순위 논리와 그래프 구조에 귀속시키고 불일치한 표본추출에 귀속시키지 않는다.
-
-\item \textbf{범위 밖:} 본 연구는 멤풀 데이터, 오프체인 호가창, 중앙화 거래소 계정 맵, 교차 체인 브리지를 수집하지 않는다. 한 행위자가 통제하는 다수 주소에 대한 개체 해석을 시도하지 않는다. 독점 GMX 인덱서 API를 1차 진실 원천으로 사용하지 않는다. 공개 로그 표가 권위적이며, 디코딩은 개방 파이프라인에서 수행한다.
+\item \textbf{범위 밖:} 본 연구는 멤풀 데이터, 오프체인 호가창, 중앙화 거래소 계정 맵, 교차 체인 브리지를 수집하지 않는다. 한 행위자가 통제하는 다수 주소에 대한 개체 해석을 시도하지 않는다. 공개 로그 표가 권위적이며, 디코딩은 개방 파이프라인에서 수행한다.
 
 \end{itemize}
 
-\dissertationSubheading[sec:collection-strategy]{3단계 수집 전략}
+\dissertationSubheading[sec:collection-strategy]{2단계 수집 전략}
 
-데이터 획득과 평가는 비용이 큰 원격 스캔과 국소·반복 가능 분석을 분리하는 세 단계로 진행한다. 분리는 의도적이다. parquet 산출물이 있으면 정합 표, 벤치마크, 강건성 스윕을 추가 클라우드 비용 없이 재생성할 수 있으며, 이는 제3자 재현과 재분석에 필수이다.
+데이터 획득과 평가는 비용이 큰 원격 스캔과 국소·반복 가능 분석을 분리하는 두 단계로 진행한다. 분리는 의도적이다. parquet 산출물이 있으면 정합 표, 벤치마크, 강건성 스윕을 추가 클라우드 비용 없이 재생성할 수 있으며, 이는 제3자 재현과 재분석에 필수이다.
 
 \begin{itemize}
-\item \textbf{1단계 (GMX 표본 스트림):} 전체 관측 창에서 \texttt{EventEmitter}의 모든 GMX \texttt{PositionDecrease} 로그를 추출·디코딩한다. 적격성은 이 스트림에서 정의되므로 추출은 사전에 지갑 필터하지 않는다. 창 안의 모든 감소가 후보이다. 디코딩 후 포지션 종료가 세 건 미만인 지갑을 제외한 집합이 GMX 적격 집합이다. 이 스트림은 매칭 필터를 공급한다. 거래 성공·역위험·청산 계열 요약은 산출물에 남을 수 있으나 주장이 아니다. 주요 동일 창 비교에 사용하는 매칭 지갑 코호트($n=5{,}521$)는 2단계 이후 비영 평판 연결성과의 교집합이다.
+\item \textbf{1단계 (평판 스트림):} 지갑 필터된 ERC-20 \texttt{Approval} 및 \texttt{Transfer} 이벤트를 월별 배치로 추출한다. 매칭 지갑 코호트는 비영 승인 또는 전송 연결성을 갖는 부분집합이다($n=5{,}521$). 각 월은 자체 드라이런 추정과 체크포인트를 갖는 독립 질의이므로, 한 달의 실패가 이전 달을 무효화하지 않는다. 승인은 소유자--지출자--토큰당 최신 allowance로 전처리한다. 동일 삼중항에 대한 복수 승인이 있으면 창 안의 마지막 시각만 남고, 최종 영 allowance는 간선을 제거한다. 전송은 소수점 조정 이벤트 표로 전처리하여 송신자, 수신자, 가치, 토큰, 블록 시각을 보존한다. 이들 표는 주요 비교를 위한 EndorseRank와 AWP 그래프 구축의 유일한 입력이다.
 
-\item \textbf{2단계 (평판 스트림):} GMX 적격 집합에 대해 지갑 필터된 ERC-20 \texttt{Approval} 및 \texttt{Transfer} 이벤트를 월별 배치로 추출한다. 매칭 지갑 코호트는 이후 비영 승인 또는 전송 연결성을 갖는 부분집합이다. 각 월은 자체 드라이런 추정과 체크포인트를 갖는 독립 질의이므로, 한 달의 실패가 이전 달을 무효화하지 않는다. 승인은 소유자--지출자--토큰당 최신 allowance로 전처리한다. 동일 삼중항에 대한 복수 승인이 있으면 창 안의 마지막 시각만 남고, 최종 영 allowance는 간선을 제거한다. 전송은 소수점 조정 이벤트 표로 전처리하여 송신자, 수신자, 가치, 토큰, 블록 시각을 보존한다. 이들 표는 주요 비교를 위한 EndorseRank와 AWP 그래프 구축의 유일한 입력이다.
-
-\item \textbf{3단계 (국소 평가):} 캐시된 parquet로부터 평판 순위, 동시기 전송·allowance 검사, 시간 홀드아웃 라벨, Spearman 및 Kendall 정합, 계산 벤치마크, 확장성·강건성 확장을 계산한다. 확장 풀용 보충 활성 지갑은 평판 부분그래프 주소(및 선택적 보충 parquet)에서 가져와, 모든 강건성 실험마다 전체 체인 재스캔을 요구하지 않는다. 1단계·2단계 추출과 보충 활성 지갑 parquet가 있으면 추가 BigQuery 스캔은 필요하지 않다.
+\item \textbf{2단계 (국소 평가):} 캐시된 parquet로부터 평판 순위, 동시기 전송·allowance 검사, 시간 홀드아웃 라벨, Spearman 및 Kendall 정합, 계산 벤치마크, 확장성·강건성 확장을 계산한다. 확장 풀용 보충 활성 지갑은 평판 부분그래프 주소(및 선택적 보충 parquet)에서 가져와, 모든 강건성 실험마다 전체 체인 재스캔을 요구하지 않는다. 1단계 추출과 보충 활성 지갑 parquet가 있으면 추가 BigQuery 스캔은 필요하지 않다.
 
 \item \textbf{비용 가드레일:} 모든 원격 질의는 추출 전 처리 바이트의 필수 드라이런 추정으로 시작한다. 추정이 질의당 $150$\,GiB 상한을 초과하면 질의를 중단한다.\footnote{질의당 바이트 상한은 본 연구 획득 파이프라인의 운영 정책이며 BigQuery 자체의 속성이 아니다.} 유료 스캔 전에 운영자는 명시적 확인 플래그를 통과해야 한다. 추출 메타데이터---지갑 수, 행 수, 처리 바이트, 시각---는 연구의 획득 기록에 기록한다(부록~\ref{ch:appendix-eval}). 이들 통제는 공개 클라우드 자원의 책임 있는 사용을 구현하고 연구의 획득 비용을 감사 가능하게 한다.
 
@@ -160,11 +150,11 @@ w(u,v)/s(u) & \text{if }s(u)>0,\\
 \node[draw, dashed, rounded corners, fit=(prep)(ranks)(proxy)(align)(latex), inner sep=8pt, label=below:{\footnotesize Local / reproducible}] {};
 \end{tikzpicture}
 \end{adjustbox}
-\caption{Evaluation pipeline: public Arbitrum logs are extracted and decoded, reputation edges and GMX outcomes are preprocessed, EndorseRank and AWP ranks are computed, proxies and alignment statistics are evaluated, and LaTeX result fragments are exported.}
+\caption{Evaluation pipeline: public Arbitrum logs are extracted and decoded, reputation edges are preprocessed, EndorseRank and AWP ranks are computed, checks and alignment statistics are evaluated, and LaTeX result fragments are exported.}
 \label{fig:pipeline-architecture}
 \end{figure}
 
-운영적으로, 1단계 스크립트는 GMX 원시 로그와 디코딩된 이벤트를 쓰고, 2단계 스크립트는 월별 승인/전송 샤드와 통합된 최신 allowance·전송 이벤트 표를 쓰며, 3단계 스크립트는 그 표를 읽어 그래프를 구축하고 PageRank를 실행하며 검사와 홀드아웃을 계산하고 제~\ref{ch:results}장에 보고된 결과 표를 내보낸다. 동일 파이프라인은 클라우드 자격 증명 없이 합성 픽스처에서 오프라인 검증을 지원한다.
+운영적으로, 1단계 스크립트는 월별 승인/전송 샤드와 통합된 최신 allowance·전송 이벤트 표를 쓰고, 2단계 스크립트는 그 표를 읽어 그래프를 구축하고 PageRank를 실행하며 검사와 홀드아웃을 계산하고 제~\ref{ch:results}장에 보고된 결과 표를 내보낸다. 동일 파이프라인은 클라우드 자격 증명 없이 합성 픽스처에서 오프라인 검증을 지원한다.
 
 \dissertationSubheading[sec:event-decoding]{이벤트 디코딩}
 
@@ -185,9 +175,7 @@ w(u,v)/s(u) & \text{if }s(u)>0,\\
 \end{center}
 이며, \texttt{Transfer(address,address,uint256)}의 해시이다. 송신자와 수신자는 인덱싱되고, 가치는 소수점 조정한다. 영 주소를 사용하는 발행·소각 패턴은 코호트 지갑에 닿으면 유지하나, 필터된 추출에서 지갑 대 지갑 전송에 비해 드물다. 자기 전송은 이벤트 표에 유지하되, 외부 상대방 관계를 입증하지 않으므로 Sybil 안정성 인바운드 상대방 계산에서는 제외한다(제~\ref{sec:proxy-formulas}절).
 
-\item \textbf{GMX \texttt{PositionDecrease}:} GMX V2는 최소 ERC-20 스타일 서명이 아니라 \texttt{EventEmitter}를 통해 구조화 이벤트를 방출한다 \cend{23}. 추출은 방출자 주소와 검증된 \texttt{EventLog1} 토픽~$0$으로 필터한 뒤, 이벤트 페이로드의 키--값 필드를 디코딩하여 \texttt{account}, \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, 청산 지시자를 복원한다. 감소만 표본 틀에 들어간다. 증가는 포지션을 개설하거나 확대하며, 종료 3건 필터에 세지 않는다.
-
-\item \textbf{주소 정규화와 단위:} 모든 주소는 조인 전 소문자화하여 체크섬·비체크섬 16진 형태가 올바르게 충돌하게 한다. 토큰 금액은 가중을 위해 부동소수점 소수점 조정 값으로 저장한다. 순위는 allowance·전송 간선에 대해 절대 USD 환산이 아니라 코호트 내 상대 크기를 사용한다. GMX PnL 필드는 이벤트 스키마에 존재하나 연구 주장으로 사용하지 않는다.
+\item \textbf{주소 정규화와 단위:} 모든 주소는 조인 전 소문자화하여 체크섬·비체크섬 16진 형태가 올바르게 충돌하게 한다. 토큰 금액은 가중을 위해 부동소수점 소수점 조정 값으로 저장한다. 순위는 allowance·전송 간선에 대해 절대 USD 환산이 아니라 코호트 내 상대 크기를 사용한다.
 
 \end{itemize}
 
@@ -287,7 +275,7 @@ $G_{\mathrm{approve}}$는 지속적 승인을 기록하고 $G_{\mathrm{transfer}
 
 \dissertationSubheading[sec:gf-pr-graph]{시간 홀드아웃 프로토콜}
 
-홀드아웃용 점수는 시각이 $T_1=$ 2026년 2월 28일 23:59:59 UTC 이하인 이벤트로부터 계산한다. 라벨은 $T_2^{\mathrm{start}}=$ 2026년 3월 1일부터 $T_2^{\mathrm{end}}=$ 2026년 5월 31일까지의 이벤트를 사용한다. 주장하는 라벨은 최신 양수 t1 스냅샷에 없는, $T_2$의 신규 소유자--지출자 승인 쌍 건수이며 지출자에 귀속한다. 주장하는 코호트는 t1 인바운드 지출자($n=1{,}335$)이다. 그 라벨의 GMX 매칭 교집합은 희소하며(12건 이벤트) 주장이 아니다.
+홀드아웃용 점수는 시각이 $T_1=$ 2026년 2월 28일 23:59:59 UTC 이하인 이벤트로부터 계산한다. 라벨은 $T_2^{\mathrm{start}}=$ 2026년 3월 1일부터 $T_2^{\mathrm{end}}=$ 2026년 5월 31일까지의 이벤트를 사용한다. 주장하는 라벨은 최신 양수 t1 스냅샷에 없는, $T_2$의 신규 소유자--지출자 승인 쌍 건수이며 지출자에 귀속한다. 주장하는 코호트는 t1 인바운드 지출자($n=1{,}335$)이다.
 
 다른 t2 수량(철회율, 승인 후 아웃바운드 유출 휴리스틱, Aave 차입자 청산)은 파이프라인에서 계산되었다. 지지 증거로 보고하지 않는다. 철회와 유출은 보증 해석에 대해 잘못된 부호를 가졌고, 이 지출자 집합에서 Aave 이벤트는 비어 있거나 잘못된 구성 개념이었다.
 
@@ -300,13 +288,13 @@ $G_{\mathrm{approve}}$는 지속적 승인을 기록하고 $G_{\mathrm{transfer}
 \item \textbf{전송} (Do et al.\ 기준선): 인바운드 전송 활동.
 \item \textbf{Allowance:} 인바운드 승인 활동(지갑이 지출자).
 \end{enumerate}
-이들은 \emph{그래프 인접}이다. $G_{\mathrm{transfer}}$와 $G_{\mathrm{approve}}$를 구축하는 동일 이벤트 계급에서 계산하되, 전역 PageRank 점수가 아니라 국소 통계이다. AWP의 전송 검사 정합, 또는 EndorseRank의 allowance 검사 정합은 구성 개념 내 정합성이지 독립 예측력이 아니다. Sybil 조정 활동 요약은 강건성 표에 나타날 수 있으나 표제 주장이 아니다. 거래 성공, 역위험, 청산 계열은 주장에서 제외한다.
+이들은 \emph{그래프 인접}이다. $G_{\mathrm{transfer}}$와 $G_{\mathrm{approve}}$를 구축하는 동일 이벤트 계급에서 계산하되, 전역 PageRank 점수가 아니라 국소 통계이다. AWP의 전송 검사 정합, 또는 EndorseRank의 allowance 검사 정합은 구성 개념 내 정합성이지 독립 예측력이 아니다. Sybil 조정 활동 요약은 강건성 표에 나타날 수 있으나 표제 주장이 아니다.
 
 창 밖 검사는 제~\ref{sec:gf-pr-graph}절의 시간 홀드아웃이다. Packin and Lev-Aretz\cend{48}는 탈중앙화 신용 점수가 불투명해질 수 있다고 경고한다. 명시적 공식을 공개하고(제~\ref{sec:proxy-formulas}절) 동일 창 검사와 시간 분할을 분리하는 것은 그 불투명성에 대응한다.
 
 \dissertationSubheading[sec:proxy-formulas]{대리 지표의 운영적 정의}
 
-$\mathcal{W}$를 매칭 코호트라 하자. GMX 파생 요약에 대해, 디코딩된 이벤트 표에서 포지션 종료가 최소 $m=3$건인 지갑만 적격이며, 비적격 지갑은 $\mathcal{W}$로의 좌조인 후 영을 받는다. 아래 기호는 개방 평가 파이프라인의 대리 지표 계산 모듈과 일치한다.
+$\mathcal{W}$를 매칭 코호트라 하자. 아래 기호는 개방 평가 파이프라인의 검사 계산 모듈과 일치한다.
 
 \dissertationSubsubheading[sub:proxy-transfer]{전송 계열}
 
@@ -338,24 +326,6 @@ $\mathcal{A}_{\mathrm{in}}(w)$를 $w$가 지출자인 최신 allowance(소유자
 \end{align}
 이다. 이들 검사는 EndorseRank가 순위를 매기도록 설계된 구성 개념인, 수신된 보증을 측정한다. EndorseRank의 이 계열과의 강한 정합은 예상되며 구성 개념 내 타당성으로 해석한다. 전송 기준선과 같이 allowance 검사는 국소적이다. 다홉 보증 사슬을 전파하지 않고 인바운드 승인을 세고 합산한다. 창 밖 증거는 시간 홀드아웃에 유보한다.
 
-\dissertationSubsubheading[sub:proxy-inverse-risk]{결과 계열 (주장하지 않음)}
-
-GMX 포지션 종료로부터의 역위험, 거래 성공, 청산(liquidation) 요약은 완결성을 위해 평가 산출물에 남는다. 연구 주장의 운영 정의가 아니다. 아래 항등식은 기존 표 조각이 계속 컴파일되도록 유지한다. 본문은 이를 거래 실력, 신용 위험, 악성 지출자의 증거로 해석하지 않는다. $\mathcal{C}(w)$를 지갑 $w$의 GMX 포지션 종료라 하고, PnL을 $x_c$, 청산 플래그를 $\ell_c\in\{0,1\}$이라 하자.
-\begin{align}
-\mathrm{loss\_avoidance}(w)
-&=
--\sum_{c\in\mathcal{C}(w)} \min(x_c,0),
-\label{eq:loss-avoidance}\\
-\mathrm{non\_loss\_close\_rate}(w)
-&=
-1-\frac{|\{c\in\mathcal{C}(w):\ell_c=0\land x_c<0\}|}{|\mathcal{C}(w)|},
-\label{eq:non-loss-rate}\\
-\mathrm{worst\_close\_pnl\_score}(w)
-&=
--\min_{c\in\mathcal{C}(w)} x_c.
-\label{eq:worst-close}
-\end{align}
-
 \dissertationSubsubheading[sub:proxy-sybil]{Sybil 조정 안정성 계열}
 
 자기 전송($u=w$)은 인바운드 계수에서 제외한다. $N_{\mathrm{tx}}(w)$를 다른 주소로부터 $w$로의 인바운드 전송 수, $N_{\mathrm{uniq}}(w)$를 서로 다른 인바운드 상대방 수라 하자. $t_{\min}(w)$와 $t_{\max}(w)$는 전송 표에서 $w$가 송신자 또는 수신자로 나타나는 최초·최종 시각이고, $M(w)$는 활동의 서로 다른 역월 수이다(인바운드 월과 전체 구간 월 중 최댓값). 정의는
@@ -374,42 +344,6 @@ M(w).
 \label{eq:active-months}
 \end{align}
 이다. 높은 상대방 비율은 소수 주소로부터 많은 전송을 받는 지갑을 벌한다(단순 Sybil/워시 패턴). 재직 기간과 활성 월수는 관측 창 안 온체인 활동의 지속성을 포착한다. 이들 측정은 불완전한 Sybil 방어이다---조정된 적대자는 여전히 상대방을 다양화할 수 있다---그러나 지속적이고 다상대방적인 활동이 폭발적 자기 거래보다 평판에 더 관련된다는 직관을 운영화한다 \cend{48}.
-
-\dissertationSubsubheading[sub:proxy-trading]{거래 성공 계열 (주장하지 않음)}
-
-산출물 라벨일 뿐이며 주장이 아니다.
-\begin{align}
-\mathrm{close\_success\_count}(w)
-&=
-\bigl|\{c\in\mathcal{C}(w):\ell_c=0\land x_c>0\}\bigr|,
-\label{eq:success-count}\\
-\mathrm{realized\_gain\_proxy}(w)
-&=
-\sum_{c\in\mathcal{C}(w)} \max(x_c,0),
-\label{eq:realized-gain}\\
-\mathrm{close\_success\_rate}(w)
-&=
-\frac{\mathrm{close\_success\_count}(w)}{|\mathcal{C}(w)|}.
-\label{eq:success-rate}
-\end{align}
-
-\dissertationSubsubheading[sub:proxy-liquidation]{청산 계열 (주장하지 않음)}
-
-산출물 라벨일 뿐이며 주장이 아니다.
-\begin{align}
-\mathrm{liquidation\_free\_rate}(w)
-&=
-1-\frac{\sum_c \ell_c}{|\mathcal{C}(w)|},
-\label{eq:liq-free-rate}\\
-\mathrm{zero\_liquidation\_flag}(w)
-&=
-\mathbf{1}\!\left[\sum_c \ell_c=0\right],
-\label{eq:zero-liq}\\
-\mathrm{liquidation\_free\_closes}(w)
-&=
-\sum_c (1-\ell_c).
-\label{eq:liq-free-closes}
-\end{align}
 
 \dissertationSubheading[sec:statistical-tests]{통계 검정}
 
@@ -443,7 +377,7 @@ Spearman은 단조 일치를 포착한다. 더 높은 평판이 더 높은 검�
 
 \item \textbf{지향과 결측:} 검사는 값이 클수록 더 나은 평판을 나타내도록 사전 지향한다. 검사 출처에 없는 지갑은 $\mathcal{W}$에 정합한 후 영을 받으며, 이는 희소 활동에 보수적이고 두 방법에 동일하게 적용한다. 한 방법에서만 지갑을 탈락시키지 않는다. 주요 표의 상관 표본은 항상 전체 매칭 코호트이다.
 
-\item \textbf{검정하지 않는 것:} 본 연구는 인과 식별을 주장하지 않고(평판이 개입적 의미에서 거래 성공을 ``유발''하지 않는다), 훈련/검정 분할의 예측 분류기를 적합하지 않으며, $p$값을 주요 의사결정 기준으로 보고하지 않는다. 과학적 대상은 고정되고 투명한 프로토콜 하에서의 비교 구성 개념 정합과 계산 비용이다.
+\item \textbf{검정하지 않는 것:} 본 연구는 인과 식별을 주장하지 않고, 훈련/검정 분할의 예측 분류기를 적합하지 않으며, $p$값을 주요 의사결정 기준으로 보고하지 않는다. 과학적 대상은 고정되고 투명한 프로토콜 하에서의 비교 구성 개념 정합과 계산 비용이다.
 
 \end{itemize}
 
@@ -456,7 +390,7 @@ Spearman은 단조 일치를 포착한다. 더 높은 평판이 더 높은 검�
 
 \item \textbf{반복과 지표:} 의도된 프로토콜은 운영체제 잡음을 평균하기 위해 각 설정을 다섯 독립 실행으로 반복한다. 제~\ref{ch:results}장 표는 현재 내보낸 평가 산출물의 3회 실행 평균을 보고한다. 두 진술은 다음 제출 전에 단일 반복 횟수로 화해할 것이다. 그때까지 표 값을 실증 기록으로, 다섯 실행을 의도된 프로토콜로 취급한다. 실행마다 파이프라인은 벽시계 해 시간, 최대 메모리, 수렴까지의 반복을 기록한다. 보고 통계는 평균 런타임, 런타임 표준편차, 평균 반복, 실행 간 최대 피크 메모리, 사전 구축 그래프의 간선/노드 수이다. 간선 수는 $O(|E|)$ 반복당 복잡도 하에서 런타임 차이의 선도적 구조 설명이므로 보고한다 \cend{49}.
 
-\item \textbf{코호트:} 주요 벤치마크는 매칭 지갑 코호트($n=5{,}521$)를 사용한다. 확장성 벤치마크는 확장 지갑 풀의 결정적 부분표본을 사용한다(제~\ref{sec:scaling-robustness}절). GF-PR 런타임은 제~\ref{ch:results}장에서 보조 맥락으로만 괄호 보고될 수 있으며 주장~C1의 일부가 아니다.
+\item \textbf{코호트:} 주요 벤치마크는 매칭 지갑 코호트($n=5{,}521$)를 사용한다. 확장성 벤치마크는 확장 지갑 풀의 결정적 부분표본을 사용한다(제~\ref{sec:scaling-robustness}절).
 
 \item \textbf{비교의 공정성:} 두 방법은 동일 솔버, 허용오차, 반복 상한, 감쇠(강건성 스윕이 $d$를 변화시키지 않는 한), 시드 지갑 집합을 사용한다. 따라서 차이는 구현 비대칭이 아니라 그래프 밀도와 가중 구조---allowance 스냅샷 대 시간 감쇠 전송---를 반영한다. 하드웨어와 소프트웨어 버전은 평가 매니페스트에 기록하여 절대 초를 실험 기계에 상대적으로 해석할 수 있게 한다. 가속비(AWP 시간을 EndorseRank 시간으로 나눈 값)가 선호되는 비교 요약이다.
 
@@ -468,7 +402,7 @@ Spearman은 단조 일치를 포착한다. 더 높은 평판이 더 높은 검�
 
 \dissertationSubsubheading[sub:expanded-pool]{확장 지갑 풀과 런타임 확장성}
 
-확장 지갑 풀 $\mathcal{W}_{\mathrm{pool}}$은 매칭 GMX 코호트와 평판 부분그래프에서 도출한 보충 활성 주소(및 존재할 때 보충 활성 지갑 parquet)를 합하여, 본 연구에서 $N=|\mathcal{W}_{\mathrm{pool}}|=31{,}612$개 주소를 산출한다. 보충 주소는 모든 주소가 GMX 라벨을 가질 것을 요구하지 않고 타이밍 실험의 그래프 크기를 증가시킨다. 중간 크기의 런타임 벤치마크는 시드 문자열 \texttt{benchmark-tier2-v1}의 결정적 SHA256 부분표본을 사용한다. 지갑은
+확장 지갑 풀 $\mathcal{W}_{\mathrm{pool}}$은 매칭 코호트와 평판 부분그래프에서 도출한 보충 활성 주소(및 존재할 때 보충 활성 지갑 parquet)를 합하여, 본 연구에서 $N=|\mathcal{W}_{\mathrm{pool}}|=31{,}612$개 주소를 산출한다. 보충 주소는 타이밍 실험의 그래프 크기를 증가시킨다. 중간 크기의 런타임 벤치마크는 시드 문자열 \texttt{benchmark-tier2-v1}의 결정적 SHA256 부분표본을 사용한다. 지갑은
 \begin{center}
 \texttt{SHA256(seed || address)}, 시드 \texttt{benchmark-tier2-v1}
 \end{center}
@@ -484,15 +418,11 @@ PageRank 감쇠는 매칭 코호트에서 그래프와 검사를 고정한 채 $
 
 \dissertationSubsubheading[sub:sample-size-protocol]{표본 크기 민감도}
 
-정합 통계는 동일 결정적 시드를 사용하여 확장 지갑 풀에서 추출한 단계적 부분표본에서 재계산한다. 부분표본은 GMX 라벨이 없는 보충 주소를 포함하므로(결과 산출물에서 영), 보고된 표본 크기 $\tau$는 주로 $\mathcal{W}_{\mathrm{pool}}$의 전송·allowance 계열에 대해 해석한다. 주요 주장은 매칭 지갑 코호트($n=5{,}521$)에 남는다. 순위 상관은 표본 변동이 있으므로 크기에 걸친 $\tau$의 완만한 이동은 예상된다. 강건성 질문은 EndorseRank와 AWP가 핵심 그래프 인접 계열에서 상대 순서를 보존하는가이다.
-
-\dissertationSubsubheading[sub:gmx-proxy-variants]{GMX 표본 주석}
-
-GMX 포지션 종료는 매칭 코호트를 정의한다($\geq 3$건의 \texttt{PositionDecrease} 이벤트). 실현 이익의 변형 정의는 평가 산출물에 존재하며 주장으로 사용하지 않는다.
+정합 통계는 동일 결정적 시드를 사용하여 확장 지갑 풀에서 추출한 단계적 부분표본에서 재계산한다. 보고된 표본 크기 $\tau$는 주로 $\mathcal{W}_{\mathrm{pool}}$의 전송·allowance 계열에 대해 해석한다. 주요 주장은 매칭 지갑 코호트($n=5{,}521$)에 남는다. 순위 상관은 표본 변동이 있으므로 크기에 걸친 $\tau$의 완만한 이동은 예상된다. 강건성 질문은 EndorseRank와 AWP가 핵심 그래프 인접 계열에서 상대 순서를 보존하는가이다.
 
 \dissertationSubheading[sec:reproducibility]{재현성}
 
-제~\ref{ch:results}장의 모든 실증 표는 개방형 평가 파이프라인이 산출한다. 1--2단계 parquet 산출물이 있으면, 단일 평가 드라이버가 그 입력으로부터 검사, 정합 통계, 벤치마크를 재계산한다. 명령줄 플래그는 캐시된 BigQuery 파생 입력 대 합성 픽스처를 선택하고, 감쇠·상위 토큰·표본 크기·GMX 산출물 변형 스윕을 가능하게 하며, 제~\ref{ch:results}장에 보고된 결과 표를 내보낸다. 관측 창, 감쇠, 감쇠 매개변수, 토픽 해시, 벤치마크 시드는 단일 버전 설정 파일에 수집한다. 픽스처 모드는 클라우드 자격 증명 없이 오프라인 검증을 지원한다.
+제~\ref{ch:results}장의 모든 실증 표는 개방형 평가 파이프라인이 산출한다. 1단계 parquet 산출물이 있으면, 단일 평가 드라이버가 그 입력으로부터 검사, 정합 통계, 벤치마크를 재계산한다. 명령줄 플래그는 캐시된 BigQuery 파생 입력 대 합성 픽스처를 선택하고, 감쇠·상위 토큰·표본 크기 스윕을 가능하게 하며, 제~\ref{ch:results}장에 보고된 결과 표를 내보낸다. 관측 창, 감쇠, 감쇠 매개변수, 토픽 해시, 벤치마크 시드는 단일 버전 설정 파일에 수집한다. 픽스처 모드는 클라우드 자격 증명 없이 오프라인 검증을 지원한다.
 
 재현 가능 요소는 다음을 포함한다. SHA256 시드를 통한 결정적 지갑 부분표본; 고정 PageRank 허용오차와 반복 상한; 제~\ref{sec:proxy-formulas}절의 명시적 공식; 기록된 추출 매니페스트. 동료 심사자는 BigQuery를 재질의하지 않고 동일 parquet로부터 정합·벤치마크 표를 재생성할 수 있다.
 
@@ -500,11 +430,11 @@ GMX 포지션 종료는 매칭 코호트를 정의한다($\geq 3$건의 \texttt{
 
 \dissertationSubheading[sec:sampling-bias]{표본추출 고려와 결측}
 
-매칭 코호트는 모든 Arbitrum 주소의 무작위 표본이 아니라 목적 표본이다. 적격성은 GMX 활동과 평판 부분그래프 연결성을 요구하므로, 결과는 \emph{관측 가능한 승인 또는 전송 구조를 가진 활성 무기한 거래자}에 대해 말한다. 유휴 지갑, 순수 보유자, 비 ERC-20 메커니즘만으로 상호작용하는 주소는 설계상 범위 밖이다.
+매칭 코호트는 모든 Arbitrum 주소의 무작위 표본이 아니라 목적 표본이다. 적격성은 승인 또는 전송 평판 부분그래프의 비영 연결성을 요구하므로, 결과는 \emph{관측 가능한 보증 또는 전송 그래프 구조를 가진 지갑}에 대해 말한다. 유휴 지갑, 순수 보유자, 비 ERC-20 메커니즘만으로 상호작용하는 주소는 설계상 범위 밖이다.
 
 결측은 여러 형태로 발생한다. 소수점을 알 수 없는 토큰은 전처리 중 탈락하거나 기본값 처리될 수 있으며, 그러한 결정은 파이프라인에 기록한다. 표준 ERC-20 로그를 방출하지 않는 승인(비표준 토큰)은 EndorseRank에 보이지 않는다. 오프체인 또는 수탁 시스템을 통한 전송은 AWP에 들어가지 않는다. 이들 결측 패턴은 두 방법을 온체인·표준 토큰 활동으로 편향시킨다. 온체인 평판 연구에는 수용 가능하나, 프로토콜의 전체 사용자 집단으로 일반화할 때 관련된다.
 
-확장 지갑 풀($N=31{,}612$)의 보충 주소는 런타임 검정의 커버리지를 높이지만 GMX 라벨을 자동으로 갖지 않는다. 따라서 정합 주장은 매칭 코호트($n=5{,}521$)에 고정되고, 확장성 주장은 풀을 사용한다.
+확장 지갑 풀($N=31{,}612$)의 보충 주소는 런타임 검정의 커버리지를 높인다. 따라서 정합 주장은 매칭 코호트($n=5{,}521$)에 고정되고, 확장성 주장은 풀을 사용한다.
 
 \dissertationSubheading[sec:implementation-notes]{구현 주석}
 
@@ -518,11 +448,11 @@ PageRank는 Python에서 희소 인접 목록과 거듭제곱 반복으로 구�
 
 \begin{itemize}
 \item\phantomsection\label{sub:privacy-anonymity}
-  \textbf{프라이버시와 익명성:} Arbitrum One 주소는 가명 식별자이며 본질적으로 실세계 신원에 연결되지 않는다 \cend{48}. 가명성은 익명성이 아니다. 결의된 적대자는 거래소 입금, 공개 프로필, 클러스터링 휴리스틱을 통해 주소를 개인에 연결할 수 있다. 본 연구는 그러한 연결을 의도적으로 삼간다. 수집은 온체인 이벤트---\texttt{Approval}, \texttt{Transfer}, GMX \texttt{PositionDecrease}---에 제한되며, IP 주소, 거래소 KYC 기록, 소셜미디어 핸들, 비익명화 그래프와 같은 오프체인 개인 데이터의 스크레이핑이나 통합이 없다. 주소를 실세계 개체로 클러스터하거나, 개인을 합리적으로 식별할 수 있는 주소 수준 순위를 출판하거나, 지갑 이력을 외부 신원 제공자와 결합하려는 시도는 하지 않았다. 보고 결과는 명명된 사용자의 리더보드가 아니라 코호트 수준 집계(상관, 런타임, 계열 평균)이다. 산문에서 예가 논의될 때, 구체적 주소가 아니라 추상 역할(예: ``높은 allowance를 받는 지출자'')을 가리킨다.
+  \textbf{프라이버시와 익명성:} Arbitrum One 주소는 가명 식별자이며 본질적으로 실세계 신원에 연결되지 않는다 \cend{48}. 가명성은 익명성이 아니다. 결의된 적대자는 거래소 입금, 공개 프로필, 클러스터링 휴리스틱을 통해 주소를 개인에 연결할 수 있다. 본 연구는 그러한 연결을 의도적으로 삼간다. 수집은 온체인 이벤트---\texttt{Approval}과 \texttt{Transfer}---에 제한되며, IP 주소, 거래소 KYC 기록, 소셜미디어 핸들, 비익명화 그래프와 같은 오프체인 개인 데이터의 스크레이핑이나 통합이 없다. 주소를 실세계 개체로 클러스터하거나, 개인을 합리적으로 식별할 수 있는 주소 수준 순위를 출판하거나, 지갑 이력을 외부 신원 제공자와 결합하려는 시도는 하지 않았다. 보고 결과는 명명된 사용자의 리더보드가 아니라 코호트 수준 집계(상관, 런타임, 계열 평균)이다. 산문에서 예가 논의될 때, 구체적 주소가 아니라 추상 역할(예: ``높은 allowance를 받는 지출자'')을 가리킨다.
 
 
 \item\phantomsection\label{sub:data-minimization}
-  \textbf{데이터 최소화:} 처리 표에는 그래프 구축과 검사에 필요한 필드만 유지한다(주소, 토큰 금액, 시각, GMX PnL 필드, 청산 플래그). 원시 로그는 연구 파이프라인의 감사 가능성을 위해 저장하되 비익명화 보조물로 재배포하지 않는다. 질의 필터는 가능한 한 지갑 범위로 두어 연구 설계를 넘는 무차별 전체 체인 덤프를 피한다.
+  \textbf{데이터 최소화:} 처리 표에는 그래프 구축과 검사에 필요한 필드만 유지한다(주소, 토큰 금액, 시각). 원시 로그는 연구 파이프라인의 감사 가능성을 위해 저장하되 비익명화 보조물로 재배포하지 않는다. 질의 필터는 가능한 한 지갑 범위로 두어 연구 설계를 넘는 무차별 전체 체인 덤프를 피한다.
 
 
 \item\phantomsection\label{sub:data-usage-compliance}
@@ -530,7 +460,7 @@ PageRank는 Python에서 희소 인접 목록과 거듭제곱 반복으로 구�
 
 
 \item\phantomsection\label{sub:fairness-transparency}
-  \textbf{공정성과 투명성:} 그래프 평판 시스템은 신규 진입자, 저거래량 참가자, 공개 승인을 피하는 지갑을 체계적으로 저평가할 수 있다 \cend{48}. 따라서 EndorseRank와 AWP는 그러한 구조적 편향에 대해 감사하였다. allowance 그래프는 지출 권한을 받는 주소를 선호하고, 전송 그래프는 가치 흐름 네트워크에 임베드된 주소를 선호한다. 한계---콜드스타트 효과, 승인 그래프의 Sybil 취약성, 탐색적 결과 고유 순위의 구성 개념 중첩---는 제~\ref{ch:discussion}장에서 논의한다. 모든 코드 경로, 매개변수 선택, 평가 지표는 개방 파이프라인(부록~\ref{ch:appendix-eval})에 문서화하여 동료 심사와 독립 재현을 가능하게 한다.
+  \textbf{공정성과 투명성:} 그래프 평판 시스템은 신규 진입자, 저거래량 참가자, 공개 승인을 피하는 지갑을 체계적으로 저평가할 수 있다 \cend{48}. 따라서 EndorseRank와 AWP는 그러한 구조적 편향에 대해 감사하였다. allowance 그래프는 지출 권한을 받는 주소를 선호하고, 전송 그래프는 가치 흐름 네트워크에 임베드된 주소를 선호한다. 한계---콜드스타트 효과와 승인 그래프의 Sybil 취약성---는 제~\ref{ch:discussion}장에서 논의한다. 모든 코드 경로, 매개변수 선택, 평가 지표는 개방 파이프라인(부록~\ref{ch:appendix-eval})에 문서화하여 동료 심사와 독립 재현을 가능하게 한다.
 
 
 \item\phantomsection\label{sub:responsible-disclosure}
@@ -538,5 +468,5 @@ PageRank는 Python에서 희소 인접 목록과 거듭제곱 반복으로 구�
 
 
 \item\phantomsection\label{sub:methodological-commitments}
-  \textbf{방법론적 약속의 요약:} 설계는 결과를 해석하기 전에 체인, 창, 코호트 규칙, 그래프 공식, 검사 정의, 통계 검정을 고정한다. 주요 주장은 매칭 지갑 코호트에서 EndorseRank와 AWP만을 비교한다. 확장 풀과 강건성 스윕은 효율과 안정성을 검정한다. RQ4는 지출자 홀드아웃 코호트를 사용한다. 거래 이익, 청산, 악성 지출자 라벨은 주장이 아니다. 제~\ref{ch:results}장은 이 프로토콜의 실증 결과를 보고한다.
+  \textbf{방법론적 약속의 요약:} 설계는 결과를 해석하기 전에 체인, 창, 코호트 규칙, 그래프 공식, 검사 정의, 통계 검정을 고정한다. 주요 주장은 매칭 지갑 코호트에서 EndorseRank와 AWP만을 비교한다. 확장 풀과 강건성 스윕은 효율과 안정성을 검정한다. RQ4는 지출자 홀드아웃 코호트를 사용한다. 제~\ref{ch:results}장은 이 프로토콜의 실증 결과를 보고한다.
 \end{itemize}

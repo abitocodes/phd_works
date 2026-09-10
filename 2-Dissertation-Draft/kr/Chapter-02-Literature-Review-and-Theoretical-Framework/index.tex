@@ -2,7 +2,7 @@
 \chapter{문헌 검토 및 이론적 틀}
 \label{ch:literature}
 
-본 장은 EndorseRank와 Adaptive Weighted PageRank(AWP)를 해석하는 데 필요한 개념적·기술적 기초를 검토한다. 분산 원장에 특화되지 않은 독자를 위해 블록체인과 DeFi 기본 개념부터 시작하여, 그래프 순위 이론, 평판 시스템 계보, ERC-20 allowance 의미론, GMX V2 표본 틀, 순위 상관 통계를 전개한다. 하이퍼링크--인용 전파, 도메인 정합, 계산 복잡도로 구성된 이론적 틀은 주요 EndorseRank 대 AWP 비교를 동기화한다. 이후 절에서는 용어 안내, 작업 예제, 위험 분류, AWP 심층 분석, 방법 비교, 그리고 제~\ref{ch:methodology}장과 제~\ref{ch:results}장으로 이어지는 미해결 문제를 제시한다.
+본 장은 EndorseRank와 Adaptive Weighted PageRank(AWP)를 해석하는 데 필요한 개념적·기술적 기초를 검토한다. 분산 원장에 특화되지 않은 독자를 위해 블록체인과 DeFi 기본 개념부터 시작하여, 그래프 순위 이론, 평판 시스템 계보, ERC-20 allowance 의미론, 순위 상관 통계를 전개한다. 하이퍼링크--인용 전파, 도메인 정합, 계산 복잡도로 구성된 이론적 틀은 주요 EndorseRank 대 AWP 비교를 동기화한다. 이후 절에서는 용어 안내, 작업 예제, 위험 분류, AWP 심층 분석, 방법 비교, 그리고 제~\ref{ch:methodology}장과 제~\ref{ch:results}장으로 이어지는 미해결 문제를 제시한다.
 
 \dissertationSubheading[sec:blockchain-defi-foundations]{블록체인과 DeFi 기초}
 
@@ -20,7 +20,7 @@
 
 이더리움 메인넷은 보안과 유동성을 제공하지만 수요 하에서 처리량과 수수료 제약을 직면한다 \cend{7,22}. Layer-2(L2) 프로토콜은 기본 계층 밖(또는 압축된 형태)에서 거래를 실행하고 주기적으로 이더리움에 커밋먼트를 게시하여, 보안을 상속하면서 비용을 줄이는 것을 목표로 한다 \cend{25,26}. Arbitrum과 같은 옵티미스틱 롤업은 분쟁 창 동안 이의가 제기되지 않는 한 정확성을 가정한다 \cend{34}.
 
-Arbitrum One은 GMX V2를 포함한 DeFi 활동에 널리 사용되는 EVM 호환 옵티미스틱 롤업이다 \cend{23}. 본 연구에서 Arbitrum One을 실증 설정으로 선택한 이유는 (i)~공개 BigQuery 데이터셋에서 ERC-20 \texttt{Approval} 및 \texttt{Transfer} 로그를 이용할 수 있고, (ii)~GMX V2가 활동 필터로만 쓰는 지갑 귀속 \texttt{PositionDecrease} 이벤트를 방출하며, (iii)~수수료 수준이 6개월 창 안에서 밀집한 활동을 허용하기 때문이다. 결과는 재검증 없이 다른 L2나 이더리움 메인넷으로 자동 이전된다고 가정해서는 안 되지만, allowance 그래프 대 전송 그래프, 대리 지표 계열, 순위 상관이라는 방법론적 템플릿은 동등한 로그가 존재하는 한 체인에 무관하다.
+Arbitrum One은 DeFi 활동에 널리 사용되는 EVM 호환 옵티미스틱 롤업이다 \cend{23}. 본 연구에서 Arbitrum One을 실증 설정으로 선택한 이유는 (i)~공개 BigQuery 데이터셋에서 ERC-20 \texttt{Approval} 및 \texttt{Transfer} 로그를 이용할 수 있고, (ii)~수수료 수준이 6개월 창 안에서 밀집한 활동을 허용하기 때문이다. 결과는 재검증 없이 다른 L2나 이더리움 메인넷으로 자동 이전된다고 가정해서는 안 되지만, allowance 그래프 대 전송 그래프, 대리 지표 계열, 순위 상관이라는 방법론적 템플릿은 동등한 로그가 존재하는 한 체인에 무관하다.
 
 \dissertationSubheading[sec:erc20-allowance-lifecycle]{ERC-20 토큰과 allowance 생명주기}
 
@@ -144,13 +144,9 @@ ERC-20 \texttt{approve}와 EIP-2612 \texttt{permit}은 명시적 지출 승인�
 
 보증 해석은 의도적이지만 불완전하다. 사용자는 라우터의 ``신뢰성''에 대한 사회적 판단이 아니라 편의상 라우터를 승인한다. 계약 주소와 EOA가 공존한다. 그럼에도 allowance는 수동적 전송 수령보다 더 명확한 승인 신호이다. 전송은 보증 의도 없이 시장 조성, 에어드롭, 라우팅을 반영할 수 있다 \cend{16}.
 
-\dissertationSubheading[sec:gmx-validation]{GMX V2를 표본 틀로}
-
-Arbitrum One에서 GMX V2 \texttt{PositionDecrease} 이벤트는 매칭 표본을 정한다: 포지션 종료가 세 건 이상인 지갑($n=5{,}521$) \cend{23,53}. 손익·성공률·청산은 검증이 아니다. 저담보 대출 부도 라벨은 범위 밖으로 남는다.
-
 \dissertationSubheading[sub:gf-pr]{본 연구가 주장하지 않는 것}
 
-본 연구는 거래 이익·청산·악성 지출자를 예측하지 않는다. 남는 외부 검사는 미래 신규 소유자--지출자 승인의 시간 홀드아웃이다(제~\ref{ch:methodology}장과 제~\ref{ch:results}장).
+남는 외부 검사는 미래 신규 소유자--지출자 승인의 시간 홀드아웃이다(제~\ref{ch:methodology}장과 제~\ref{ch:results}장).
 
 \dissertationSubheading[sec:rank-correlation-theory]{순위 상관 이론}
 
@@ -209,7 +205,7 @@ Kendall의 $\tau$ \cend{36}는 일치 및 불일치 쌍을 센다. $i<j$인 모�
 \item \textbf{주요 그래프 구성 개념:} 방법이 순위를 매기도록 \emph{설계}된 그래프(예: EndorseRank의 $G_{\text{approve}}$). 점수화 후 적용되는 검사와 구별된다.
 \item \textbf{동시기 검사:} 점수와 동일 창에서 계산한 국소 전송·allowance 통계 \cend{14}.
 \item \textbf{시간 홀드아웃:} 점수는 t1에서 고정하고, 라벨은 t2의 인바운드 지출자에 대한 신규 소유자--지출자 승인이다.
-\item \textbf{매칭 지갑 코호트:} GMX 포지션 종료가 최소 세 건이고 비영 평판 부분그래프 연결성을 갖는 $n=5{,}521$ 지갑의 주요 동일 창 표본.
+\item \textbf{매칭 지갑 코호트:} 보증·전송 그래프 연결성이 비영인 $n=5{,}521$ 지갑의 주요 동일 창 표본.
 \item \textbf{지출자 홀드아웃 코호트:} RQ4에 사용하는 t1 인바운드 allowance 수신자 $n=1{,}335$.
 \item \textbf{확장 지갑 풀:} 매칭 코호트를 넘어 런타임 확장성에 사용되는 더 큰 주소 집합($N=31{,}612$).
 \end{itemize}

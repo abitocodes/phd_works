@@ -24,7 +24,7 @@ On the \textbf{allowance} family, EndorseRank achieves mean Kendall $\tau=0.355$
 
 On the \textbf{transfer} family, AWP achieves $\tau=0.534$ and EndorseRank a moderate secondary-axis $\tau=0.333$. AWP's advantage is expected because transfer checks share input semantics with $G_{\text{transfer}}$ \cend{16}.
 
-H2 is supported in its construct-specific form: EndorseRank wins on allowance; AWP wins on transfer. Graph semantics determine which check a score can credibly track. Trading-success and inverse-risk families are not used to answer RQ2.
+H2 is supported in its construct-specific form: EndorseRank wins on allowance; AWP wins on transfer. Graph semantics determine which check a score can credibly track.
 
 \dissertationSubsubheading[sub:finding-rq3]{RQ3: Computational efficiency}
 
@@ -38,11 +38,7 @@ H3 is supported. The efficiency gain follows from latest-allowance snapshots ins
 
 RQ4 asks whether t1 scores predict t2 new owner--spender approvals on inbound spenders. On that cohort ($n=1{,}335$), EndorseRank Kendall $\tau=0.479$ (CI $0.426$--$0.529$) and AWP $\tau=0.044$. Two hundred twenty-two spenders received at least one new t2 pair.
 
-The holdout is the same endorsement construct in the future tense. It is more informative as external evidence than same-window allowance $\tau=0.355$, because the labels are out of the score window. It is not a trading-profit, liquidation, or malicious-spender test. The GMX-matched intersection (12 events) is too sparse to claim.
-
-\dissertationSubheading[sec:supplementary-finding-srq1]{What is not claimed}
-
-Trading-success, inverse-risk, liquidation, and malicious-spender alignments are excluded from the findings. An outcome-native PageRank on GMX profit-and-loss exists in the evaluation artifact and is circular with those outcomes; it is not a deployable social score and is not used here.
+The holdout is the same endorsement construct in the future tense. It is more informative as external evidence than same-window allowance $\tau=0.355$, because the labels are out of the score window.
 
 \dissertationSubheading[sec:theoretical-implications]{Theoretical implications}
 
@@ -82,10 +78,10 @@ Hybrid deployments are feasible: EndorseRank for continuous authorization-aware 
 
 \dissertationSubsubheading[sub:deploy-industry]{Industry adoption scenarios}
 
-The practical value of EndorseRank and AWP is not that either score predicts trading profit. Both supply a cheap, standardized, and independently recomputable ordinal signal. Value capture is hypothesized to run through fees, utilization, monitoring cost, and reduced reward leakage, rather than through reducing collateral. The scenarios below map actors to decision problems consistent with the empirical results.
+The practical value of EndorseRank and AWP is that both supply a cheap, standardized, and independently recomputable ordinal signal. Value capture is hypothesized to run through fees, utilization, monitoring cost, and reduced reward leakage, rather than through reducing collateral. The scenarios below map actors to decision problems consistent with the empirical results.
 
 \begin{itemize}
-\item \textbf{Perpetual DEX operators:} Protocols such as GMX V2 earn primarily from trading fees tied to notional volume, not from trader PnL \cend{23}. Operators face a continuous decision problem: which wallets to prioritize for monitoring, fee tiers, or feature access when reputation must be refreshed frequently. EndorseRank fits this loop because allowance $\tau=0.355$ aligns the score with authorization activity and PageRank completes in $2.105$\,s on the matched cohort, enabling frequent (order-of-seconds) updates without transfer-history aggregation. Any revenue effect would be hypothesized to run through fee volume (if differentiated service raises retained notional) and lower monitoring cost of risk review---not through selecting profitable traders. Fee and monitoring policies remain the justified levers.
+\item \textbf{DEX operators:} Protocols that earn primarily from trading fees face a continuous decision problem: which wallets to prioritize for monitoring, fee tiers, or feature access when reputation must be refreshed frequently. EndorseRank fits this loop because allowance $\tau=0.355$ aligns the score with authorization activity and PageRank completes in $2.105$\,s on the matched cohort, enabling frequent (order-of-seconds) updates without transfer-history aggregation. Any revenue effect would be hypothesized to run through fee volume (if differentiated service raises retained notional) and lower monitoring cost of risk review. Fee and monitoring policies remain the justified levers.
 
 \item \textbf{Lending protocols:} Lending markets seek higher capital utilization without abandoning collateralization \cend{5,26}. Reputation can enter as an auxiliary signal for interest-rate or fee tiers and review cadence on already-collateralized positions, not as a substitute for collateral. EndorseRank is the natural social input when the protocol already relies on ERC-20 approvals for deposits and borrows (Section~\ref{sec:allowance-endorsement}). Utilization-driven interest income is the revenue channel. The scores are not default predictors. Any collateral-differentiation experiment remains future work (Chapter~\ref{ch:conclusion}).
 
@@ -98,7 +94,7 @@ The practical value of EndorseRank and AWP is not that either score predicts tra
 \item \textbf{Analytics and compliance providers:} Exchanges, funds, and compliance teams need auditable counterparty rankings that third parties can recompute. The open pipeline (Appendix~\ref{ch:appendix-eval}) supports subscription APIs that publish EndorseRank and AWP under disclosed windows and parameters. Recurring data revenue is a vendor business model; auditability is the product differentiator relative to opaque machine-learning scores \cend{48}. Providers should disclose Sybil exposure and that the scores are not trading-profit forecasts alongside any dashboard that surfaces ranks.
 \end{itemize}
 
-None of these scenarios treats reputation as a substitute for collateral or as a predictor of trading profit. The claim is narrower and, we argue, more durable: a standardized, auditable, low-latency ordinal signal lowers the cost of counterparty differentiation, and the protocols that adopt it may capture value through fees, utilization, monitoring cost, and reduced reward leakage rather than through reducing collateral or transferring protocol credit risk to the score.
+None of these scenarios treats reputation as a substitute for collateral. The claim is narrower and, we argue, more durable: a standardized, auditable, low-latency ordinal signal lowers the cost of counterparty differentiation, and the protocols that adopt it may capture value through fees, utilization, monitoring cost, and reduced reward leakage rather than through reducing collateral or transferring protocol credit risk to the score.
 
 \dissertationSubsubheading[sub:deploy-multiples]{From valuation multiples to reputation multiples}
 
@@ -184,7 +180,7 @@ Equations~\eqref{eq:closed-cluster}--\eqref{eq:efficiency} imply that EndorseRan
 
 On-chain reputation scores occupy a contested space between transparency and fairness. Legal and regulatory analyses of DeFi emphasize that decentralized markets remain subject to disclosure and consumer-protection concerns even when settlement is on-chain \cend{62}. Packin and Lev-Aretz\cend{48} caution that decentralized credit scoring can reproduce black-box harms if models are opaque, unappealable, or coupled to identity systems without due process. EndorseRank and AWP are fully determined by public ledger events and published algorithms; any party can recompute scores from the open pipeline (Appendix~\ref{ch:appendix-eval}). That auditability is a partial response to black-box concerns, but it does not resolve distributional effects: wallets with limited approval or transfer history receive low scores regardless of off-chain creditworthiness.
 
-Ethically, scores must not be presented as identity, creditworthiness in the consumer-lending sense, or proof of unique personhood \cend{17}. They are ordinal indicators of on-chain graph position under specified edge semantics. Deployments that gate access to financial services should disclose the graph definition, observation window, and known failure modes---including Sybil exposure. Regulatory regimes that require explainability favor graph propagation over opaque machine-learning scores \cend{39,48}, provided operators resist overclaiming predictive power for loan default or trading profit.
+Ethically, scores must not be presented as identity, creditworthiness in the consumer-lending sense, or proof of unique personhood \cend{17}. They are ordinal indicators of on-chain graph position under specified edge semantics. Deployments that gate access to financial services should disclose the graph definition, observation window, and known failure modes---including Sybil exposure. Regulatory regimes that require explainability favor graph propagation over opaque machine-learning scores \cend{39,48}, provided operators resist overclaiming predictive power for loan default.
 
 Privacy is structurally limited on public ledgers \cend{46,60}: reputation computation uses data already broadcast. The ethical obligation is therefore not to avoid analysis but to avoid deanonymization beyond address-level aggregation and to prevent misuse of scores as persistent biometric-like identifiers. This research analyzes addresses only; no off-chain identity linkage is performed (Chapter~\ref{ch:methodology}).
 
@@ -195,7 +191,7 @@ Interpretation of the empirical claims should account for the following threats,
 \dissertationSubsubheading[sub:threat-construct]{Construct validity}
 
 \begin{itemize}
-\item \textbf{Checks are not credit labels:} No under-collateralized lending default labels are used. GMX closes define the matched sample only. Trading-success and liquidation alignments are not claims.
+\item \textbf{Checks are not credit labels:} No under-collateralized lending default labels are used. Same-window checks are allowance and transfer local statistics. The holdout is future new approvals.
 
 \item \textbf{Holdout construct:} Future new approvals are still endorsement events. They are out of the score window, but they are not an independent credit or trading construct.
 
@@ -207,7 +203,7 @@ Interpretation of the empirical claims should account for the following threats,
 \begin{itemize}
 \item \textbf{Shared observation window:} All methods and proxies are computed over 2025-12-01 to 2026-05-31. Market regimes specific to that window---volatility, incentive programs, or protocol changes---may inflate or deflate alignment. Robustness checks on damping and top-token subgraphs reduce sensitivity to PageRank hyperparameters and token concentration but do not vary the calendar window.
 
-\item \textbf{Cohort selection:} The matched wallet cohort requires at least three GMX closes and non-zero reputation subgraph connectivity ($n=5{,}521$; $365{,}488$ \texttt{PositionDecrease} events). Results may not extend to wallets with thinner perpetual histories or to addresses absent from allowance and transfer subgraphs.
+\item \textbf{Cohort selection:} The matched wallet cohort requires non-zero reputation-subgraph connectivity ($n=5{,}521$). Results may not extend to addresses absent from allowance and transfer subgraphs.
 
 \item \textbf{Edge-weight measurement:} Token-decimal normalization, USD conversion choices, and permit-versus-approve coverage can affect $w_{uv}$. Measurement error in edge weights propagates to $\mathbf{r}$ and to rank correlations \cend{40}.
 \end{itemize}
@@ -215,7 +211,7 @@ Interpretation of the empirical claims should account for the following threats,
 \dissertationSubsubheading[sub:threat-external]{External validity}
 
 \begin{itemize}
-\item \textbf{Single protocol and chain:} Evidence is limited to Arbitrum One and GMX V2. Generalization to other perpetual markets, lending protocols, or Layer-1 chains requires cross-protocol validation \cend{53,59,28}.
+\item \textbf{Single protocol and chain:} Evidence is limited to Arbitrum One. Generalization to other venues, lending protocols, or Layer-1 chains requires cross-protocol validation \cend{53,59,28}.
 
 \item \textbf{Pool scaling versus alignment scaling:} Runtime scaling on the expanded wallet pool ($N=31{,}612$) supports efficiency claims at larger $n$; same-window alignment remains anchored to the matched cohort, and the holdout to spenders. Efficiency gains should not be assumed to preserve the same $\tau$ profile at arbitrary population sizes.
 \end{itemize}
@@ -230,7 +226,7 @@ Interpretation of the empirical claims should account for the following threats,
 
 \dissertationSubheading[sec:limitations]{Limitations}
 
-Results reflect one six-month window on Arbitrum One for a matched wallet cohort of $n=5{,}521$ addresses, plus a spender holdout of $n=1{,}335$. The endorsement subgraph comprises $14{,}727$ edges; the transfer subgraph comprises $137{,}087$ edges. EndorseRank's primary demonstrated strengths are allowance-construct alignment ($\tau=0.355$), rank distinctness from AWP (inter-method $\tau=0.316$), computational efficiency ($2.105$\,s vs.\ $18.711$\,s), and holdout alignment with future new approvers ($\tau=0.479$). Trading-profit, liquidation, and malicious-spender prediction are not claimed.
+Results reflect one six-month window on Arbitrum One for a matched wallet cohort of $n=5{,}521$ addresses, plus a spender holdout of $n=1{,}335$. The endorsement subgraph comprises $14{,}727$ edges; the transfer subgraph comprises $137{,}087$ edges. EndorseRank's primary demonstrated strengths are allowance-construct alignment ($\tau=0.355$), rank distinctness from AWP (inter-method $\tau=0.316$), computational efficiency ($2.105$\,s vs.\ $18.711$\,s), and holdout alignment with future new approvers ($\tau=0.479$).
 
 Token-decimal normalization, USD price oracles, and permit-versus-approve coverage may affect edge weights. Extended baselines (alternative PageRank variants and lending-oriented graphs) are archived for future comparison (Appendix~\ref{ch:appendix-eval}) but are excluded from the main research narrative. Unsecured lending default labels are out of scope. Regulatory and ethical deployment constraints (Section~\ref{sec:regulatory-ethics}) limit how scores should be used even when alignment is favorable.
 

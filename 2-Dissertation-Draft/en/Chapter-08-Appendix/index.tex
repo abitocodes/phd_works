@@ -22,21 +22,18 @@ This appendix documents the evaluation pipeline that produced the numerics in Ch
 
 \dissertationSubheading[sec:pipeline-stages]{Pipeline stages}
 
-The evaluation proceeds in three stages on Arbitrum One over the observation window 2025-12-01 to 2026-05-31 (UTC, inclusive).
+The evaluation proceeds in two stages on Arbitrum One over the observation window 2025-12-01 to 2026-05-31 (UTC, inclusive).
 
 \begin{enumerate}
-\item \textbf{Trading-success labels:} Decode GMX V2 \texttt{PositionDecrease} events from the public BigQuery log table, recover wallet identity, realized PnL, position-size change, and liquidation flags, and retain wallets with at least three closes as the matched cohort ($n=5{,}521$; $365{,}488$ decoded closes).
-\item \textbf{Reputation graphs and scores:} Extract ERC-20 \texttt{Approval} and \texttt{Transfer} logs for cohort wallets in monthly batches (per-query dry-run and a $150$\,GiB abort cap). Build the latest-allowance endorsement graph and the time-decayed transfer graph, then compute EndorseRank, AWP, and supplementary GF-PR scores by power iteration (damping $d=0.85$, tolerance $10^{-8}$, at most $300$ iterations).
-\item \textbf{Proxies, alignment, and benchmarks:} Compute the five proxy families defined in Chapter~\ref{ch:methodology}, report Spearman $\rho$ and Kendall $\tau$ against each score vector, time PageRank solves on pre-built edges (three-run averages), and run robustness sweeps over damping, top tokens, and sample size.
+\item \textbf{Reputation graphs and scores:} Extract ERC-20 \texttt{Approval} and \texttt{Transfer} logs in monthly batches (per-query dry-run and a $150$\,GiB abort cap). The matched cohort is wallets with non-zero approval or transfer connectivity ($n=5{,}521$). Build the latest-allowance endorsement graph and the time-decayed transfer graph, then compute EndorseRank and AWP scores by power iteration (damping $d=0.85$, tolerance $10^{-8}$, at most $300$ iterations).
+\item \textbf{Checks, alignment, and benchmarks:} Compute transfer and allowance checks defined in Chapter~\ref{ch:methodology}, report Spearman $\rho$ and Kendall $\tau$ against each score vector, time PageRank solves on pre-built edges (three-run averages), and run robustness sweeps over damping, top tokens, and sample size.
 \end{enumerate}
 
 Offline synthetic checks use the same scoring and alignment logic on fixture graphs (no cloud access) to validate implementation before real extraction. Real extraction requires Google Cloud credentials and a billing project; scans target only the public Arbitrum One log dataset.
 
 \dissertationSubheading[sec:bq-extraction]{BigQuery extraction design}
 
-ERC-20 \texttt{Approval} and \texttt{Transfer} events are identified by their standard topic-$0$ hashes and restricted to logs whose owner/spender or from/to address lies in the evaluation wallet list, so scan cost scales with the cohort rather than the full chain. Monthly batching keeps each query under the operational byte cap. GMX V2 events are read from the \texttt{EventEmitter} contract at
-\texttt{0xC8ee91A54287DB53897056e12D9819156D3822Fb}
-and decoded to key--value fields for \texttt{account}, \texttt{basePnlUsd}, \texttt{sizeDeltaUsd}, and liquidation flags. Representative SQL patterns appear in Appendix~\ref{ch:appendix-sql}.
+ERC-20 \texttt{Approval} and \texttt{Transfer} events are identified by their standard topic-$0$ hashes and restricted to logs whose owner/spender or from/to address lies in the evaluation wallet list, so scan cost scales with the cohort rather than the full chain. Monthly batching keeps each query under the operational byte cap. Representative SQL patterns appear in Appendix~\ref{ch:appendix-sql}.
 
 Extraction records (bytes processed, row counts, timestamps) are retained in the study's acquisition log for auditability; this research reports the resulting cohort sizes and edge counts rather than those operational logs.
 
@@ -44,7 +41,21 @@ Extraction records (bytes processed, row counts, timestamps) are retained in the
 
 Table~\ref{tab:benchmark-scaling-incohort} reports in-cohort runtime scaling for $n \leq 5{,}521$. Robustness tables in Chapter~\ref{ch:results} use the same solver settings and cohort definitions as the primary evaluation.
 
-\input{results/tables/benchmark-scaling-incohort.tex}
+\begin{table}[htbp]
+\centering
+\caption{In-cohort runtime scaling (SHA256 seed \texttt{benchmark-scale-v1}; $n \leq 5{,}521$ matched cohort).}
+\label{tab:benchmark-scaling-incohort}
+\begin{tabular}{rrrrrr}
+\toprule
+$n$ & ER (s) & AWP (s) & Speedup & ER $|E|$ & AWP $|E|$ \\
+\midrule
+1000 & 0.393 & 3.215 & 8.2$\times$ & 2584 & 23058 \\
+2000 & 0.729 & 6.794 & 9.3$\times$ & 5147 & 47031 \\
+4000 & 2.075 & 18.031 & 8.7$\times$ & 10557 & 97105 \\
+5521 & 2.105 & 18.711 & 8.9$\times$ & 14727 & 137087 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \dissertationSubheading[sec:delegation-deferred]{Credit-delegation extract (deferred)}
 
@@ -52,9 +63,7 @@ Aave V3 \texttt{BorrowAllowanceDelegated} events were not extracted in this stud
 
 \dissertationSubheading[sec:supplementary-summary]{Supplementary alignment summary table}
 
-Table~\ref{tab:alignment-summary} restates family-level mean $\tau$ from Table~\ref{tab:alignment-three-methods} in columnar form (EndorseRank / AWP / GF-PR / highest-alignment label). The main narrative uses Table~\ref{tab:alignment-three-methods}; the columnar form is retained here for side-by-side reading.
-
-\input{results/tables/alignment-summary.tex}
+Family-level mean $\tau$ for transfer and allowance is restated in Table~\ref{tab:alignment-three-methods} in Chapter~\ref{ch:results}.
 
 \dissertationSubheading[sec:parameter-summary]{Parameter summary}
 
@@ -72,10 +81,7 @@ Convergence tolerance $\varepsilon$ & $10^{-8}$ & Power-iteration stop \\
 Max iterations & $300$ & Power-iteration cap \\
 Logistic $k$ & $0.01$ & AWP decay slope \\
 Logistic $t_0$ & $180$ days & AWP decay midpoint \\
-Min.\ GMX closes & $3$ & Cohort eligibility \\
 Observation window & 2025-12-01 -- 2026-05-31 & UTC inclusive \\
-GF-PR loss $\varepsilon_{\mathrm{loss}}$ & $0.1$ & Ordinary loss edge boost \\
-GF-PR liquidation $\varepsilon_{\mathrm{liq}}$ & $1.0$ & Liquidation edge boost \\
 Expanded pool subsample seed & \texttt{benchmark-tier2-v1} & Deterministic SHA256 seed \\
 \bottomrule
 \end{tabular}
@@ -91,11 +97,7 @@ The following formulas match Chapter~\ref{ch:methodology}.
 
 \item \textbf{Allowance:} $\mathrm{in\_approve\_degree}(w)=|\{o:\exists o\to w\}|$; $\mathrm{in\_approve\_value}(w)=\sum_o w_a(o,w)$ with $w$ as spender.
 
-\item \textbf{Inverse risk:} $\mathrm{loss\_avoidance}(w)=-\sum_c\min(\mathrm{PnL}_c,0)$; $\mathrm{non\_loss\_close\_rate}(w)=1-|\{c:\mathrm{PnL}_c<0\land\neg\mathrm{liq}_c\}|/|\mathcal{C}(w)|$; $\mathrm{worst\_close\_pnl\_score}(w)=-\min_c\mathrm{PnL}_c$.
-
 \item \textbf{Sybil-adjusted stability:} $\mathrm{inbound\_counterparty\_ratio}(w)=|\{u:u\to w\}|/|T^{\mathrm{in}}(w)|$ (self-transfers excluded); tenure in days; active months.
-
-\item \textbf{Trading success:} $\mathrm{close\_success\_count}(w)=|\{c:\mathrm{PnL}_c>0\land\neg\mathrm{liq}_c\}|$; $\mathrm{realized\_gain\_proxy}(w)=\sum_c\max(\mathrm{PnL}_c,0)$; $\mathrm{close\_success\_rate}(w)=\mathrm{close\_success\_count}(w)/|\mathcal{C}(w)|$.
 \end{itemize}
 
 \dissertationSubheading[sec:glossary]{Glossary}
@@ -105,7 +107,7 @@ The following formulas match Chapter~\ref{ch:methodology}.
 \item[Alignment] Rank agreement between reputation scores and a validation proxy ($\rho$, $\tau$).
 \item[Construct overlap] Shared data source between a ranking method and a proxy, inflating alignment.
 \item[Endorsement graph] Directed graph of latest allowances (EndorseRank input).
-\item[Matched cohort] Primary sample of $n=5{,}521$ wallets meeting eligibility rules.
+\item[Matched cohort] Primary sample of $n=5{,}521$ wallets with non-zero endorsement- or transfer-graph connectivity.
 \item[Expanded wallet pool] Larger address set ($N=31{,}612$) for runtime scaling.
 \item[PageRank] Spectral ranking by stationary distribution of a damped random walk.
 \item[Proxy] Observable wallet metric used for domain-intuition validation.
