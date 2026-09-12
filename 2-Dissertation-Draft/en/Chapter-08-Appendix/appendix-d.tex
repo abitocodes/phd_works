@@ -13,7 +13,7 @@ Interpretation guidelines:
 \begin{itemize}
 \item Methods built on transfer-like edges cluster near AWP on transfer and Sybil families.
 \item Methods with very small edge counts can produce unstable or degenerate rankings; their runtimes may be low simply because $m$ is tiny.
-\item RiskProp-style rows that mirror AWP numerically indicate shared transfer structure rather than independent discovery.
+\item RiskProp-style rows that mirror AWP numerically indicate shared transfer structure, not independent discovery.
 \end{itemize}
 
 \dissertationSubheading[sec:six-aave-archive]{Six-method Aave-oriented matrix}
@@ -31,7 +31,7 @@ Focusing this research on EndorseRank and AWP serves two goals:
 \begin{enumerate}
 \item Clarity of contribution: The novel construct is allowance-based endorsement. Comparing it to the established transfer baseline\cend{3} isolates the research question.
 \item Avoiding baseline sprawl: Additional variants that share transfer edges with AWP add rows without adding independent constructs.
-\item Avoiding circular references: The outcome-native GF-PR reference used in the research proposal is built from the same GMX events as the trading-success proxies, so any alignment between them is construct overlap rather than validation (Section~\ref{sub:gf-pr}); its three-method matrix is archived alongside the seven-method and six-Aave presets.
+\item Avoiding circular references: The outcome-native GF-PR reference used in the research proposal is built from the same GMX events as the trading-success proxies, so any alignment between them is construct overlap, not validation (Section~\ref{sub:gf-pr}); its three-method matrix is archived alongside the seven-method and six-Aave presets.
 \end{enumerate}
 
 Researchers who need broader baselines can regenerate the archive tables from the open evaluation pipeline using the seven-method and six-Aave presets.
@@ -53,7 +53,7 @@ The following identifiers appear in archive tables and CSV exports. They documen
 \item[Delegation-PR] Intended to use credit-delegation allowances; with zero delegation edges extracted, scores are degenerate and $\tau$ is not interpretable.
 \end{description}
 
-These notes exist so that future researchers can decide which variants deserve full re-implementation rather than treating archive rows as peer-reviewed baselines.
+These notes exist so that future researchers can decide which variants deserve full re-implementation. Archive rows are not peer-reviewed baselines.
 
 \dissertationSubheading[sec:archive-decision-log]{Decision log: what stayed in the main text}
 
@@ -65,5 +65,5 @@ The decision to keep only EndorseRank and AWP in Chapters~\ref{ch:results}--\ref
 \item Narrative focus: This research's contribution is allowance-based endorsement, not a survey of all possible PageRank variants.
 \end{enumerate}
 
-Under these criteria, EndorseRank (allowance) and AWP (transfer) form a minimal sufficient set. Archive tables remain available for readers who want the broader landscape without diluting the primary claims.
+Under these criteria, EndorseRank (allowance) and AWP (transfer) form a minimal sufficient set. Archive tables remain available for readers who want the seven-method and six-Aave matrices without mixing them into the primary claims.
 
