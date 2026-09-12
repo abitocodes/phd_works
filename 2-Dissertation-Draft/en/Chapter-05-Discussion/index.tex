@@ -2,118 +2,135 @@
 \chapter{Discussion}
 \label{ch:discussion}
 
-This chapter interprets the Chapter~\ref{ch:results} findings against RQ1--RQ4, discusses theoretical and practical implications, formulates a Sybil attack cost model on allowance graphs, addresses regulatory and ethical considerations, evaluates threats to validity, and states limitations. Same-window quantities are those for the matched cohort ($n=5{,}521$) unless noted: inter-method Kendall $\tau=0.316$, EndorseRank allowance $\tau=0.355$, AWP transfer $\tau=0.534$, and PageRank runtimes of $2.105$\,s versus $18.711$\,s ($\approx 8.9\times$), with pool scaling of $\approx 10.4\times$ at $n=10{,}000$ and $\approx 9.4\times$ at $N=31{,}612$. The holdout uses t1 inbound spenders ($n=1{,}335$): EndorseRank $\tau=0.479$ with future new approvers (CI $0.426$--$0.529$) versus AWP $\tau=0.044$.
+Chapter~\ref{ch:results} reported what was measured on Arbitrum One. This chapter asks what those measurements mean. It first answers each research question and judges each objective of Chapter~\ref{ch:introduction} against the criterion stated there (Sections~\ref{sec:findings-rq}--\ref{sec:objectives-achievement}). It then draws out theoretical implications (Section~\ref{sec:theoretical-implications}), practical deployment implications (Section~\ref{sec:practical-implications}) and the societal significance of a cheap, auditable, authorisation-aware reputation signal (Section~\ref{sec:societal-impact}), formalises the cost of a Sybil attack on an allowance graph (Section~\ref{sec:sybil-cost-model}), and closes with regulatory and ethical considerations, threats to validity and limitations (Sections~\ref{sec:regulatory-ethics}--\ref{sec:limitations}). Numerical results are not restated here; each interpretation names the table of Chapter~\ref{ch:results} it rests on. Same-window statements refer to the matched cohort and holdout statements to the spender cohort unless noted.
 
 \dissertationSubheading[sec:findings-rq]{Findings by research question}
 
-The primary empirical comparison concerns EndorseRank and AWP as social reputation methods on wallet-to-wallet graphs. The following subsections interpret each research question in light of contemporaneous construct checks, the temporal holdout, and the computational benchmarks.
-
 \dissertationSubsubheading[sub:finding-rq1]{RQ1: Reputation structure and rank divergence}
 
-RQ1 asks whether EndorseRank and AWP produce meaningfully different wallet orderings on an identical Arbitrum sample. Inter-method Kendall $\tau$ between the two score vectors is $0.316$ on the matched cohort ($n=5{,}521$). Correlation is present---both methods operate on overlapping wallet activity in the same observation window---but the magnitude is far from unity. Allowance and transfer graphs therefore emphasize different wallet relationships.
+RQ1 asks whether EndorseRank and AWP produce meaningfully different wallet orderings on an identical sample. The inter-method Kendall $\tau$ and its interval (Table~\ref{tab:alignment-family-ci}, last row) sit well inside the open interval between unrelated and identical orderings: correlation is present, because both methods draw on overlapping wallet activity in one window, but a large share of pairwise orderings disagree (Figure~\ref{fig:rank-scatter}).
 
-This divergence is structurally expected. The endorsement graph $G_{\text{approve}}$ contains $14{,}727$ edges encoding current spending authorization; the transfer graph $G_{\text{transfer}}$ contains $137{,}087$ edges encoding time-decayed economic flow \cend{16}. PageRank propagates influence along these edges under the same damping convention \cend{49,40}, so differences in edge sets and weights produce differences in stationary mass. Allowances encode authorization intent; transfers encode movement of value. A wallet that receives large transfers without granting allowances can rank highly under AWP and modestly under EndorseRank, and conversely for a wallet that authorizes spenders without being a transfer hub.
+The divergence is structurally expected. The endorsement graph encodes current spending authorisation with about one ninth as many edges as the transfer graph, which encodes time-decayed economic flow\cend{3}. PageRank propagates influence along whatever edges it is given under the same damping convention \cend{15}, and the sensitivity of the stationary vector to the edge set is well characterised \cend{23}; different edge sets therefore yield different stationary mass. A wallet that receives large transfers without granting allowances ranks highly under AWP and modestly under EndorseRank, and conversely for a wallet that authorises spenders without being a transfer hub. H1 is supported. The practical corollary is that the two scores are not substitutes: adopting EndorseRank for efficiency means accepting a different ranking geometry, not a faster approximation of AWP.
 
-H1 is therefore supported: EndorseRank and AWP yield partially overlapping yet construct-distinct orderings. The practical implication is that the two scores are not interchangeable substitutes. Deployments that adopt EndorseRank for efficiency must accept a different ranking geometry, not merely a faster approximation of AWP.
+\dissertationSubsubheading[sub:finding-rq2]{RQ2: Construct-specific alignment}
 
-\dissertationSubsubheading[sub:finding-rq2]{RQ2: Construct-specific social-method alignment}
+RQ2 asks which method aligns more strongly with contemporaneous allowance checks and with contemporaneous transfer checks. Tables~\ref{tab:alignment-family-ci} and~\ref{tab:tau-diff} show construct-specific winners rather than a universal ranking: AWP leads on the transfer family and EndorseRank on the allowance family, and both between-method paired differences exclude zero in opposite directions.
 
-RQ2 asks which social method aligns more strongly with contemporaneous allowance checks and with contemporaneous transfer checks. Tables~\ref{tab:alignment-transfer}--\ref{tab:alignment-allowance} show construct-specific winners rather than a universal ranking.
-
-On the \textbf{allowance} family, EndorseRank achieves mean Kendall $\tau=0.355$, whereas AWP is near zero ($-0.030$). This is an intended-construct check: latest-allowance centrality aligns with allowance local statistics, while transfer-graph PageRank does not \cend{14}.
-
-On the \textbf{transfer} family, AWP achieves $\tau=0.534$ and EndorseRank a moderate secondary-axis $\tau=0.333$. AWP's advantage is expected because transfer checks share input semantics with $G_{\text{transfer}}$ \cend{16}.
-
-H2 is supported in its construct-specific form: EndorseRank wins on allowance; AWP wins on transfer. Graph semantics determine which check a score can credibly track.
+Two qualifications matter for how H2 is read. First, each method's own-construct agreement is partly mechanical, because the proxies of a family are computed from the same event stream that builds the corresponding graph; RQ2 is therefore a construct-validity observation in the sense of Cronbach and Meehl \cend{22} rather than external validation. Second, the within-method contrasts are null: EndorseRank's allowance alignment is not statistically higher than its own transfer alignment, and its agreement with in-approve degree is not statistically higher than its agreement with transfer in-degree (Table~\ref{tab:tau-diff}, contrasts~i and~vi). The evidence therefore supports the between-method statement---transfer centrality does not recover authorisation, and endorsement centrality does not recover transfer volume as well as AWP---but not a claim that EndorseRank is ``more about'' allowances than about transfers within its own ranking. H2 is supported in that construct-specific, between-method form.
 
 \dissertationSubsubheading[sub:finding-rq3]{RQ3: Computational efficiency}
 
-RQ3 asks whether EndorseRank is computationally more efficient than AWP on the same matched sample. On the full cohort ($n=5{,}521$), EndorseRank completes PageRank in $2.105$\,s versus $18.711$\,s for AWP---approximately $8.9\times$ faster---with a sparser graph ($14{,}727$ vs.\ $137{,}087$ edges). Both methods converge within tolerance $10^{-8}$; EndorseRank requires fewer iterations on average, consistent with a smaller effective edge set \cend{49}.
+RQ3 asks whether EndorseRank is computationally more efficient than AWP on the same matched sample. Table~\ref{tab:benchmark-runtime} answers affirmatively on wall-clock time, memory and iterations, and reports the edge counts next to the runtimes so that the ratio can be attributed: the endorsement graph is about one ninth the size of the transfer graph, and per-iteration cost is linear in $|E|$ \cend{23}. The advantage follows from representing authorisation as a latest-allowance snapshot rather than as an accumulated, logistically decayed transfer history\cend{3}; nothing in the solver differs between the two methods.
 
-Scaling on the expanded wallet pool ($N=31{,}612$) preserves the advantage: $\approx 10.4\times$ at $n=10{,}000$ and $\approx 9.4\times$ at full pool size. Robustness checks on damping and top-token subgraphs do not alter the allowance--transfer trade-off pattern: EndorseRank's allowance $\tau$ remains stable near $0.355$ across damping $d \in \{0.75, 0.85, 0.95\}$, while transfer-family $\tau$ for both methods varies by at most approximately $0.005$.
-
-H3 is supported. The efficiency gain follows from latest-allowance snapshots instead of aggregating full transfer history with logistic decay \cend{64}. For protocols that must refresh reputation frequently, this difference is operationally material: an order-of-magnitude reduction in PageRank wall time enables tighter update loops without proportional infrastructure cost.
+The node-count sensitivity of Table~\ref{tab:benchmark-scaling} qualifies rather than extends the claim. The runtime ratio stays within a narrow band across staged node counts, but the pool stages add addresses without adding extracted edges, so they do not test how either method scales when the edge population itself grows. Damping and top-token perturbations (Tables~\ref{tab:robustness-damping} and~\ref{tab:robustness-tokens}) leave the alignment pattern unchanged; the runtime ratio does move with damping. H3 is supported for the matched cohort and for the bounded node-count experiment that was actually run.
 
 \dissertationSubsubheading[sub:finding-rq4]{RQ4: Temporal holdout of future new approvals}
 
-RQ4 asks whether t1 scores predict t2 new owner--spender approvals on inbound spenders. On that cohort ($n=1{,}335$), EndorseRank Kendall $\tau=0.479$ (CI $0.426$--$0.529$) and AWP $\tau=0.044$. Two hundred twenty-two spenders received at least one new t2 pair.
+RQ4 asks whether scores frozen at the end of February predict new owner--spender approvals in the following three months on inbound spenders. Table~\ref{tab:holdout-spenders} shows that EndorseRank does and AWP does not; EndorseRank's interval excludes zero and lies entirely above AWP's, whose interval includes zero. Because the labels post-date every scored event, this is the one result in the thesis that is not a same-window construct check, and it is the strongest evidence that endorsement centrality carries information about spenders that transfer centrality does not.
 
-The holdout is the same endorsement construct in the future tense. It is more informative as external evidence than same-window allowance $\tau=0.355$, because the labels are out of the score window.
+RQ4 differs from the research proposal, which planned a comparison against a trading-success reference. That comparison was withdrawn because the outcome-native reference was built from the same GMX events as the proxies it would have been validated against (Section~\ref{sub:gf-pr}); the holdout replaces it with a label that is out of window but still of the same construct---new approvals, not profit or repayment. The limit of RQ4 is therefore that it demonstrates temporal predictive validity of the endorsement construct, not credit-risk validity.
+
+\dissertationSubheading[sec:objectives-achievement]{Achievement of the research objectives}
+
+Chapter~\ref{ch:introduction} stated four objectives with a measurement and a criterion each. Table~\ref{tab:objectives-achievement} judges them against the evidence.
+
+\begin{table}[htbp]
+\centering
+\caption{Research objectives, the criterion stated in Chapter~\ref{ch:introduction}, and the outcome.}
+\label{tab:objectives-achievement}
+\fitwidth{%
+\begin{tabular}{p{0.06\linewidth}p{0.36\linewidth}p{0.42\linewidth}p{0.10\linewidth}}
+\toprule
+Obj. & Criterion & Evidence & Outcome \\
+\midrule
+O1 & 95\% interval of inter-method $\tau$ excludes $0$ and $1$ & Table~\ref{tab:alignment-family-ci}, last row: interval lies strictly inside $(0,1)$ & Met \\
+O2 & Each method's own-construct $\Delta\tau$ against the other method is positive with an interval excluding $0$ & Table~\ref{tab:tau-diff}, contrasts~ii (AWP on transfer) and~iii (EndorseRank on allowance) & Met \\
+O3 & Runtime ratio reported together with the edge ratio under one fixed protocol & Tables~\ref{tab:benchmark-runtime}, \ref{tab:benchmark-scaling} and~\ref{tab:benchmark-scaling-incohort}: mean, SD, memory, iterations, $|V|$, $|E|$ per configuration & Met \\
+O4 & EndorseRank holdout interval excludes $0$ and point estimate exceeds AWP & Table~\ref{tab:holdout-spenders} & Met \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+Two findings that were not objectives also shape the conclusions. The within-method contrasts of Table~\ref{tab:tau-diff} did not reach significance, which narrows what can be said about EndorseRank's allowance family (Section~\ref{sub:finding-rq2}), and the expanded-pool experiment turned out to test node count only, not edge growth (Section~\ref{sub:finding-rq3}). Both are reported as limits on the claims rather than folded into them.
 
 \dissertationSubheading[sec:theoretical-implications]{Theoretical implications}
 
-The findings extend three strands of theory: hyperlink-style propagation on financial graphs, construct validity for on-chain scores, and the economics of trust under pseudonymity.
+The findings bear on three strands of theory: hyperlink-style propagation on financial graphs, construct validity for on-chain scores, and the economics of trust under pseudonymity.
 
 \dissertationSubsubheading[sub:theory-propagation]{Propagation semantics beyond transfers}
 
-PageRank's original formulation treats inbound hyperlinks as citations \cend{49,8}. Do et al.\cend{16} map that metaphor to Ethereum transfers. EndorseRank maps it to ERC-20 allowances: an owner who authorizes a spender issues a directed endorsement of spending authority \cend{18,19}. The inter-method $\tau=0.316$ demonstrates that changing the edge semantics changes the ranking geometry even when the node set is held fixed. Graph-based reputation is therefore not a single algorithm applied to ``the'' transaction graph; it is a family of methods whose validity depends on which relationships are encoded as edges \cend{40,44}.
-
-Related trust-propagation systems in peer-to-peer and web settings---EigenTrust and TrustRank---similarly show that seed sets and edge definitions dominate outcomes \cend{35,27}. EndorseRank contributes an edge definition native to token standards rather than to message-passing overlays or hyperlink graphs.
+PageRank's original formulation treats inbound hyperlinks as citations \cend{15}. Do and Do\cend{4} carried that metaphor to Ethereum transactions, and Do, Do and Nguyen\cend{3} refined it into AWP by weighting transfer edges with value and a logistic decay of age. EndorseRank carries the metaphor to ERC-20 allowances: an owner who authorises a spender issues a directed endorsement of spending authority \cend{18}. The divergence measured under RQ1 shows that changing the edge semantics changes the ranking geometry even when the node set is held fixed. Graph-based reputation is therefore not a single algorithm applied to ``the'' transaction graph; it is a family of methods whose validity depends on which relationships are encoded as edges \cend{23}. Trust-propagation systems in peer-to-peer and web settings made the same point from the other side: in EigenTrust \cend{16} and TrustRank \cend{17}, seed sets and edge definitions dominate outcomes. EndorseRank contributes an edge definition native to a token standard rather than to a message-passing overlay or a hyperlink graph.
 
 \dissertationSubsubheading[sub:theory-construct]{Multi-construct domain alignment}
 
-The check design separates transfer centrality from allowance delegation. EndorseRank aligns with its primary allowance construct ($G_{\text{approve}}$, $\tau=0.355$); transfer checks are a secondary axis (moderate $\tau=0.333$, below AWP $0.534$). The temporal holdout then asks whether that authorization signal persists after the score window.
-
-This pattern is consistent with classical construct-validity reasoning: indicators should correlate with measures of the same construct and diverge from measures of different constructs \cend{14}. Rank correlations \cend{54,36} operationalize that reasoning for ordinal reputation scores without imposing classification thresholds.
+The check design separates transfer centrality from allowance delegation and tests each method on both. The resulting pattern---each method converging with its own construct and diverging from the other's---is the pattern that classical construct-validity reasoning predicts for indicators that measure different things \cend{22}, and Messick's \cend{33} unified view adds that the consequences of using a score are part of its validity, which is why the deployment scenarios below are stated in terms of what each score can and cannot be used for. Rank correlations \cend{20,21} operationalise the reasoning for ordinal reputation scores without imposing classification thresholds, and the paired bootstrap \cend{34} turns the pattern into tested differences rather than eyeballed ones. The null within-method contrasts are a reminder that convergent evidence on a method's own construct is not the same as discriminant evidence within the method.
 
 \dissertationSubsubheading[sub:theory-pseudonymity]{Reputation under cheap pseudonyms}
 
-Public ledgers permit cheap identity creation \cend{46,60,17}. Reputation systems that reward inbound transfers or allowances are therefore exposed to Sybil strategies in which an attacker manufactures edges among controlled addresses. The empirical results do not eliminate that threat; they show that allowance and transfer graphs respond differently to the activity patterns present in the observational sample. Section~\ref{sec:sybil-cost-model} formalizes attack cost on allowance graphs, arguing that non-zero allowances to external spenders can impose opportunity and revocation costs that pure transfer wash trading does not.
+Public ledgers permit cheap identity creation \cend{5}, and Ethereum's account model makes address creation free of any registration step \cend{36}. Reputation systems that reward inbound transfers or allowances are therefore exposed to Sybil strategies in which an attacker manufactures edges among controlled addresses \cend{11}. The empirical results do not eliminate that threat; they show that allowance and transfer graphs respond differently to the activity present in the observational sample. Section~\ref{sec:sybil-cost-model} formalises attack cost on allowance graphs and argues that non-zero allowances to external spenders impose opportunity and revocation costs that transfer wash trading does not.
 
 \dissertationSubheading[sec:practical-implications]{Practical implications and deployment scenarios}
 
-Protocols and infrastructure providers face a design choice between transfer-hub detection and authorization-aware reputation. The empirical trade-off supports scenario-dependent adoption rather than a single recommended score.
+Protocols and infrastructure providers face a design choice between transfer-hub detection and authorisation-aware reputation. The empirical trade-off supports scenario-dependent adoption rather than a single recommended score.
 
 \dissertationSubsubheading[sub:deploy-transfer]{Transfer-hub and flow monitoring}
 
-Protocols that prioritize detection of high-flow wallets---for example, for market-maker identification, routing analysis, or transfer-based compliance heuristics---may prefer AWP despite higher cost. AWP's transfer $\tau=0.534$ makes it the better match when the operational target is economic flow centrality \cend{16}. The runtime of $18.711$\,s on $n=5{,}521$ wallets is acceptable for batch analytics; it is less attractive for sub-second or near-real-time refresh.
+Protocols that prioritise detection of high-flow wallets---for market-maker identification, routing analysis or transfer-based compliance heuristics---have reason to prefer AWP despite its cost. Its transfer alignment (Table~\ref{tab:alignment-transfer}) makes it the better match when the operational target is economic flow centrality\cend{3}. Its runtime on the matched cohort (Table~\ref{tab:benchmark-runtime}) is acceptable for batch analytics and less attractive for near-real-time refresh.
 
-\dissertationSubsubheading[sub:deploy-allowance]{Authorization-aware and low-latency refresh}
+\dissertationSubsubheading[sub:deploy-allowance]{Authorisation-aware and low-latency refresh}
 
-Protocols that emphasize explicit spending authorization---token vaults, allowance-gated integrations, or risk engines that treat approvals as trust acts---may prefer EndorseRank. The method's allowance $\tau=0.355$, sparse graph ($14{,}727$ edges), and $2.105$\,s PageRank time support frequent recomputation. Pool scaling ($\approx 10.4\times$ at $n=10{,}000$; $\approx 9.4\times$ at $N=31{,}612$) indicates that the efficiency advantage persists beyond the matched cohort. Operators accept lower transfer-check alignment ($\tau=0.333$) in exchange for authorization semantics, holdout evidence on future new approvals, and speed.
+Protocols that emphasise explicit spending authorisation---token vaults, allowance-gated integrations, risk engines that treat approvals as trust acts---have reason to prefer EndorseRank. Its allowance alignment (Table~\ref{tab:alignment-allowance}), its holdout result (Table~\ref{tab:holdout-spenders}) and its sparse graph and short solve time (Table~\ref{tab:benchmark-runtime}) support frequent recomputation. Operators accept weaker transfer alignment in exchange for authorisation semantics, out-of-window evidence and speed.
 
 \dissertationSubsubheading[sub:deploy-hybrid]{Evaluation design and hybrid use}
 
-Hybrid deployments are feasible: EndorseRank for continuous authorization-aware monitoring and AWP for periodic transfer-hub audits. The open pipeline enables cross-protocol replication on any ERC-20 chain with allowance logs (Appendix~\ref{ch:appendix-eval}). Integration with live risk oracles remains future work (Chapter~\ref{ch:conclusion}), but the efficiency profile of EndorseRank is compatible with refresh cadences that transfer-graph AWP may not sustain at equal cost.
+Hybrid deployments are feasible: EndorseRank for continuous authorisation-aware monitoring and AWP for periodic transfer-hub audits. The open pipeline enables cross-protocol replication on any ERC-20 chain with allowance logs (Appendix~\ref{ch:appendix-eval}). Integration with live risk oracles remains future work (Chapter~\ref{ch:conclusion}), but EndorseRank's efficiency profile is compatible with refresh cadences that a transfer-graph method may not sustain at equal cost.
 
 \dissertationSubsubheading[sub:deploy-industry]{Industry adoption scenarios}
 
-The practical value of EndorseRank and AWP is that both supply a cheap, standardized, and independently recomputable ordinal signal. Value capture is hypothesized to run through fees, utilization, monitoring cost, and reduced reward leakage, rather than through reducing collateral. The scenarios below map actors to decision problems consistent with the empirical results.
+Both methods supply a cheap, standardised and independently recomputable ordinal signal. Value capture is hypothesised to run through fees, utilisation, monitoring cost and reduced reward leakage, not through reducing collateral. The scenarios below map actors to decision problems consistent with the results.
 
 \begin{itemize}
-\item \textbf{DEX operators:} Protocols that earn primarily from trading fees face a continuous decision problem: which wallets to prioritize for monitoring, fee tiers, or feature access when reputation must be refreshed frequently. EndorseRank fits this loop because allowance $\tau=0.355$ aligns the score with authorization activity and PageRank completes in $2.105$\,s on the matched cohort, enabling frequent (order-of-seconds) updates without transfer-history aggregation. Any revenue effect would be hypothesized to run through fee volume (if differentiated service raises retained notional) and lower monitoring cost of risk review. Fee and monitoring policies remain the justified levers.
-
-\item \textbf{Lending protocols:} Lending markets seek higher capital utilization without abandoning collateralization \cend{5,26}. Reputation can enter as an auxiliary signal for interest-rate or fee tiers and review cadence on already-collateralized positions, not as a substitute for collateral. EndorseRank is the natural social input when the protocol already relies on ERC-20 approvals for deposits and borrows (Section~\ref{sec:allowance-endorsement}). Utilization-driven interest income is the revenue channel. The scores are not default predictors. Any collateral-differentiation experiment remains future work (Chapter~\ref{ch:conclusion}).
-
-\item \textbf{Wallet and security tooling:} Users and integrators must decide whether a spender contract is widely authorized. Displaying the spender's EndorseRank---or the distribution of inbound endorsement mass---as a trust badge operationalizes allowance semantics as explicit delegation of spending authority \cend{18,19}. Vendors may monetize through premium alerts and API subscriptions; this is subscription revenue for tooling, distinct from protocol fees, utilization, monitoring-cost savings, or Sybil-filter reward-leakage reduction. The badge reports graph position under published edge definitions; it is not a security audit or a guarantee against malicious contracts.
-
-\item \textbf{Liquidity providers and market makers:} LPs and market makers need to identify transfer hubs and flow structure for inventory and spread management. AWP is the better social method for this target: transfer $\tau=0.534$ and a batch-friendly runtime of $18.711$\,s on $n=5{,}521$ wallets support periodic analytics rather than sub-second refresh \cend{16}. The operational channel is lower screening and monitoring cost when identifying transfer hubs---not improved P\&L or a profitability forecast. AWP remains a flow-centrality instrument, not a profitability oracle.
-
-\item \textbf{Airdrop and governance programs:} Token distributions and governance eligibility are routinely gamed by Sybil clusters \cend{17}. Programs can require inbound endorsement diversity or apply the closed-cluster mass bound of Section~\ref{sec:sybil-cost-model} (Equation~\ref{eq:cluster-mass}) as a filter before rewards are paid. The revenue---or cost-avoidance---channel is reduced reward leakage to fabricated identities. Filters based on graph structure mitigate closed-cluster inflation; they do not eliminate open-cluster attacks that recruit honest inbound endorsements.
-
-\item \textbf{Analytics and compliance providers:} Exchanges, funds, and compliance teams need auditable counterparty rankings that third parties can recompute. The open pipeline (Appendix~\ref{ch:appendix-eval}) supports subscription APIs that publish EndorseRank and AWP under disclosed windows and parameters. Recurring data revenue is a vendor business model; auditability is the product differentiator relative to opaque machine-learning scores \cend{48}. Providers should disclose Sybil exposure and that the scores are not trading-profit forecasts alongside any dashboard that surfaces ranks.
+\item DEX operators. Protocols that earn from trading fees must decide which wallets to prioritise for monitoring, fee tiers or feature access while refreshing reputation frequently. EndorseRank fits this loop because its score tracks authorisation activity and can be recomputed in seconds without transfer-history aggregation. Any revenue effect would run through fee volume and lower monitoring cost; fee and monitoring policies are the justified levers.
+\item Lending protocols. Lending markets seek higher capital utilisation without abandoning collateralisation \cend{41}; the 2020 stress episodes show what happens when risk parameters lag \cend{9}. Reputation can enter as an auxiliary signal for interest-rate or fee tiers and review cadence on already-collateralised positions, not as a substitute for collateral. EndorseRank is the natural input when the protocol already relies on ERC-20 approvals for deposits and borrows (Section~\ref{sec:allowance-endorsement}). The scores are not default predictors; any collateral-differentiation experiment remains future work.
+\item Wallet and security tooling. Users and integrators must decide whether a spender contract is widely authorised. Displaying a spender's EndorseRank, or the distribution of inbound endorsement mass, as a trust badge operationalises allowance semantics as explicit delegation \cend{18,19}. The badge reports graph position under published edge definitions; it is not a security audit or a guarantee against malicious contracts.
+\item Liquidity providers and market makers. These actors need transfer hubs and flow structure for inventory and spread management. AWP is the better method for that target\cend{3}; the operational channel is lower screening cost, not improved profit and loss.
+\item Airdrop and governance programmes. Token distributions and governance eligibility are routinely gamed by Sybil clusters \cend{11,32}. Programmes can require inbound endorsement diversity or apply the closed-cluster mass bound of Section~\ref{sec:sybil-cost-model} (Equation~\ref{eq:cluster-mass}) as a filter before rewards are paid. Such filters mitigate closed-cluster inflation; they do not stop open-cluster attacks that recruit honest inbound endorsements.
+\item Analytics and compliance providers. Exchanges, funds and compliance teams need auditable counterparty rankings that third parties can recompute. The open pipeline supports publishing EndorseRank and AWP under disclosed windows and parameters; auditability is the differentiator relative to opaque machine-learning scores \cend{2}. Providers should disclose Sybil exposure and the fact that the scores are not profit forecasts alongside any surfaced rank.
 \end{itemize}
 
-None of these scenarios treats reputation as a substitute for collateral. The claim is narrower and, we argue, more durable: a standardized, auditable, low-latency ordinal signal lowers the cost of counterparty differentiation, and the protocols that adopt it may capture value through fees, utilization, monitoring cost, and reduced reward leakage rather than through reducing collateral or transferring protocol credit risk to the score.
+None of these scenarios treats reputation as a substitute for collateral. The claim is narrower and more durable: a standardised, auditable, low-latency ordinal signal lowers the cost of counterparty differentiation.
 
-\dissertationSubsubheading[sub:deploy-multiples]{From valuation multiples to reputation multiples}
+\dissertationSubsubheading[sub:deploy-multiples]{Standardised scores as shared infrastructure}
 
-Price--earnings and price--book ratios became industry language because they are standardized, comparable, imperfect, and gameable \cend{24,6,20,31}---not because they forecast returns well. Token-economy valuation models similarly rely on shared, publicly observable quantities rather than private identity \cend{13}. EndorseRank and AWP can play an analogous infrastructural role for pseudonymous wallets: they are computed from public logs by an open pipeline (Appendix~\ref{ch:appendix-eval}), cheap enough to refresh ($2.105$\,s on the matched cohort for EndorseRank), and independently verifiable. Neither score is a profit forecast. Standardized reputation scores, like valuation multiples, are useful only when construction is public and failure modes are named (Sections~\ref{sec:sybil-cost-model} and~\ref{sec:regulatory-ethics}).
+The practical value of a reputation score, like that of any standardised financial ratio, lies less in its forecasting power than in its being public, comparable and cheap to recompute, so that many parties can reason from the same number while knowing how it can be gamed. EndorseRank and AWP can play that infrastructural role for pseudonymous wallets: they are computed from public logs by an open pipeline (Appendix~\ref{ch:appendix-eval}), cheap enough to refresh, and independently verifiable. Neither is a profit forecast, and both are useful only if their construction is public and their failure modes are named (Sections~\ref{sec:sybil-cost-model} and~\ref{sec:regulatory-ethics}).
+
+\dissertationSubheading[sec:societal-impact]{Societal and practical impact}
+
+The significance of this research beyond its immediate findings lies in who bears the cost of trust in decentralised finance today and how an authorisation-aware, auditable score changes that distribution.
+
+For users, counterparty screening in DeFi is currently expensive and unevenly available. Well-resourced actors run proprietary risk engines over full transfer histories; retail users rely on informal signals or none. A score that can be refreshed at a fraction of the transfer-graph cost (Table~\ref{tab:benchmark-runtime}) and that reads directly off the approvals users already grant lowers the resource barrier to systematic screening. Because approvals are also the mechanism through which most token-draining exploits operate (Section~\ref{sec:approval-security}), a spender-centred endorsement score speaks to a risk that users face directly and that transfer volume does not capture.
+
+For protocol operators, the results support a shift from a single ``reputation'' to construct-specific instruments chosen for the decision at hand. That shift reduces the risk of mis-specified gating---using a flow score to decide an authorisation question or the reverse---and, because both instruments here are computed from public data by a published pipeline, it allows gating rules to be audited by the users they affect. The efficiency result makes continuous rather than periodic monitoring economically feasible for smaller protocols.
+
+For regulators and the public interest, the contribution is an existence proof that a useful on-chain reputation signal can be fully transparent: every input event is public, every parameter is versioned and every table is regenerable. That stands in contrast to the black-box decentralised credit scores whose due-process risks Packin and Lev-Aretz\cend{2} describe, and it offers a template for the explainability that regulatory analyses of DeFi call for \cend{63}. The same transparency imposes an obligation, developed in Section~\ref{sec:regulatory-ethics}, not to let an ordinal graph statistic be mistaken for identity, creditworthiness or proof of personhood.
+
+Two limits on impact should be stated with equal clarity. The evidence is from one chain and one six-month window, and it concerns the endorsement construct, not credit outcomes; social benefit therefore depends on deployments that respect the construct boundary. And any reputation signal, once it gates value, invites strategic behaviour; the cost model of the next section shows where that behaviour is expensive, not that it is impossible.
 
 \dissertationSubheading[sec:sybil-cost-model]{Sybil attack cost model on allowance graphs}
 
-Sybil attacks exploit cheap pseudonyms to manufacture reputation \cend{17}. On transfer graphs, an attacker can wash-trade value among controlled wallets, inflating in-degree and in-value at the cost of fees and inventory risk. On allowance graphs, the attack surface differs because edges represent authorization rather than completed transfers. This section formalizes a minimal cost model for inflating EndorseRank via fabricated allowances.
+Sybil attacks exploit cheap pseudonyms to manufacture reputation \cend{11}. On transfer graphs, an attacker can wash-trade value among controlled wallets, inflating in-degree and in-value at the cost of fees and inventory risk \cend{29}. On allowance graphs the attack surface differs, because edges represent authorisation rather than completed transfers. This section formalises a minimal cost model for inflating EndorseRank through fabricated allowances.
 
 \dissertationSubsubheading[sub:sybil-setup]{Attack setup}
 
-Let $\mathcal{A}$ be the set of addresses controlled by an attacker and $\mathcal{H}$ the set of honest wallets in the endorsement graph $G_{\text{approve}}=(V,E,w)$. An edge $(u,v)$ with weight $w_{uv}>0$ denotes that $u$ currently authorizes $v$ to spend decimal-adjusted token units totaling $w_{uv}$. EndorseRank computes the PageRank vector $\mathbf{r}$ on $G_{\text{approve}}$ with damping $d\in(0,1)$ \cend{49,40}:
+Let $\mathcal{A}$ be the set of addresses controlled by an attacker and $\mathcal{H}$ the set of honest wallets in the endorsement graph $G_{\text{approve}}=(V,E,w)$. An edge $(u,v)$ with weight $w_{uv}>0$ denotes that $u$ currently authorises $v$ to spend decimal-adjusted token units totalling $w_{uv}$. EndorseRank computes the PageRank vector $\mathbf{r}$ on $G_{\text{approve}}$ with damping $d\in(0,1)$ \cend{15}:
 \begin{equation}
 \label{eq:pagerank-sybil}
 \mathbf{r} = d\, P^{\top} \mathbf{r} + \frac{1-d}{|V|}\mathbf{1},
 \end{equation}
-where $P$ is the row-stochastic matrix obtained by normalizing outgoing allowance weights (with a standard handling of dangling nodes).
+where $P$ is the row-stochastic matrix obtained by normalising outgoing allowance weights, with the standard handling of dangling nodes \cend{23}.
 
-The attacker seeks to maximize the mean EndorseRank of a target subset $T\subseteq\mathcal{A}$,
+The attacker seeks to maximise the mean EndorseRank of a target subset $T\subseteq\mathcal{A}$,
 \begin{equation}
 \label{eq:objective}
 J(T) = \frac{1}{|T|}\sum_{i\in T} r_i,
@@ -122,21 +139,21 @@ subject to a budget on attack cost defined below.
 
 \dissertationSubsubheading[sub:sybil-cost]{Cost components}
 
-Fabricating an allowance edge $(u,v)$ with weight $w_{uv}$ incurs at least three cost components:
+Fabricating an allowance edge $(u,v)$ with weight $w_{uv}$ incurs at least three cost components.
 
 \begin{enumerate}
-\item \textbf{Transaction cost:} Submitting \texttt{approve} or \texttt{permit} consumes gas. Let $c_{\mathrm{gas}}$ be the expected fee per allowance update. For $m$ updates,
+\item Transaction cost. Submitting \texttt{approve} or \texttt{permit} consumes gas. Let $c_{\mathrm{gas}}$ be the expected fee per allowance update. For $m$ updates,
 \begin{equation}
 C_{\mathrm{gas}} = m\, c_{\mathrm{gas}}.
 \end{equation}
 
-\item \textbf{Capital lock / opportunity cost:} A non-zero allowance to an external spender $v\notin\mathcal{A}$ exposes tokens owned by $u$ to transfer by $v$. Even if $v\in\mathcal{A}$, maintaining large allowances to contracts or routers may be required to mimic honest behavior. Let $\ell(w_{uv})$ be the opportunity cost of capital associated with weight $w_{uv}$ over the reputation refresh horizon (for example, forgone yield). Then
+\item Capital lock and opportunity cost. A non-zero allowance to an external spender $v\notin\mathcal{A}$ exposes tokens owned by $u$ to transfer by $v$. Even if $v\in\mathcal{A}$, maintaining large allowances to contracts or routers may be required to mimic honest behaviour. Let $\ell(w_{uv})$ be the opportunity cost of capital associated with weight $w_{uv}$ over the reputation refresh horizon (for example, forgone yield). Then
 \begin{equation}
 C_{\mathrm{cap}} = \sum_{(u,v)\in E_{\mathcal{A}}} \ell(w_{uv}),
 \end{equation}
 where $E_{\mathcal{A}}$ denotes attacker-created edges.
 
-\item \textbf{Revocation and detection cost:} Honest users revoke stale allowances; attackers who never revoke may be distinguishable. Let $c_{\mathrm{rev}}$ be the expected cost of periodic revocation and re-approval needed to maintain a target edge set over $k$ refresh epochs:
+\item Revocation and detection cost. Honest users revoke stale allowances; attackers who never revoke may be distinguishable. Let $c_{\mathrm{rev}}$ be the expected cost of periodic revocation and re-approval needed to maintain a target edge set over $k$ refresh epochs:
 \begin{equation}
 C_{\mathrm{rev}} = k\, c_{\mathrm{rev}}.
 \end{equation}
@@ -150,7 +167,7 @@ C = C_{\mathrm{gas}} + C_{\mathrm{cap}} + C_{\mathrm{rev}}.
 
 \dissertationSubsubheading[sub:sybil-bound]{Influence and a cost-effectiveness bound}
 
-Under standard PageRank sensitivity results, the influence of an edge on $\mathbf{r}$ is mediated by the stationary mass at the source and the normalized outgoing weight \cend{40}. A coarse upper bound on the gain in $J(T)$ from adding edges among $\mathcal{A}$ alone---a closed Sybil cluster with no honest inbound endorsements---is limited by the teleportation mass:
+Under standard PageRank sensitivity results, the influence of an edge on $\mathbf{r}$ is mediated by the stationary mass at the source and the normalised outgoing weight \cend{23}. A coarse upper bound on the gain in $J(T)$ from adding edges among $\mathcal{A}$ alone---a closed Sybil cluster with no honest inbound endorsements---is limited by the teleportation mass:
 \begin{equation}
 \label{eq:closed-cluster}
 \sum_{i\in\mathcal{A}} r_i \leq |\mathcal{A}|\cdot\frac{1-d}{|V|} + d\cdot \sum_{i\in\mathcal{A}} r_i,
@@ -160,7 +177,7 @@ which rearranges to
 \label{eq:cluster-mass}
 \sum_{i\in\mathcal{A}} r_i \leq \frac{|\mathcal{A}|}{|V|}.
 \end{equation}
-Thus a closed attacker cluster cannot capture more than its population share of total rank mass. To exceed that share, the attacker needs inbound endorsements from $\mathcal{H}$, which requires either compromising honest wallets or inducing honest owners to approve attacker-controlled spenders---actions whose cost is typically dominated by $C_{\mathrm{cap}}$ and social-engineering effort rather than gas alone.
+A closed attacker cluster therefore cannot capture more than its population share of total rank mass. To exceed that share, the attacker needs inbound endorsements from $\mathcal{H}$, which requires either compromising honest wallets or inducing honest owners to approve attacker-controlled spenders---actions whose cost is typically dominated by $C_{\mathrm{cap}}$ and social-engineering effort rather than gas alone.
 
 When the attacker purchases inbound allowances from honest owners (for example, by operating a service that requests approvals), the marginal cost per unit of honest-sourced weight $w_{h a}$ can be written
 \begin{equation}
@@ -174,60 +191,55 @@ where $\ell_{\mathrm{honest}}$ is compensation paid to the honest owner and $\pi
 \end{equation}
 with $\Delta J(T)$ the increase in mean target rank attributable to the attack edges.
 
-Equations~\eqref{eq:closed-cluster}--\eqref{eq:efficiency} imply that EndorseRank is not Sybil-proof, but that closed-cluster inflation is population-share limited, and that cross-cluster inflation requires costly honest-sourced allowances. Transfer wash trading faces different costs (fees and inventory) but does not require exposing spending authority to external addresses. Sybil-adjusted stability proxies in Chapter~\ref{ch:results} partially address observational manipulation; they do not replace adversarial evaluation, which remains future work.
+Equations~\eqref{eq:closed-cluster}--\eqref{eq:efficiency} imply that EndorseRank is not Sybil-proof, but that closed-cluster inflation is population-share limited and that cross-cluster inflation requires costly honest-sourced allowances. Transfer wash trading faces different costs (fees and inventory) but does not require exposing spending authority to external addresses. The Sybil-adjusted stability proxies of Chapter~\ref{ch:results} partially address observational manipulation; they do not replace adversarial evaluation, which remains future work.
 
 \dissertationSubheading[sec:regulatory-ethics]{Regulatory and ethical considerations}
 
-On-chain reputation scores occupy a contested space between transparency and fairness. Legal and regulatory analyses of DeFi emphasize that decentralized markets remain subject to disclosure and consumer-protection concerns even when settlement is on-chain \cend{62}. Packin and Lev-Aretz\cend{48} caution that decentralized credit scoring can reproduce black-box harms if models are opaque, unappealable, or coupled to identity systems without due process. EndorseRank and AWP are fully determined by public ledger events and published algorithms; any party can recompute scores from the open pipeline (Appendix~\ref{ch:appendix-eval}). That auditability is a partial response to black-box concerns, but it does not resolve distributional effects: wallets with limited approval or transfer history receive low scores regardless of off-chain creditworthiness.
+On-chain reputation scores occupy a contested space between transparency and fairness. Legal analyses of DeFi emphasise that decentralised markets remain subject to disclosure and consumer-protection concerns even when settlement is on-chain \cend{63}. Packin and Lev-Aretz\cend{2} caution that decentralised credit scoring can reproduce black-box harms if models are opaque, unappealable or coupled to identity systems without due process. EndorseRank and AWP are fully determined by public ledger events and published algorithms; any party can recompute the scores from the open pipeline (Appendix~\ref{ch:appendix-eval}). That auditability is a partial response to black-box concerns, but it does not resolve distributional effects: wallets with limited approval or transfer history receive low scores regardless of off-chain creditworthiness.
 
-Ethically, scores must not be presented as identity, creditworthiness in the consumer-lending sense, or proof of unique personhood \cend{17}. They are ordinal indicators of on-chain graph position under specified edge semantics. Deployments that gate access to financial services should disclose the graph definition, observation window, and known failure modes---including Sybil exposure. Regulatory regimes that require explainability favor graph propagation over opaque machine-learning scores \cend{39,48}, provided operators resist overclaiming predictive power for loan default.
+Ethically, scores must not be presented as identity, as creditworthiness in the consumer-lending sense or as proof of unique personhood \cend{11}. They are ordinal indicators of on-chain graph position under specified edge semantics. Deployments that gate access to financial services should disclose the graph definition, observation window and known failure modes, including Sybil exposure. Regulatory regimes that require explainability favour graph propagation over opaque machine-learning scores of the kind surveyed by Kotb \cend{14}, provided operators resist overclaiming predictive power for loan default \cend{2}.
 
-Privacy is structurally limited on public ledgers \cend{46,60}: reputation computation uses data already broadcast. The ethical obligation is therefore not to avoid analysis but to avoid deanonymization beyond address-level aggregation and to prevent misuse of scores as persistent biometric-like identifiers. This research analyzes addresses only; no off-chain identity linkage is performed (Chapter~\ref{ch:methodology}).
+Privacy is structurally limited on public ledgers \cend{5}: reputation computation uses data already broadcast. The ethical obligation is therefore not to avoid analysis but to avoid deanonymisation beyond address-level aggregation and to prevent misuse of scores as persistent biometric-like identifiers. This research analyses addresses only; no off-chain identity linkage is performed (Section~\ref{sec:ethics}).
 
 \dissertationSubheading[sec:threats-validity]{Threats to validity}
 
-Interpretation of the empirical claims should account for the following threats, organized by construct, internal, external, and adversarial validity.
+Interpretation of the empirical claims should account for the following threats, organised by construct, internal, external and adversarial validity.
 
 \dissertationSubsubheading[sub:threat-construct]{Construct validity}
 
 \begin{itemize}
-\item \textbf{Checks are not credit labels:} No under-collateralized lending default labels are used. Same-window checks are allowance and transfer local statistics. The holdout is future new approvals.
-
-\item \textbf{Holdout construct:} Future new approvals are still endorsement events. They are out of the score window, but they are not an independent credit or trading construct.
-
-\item \textbf{Secondary-axis interpretation:} EndorseRank's moderate transfer $\tau=0.333$ is a secondary validation axis, not evidence that allowance graphs measure transfer centrality as well as AWP ($\tau=0.534$).
+\item Checks are not credit labels. No under-collateralised lending default labels are used. Same-window checks are allowance and transfer local statistics; the holdout label is future new approvals.
+\item Holdout construct. Future new approvals are still endorsement events. They are out of the score window, but they are not an independent credit or trading construct.
+\item Own-construct agreement is partly mechanical. EndorseRank is a global smoothing of spender in-approve degree, and AWP of decayed transfer in-strength; each method's agreement with its own family is expected by construction, which is why the within-method contrasts of Table~\ref{tab:tau-diff} are reported and why the null result on them is treated as informative.
 \end{itemize}
 
 \dissertationSubsubheading[sub:threat-internal]{Internal validity}
 
 \begin{itemize}
-\item \textbf{Shared observation window:} All methods and proxies are computed over 2025-12-01 to 2026-05-31. Market regimes specific to that window---volatility, incentive programs, or protocol changes---may inflate or deflate alignment. Robustness checks on damping and top-token subgraphs reduce sensitivity to PageRank hyperparameters and token concentration but do not vary the calendar window.
-
-\item \textbf{Cohort selection:} The matched wallet cohort requires non-zero reputation-subgraph connectivity ($n=5{,}521$). Results may not extend to addresses absent from allowance and transfer subgraphs.
-
-\item \textbf{Edge-weight measurement:} Token-decimal normalization, USD conversion choices, and permit-versus-approve coverage can affect $w_{uv}$. Measurement error in edge weights propagates to $\mathbf{r}$ and to rank correlations \cend{40}.
+\item Shared observation window. All methods and proxies are computed over 1~December~2025 to 31~May~2026. Market regimes specific to that window---volatility, incentive programmes, protocol changes---may inflate or deflate alignment. Robustness checks on damping and top-token subgraphs reduce sensitivity to hyperparameters and token concentration but do not vary the calendar window.
+\item Cohort selection. The matched cohort requires non-zero connectivity in both reputation subgraphs. Results may not extend to addresses absent from allowance and transfer subgraphs; the sample-definition sensitivity of Table~\ref{tab:robustness-sample-size} shows how strongly the coefficients respond when that requirement is relaxed.
+\item Edge-weight measurement. Token-decimal normalisation, unit conversion and permit-versus-approve coverage can affect $w_{uv}$. Measurement error in edge weights propagates to $\mathbf{r}$ and to rank correlations \cend{23}.
+\item Timing environment. Runtimes are wall-clock measurements on one machine; the standard deviations in Table~\ref{tab:benchmark-runtime} bound within-session noise but not between-machine variation, which is why ratios rather than seconds are the comparative summary.
 \end{itemize}
 
 \dissertationSubsubheading[sub:threat-external]{External validity}
 
 \begin{itemize}
-\item \textbf{Single protocol and chain:} Evidence is limited to Arbitrum One. Generalization to other venues, lending protocols, or Layer-1 chains requires cross-protocol validation \cend{53,59,28}.
-
-\item \textbf{Pool scaling versus alignment scaling:} Runtime scaling on the expanded wallet pool ($N=31{,}612$) supports efficiency claims at larger $n$; same-window alignment remains anchored to the matched cohort, and the holdout to spenders. Efficiency gains should not be assumed to preserve the same $\tau$ profile at arbitrary population sizes.
+\item Single chain and window. Evidence is limited to Arbitrum One over six months. Generalisation to other rollups, Layer-1 chains or lending-centred venues requires cross-protocol validation; the DeFi landscape is heterogeneous in protocol design \cend{8} and in market structure \cend{1}.
+\item Pool scaling versus alignment scaling. The expanded pool supports a node-count statement about runtime only (Section~\ref{sub:runtime-scaling}); same-window alignment remains anchored to the matched cohort, and the holdout to spenders. Efficiency gains should not be assumed to preserve the same $\tau$ profile at arbitrary population sizes.
 \end{itemize}
 
 \dissertationSubsubheading[sub:threat-adversarial]{Adversarial validity}
 
 \begin{itemize}
-\item \textbf{Sybil and wash trading:} Adversarial allowance or transfer patterns may manipulate rankings \cend{17}. Sybil-adjusted proxies partially address but do not eliminate this risk. The cost model in Section~\ref{sec:sybil-cost-model} is analytical; it is not an empirical red-team evaluation.
-
-\item \textbf{Strategic approval behavior:} Once EndorseRank is deployed, rational actors may grant allowances strategically to farm rank. Observational $\tau$ estimated before widespread deployment may overstate robustness to strategic behavior.
+\item Sybil and wash trading. Adversarial allowance or transfer patterns may manipulate rankings \cend{11}. Sybil-adjusted proxies partially address but do not eliminate this risk. The cost model of Section~\ref{sec:sybil-cost-model} is analytical; it is not an empirical red-team evaluation.
+\item Strategic approval behaviour. Once EndorseRank is deployed, rational actors may grant allowances strategically to farm rank. Observational $\tau$ estimated before deployment may overstate robustness to strategic behaviour.
 \end{itemize}
 
 \dissertationSubheading[sec:limitations]{Limitations}
 
-Results reflect one six-month window on Arbitrum One for a matched wallet cohort of $n=5{,}521$ addresses, plus a spender holdout of $n=1{,}335$. The endorsement subgraph comprises $14{,}727$ edges; the transfer subgraph comprises $137{,}087$ edges. EndorseRank's primary demonstrated strengths are allowance-construct alignment ($\tau=0.355$), rank distinctness from AWP (inter-method $\tau=0.316$), computational efficiency ($2.105$\,s vs.\ $18.711$\,s), and holdout alignment with future new approvers ($\tau=0.479$).
+Results reflect one six-month window on Arbitrum One for a matched wallet cohort and a spender holdout cohort whose sizes and graph dimensions are given in Chapter~\ref{ch:results}. EndorseRank's demonstrated strengths are allowance-construct alignment, rank distinctness from AWP, computational efficiency attributable to sparsity, and holdout alignment with future new approvers; its demonstrated weaknesses are weaker transfer alignment and weaker longitudinal-stability alignment than AWP, and an allowance lead over its own transfer alignment that did not reach significance.
 
-Token-decimal normalization, USD price oracles, and permit-versus-approve coverage may affect edge weights. Extended baselines (alternative PageRank variants and lending-oriented graphs) are archived for future comparison (Appendix~\ref{ch:appendix-eval}) but are excluded from the main research narrative. Unsecured lending default labels are out of scope. Regulatory and ethical deployment constraints (Section~\ref{sec:regulatory-ethics}) limit how scores should be used even when alignment is favorable.
+Token-decimal normalisation, unit conversion and permit-versus-approve coverage may affect edge weights. The expanded-pool experiment tests node count, not edge growth, because the second-tier extraction did not complete. Extended baselines (alternative PageRank variants and lending-oriented graphs) are archived for future comparison (Appendix~\ref{ch:appendix-archive}) and excluded from the main narrative. Unsecured lending default labels are out of scope. Regulatory and ethical deployment constraints (Section~\ref{sec:regulatory-ethics}) limit how scores should be used even when alignment is favourable.
 
-These limitations bound the claims: EndorseRank is a credible, efficient, allowance-specific social reputation method on the studied cohort and window; it is not a universal credit score, a Sybil-proof identity system, or a replacement for protocol-level collateralization \cend{26,48}.
+These limitations bound the claims: EndorseRank is a credible, efficient, allowance-specific social reputation method on the studied cohort and window; it is not a universal credit score, a Sybil-proof identity system or a replacement for protocol-level collateralisation \cend{9}. Chapter~\ref{ch:conclusion} restates what was established, what it adds to knowledge, and the work that would be needed to relax these bounds.

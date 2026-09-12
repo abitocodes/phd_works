@@ -12,9 +12,9 @@
 
 \TOCentry{1}{{\textbf{Introduction and Research Problem}}}{ch:introduction}
 
-\hspace*{1.5em}\TOCentry{1.1}{{Background: DeFi, pseudonymity, and collateral}}{sec:background}
+\hspace*{1.5em}\TOCentry{1.1}{{Background: DeFi, collateralization, and pseudonymity}}{sec:background}
 
-\hspace*{1.5em}\TOCentry{1.2}{{Motivation for on-chain reputation scores}}{sec:motivation}
+\hspace*{1.5em}\TOCentry{1.2}{{Motivation for on-chain reputation}}{sec:motivation}
 
 \hspace*{1.5em}\TOCentry{1.3}{{Research problem}}{sec:research-problem}
 
@@ -24,11 +24,15 @@
 
 \hspace*{1.5em}\TOCentry{1.6}{{Research questions}}{sec:research-questions}
 
-\hspace*{1.5em}\TOCentry{1.7}{{Contributions}}{sec:contributions}
+\hspace*{1.5em}\TOCentry{1.7}{{Summary of the literature review}}{sec:literature-summary}
 
-\hspace*{1.5em}\TOCentry{1.8}{{Scope and limitations}}{sec:scope-limitations}
+\hspace*{1.5em}\TOCentry{1.8}{{Summary of the research methodology}}{sec:methodology-summary}
 
-\hspace*{1.5em}\TOCentry{1.9}{{Research roadmap}}{sec:roadmap}
+\hspace*{1.5em}\TOCentry{1.9}{{Contributions}}{sec:contributions}
+
+\hspace*{1.5em}\TOCentry{1.10}{{Scope and limitations}}{sec:scope-limitations}
+
+\hspace*{1.5em}\TOCentry{1.11}{{Research roadmap}}{sec:roadmap}
 
 \TOCentry{2}{{\textbf{Literature Review and Theoretical Framework}}}{ch:literature}
 
@@ -70,7 +74,11 @@
 
 \hspace*{1.5em}\TOCentry{2.19}{{Comparison of graph reputation methods}}{sec:method-comparison-table}
 
-\hspace*{1.5em}\TOCentry{2.20}{{Open problems motivating this research}}{sec:open-problems}
+\hspace*{1.5em}\TOCentry{2.20}{{Summary of the reviewed literature}}{sec:literature-summary-table}
+
+\hspace*{1.5em}\TOCentry{2.21}{{Research gap}}{sec:research-gap}
+
+\hspace*{1.5em}\TOCentry{2.22}{{Open problems motivating this research}}{sec:open-problems}
 
 \TOCentry{3}{{\textbf{Research Methodology}}}{ch:methodology}
 
@@ -90,7 +98,7 @@
 
 \hspace*{1.5em}\TOCentry{3.8}{{Construct-check design}}{sec:proxy-evaluation}
 
-\hspace*{1.5em}\TOCentry{3.9}{{Proxy operational definitions}}{sec:proxy-formulas}
+\hspace*{1.5em}\TOCentry{3.9}{{Operational definitions of proxies}}{sec:proxy-formulas}
 
 \hspace*{1.5em}\TOCentry{3.10}{{Statistical tests}}{sec:statistical-tests}
 
@@ -120,17 +128,17 @@
 
 \TOCentry{4}{{\textbf{Implementation and Empirical Results}}}{ch:results}
 
-\hspace*{1.5em}\TOCentry{4.1}{{Dataset}}{sec:dataset}
+\hspace*{1.5em}\TOCentry{4.1}{{Case study setting: Arbitrum One}}{sec:dataset}
 
-\hspace*{1.5em}\TOCentry{4.2}{{EndorseRank vs AWP benchmark (Claim~C1)}}{sec:benchmark-results}
+\hspace*{1.5em}\TOCentry{4.2}{{Computational benchmark (Claim~C1)}}{sec:benchmark-results}
 
-\hspace*{1.5em}\TOCentry{4.3}{{Robustness checks}}{sec:robustness-results}
+\hspace*{1.5em}\TOCentry{4.3}{{Same-window alignment: EndorseRank vs.\ AWP (Claims~C2--C3)}}{sec:three-method-alignment}
 
-\hspace*{1.5em}\TOCentry{4.4}{{Social-method alignment: EndorseRank vs AWP (Claims~C2--C3)}}{sec:three-method-alignment}
+\hspace*{1.5em}\TOCentry{4.4}{{Proxy family detail}}{sec:proxy-family-detail}
 
-\hspace*{1.5em}\TOCentry{4.5}{{Proxy family detail}}{sec:proxy-family-detail}
+\hspace*{1.5em}\TOCentry{4.5}{{Rank divergence (H1 / RQ1)}}{sec:rank-divergence}
 
-\hspace*{1.5em}\TOCentry{4.6}{{Rank divergence (H1 / RQ1)}}{sec:rank-divergence}
+\hspace*{1.5em}\TOCentry{4.6}{{Robustness and sensitivity checks}}{sec:robustness-results}
 
 \hspace*{1.5em}\TOCentry{4.7}{{Temporal holdout of future new approvals (RQ4)}}{sec:gf-pr-ceiling}
 
@@ -140,21 +148,25 @@
 
 \hspace*{1.5em}\TOCentry{5.1}{{Findings by research question}}{sec:findings-rq}
 
-\hspace*{1.5em}\TOCentry{5.2}{{Theoretical implications}}{sec:theoretical-implications}
+\hspace*{1.5em}\TOCentry{5.2}{{Achievement of the research objectives}}{sec:objectives-achievement}
 
-\hspace*{1.5em}\TOCentry{5.3}{{Practical implications}}{sec:practical-implications}
+\hspace*{1.5em}\TOCentry{5.3}{{Theoretical implications}}{sec:theoretical-implications}
 
-\hspace*{1.5em}\TOCentry{5.4}{{Sybil cost on allowance graphs}}{sec:sybil-cost-model}
+\hspace*{1.5em}\TOCentry{5.4}{{Practical implications and deployment scenarios}}{sec:practical-implications}
 
-\hspace*{1.5em}\TOCentry{5.5}{{Regulatory and ethical considerations}}{sec:regulatory-ethics}
+\hspace*{1.5em}\TOCentry{5.5}{{Societal and practical impact}}{sec:societal-impact}
 
-\hspace*{1.5em}\TOCentry{5.6}{{Threats to validity}}{sec:threats-validity}
+\hspace*{1.5em}\TOCentry{5.6}{{Sybil attack cost model on allowance graphs}}{sec:sybil-cost-model}
 
-\hspace*{1.5em}\TOCentry{5.7}{{Limitations}}{sec:limitations}
+\hspace*{1.5em}\TOCentry{5.7}{{Regulatory and ethical considerations}}{sec:regulatory-ethics}
+
+\hspace*{1.5em}\TOCentry{5.8}{{Threats to validity}}{sec:threats-validity}
+
+\hspace*{1.5em}\TOCentry{5.9}{{Limitations}}{sec:limitations}
 
 \TOCentry{6}{{\textbf{Conclusion and Future Work}}}{ch:conclusion}
 
-\hspace*{1.5em}\TOCentry{6.1}{{Summary of findings}}{sec:summary-findings}
+\hspace*{1.5em}\TOCentry{6.1}{{Answers to the research questions}}{sec:summary-findings}
 
 \hspace*{1.5em}\TOCentry{6.2}{{Original contribution to knowledge}}{sec:contribution-knowledge}
 
@@ -174,7 +186,7 @@
 
 \hspace*{3.0em}\TOCentry{8.1.3}{{Scaling tables}}{sec:scaling-appendix}
 
-\hspace*{3.0em}\TOCentry{8.1.4}{{Credit Delegation extract (deferred)}}{sec:delegation-deferred}
+\hspace*{3.0em}\TOCentry{8.1.4}{{Credit-delegation extract (deferred)}}{sec:delegation-deferred}
 
 \hspace*{3.0em}\TOCentry{8.1.5}{{Supplementary alignment summary table}}{sec:supplementary-summary}
 
@@ -214,7 +226,7 @@
 
 \hspace*{3.0em}\TOCentry{8.3.6}{{Construct validity note}}{sec:construct-validity-note}
 
-\hspace*{3.0em}\TOCentry{8.3.7}{{Numerical summary sheet}}{sec:numerical-summary-sheet}
+\hspace*{3.0em}\TOCentry{8.3.7}{{Where each primary quantity is reported}}{sec:numerical-summary-sheet}
 
 \hspace*{1.5em}\TOCentry{8.4}{{\textbf{Archived Extended Baselines}}}{ch:appendix-archive}
 
@@ -222,7 +234,7 @@
 
 \hspace*{3.0em}\TOCentry{8.4.2}{{Six-method Aave-oriented matrix}}{sec:six-aave-archive}
 
-\hspace*{3.0em}\TOCentry{8.4.3}{{Why the main narrative uses three methods}}{sec:why-archived}
+\hspace*{3.0em}\TOCentry{8.4.3}{{Why the main narrative uses two methods}}{sec:why-archived}
 
 \hspace*{3.0em}\TOCentry{8.4.4}{{Reproducing archive tables}}{sec:archive-repro}
 
@@ -245,6 +257,10 @@
 \hspace*{3.0em}\TOCentry{8.5.6}{{Explicit non-claims}}{sec:map-nonclaims}
 
 \hspace*{3.0em}\TOCentry{8.5.7}{{Artifact checklist for replication}}{sec:map-artifacts}
+
+\hspace*{1.5em}\TOCentry{8.6}{{\textbf{Ethics Clearance Certificate}}}{ch:appendix-ethics}
+
+\hspace*{3.0em}\TOCentry{8.6.1}{{Certificate}}{sec:ethics-certificate}
 
 \clearpage
 

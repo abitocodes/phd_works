@@ -133,11 +133,11 @@ def write_latex(summary: dict, out: Path, preset_cfg: dict) -> None:
             edge_note = " Edge counts: " + ", ".join(parts) + "."
 
     if synthetic:
-        hdr = r"""% Synthetic fixtures ??regenerate with:
+        hdr = r"""% Synthetic fixtures -- regenerate with:
 %   run_dissertation_eval.py --fixtures --export-latex
 """
     else:
-        hdr = r"""% Real BigQuery data ??regenerate with:
+        hdr = r"""% Real BigQuery data -- regenerate with:
 %   run_dissertation_eval.py --real --export-latex
 """
 
@@ -171,6 +171,11 @@ def write_latex(summary: dict, out: Path, preset_cfg: dict) -> None:
         rows.append(f"{label} & {' & '.join(cells)} & {rt_cell} \\\\")
 
     method_count = len(methods)
+    repeats = (
+        summary.get("timing_protocol", {}).get("timed_repeats")
+        or summary.get("benchmark", {}).get("endorserank", {}).get("repeats")
+        or 5
+    )
     tabular = f"""\\begin{{tabular}}{{l{'c' * len(families)}r}}
 \\toprule
 Method & {col_headers} & Runtime (s) \\\\
@@ -181,7 +186,7 @@ Method & {col_headers} & Runtime (s) \\\\
     body = f"""{hdr}
 \\begin{{table}}[htbp]
 \\centering
-\\caption{{Mean Kendall $\\tau$ by proxy family across {method_count} PageRank methods ($n={n}$). Bold = column maximum. Runtime = mean PageRank wall time (s, 3 repeats).{preset_cfg['caption_extra']}{edge_note}}}
+\\caption{{Mean Kendall $\\tau$ by proxy family across {method_count} PageRank methods ($n={n}$). Bold = column maximum. Runtime = mean PageRank wall time (s, {repeats} timed repeats after one warm-up).{preset_cfg['caption_extra']}{edge_note}}}
 \\label{{{preset_cfg['label']}}}
 \\fitwidth{{%
 {tabular}
@@ -229,11 +234,13 @@ def main() -> int:
         print(f"Missing {preset_cfg['matrix_key']} in eval summary.")
         return 1
 
+    # All matrix presets (including the former three-method table with GF-PR) are
+    # archived: the main text reports EndorseRank vs AWP only, via
+    # export_latex_results.py (alignment-family-ci.tex). GF-PR was withdrawn from
+    # the narrative as circular with the GMX proxies (supervisor comment id 14).
     repo_root = ROOT.parents[1]
     if args.csv_out_dir:
         csv_dir = args.csv_out_dir
-    elif args.preset == "three":
-        csv_dir = ROOT / "data" / "processed"
     else:
         csv_dir = ROOT / "data" / "archive" / "extended-baselines"
     csv_path = csv_dir / preset_cfg["csv_name"]
@@ -241,8 +248,6 @@ def main() -> int:
 
     if args.out_dir:
         tex_path = args.out_dir / preset_cfg["tex_name"]
-    elif args.preset == "three":
-        tex_path = repo_root / "2-Dissertation-Draft" / "en" / "results" / "tables" / preset_cfg["tex_name"]
     else:
         tex_path = (
             repo_root

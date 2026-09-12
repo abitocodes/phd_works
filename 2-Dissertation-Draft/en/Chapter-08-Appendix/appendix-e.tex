@@ -2,51 +2,47 @@
 \section{Claim-to-Evidence Map}
 \label{ch:appendix-claims}
 
-This appendix maps each hypothesis, research question, and empirical claim to the specific evidence in Chapter~\ref{ch:results}. It is intended as a navigation aid for examiners and replicators.
+This appendix maps each hypothesis, research question, and empirical claim to the specific evidence in Chapter~\ref{ch:results}. It is intended as a navigation aid for examiners and replicators; numerical values are not repeated here.
 
 \dissertationSubheading[sec:map-h1]{H1 / RQ1 --- Rank divergence}
 
 \begin{itemize}
-\item \textbf{Statement:} EndorseRank and AWP yield distinct wallet orderings on the same cohort.
-
-\item \textbf{Evidence:} Inter-method Kendall $\tau=0.316$ between score vectors (Section~\ref{sec:rank-divergence}); rank scatter in Figure~\ref{fig:rank-scatter}; score distributions in Figure~\ref{fig:score-distributions}.
-
-\item \textbf{Interpretation:} Related but not interchangeable rankings.
+\item Statement: EndorseRank and AWP yield distinct wallet orderings on the same cohort.
+\item Evidence: inter-method Kendall $\tau$ with 95\% CI (Table~\ref{tab:alignment-family-ci}, last row; Section~\ref{sec:rank-divergence}); rank scatter in Figure~\ref{fig:rank-scatter}; score distributions in Figure~\ref{fig:score-distributions}.
+\item Interpretation: related but not interchangeable rankings; O1 criterion met (Table~\ref{tab:objectives-achievement}).
 \end{itemize}
 
 \dissertationSubheading[sec:map-h2]{H2 / RQ2 --- Construct-specific alignment}
 
 \begin{itemize}
-\item \textbf{Statement:} Social methods differ on contemporaneous allowance versus transfer checks.
-
-\item \textbf{Evidence:} Tables~\ref{tab:alignment-transfer}--\ref{tab:alignment-allowance}; heatmap Figure~\ref{fig:alignment-heatmap} (allowance and transfer cells only).
-
-\item \textbf{Winners:} EndorseRank on allowance ($\tau=0.355$ vs.\ $-0.030$); AWP on transfer ($0.534$ vs.\ $0.333$).
+\item Statement: the two methods differ on contemporaneous allowance versus transfer checks.
+\item Evidence: family means with CI (Table~\ref{tab:alignment-family-ci}); paired $\Delta\tau$ contrasts ii and iii (Table~\ref{tab:tau-diff}); per-proxy detail (Tables~\ref{tab:alignment-transfer} and~\ref{tab:alignment-allowance}); heatmap Figure~\ref{fig:alignment-heatmap}.
+\item Qualification: within-method contrasts i and vi in Table~\ref{tab:tau-diff} include zero; the claim is between-method only.
 \end{itemize}
 
 \dissertationSubheading[sec:map-h3]{H3 / RQ3 --- Computational efficiency}
 
 \begin{itemize}
-\item \textbf{Statement:} EndorseRank is faster than AWP at equal $n$.
-
-\item \textbf{Evidence:} Table~\ref{tab:benchmark-runtime} ($2.105$\,s vs.\ $18.711$\,s, $\approx 8.9\times$); Table~\ref{tab:benchmark-scaling} ($\approx 10.4\times$ at $n=10{,}000$; $\approx 9.4\times$ at $N=31{,}612$); Figure~\ref{fig:runtime-scaling}; edge counts $14{,}727$ vs.\ $137{,}087$.
+\item Statement: EndorseRank is faster than AWP at equal $n$, attributable to edge count.
+\item Evidence: Table~\ref{tab:benchmark-runtime} (runtime, SD, memory, iterations, $|V|$, $|E|$); Table~\ref{tab:benchmark-scaling-incohort}; Table~\ref{tab:benchmark-scaling}; Figure~\ref{fig:runtime-scaling}.
+\item Qualification: expanded-pool stages add nodes without edges (Section~\ref{sub:runtime-scaling}); the claim does not cover edge growth.
 \end{itemize}
 
 \dissertationSubheading[sec:map-rq4]{RQ4 --- Temporal holdout}
 
 \begin{itemize}
-\item \textbf{Statement:} After scores are frozen at t1, EndorseRank predicts t2 new owner--spender approvals on inbound spenders more strongly than AWP.
-
-\item \textbf{Evidence:} Spender cohort $n=1{,}335$; 222 wallets with at least one new t2 pair; EndorseRank Kendall $\tau=0.479$ (bootstrap 95\% CI $0.426$--$0.529$); AWP $\tau=0.044$ (Section~\ref{sec:gf-pr-ceiling}).
+\item Statement: after scores are frozen at t1, EndorseRank predicts t2 new owner--spender approvals on inbound spenders more strongly than AWP.
+\item Evidence: Table~\ref{tab:holdout-spenders} (Section~\ref{sec:gf-pr-ceiling}).
+\item Qualification: the label is the endorsement construct in the future tense, not a credit or trading outcome; RQ4 replaced the proposal's trading-success comparison (Section~\ref{sub:gf-pr}).
 \end{itemize}
 
 \dissertationSubheading[sec:map-c1c4]{Claims C1--C4}
 
 \begin{itemize}
-\item \textbf{C1:} runtime evidence as in H3/RQ3.
-\item \textbf{C2:} intended-construct checks---allowance for ER, transfer for AWP---in Tables~\ref{tab:alignment-allowance} and~\ref{tab:alignment-transfer}.
-\item \textbf{C3:} construct-specific winners as in H2/RQ2.
-\item \textbf{C4:} efficiency--alignment trade-off combining C1 with allowance $\tau=0.355$ and the spender holdout $\tau=0.479$; robustness in Tables~\ref{tab:robustness-damping}--\ref{tab:robustness-sample-size} and Figure~\ref{fig:damping-sensitivity}.
+\item C1: runtime evidence as in H3/RQ3.
+\item C2: intended-construct checks---allowance for EndorseRank, transfer for AWP---in Table~\ref{tab:alignment-family-ci}.
+\item C3: construct-specific winners as in H2/RQ2, tested in Table~\ref{tab:tau-diff}.
+\item C4: efficiency--alignment trade-off combining C1, C3 and the spender holdout (Table~\ref{tab:holdout-spenders}); robustness in Tables~\ref{tab:robustness-damping}--\ref{tab:robustness-sample-size} and Figure~\ref{fig:damping-sensitivity}.
 \end{itemize}
 
 \dissertationSubheading[sec:map-nonclaims]{Explicit non-claims}
@@ -55,19 +51,21 @@ This research does \emph{not} claim:
 
 \begin{itemize}
 \item that AWP is obsolete;
-\item that results generalize beyond Arbitrum One and the study window without replication;
+\item that EndorseRank's allowance alignment exceeds its own transfer alignment;
+\item that runtime scales favourably as the edge population grows beyond the cohort graph;
+\item that results generalise beyond Arbitrum One and the study window without replication;
 \item that on-chain scores replace collateral or legal identity systems.
 \end{itemize}
 
 \dissertationSubheading[sec:map-artifacts]{Artifact checklist for replication}
 
 \begin{enumerate}
-\item Merged wallet-ranking table --- scores for ER and AWP.
+\item Merged wallet-ranking table --- scores for EndorseRank and AWP.
 \item Machine-readable holdout summary for the spender cohort.
-\item Machine-readable evaluation summary --- authoritative same-window numerics.
-\item Exported LaTeX table fragments.
-\item Exported vector figures.
+\item Machine-readable evaluation summary --- authoritative same-window numerics, per-run timings, bootstrap protocol.
+\item Exported LaTeX table fragments (\texttt{results/tables/}).
+\item Exported vector figures (\texttt{Figures/generated/}).
 \item Optional archived extended-baseline matrices.
 \end{enumerate}
 
-Replicators can regenerate tables and figures by running the evaluation pipeline on real data with robustness sweeps and table export, then regenerating figures from the same artifacts.
+Replicators can regenerate tables and figures by running the evaluation pipeline on real data with robustness sweeps, exporting the tables, and regenerating figures from the same artifacts (Appendix~\ref{sec:pipeline-stages}).

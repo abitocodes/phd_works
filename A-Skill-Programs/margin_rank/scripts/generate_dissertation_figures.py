@@ -99,21 +99,22 @@ def fig_rank_scatter(rankings: pd.DataFrame) -> None:
 def fig_alignment_heatmap(summary: dict) -> None:
     matrix = summary["alignment"]["method_proxy_matrix"]
     # Keys must match eval_summary.json method_proxy_matrix (gmx_success, not trading_success).
+    # Main-text heatmap: EndorseRank vs AWP on the three families used in the
+    # narrative. GF-PR and the GMX/inverse-risk families are archived
+    # (supervisor comment id 14: outcome-native reference is circular).
     families = [
         "transfer",
         "allowance",
-        "inverse_risk",
         "sybil_stability",
-        "gmx_success",
     ]
-    labels = ["Transfer", "Allowance", "Inverse risk", "Sybil stability", "Trading success"]
-    methods = ["endorserank", "awp", "gf_pr"]
-    method_labels = ["EndorseRank", "AWP", "GF-PR"]
+    labels = ["Transfer", "Allowance", "Sybil stability"]
+    methods = ["endorserank", "awp"]
+    method_labels = ["EndorseRank", "AWP"]
     data = np.array([[matrix[m].get(f, np.nan) for f in families] for m in methods], dtype=float)
     if np.isnan(data).any():
         raise ValueError(f"heatmap contains NaN; check family keys. data=\n{data}")
 
-    fig, ax = plt.subplots(figsize=(7.0, 3.2))
+    fig, ax = plt.subplots(figsize=(5.6, 2.6))
     im = ax.imshow(data, cmap="RdYlBu_r", vmin=-0.1, vmax=0.6, aspect="auto")
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=25, ha="right")

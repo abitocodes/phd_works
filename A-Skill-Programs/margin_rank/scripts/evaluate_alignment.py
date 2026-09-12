@@ -10,6 +10,8 @@ from typing import Any
 
 
 
+import numpy as np
+
 import pandas as pd
 
 from scipy.stats import kendalltau, spearmanr
@@ -421,15 +423,365 @@ def _build_method_cross(
 
 
 
+def _tau_safe(x: np.ndarray, y: np.ndarray) -> float | None:
+
+    if x.size < 5 or np.unique(x).size < 2 or np.unique(y).size < 2:
+
+        return None
+
+    t, _ = kendalltau(x, y)
+
+    if t is None or not np.isfinite(t):
+
+        return None
+
+    return float(t)
+
+
+
+
+
+def _percentile_ci(samples: list[float], ci: float) -> tuple[float | None, float | None]:
+
+    if not samples:
+
+        return None, None
+
+    arr = np.asarray(samples, dtype=float)
+
+    lo = float(np.percentile(arr, (1.0 - ci) / 2.0 * 100.0))
+
+    hi = float(np.percentile(arr, (1.0 + ci) / 2.0 * 100.0))
+
+    return lo, hi
+
+
+
+
+
+# Paired contrasts reported with bootstrap intervals on the difference. Each
+
+# entry is (label, (method_a, family_or_proxy_a), (method_b, family_or_proxy_b)).
+
+# Family names resolve to family mean tau; proxy names resolve to a single proxy.
+
+TAU_DIFF_CONTRASTS: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
+
+    ("EndorseRank allowance minus EndorseRank transfer", ("endorserank", "allowance"), ("endorserank", "transfer")),
+
+    ("AWP transfer minus EndorseRank transfer", ("awp", "transfer"), ("endorserank", "transfer")),
+
+    ("EndorseRank allowance minus AWP allowance", ("endorserank", "allowance"), ("awp", "allowance")),
+
+    ("AWP sybil-stability minus EndorseRank sybil-stability", ("awp", "sybil_stability"), ("endorserank", "sybil_stability")),
+
+    ("AWP GMX-success minus EndorseRank GMX-success", ("awp", "gmx_success"), ("endorserank", "gmx_success")),
+
+    ("EndorseRank in-approve degree minus EndorseRank in-degree", ("endorserank", "in_approve_degree"), ("endorserank", "in_degree")),
+
+)
+
+
+
+
+
+def bootstrap_alignment(
+
+    merged: pd.DataFrame,
+
+    methods: dict[str, str],
+
+    n_boot: int = 400,
+
+    seed: int = 42,
+
+    ci: float = 0.95,
+
+    contrasts: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = TAU_DIFF_CONTRASTS,
+
+) -> dict[str, Any]:
+
+    """Paired bootstrap over wallets for every (method, proxy) Kendall tau.
+
+
+
+    One resample index matrix (n_boot x n) is shared by all methods and proxies,
+
+    so differences between any two tau statistics are paired by construction.
+
+    Returns per-proxy CIs, family-mean CIs, the inter-method CI, and the
+
+    contrast table (delta tau with percentile CI and bootstrap share > 0).
+
+    """
+
+    n = len(merged)
+
+    rng = np.random.default_rng(seed)
+
+    idx_matrix = rng.integers(0, n, size=(n_boot, n))
+
+
+
+    score_arrays: dict[str, np.ndarray] = {}
+
+    for method_id, col in methods.items():
+
+        if col in merged.columns:
+
+            score_arrays[method_id] = merged[col].astype(float).to_numpy()
+
+    proxy_arrays: dict[str, np.ndarray] = {
+
+        p: merged[p].astype(float).to_numpy() for p in ALL_PROXIES if p in merged.columns
+
+    }
+
+
+
+    # per (method, proxy): list of resampled tau
+
+    resampled: dict[str, dict[str, list[float]]] = {m: {} for m in score_arrays}
+
+    point: dict[str, dict[str, float | None]] = {m: {} for m in score_arrays}
+
+    for m, s in score_arrays.items():
+
+        for p, y in proxy_arrays.items():
+
+            mask = np.isfinite(s) & np.isfinite(y)
+
+            point[m][p] = _tau_safe(s[mask], y[mask])
+
+            vals: list[float] = []
+
+            for b in range(n_boot):
+
+                idx = idx_matrix[b]
+
+                mb = mask[idx]
+
+                t = _tau_safe(s[idx][mb], y[idx][mb])
+
+                if t is not None:
+
+                    vals.append(t)
+
+            resampled[m][p] = vals
+
+
+
+    proxy_ci: dict[str, dict[str, dict[str, Any]]] = {}
+
+    for m in resampled:
+
+        proxy_ci[m] = {}
+
+        for p, vals in resampled[m].items():
+
+            lo, hi = _percentile_ci(vals, ci)
+
+            proxy_ci[m][p] = {
+
+                "kendall_tau": point[m][p],
+
+                "ci_low": lo,
+
+                "ci_high": hi,
+
+                "n_boot": len(vals),
+
+            }
+
+
+
+    # family means per resample (mean over proxies present in that resample)
+
+    family_samples: dict[str, dict[str, np.ndarray]] = {m: {} for m in resampled}
+
+    family_ci: dict[str, dict[str, dict[str, Any]]] = {m: {} for m in resampled}
+
+    for m in resampled:
+
+        for family, proxies in PROXY_FAMILIES.items():
+
+            cols = [np.asarray(resampled[m][p], dtype=float) for p in proxies if p in resampled[m]]
+
+            cols = [c for c in cols if c.size == n_boot]
+
+            if not cols:
+
+                continue
+
+            fam = np.mean(np.vstack(cols), axis=0)
+
+            family_samples[m][family] = fam
+
+            lo, hi = _percentile_ci(fam.tolist(), ci)
+
+            pts = [point[m][p] for p in proxies if point[m].get(p) is not None]
+
+            family_ci[m][family] = {
+
+                "mean_tau": float(np.mean(pts)) if pts else None,
+
+                "ci_low": lo,
+
+                "ci_high": hi,
+
+                "n_boot": int(fam.size),
+
+            }
+
+
+
+    inter_method_ci: dict[str, Any] = {}
+
+    if "endorserank" in score_arrays and "awp" in score_arrays:
+
+        a = score_arrays["endorserank"]
+
+        b_arr = score_arrays["awp"]
+
+        mask = np.isfinite(a) & np.isfinite(b_arr)
+
+        vals = []
+
+        for b in range(n_boot):
+
+            idx = idx_matrix[b]
+
+            mb = mask[idx]
+
+            t = _tau_safe(a[idx][mb], b_arr[idx][mb])
+
+            if t is not None:
+
+                vals.append(t)
+
+        lo, hi = _percentile_ci(vals, ci)
+
+        inter_method_ci = {
+
+            "kendall_tau": _tau_safe(a[mask], b_arr[mask]),
+
+            "ci_low": lo,
+
+            "ci_high": hi,
+
+            "n_boot": len(vals),
+
+        }
+
+
+
+    def _resolve(spec: tuple[str, str]) -> tuple[np.ndarray | None, float | None]:
+
+        m, key = spec
+
+        if key in PROXY_FAMILIES:
+
+            fam = family_samples.get(m, {}).get(key)
+
+            pt = family_ci.get(m, {}).get(key, {}).get("mean_tau")
+
+            return fam, pt
+
+        vals = resampled.get(m, {}).get(key)
+
+        arr = np.asarray(vals, dtype=float) if vals is not None and len(vals) == n_boot else None
+
+        return arr, point.get(m, {}).get(key)
+
+
+
+    tau_diff: list[dict[str, Any]] = []
+
+    for label, spec_a, spec_b in contrasts:
+
+        arr_a, pt_a = _resolve(spec_a)
+
+        arr_b, pt_b = _resolve(spec_b)
+
+        if arr_a is None or arr_b is None or pt_a is None or pt_b is None:
+
+            continue
+
+        delta = arr_a - arr_b
+
+        lo, hi = _percentile_ci(delta.tolist(), ci)
+
+        tau_diff.append(
+
+            {
+
+                "label": label,
+
+                "a": {"method": spec_a[0], "key": spec_a[1], "tau": pt_a},
+
+                "b": {"method": spec_b[0], "key": spec_b[1], "tau": pt_b},
+
+                "delta_tau": float(pt_a - pt_b),
+
+                "ci_low": lo,
+
+                "ci_high": hi,
+
+                "share_positive": float(np.mean(delta > 0)),
+
+                "n_boot": int(delta.size),
+
+            }
+
+        )
+
+
+
+    return {
+
+        "n_boot": n_boot,
+
+        "seed": seed,
+
+        "ci_level": ci,
+
+        "n_wallets": n,
+
+        "methods": sorted(score_arrays),
+
+        "proxy_ci": proxy_ci,
+
+        "family_ci": family_ci,
+
+        "inter_method_ci": inter_method_ci,
+
+        "tau_diff": tau_diff,
+
+    }
+
+
+
+
+
 def build_alignment_report(
 
     merged: pd.DataFrame,
 
     methods: dict[str, str] | None = None,
 
+    bootstrap: dict[str, Any] | None = None,
+
 ) -> dict[str, Any]:
 
-    """Full alignment report for methods across six proxy families."""
+    """Full alignment report for methods across six proxy families.
+
+
+
+    ``bootstrap`` = {"n_boot": int, "seed": int, "methods": {id: col}} enables the
+
+    paired wallet bootstrap for the listed methods (default: EndorseRank and AWP).
+
+    """
 
     methods_dict = methods if methods is not None else METHODS
 
@@ -461,6 +813,46 @@ def build_alignment_report(
 
 
 
+    boot: dict[str, Any] = {}
+
+    if bootstrap:
+
+        boot_methods = bootstrap.get("methods") or {
+
+            k: v for k, v in methods_dict.items() if k in ("endorserank", "awp")
+
+        }
+
+        boot = bootstrap_alignment(
+
+            merged,
+
+            boot_methods,
+
+            n_boot=int(bootstrap.get("n_boot", 400)),
+
+            seed=int(bootstrap.get("seed", 42)),
+
+        )
+
+        for m, per_proxy in boot["proxy_ci"].items():
+
+            for p, ci_row in per_proxy.items():
+
+                if m in method_results and p in method_results[m]:
+
+                    method_results[m][p]["ci_low"] = ci_row["ci_low"]
+
+                    method_results[m][p]["ci_high"] = ci_row["ci_high"]
+
+                    method_results[m][p]["n_boot"] = ci_row["n_boot"]
+
+        if boot.get("inter_method_ci"):
+
+            inter_method = {**inter_method, **{k: v for k, v in boot["inter_method_ci"].items() if k != "kendall_tau"}}
+
+
+
     return {
 
         "methods": method_results,
@@ -482,6 +874,8 @@ def build_alignment_report(
         "method_comparison": _method_comparison(er_cross, awp_cross),
 
         "inter_method": inter_method,
+
+        "bootstrap": boot,
 
         "n_wallets": len(merged),
 

@@ -72,9 +72,9 @@ Changing damping or decay parameters requires re-running the full evaluation---i
 
 \dissertationSubheading[sec:complexity-notes]{Complexity notes}
 
-Let $n$ be the number of nodes and $m=|E|$ the number of edges. Building latest-allowance edges is $O(R_a\log R_a)$ if $R_a$ approval rows are sorted by timestamp, or $O(R_a)$ expected time with a hash map keyed by (token, owner, spender). Building transfer edges is $O(R_t)$ over transfer rows. PageRank is $O(mI)$ for $I$ iterations. Empirically $I\approx 37$ for EndorseRank and $I\approx 100$ for AWP on the matched cohort, and $m_{\mathrm{approve}}\ll m_{\mathrm{transfer}}$, so both factors favor EndorseRank.
+Let $n$ be the number of nodes and $m=|E|$ the number of edges. Building latest-allowance edges is $O(R_a\log R_a)$ if $R_a$ approval rows are sorted by timestamp, or $O(R_a)$ expected time with a hash map keyed by (token, owner, spender). Building transfer edges is $O(R_t)$ over transfer rows. PageRank is $O(m + mI)$ for $I$ iterations, the first term being the assembly of the sparse operator. Iteration counts and edge counts for both methods are given in Table~\ref{tab:benchmark-runtime}; EndorseRank needs roughly a third of AWP's iterations and $m_{\mathrm{approve}}\ll m_{\mathrm{transfer}}$, so both factors favour EndorseRank.
 
-Memory is dominated by edge lists and score vectors. Peak solve memory of $4.6$\,MB versus $38.2$\,MB (Table~\ref{tab:benchmark-runtime}) is consistent with the edge-count ratio $14{,}727:137{,}087$.
+Memory is dominated by edge lists and score vectors. The peak-memory ratio in Table~\ref{tab:benchmark-runtime} is of the same order as the edge-count ratio.
 
 \dissertationSubheading[sec:interpretation-checklist]{Interpretation checklist for readers}
 
@@ -84,14 +84,15 @@ When reading Chapter~\ref{ch:results} tables, the following checklist reduces co
 \item Identify whether a row is a social method (EndorseRank or AWP).
 \item Match each family to its intended construct (allowance vs.\ transfer).
 \item Prefer relative comparisons on the same cohort over absolute $\tau$ thresholds.
-\item Read runtime tables as PageRank solve time on pre-built edges, not end-to-end ETL time.
-\item Confirm robustness tables before generalizing a point estimate.
+\item Read runtime tables as PageRank solve time on pre-built edge lists, not end-to-end ETL time, and expect identical numbers wherever the same graph is tabulated under the same settings (Section~\ref{sec:computational-benchmark}).
+\item Read every $\tau$ with its interval, and read differences between coefficients from Table~\ref{tab:tau-diff} rather than by subtracting point estimates.
+\item Treat the sample-definition sweep (Table~\ref{tab:robustness-sample-size}) as a sensitivity analysis whose absolute values are not comparable with the matched-cohort tables.
 \end{enumerate}
 
 \dissertationSubheading[sec:archived-baselines]{Archived extended baselines}
 
-Seven-method and six-Aave alignment matrices are archived alongside the evaluation pipeline, together with corresponding CSV matrices for spreadsheet inspection. They are excluded from the main narrative because several variants require additional event types (e.g., credit delegation) or introduce constructs outside the primary EndorseRank--AWP question. Researchers extending this work may re-enable exports via a dedicated export utility with documented presets.
+Three-method (with the withdrawn GF-PR reference), seven-method and six-Aave alignment matrices are archived alongside the evaluation pipeline, together with corresponding CSV matrices for spreadsheet inspection. They are excluded from the main narrative because several variants require additional event types (e.g., credit delegation) or introduce constructs outside the primary EndorseRank--AWP question. Researchers extending this work may re-enable exports via a dedicated export utility with documented presets.
 
 \dissertationSubheading[sec:limitations-reprise]{Limitations reprise}
 
-Appendix material does not expand the empirical claims beyond Chapter~\ref{ch:results}. In particular, SQL templates do not imply that other chains were queried, and archived baselines do not constitute peer comparisons in this research. The authoritative numerics remain those in the pipeline's machine-readable summary artifact for the matched cohort ($n=5{,}521$) and expanded wallet pool ($N=31{,}612$).
+Appendix material does not expand the empirical claims beyond Chapter~\ref{ch:results}. In particular, SQL templates do not imply that other chains were queried, and archived baselines do not constitute peer comparisons in this research. The authoritative numerics remain those in the pipeline's machine-readable summary artifact for the matched cohort ($n=5{,}521$) and expanded wallet pool ($N=99{,}080$).

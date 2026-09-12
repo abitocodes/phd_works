@@ -2,312 +2,186 @@
 \chapter{Implementation and Empirical Results}
 \label{ch:results}
 
-This chapter reports the empirical evaluation of EndorseRank against Adaptive Weighted PageRank (AWP) on Arbitrum One. The analysis proceeds from cohort construction, through computational benchmarks and robustness checks, to contemporaneous allowance and transfer checks, inter-method rank divergence, and a temporal holdout of future new approvals. Primary claims C1--C4 address the EndorseRank--AWP comparison.
+Chapter~\ref{ch:methodology} specified how EndorseRank and the Adaptive Weighted PageRank (AWP) baseline are built, which construct checks are applied, how uncertainty is quantified and how runtime is timed. This chapter applies that design to Arbitrum One and reports what was observed. It is organised as a single case study: one chain, one observation window, one matched cohort for all same-window comparisons, one spender cohort for the temporal holdout and one expanded address pool for node-count sensitivity. Every table in the chapter is rendered by the pipeline's exporter from the machine-readable summary described in Section~\ref{sec:reproducibility}; where a number is discussed in the text it is stated once, with its table as the reference, and confidence intervals accompany every Kendall $\tau$ coefficient.
 
-All same-window results use an identical matched cohort of $n=5{,}521$ wallets with non-zero connectivity in the reputation subgraphs. The holdout uses t1 inbound spenders ($n=1{,}335$). Runtime scaling is evaluated on an expanded wallet pool of $N=31{,}612$ addresses. Robustness checks vary PageRank damping, restrict the reputation graph to high-volume tokens, and recompute alignment at staged subsample sizes. Methodological definitions appear in Chapter~\ref{ch:methodology}. Claims are summarized in Section~\ref{sec:empirical-claims} and mapped in Table~\ref{tab:hrq-claim-map}.
+The chapter proceeds from the case-study setting (Section~\ref{sec:dataset}), through the computational benchmark (Section~\ref{sec:benchmark-results}), the same-window alignment results with difference tests (Sections~\ref{sec:three-method-alignment}--\ref{sec:proxy-family-detail}), inter-method rank divergence (Section~\ref{sec:rank-divergence}), robustness and sensitivity checks (Section~\ref{sec:robustness-results}) and the temporal holdout (Section~\ref{sec:gf-pr-ceiling}), to a consolidated statement of the empirical claims C1--C4 (Section~\ref{sec:empirical-claims}).
 
-\dissertationSubheading[sec:dataset]{Dataset}
+\dissertationSubheading[sec:dataset]{Case study setting: Arbitrum One}
 
-The matched cohort comprises $n=5{,}521$ wallets with non-zero endorsement- and transfer-graph connectivity, drawn from six months of Arbitrum One BigQuery logs spanning 2025-12-01 through 2026-05-31. EndorseRank scores are computed on the latest-allowance endorsement graph $G_{\text{approve}}$; AWP scores are computed on the time-decayed transfer graph $G_{\text{transfer}}$. Same-window claims use transfer and allowance local statistics. The temporal holdout is reported in Section~\ref{sec:gf-pr-ceiling}.
+Arbitrum One was selected as the case because it is a high-activity Ethereum rollup with mature DeFi protocols (Section~\ref{sec:ethereum-l2}), its logs are available in the public BigQuery export used by the pipeline, and a margin-trading protocol on it (GMX~V2) supplies the wallet seed set described below. The observation window is 1~December~2025 to 31~May~2026. Six months is long enough to span several market regimes and to give tenure and active-month proxies room to vary, and short enough that a latest-allowance snapshot remains contemporaneous with the transfer history that AWP aggregates.
 
-Table~\ref{tab:dataset-stats} summarizes cohort size and subgraph edge counts. The endorsement graph is substantially sparser than the transfer graph (14{,}727 vs.\ 137{,}087 edges), a structural difference that underpins both the runtime advantage reported in Section~\ref{sec:benchmark-results} and the construct-specific alignment patterns in Sections~\ref{sec:three-method-alignment}--\ref{sec:proxy-family-detail}.
+\dissertationSubsubheading[sub:cohorts]{Cohorts}
 
-\begin{table}[htbp]
-\centering
-\caption{Dataset characteristics for the matched cohort ($n=5{,}521$ wallets with non-zero reputation-subgraph connectivity).}
-\label{tab:dataset-stats}
-\begin{tabular}{lr}
-\toprule
-Statistic & Value \\
-\midrule
-Matched wallets & 5{,}521 \\
-EndorseRank edges (subgraph) & 14{,}727 \\
-AWP edges (subgraph) & 137{,}087 \\
-Observation window & 2025-12-01 -- 2026-05-31 \\
-\bottomrule
-\end{tabular}
-\end{table}
+Three address sets are used, each for one purpose.
 
-The edge-count asymmetry is not an artifact of incomplete extraction: both graphs are built from the same wallet seed set and the same observation window. EndorseRank retains only the latest decimal-adjusted allowance per owner--spender pair, so repeated approvals collapse to a single directed edge. AWP aggregates transfer history with logistic time-decay, producing many more directed edges among the same wallets. Consequently, differences in scores and alignment are attributable to ranking logic and graph semantics, not to inconsistent sampling.
+\begin{itemize}
+\item Matched cohort ($n=5{,}521$). Wallets seeded from GMX~V2 margin-trading activity that have non-zero connectivity in both the latest-allowance endorsement graph $G_{\text{approve}}$ and the time-decayed transfer graph $G_{\text{transfer}}$ over the window. All same-window alignment, difference-test and benchmark results refer to this cohort. Requiring connectivity in both graphs ensures that neither method is evaluated on wallets for which it can only return the teleportation floor.
+\item Holdout spender cohort ($n=1{,}335$). Wallets that appear as spenders in at least one allowance during the scoring period (events up to 28~February~2026). Their scores are tested against owner--spender approval pairs first observed between 1~March and 31~May~2026 (Section~\ref{sec:gf-pr-graph}).
+\item Expanded wallet pool ($N=99{,}080$). The matched cohort unioned with $93{,}559$ supplemental addresses sampled from monthly ERC-20 activity on the chain. The pool is used only for node-count sensitivity of runtime and for the sample-definition sensitivity analysis (Section~\ref{sub:expanded-pool}); its limitation---supplemental addresses contribute nodes but no additional extracted edges---is restated where the results are reported.
+\end{itemize}
 
-The matched-cohort design requires non-zero connectivity in the reputation subgraph so that both EndorseRank and AWP produce non-degenerate scores. The filter yields $n=5{,}521$ wallets over the six-month window. This sample is large enough for stable Kendall $\tau$ estimates on transfer and allowance checks, yet small enough that full PageRank solves remain interactive on commodity hardware.
+Graph sizes for the matched cohort are given with the benchmark in Table~\ref{tab:benchmark-runtime}. The endorsement graph has roughly one ninth as many edges as the transfer graph on the same wallets. That asymmetry is a property of the two representations rather than of the extraction: both graphs are built from the same wallet seed set and window, but EndorseRank keeps only the latest decimal-adjusted allowance per owner--spender pair, so repeated approvals collapse to one directed edge, whereas AWP accumulates every transfer between two wallets into a decayed weight. Differences in scores and alignment are therefore attributable to ranking logic and graph semantics, not to inconsistent sampling.
 
-The observation window (2025-12-01 -- 2026-05-31) is long enough to capture multiple market regimes, but short enough that latest-allowance snapshots remain contemporaneous with transfer histories used by AWP. Longer windows would increase AWP's historical edge accumulation and could further widen the runtime gap; shorter windows would reduce proxy stability for tenure and active-month measures. The chosen window therefore balances recency, activity volume, and comparability between snapshot-based and history-based graphs.
+\dissertationSubsubheading[sub:implementation]{Implementation}
 
-The edge-count gap in Table~\ref{tab:dataset-stats} fixes a sample constraint: endorsement and transfer graphs differ by nearly an order of magnitude in edge count, so efficiency and alignment claims must be evaluated jointly.
+Both methods run through the same Python PageRank solver with identical damping ($d=0.85$), tolerance ($10^{-8}$) and iteration cap; only the edge lists differ (Section~\ref{sec:implementation-notes}). Scores, per-proxy statistics, bootstrap intervals and timings are written to one summary file per run; the tables below were produced from the run of 12~September~2026 whose configuration is recorded in \texttt{config/margin\_config.yaml} at the commit named in Section~\ref{sec:reproducibility}.
 
-\dissertationSubheading[sec:benchmark-results]{EndorseRank vs.\ AWP benchmark (Claim~C1)}
+\dissertationSubheading[sec:benchmark-results]{Computational benchmark (Claim~C1)}
 
-Claim~C1 asserts that EndorseRank is computationally cheaper than AWP on identical inputs. Table~\ref{tab:benchmark-runtime} reports PageRank solve time, peak memory, iteration count, and edge count on the full matched cohort ($n=5{,}521$). Timing excludes one-time graph construction and reports three-run means from the exported evaluation tables at convergence tolerance $10^{-8}$.\footnote{Excluding graph construction isolates the recurring PageRank solve cost that would dominate incremental score refresh in a deployed scorer. Chapter~\ref{ch:methodology} specifies five independent runs as the intended protocol; the table values remain the empirical record until the repetition count is reconciled.}
+Claim~C1 asserts that EndorseRank is computationally cheaper than AWP on identical inputs. Table~\ref{tab:benchmark-runtime} reports PageRank solve time, its standard deviation over the five timed repeats, peak memory during the warm-up solve, iterations to convergence and the size of each method's evaluation subgraph on the matched cohort, following the timing protocol of Section~\ref{sec:computational-benchmark}.
 
-\begin{table}[htbp]
-\centering
-\caption{Computational benchmark on the matched wallet cohort ($n=5{,}521$).}
-\label{tab:benchmark-runtime}
-\begin{tabular}{lrrrr}
-\toprule
-Method & Runtime (s) & Peak mem.\ (MB) & Iters & Edges \\
-\midrule
-EndorseRank & 2.105 & 4.6 & 37.0 & 14{,}727 \\
-AWP & 18.711 & 38.2 & 100.0 & 137{,}087 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{results/tables/benchmark-runtime.tex}
 
-EndorseRank completes in 2.105\,s versus 18.711\,s for AWP, a wall-clock speedup of approximately $8.9\times$. Peak memory follows the same pattern (4.6\,MB vs.\ 38.2\,MB). The dominant driver is graph sparsity: EndorseRank operates on 14{,}727 edges, whereas AWP operates on 137{,}087 edges---roughly $9.3\times$ more edges. Because PageRank's per-iteration cost scales with $|E|$, the sparser endorsement graph reduces both work per iteration and the number of iterations required for convergence (EndorseRank $\approx 37$ iterations; AWP $\approx 100$). The iteration gap is consistent with a better-conditioned, lower-density adjacency structure under latest-allowance semantics: allowance overrides replace historical accumulation, so the operator does not encode long-tailed transfer histories that slow mixing. The primary efficiency comparison is EndorseRank versus AWP on wallet-to-wallet social graphs.
+Three mechanisms account for the runtime ratio in the table. First, both parts of the timed solve---assembling the sparse transition operator from the edge list and each power-iteration step---are linear in $|E|$ (Appendix~\ref{sec:pr-sparsity}), and the endorsement graph has about one ninth of the transfer graph's edges. Second, EndorseRank converges in roughly a third of the iterations AWP needs; the transfer operator, with its long-tailed decayed weights, mixes more slowly. Third, peak memory follows $|E|$ as well, since adjacency, weight and residual buffers scale with the edge list. The standard deviations show that run-to-run noise is an order of magnitude smaller than the gap between methods.
 
-Memory footprints reinforce the same structural story. EndorseRank's peak memory (4.6\,MB) is nearly an order of magnitude below AWP's (38.2\,MB) under identical profiling. Although absolute megabytes are modest at $n=5{,}521$, the ratio matters for deployment at larger $n$: transfer-graph adjacency, weight vectors, and residual buffers all scale with $|E|$. A method that stores and iterates over roughly $9\times$ fewer edges inherits proportional savings in cache pressure and allocator traffic, not only in arithmetic operations. Iteration counts (37 vs.\ 100) compound this effect: EndorseRank performs fewer passes over a smaller edge list.
+Two remarks bound the claim. The benchmark times the solver call on pre-built edge lists; end-to-end refresh cost includes extraction, decoding and edge-list construction, which are shared or partially shared across methods and are not part of C1. And ``faster'' is not ``better'': the runtime result acquires meaning only when paired with the alignment results of Sections~\ref{sec:three-method-alignment}--\ref{sec:proxy-family-detail}, which is why Claim~C4 combines the two.
 
-From a systems perspective, Claim~C1 is therefore multi-dimensional. Wall-clock time is the headline metric for interactive refresh; memory and iterations are the mechanisms that make the headline durable as cohorts grow. A method that was faster only because of an implementation accident---for example, an unfairly optimized sparse kernel applied to one graph but not the other---would be less persuasive. Here both methods use the same PageRank solver, tolerance, and damping default; only the edge lists differ. The efficiency gap is a property of the endorsement representation.
+\dissertationSubsubheading[sub:runtime-scaling]{Node-count sensitivity on the expanded pool}
 
-\dissertationSubsubheading[sub:runtime-scaling]{Runtime scaling on the expanded wallet pool}
-
-The runtime advantage is not merely a constant-factor curiosity on a single cohort size. If EndorseRank's edge set remains substantially smaller than AWP's as the wallet pool grows, the speedup should persist under staged scaling. Table~\ref{tab:benchmark-scaling} reports runtime scaling on an expanded wallet pool of $N=31{,}612$ addresses: the matched cohort unioned with supplemental active wallets drawn from the reputation subgraph. Deterministic SHA256 subsampling yields staged cohorts at $n=10{,}000$ and at full pool size. In-cohort scaling for $n \leq 5{,}521$ is reported in Appendix~\ref{ch:appendix-eval} (Table~\ref{tab:benchmark-scaling-incohort}).
+Table~\ref{tab:benchmark-scaling} reports runtime at three staged node counts drawn from the expanded pool by deterministic SHA256 subsampling, together with the per-stage $|V|$ and $|E|$ of each method's subgraph. In-cohort stages ($n\le 5{,}521$) are given in Appendix~\ref{ch:appendix-eval} (Table~\ref{tab:benchmark-scaling-incohort}).
 
 \input{results/tables/benchmark-scaling.tex}
 
-At $n=10{,}000$, EndorseRank runs in 1.18\,s versus 12.28\,s for AWP (speedup $\approx 10.4\times$). At full pool size ($N=31{,}612$), EndorseRank runs in 2.29\,s versus 21.40\,s for AWP (speedup $\approx 9.4\times$). These three wall-clock pairs are not interchangeable. The $2.105$\,s vs.\ $18.711$\,s pair is the matched cohort ($n=5{,}521$). The $1.18$\,s vs.\ $12.28$\,s pair is a SHA256 subsample of the expanded pool at $n=10{,}000$. The $2.29$\,s vs.\ $21.40$\,s pair is the full pool. The $1.18$\,s figure is smaller than the matched-cohort $2.105$\,s because the samples differ in wallet mix and solver path, not because PageRank became cheaper at larger $n$ on the same graph. Edge counts at the full pool remain 14{,}727 for EndorseRank and 137{,}087 for AWP---identical to the matched-cohort edge totals in Table~\ref{tab:dataset-stats}---because the reputation subgraph edges among the evaluation wallets are fixed by the extraction; expanding the node set without adding new edges among scored wallets does not inflate $|E|$ for either method in this configuration. That is a graph-construction fact, not a monotonicity failure. The $\approx 10.4\times$ ($n=10{,}000$) versus $\approx 8.9\times$ ($n=5{,}521$) speedups therefore compare different sample definitions. The speedup remains in the $9$--$10\times$ band across both staged pool sizes.
+Two features of the table need to be read together with Section~\ref{sub:expanded-pool}. First, the full-pool row is numerically identical to the matched-cohort row of Table~\ref{tab:benchmark-runtime}. This is not a copy: the supplemental addresses have no extracted approval or transfer logs, so the induced subgraph at $N=99{,}080$ contains exactly the cohort edges, and the timing protocol times each distinct graph once per session and reuses that measurement wherever the same graph is tabulated. The same measurement therefore appears in the $d=0.85$ row of Table~\ref{tab:robustness-damping}. Second, $|E|$ is not monotone in $n$ across stages, because each stage is the subgraph induced by whichever wallets the hash order selects; the $n=10{,}000$ stage happens to select comparatively few cohort wallets and hence few edges. What the table supports is a bounded statement: across stages whose edge counts vary by a factor of five to seven, the AWP/EndorseRank runtime ratio stays within roughly $8$--$10\times$ and EndorseRank remains in the sub-two-second regime. It does not show how either method scales when the edge count itself grows with the address population, since the second-tier extraction that would have supplied those edges did not complete.
 
-Figure~\ref{fig:runtime-scaling} visualizes the scaling relationship. The curves confirm that AWP's wall-clock cost grows more steeply with $n$, while EndorseRank remains in a low-second regime even at $N=31{,}612$. For protocols that refresh reputation scores frequently---for example, after each batch of new approvals or transfers---an order-of-magnitude reduction in PageRank solve time is operationally material: it lowers the cost of continuous monitoring and makes more frequent re-ranking feasible under the same compute budget.
+Figure~\ref{fig:runtime-scaling} plots the in-cohort and pool stages on a common log axis.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{runtime-scaling.pdf}}
-\caption{PageRank wall-clock runtime versus cohort size (log $x$-axis). Solid lines: in-cohort scaling on the matched sample ($n\leq 5{,}521$). Dashed lines: expanded wallet pool ($N=31{,}612$). EndorseRank remains approximately $9$--$10\times$ faster than AWP at $n=10{,}000$ ($\approx 10.4\times$) and at full pool size ($\approx 9.4\times$).}
+\caption{PageRank wall-clock runtime versus number of sampled wallets (log $x$-axis). Solid lines: in-cohort stages ($n\le 5{,}521$, Table~\ref{tab:benchmark-scaling-incohort}). Dashed lines: expanded-pool stages ($N=99{,}080$, Table~\ref{tab:benchmark-scaling}). Pool stages add addresses without adding extracted edges, so the rightmost pool point coincides with the full matched cohort.}
 \label{fig:runtime-scaling}
 \end{figure}
 
-Two caveats qualify the efficiency claim. First, the benchmark times PageRank solve on pre-built edge lists; end-to-end pipelines that include BigQuery extraction and edge construction incur additional costs shared or partially shared across methods. Second, memory footprints reported here are modest because the cohort is wallet-filtered; full-chain transfer graphs would increase AWP's absolute cost further and would likely widen, not narrow, the relative gap. Within the scope of this research---matched wallets with reputation-subgraph connectivity---Claim~C1 is supported at both the matched cohort and the expanded pool.
+\dissertationSubheading[sec:three-method-alignment]{Same-window alignment: EndorseRank vs.\ AWP (Claims~C2--C3)}
 
-A third caveat concerns what ``faster'' does and does not buy. EndorseRank's speedup does not automatically imply superior risk discrimination. Efficiency is valuable only insofar as the resulting scores remain credible on the constructs a protocol cares about. Section~\ref{sec:three-method-alignment} and Claim~C4 therefore pair the runtime results with alignment results: EndorseRank is not merely cheaper; it is cheaper while preserving credible primary-construct allowance alignment ($\tau=0.355$) and moderate transfer alignment. Protocols that need transfer-hub detection above all else may still prefer AWP and pay the runtime premium; protocols that need authorization-aware scores at low latency have a clear efficiency rationale for EndorseRank.
+Claims~C2 and~C3 ask whether each method recovers its intended construct on contemporaneous local statistics and whether the winners are construct-specific. Table~\ref{tab:alignment-family-ci} reports family-mean Kendall $\tau$ with 95\% paired-bootstrap intervals for the transfer, allowance and Sybil-stability families, together with the inter-method agreement between the two score vectors. Figure~\ref{fig:alignment-heatmap} shows the same family means as a heatmap.
 
-\dissertationSubheading[sec:robustness-results]{Robustness checks}
-
-Efficiency and alignment results are useful only if they are not artifacts of a single damping choice, a single token mix, or a single sample size. This section reports three robustness checks: PageRank damping sensitivity, restriction to the top-20 ERC-20 token subgraph, and sample-size sensitivity on the expanded wallet pool.
-
-\dissertationSubsubheading[sub:damping]{Damping sensitivity}
-
-Table~\ref{tab:robustness-damping} reports mean Kendall $\tau$ for allowance and transfer families under damping $d \in \{0.75, 0.85, 0.95\}$ on the matched cohort, together with corresponding runtimes.
-
-\input{results/tables/robustness-damping.tex}
-
-EndorseRank allowance mean $\tau$ is stable at approximately $0.355$ across all three damping values. Transfer-family $\tau$ for EndorseRank is likewise unchanged at $0.333$. AWP transfer $\tau$ varies only from $0.531$ to $0.536$ (at most $\approx 0.005$), and AWP allowance $\tau$ remains near zero ($-0.031$ to $-0.030$). The construct-specific pattern---EndorseRank leading on allowance, AWP leading on transfer---is therefore not an artifact of the conventional $d=0.85$ setting.
-
-Figure~\ref{fig:damping-sensitivity} plots these relationships. Flat allowance and transfer curves for EndorseRank indicate that the endorsement operator's ranking is insensitive to moderate changes in the teleportation probability. Runtime decreases slightly as $d$ increases for both methods, consistent with faster mixing when less mass is retained on the graph operator, but the relative speedup remains large throughout the sweep.
+\input{results/tables/alignment-family-ci.tex}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{\figpath{damping-sensitivity.pdf}}
-\caption{Damping sensitivity of mean Kendall $\tau$ for allowance and transfer families ($d \in \{0.75, 0.85, 0.95\}$). EndorseRank allowance alignment remains $\approx 0.355$ across the sweep; AWP transfer alignment varies by at most $\approx 0.005$.}
-\label{fig:damping-sensitivity}
-\end{figure}
-
-The damping result has a methodological implication. Because allowance edges encode a latest snapshot rather than a long historical path structure, changing how much mass teleports does not reorder wallets enough to alter family-level alignment. Protocols adopting EndorseRank can therefore treat $d=0.85$ as a stable default without extensive hyperparameter search for the allowance construct, at least within the range examined here.
-
-\dissertationSubsubheading[sub:token-subgraph]{Top-token subgraph}
-
-Table~\ref{tab:robustness-tokens} reports family-level mean $\tau$ when reputation graphs are restricted to the top-20 ERC-20 tokens by transfer and allowance volume.
-
-\begin{table}[htbp]
-\centering
-\caption{Robustness: mean Kendall $\tau$ on the top-20 ERC-20 token subgraph (matched cohort).}
-\label{tab:robustness-tokens}
-\begin{tabular}{lccc}
-\toprule
-Method & Transfer & Allowance & Sybil \\
-\midrule
-EndorseRank & 0.331 & 0.355 & 0.234 \\
-AWP & 0.532 & $-0.031$ & 0.283 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Relative to the full-token matched-cohort results in Table~\ref{tab:alignment-three-methods}, family-level means change only marginally. EndorseRank allowance remains $0.355$; transfer is $0.331$ (vs.\ $0.333$ on the full graph). AWP transfer is $0.532$ (vs.\ $0.534$), and AWP allowance remains near zero ($-0.031$). Sybil-adjusted stability means are likewise within a few thousandths of the full-graph values. The primary alignment pattern is therefore not driven by long-tail tokens with sparse, noisy edges. High-volume tokens---the economically salient core of ERC-20 activity---suffice to reproduce the EndorseRank--AWP contrast.
-
-\dissertationSubsubheading[sub:sample-size]{Sample-size sensitivity}
-
-Table~\ref{tab:robustness-sample-size} summarizes allowance and transfer $\tau$ at staged subsample sizes drawn from the expanded wallet pool ($N=31{,}612$).
-
-\input{results/tables/robustness-sample-size.tex}
-
-At $n=10{,}000$ and $N=31{,}612$, EndorseRank continues to dominate on allowance and AWP on transfer, with EndorseRank speedups of approximately $9.0\times$ and $9.9\times$, respectively. Absolute $\tau$ values differ from the matched-cohort figures because the expanded pool includes supplemental active wallets; checks and score supports therefore change with the sample definition. The relevant claim is sensitivity to sample definition, not invariance of every decimal place: the construct-specific winners and the runtime advantage persist under pool expansion and staged subsampling. In-cohort scaling detail for the matched sample alone appears in Appendix~\ref{ch:appendix-eval}.
-
-Collectively, the damping and top-token checks support reading Claims~C1--C4 as stable under parameter and token-mix perturbation, while the sample-size check is a sensitivity result: absolute $\tau$ values shift when the sample definition changes from the matched cohort to the expanded pool, and runtimes shift with damping and $n$. What remains stable is the comparative structure: EndorseRank is faster; EndorseRank wins on allowance; AWP wins on transfer; allowance alignment under EndorseRank is insensitive to damping in $\{0.75, 0.85, 0.95\}$. That comparative structure is what the claims assert.
-
-\dissertationSubheading[sec:three-method-alignment]{Social-method alignment: EndorseRank vs.\ AWP (Claims~C2--C3)}
-
-Claims~C2 and~C3 address whether EndorseRank and AWP achieve intended-construct checks and whether winners are construct-specific. Table~\ref{tab:alignment-three-methods} reports mean Kendall $\tau$ on transfer and allowance families.
-
-\begin{table}[htbp]
-\centering
-\caption{Mean Kendall $\tau$ on transfer and allowance families ($n=5{,}521$). Runtime is mean PageRank wall time (s, 3 repeats).}
-\label{tab:alignment-three-methods}
-\begin{tabular}{lccr}
-\toprule
-Method & Transfer & Allowance & Runtime (s) \\
-\midrule
-EndorseRank & 0.333 & 0.355 & 2.105 \\
-AWP & 0.534 & $-0.030$ & 18.711 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-EndorseRank leads on allowance ($\tau=0.355$), while AWP leads on transfer ($\tau=0.534$). EndorseRank's transfer alignment is moderate ($\tau=0.333$). AWP's allowance alignment is near zero ($-0.030$).
-
-Figure~\ref{fig:alignment-heatmap} shows the same crossed pattern on allowance versus transfer.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{\figpath{alignment-heatmap.pdf}}
-\caption{Family-level mean Kendall $\tau$ heatmap on the matched cohort ($n=5{,}521$). Claims use allowance and transfer cells only.}
+\includegraphics[width=0.8\textwidth]{\figpath{alignment-heatmap.pdf}}
+\caption{Family-mean Kendall $\tau$ on the matched cohort ($n=5{,}521$) for EndorseRank and AWP; the values are those of Table~\ref{tab:alignment-family-ci}.}
 \label{fig:alignment-heatmap}
 \end{figure}
 
-Claim~C2 is supported insofar as both social methods achieve non-negligible alignment on at least one primary construct: EndorseRank on allowance ($\tau \approx 0.35$), and AWP on transfer ($\tau=0.534$). Claim~C3 is supported by the crossed pattern: no single social method dominates both checks. EndorseRank's moderate transfer $\tau=0.333$ is a secondary axis. Out-of-window evidence is the holdout in Section~\ref{sec:gf-pr-ceiling}.
+The pattern is crossed. AWP aligns most strongly with the transfer family and is slightly negative on the allowance family; EndorseRank aligns most strongly with the allowance family and moderately with the transfer family. Whether each contrast exceeds sampling variation is tested in Table~\ref{tab:tau-diff}, which reports the six pre-specified paired differences of Section~\ref{sec:statistical-tests}.
 
-Per-proxy detail for transfer and allowance appears in Section~\ref{sec:proxy-family-detail}. Inter-method divergence is quantified in Section~\ref{sec:rank-divergence}.
+\input{results/tables/tau-diff.tex}
+
+Four of the six contrasts have intervals that exclude zero: AWP's transfer alignment exceeds EndorseRank's, EndorseRank's allowance alignment exceeds AWP's, and AWP exceeds EndorseRank on the Sybil-stability and (archived) GMX-success families. Two do not. EndorseRank's allowance alignment is not statistically higher than its own transfer alignment (contrast~i), and EndorseRank's in-approve-degree alignment is not statistically higher than its in-degree alignment (contrast~vi). These two null results discipline the interpretation of the allowance family. EndorseRank is a global smoothing of spender in-approve degree, so its agreement with allowance proxies is an intended-construct check rather than an external test; and the evidence does not license the statement that EndorseRank ``prefers'' allowance over transfer signal within its own ranking. What the evidence does license is the between-method statement: transfer centrality (AWP) carries no information about who receives spending authorisation, whereas endorsement centrality (EndorseRank) does, and the reverse holds for transfer volume.
+
+Claim~C2 is supported in the sense that each method achieves non-trivial alignment on its own construct with an interval well away from zero. Claim~C3 is supported by the two between-method contrasts (ii and iii) whose intervals exclude zero in opposite directions: neither method dominates both checks.
 
 \dissertationSubheading[sec:proxy-family-detail]{Proxy family detail}
 
-The following subsections report Spearman $\rho$ and Kendall $\tau$ for transfer and allowance checks. Checks are oriented so that higher values imply higher expected reputation before correlation, following Do et al.\cend{16}.
+The family means summarise per-proxy coefficients. This section reports Spearman $\rho$, Kendall $\tau$ and the 95\% interval of $\tau$ for each proxy. Proxies are oriented so that higher values imply higher expected reputation before correlation, and the transfer proxies are those used to validate AWP in its source paper\cend{3}.
 
-\dissertationSubsubheading[sub:transfer-family]{Transfer family (Do et al.\ baseline)}
+\dissertationSubsubheading[sub:transfer-family]{Transfer family}
 
-Table~\ref{tab:alignment-transfer} reports alignment with transfer in-degree and inbound transfer value---the baseline validation axis in Do et al.\cend{16}.
+\input{results/tables/alignment-transfer.tex}
 
-\begin{table}[htbp]
-\centering
-\caption{Domain alignment with transfer proxies (Do et al.\ 2023 baseline).}
-\label{tab:alignment-transfer}
-\begin{tabular}{lcc}
-\toprule
-Proxy & Spearman $\rho$ & Kendall $\tau$ \\
-\midrule
-\multicolumn{3}{l}{\textit{EndorseRank}} \\
-In-degree & 0.422 & 0.344 \\
-In-value (sum inbound) & 0.398 & 0.321 \\
-\addlinespace
-\multicolumn{3}{l}{\textit{AWP}} \\
-In-degree & 0.791 & 0.617 \\
-In-value (sum inbound) & 0.610 & 0.450 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-AWP achieves the highest social-method alignment on both transfer proxies: in-degree $\tau=0.617$ ($\rho=0.791$) and in-value $\tau=0.450$ ($\rho=0.610$), for a family mean of $0.534$. This result is expected by construction: AWP ranks on the time-decayed transfer graph, so correlation with transfer centrality is a primary-construct check rather than an independent external validation. The magnitude is nonetheless informative. AWP does not collapse to a trivial identity with in-degree; logistic decay and value weighting produce rankings that agree strongly but not perfectly with simple degree and value summaries.
-
-EndorseRank shows moderate secondary-axis alignment (in-degree $\tau=0.344$; in-value $\tau=0.321$; family mean $0.333$). Wallets that receive substantial transfer activity are somewhat more likely to appear as endorsed spenders, but the relationship is far from deterministic. Allowance delegation and transfer receipt are related economic behaviors---active protocols and market makers tend to attract both---yet they are not interchangeable. The moderate EndorseRank--transfer $\tau$ therefore supports Claim~C2 (credible secondary alignment) without undermining Claim~C3 (AWP remains the transfer-family winner among social methods).
-
-If a protocol's notion of reputation is inbound economic flow, AWP is the appropriate social method on this evidence. EndorseRank remains a secondary check: moderate transfer alignment suggests that endorsed spenders are not entirely disjoint from transfer recipients.
+AWP's agreement with in-degree is the largest coefficient in the chapter, and its agreement with in-value is smaller but still far above EndorseRank's. Both are primary-construct checks for AWP, since it ranks on the time-decayed transfer graph; the informative observation is that AWP does not collapse to in-degree---logistic decay and value weighting move a measurable share of pairwise orderings. EndorseRank's transfer coefficients are moderate and their intervals overlap neither zero nor AWP's intervals. Wallets that receive many transfers are somewhat more likely to be endorsed spenders, but the two behaviours are far from interchangeable. If a protocol's notion of reputation is inbound economic flow, AWP is the appropriate method on this evidence.
 
 \dissertationSubsubheading[sub:allowance-family]{Allowance family}
 
-Table~\ref{tab:alignment-allowance} reports alignment with spender-side in-approve degree and in-approve value---EndorseRank's primary construct.
+\input{results/tables/alignment-allowance.tex}
 
-\begin{table}[htbp]
-\centering
-\caption{Domain alignment with allowance proxies (spender-side in-approve degree and value).}
-\label{tab:alignment-allowance}
-\begin{tabular}{lcc}
-\toprule
-Proxy & Spearman $\rho$ & Kendall $\tau$ \\
-\midrule
-\multicolumn{3}{l}{\textit{EndorseRank}} \\
-In-approve degree & 0.360 & 0.356 \\
-In-approve value (sum) & 0.360 & 0.354 \\
-\addlinespace
-\multicolumn{3}{l}{\textit{AWP}} \\
-In-approve degree & $-0.037$ & $-0.030$ \\
-In-approve value (sum) & $-0.037$ & $-0.030$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-EndorseRank shows credible primary-construct alignment with both allowance proxies (in-approve degree $\tau=0.356$; in-approve value $\tau=0.354$; family mean $0.355$). As with AWP on transfer, this is a primary-construct check: PageRank on $G_{\text{approve}}$ should correlate with spender-side approval centrality. The allowance-family result is therefore partly a same-construct check, not an independent external criterion. The scientifically informative cell is AWP's near-zero allowance $\tau$, which shows that transfer centrality does not recover authorization. EndorseRank's $\tau \approx 0.355$ is evidence of recoverable graph signal on the graph it was given. The near-equality of degree and value correlations suggests that, on this cohort, being approved by many owners and being approved for large aggregate value convey similar ranking information under latest-allowance semantics.
-
-AWP alignment on allowance is near zero and slightly negative ($\tau=-0.030$ for both proxies). Transfer centrality does not identify wallets that receive spending authorization. This dissociation is central to this research's contribution: if transfer-based reputation were a sufficient proxy for endorsement, AWP would show at least moderate allowance alignment. It does not. Protocols that care about explicit spending authorization---for example, which addresses are trusted to move tokens on behalf of others---cannot substitute AWP for an allowance-aware method on this evidence.
-
-The allowance result is the empirical core of the same-window contribution. Transfer graphs do not encode spending authorization. Combined with the runtime results, the allowance family supports Claim~C4: the cheaper method is also the only social method that aligns with authorization checks. The holdout in Section~\ref{sec:gf-pr-ceiling} tests whether that signal persists after the score window.
+EndorseRank's coefficients on in-approve degree and in-approve value are nearly equal, which indicates that on this cohort being approved by many owners and being approved for large aggregate value convey similar ranking information under latest-allowance semantics. AWP's coefficients are slightly negative with intervals that exclude zero: transfer centrality does not recover authorisation. That dissociation is the empirical core of the same-window contribution. If transfer-based reputation were a sufficient proxy for endorsement, AWP would show at least moderate allowance alignment; it does not, so protocols that care about which addresses are trusted to move tokens on behalf of others cannot substitute AWP for an allowance-aware method. The caveat of Section~\ref{sec:three-method-alignment} applies: EndorseRank's own allowance coefficients are a construct check, and the out-of-window test of the same construct is the holdout of Section~\ref{sec:gf-pr-ceiling}.
 
 \dissertationSubsubheading[sub:sybil-family]{Sybil-adjusted stability family}
 
-Table~\ref{tab:alignment-sybil-stability} reports alignment with inbound counterparty ratio, transfer tenure, and active months.
+\input{results/tables/alignment-sybil-stability.tex}
 
-\begin{table}[htbp]
-\centering
-\caption{Domain alignment with Sybil-adjusted stability proxies from transfer activity.}
-\label{tab:alignment-sybil-stability}
-\begin{tabular}{lcc}
-\toprule
-Proxy & Spearman $\rho$ & Kendall $\tau$ \\
-\midrule
-\multicolumn{3}{l}{\textit{EndorseRank}} \\
-Inbound counterparty ratio & 0.093 & 0.073 \\
-Transfer tenure (days) & 0.366 & 0.297 \\
-Active months & 0.381 & 0.330 \\
-\addlinespace
-\multicolumn{3}{l}{\textit{AWP}} \\
-Inbound counterparty ratio & $-0.063$ & $-0.061$ \\
-Transfer tenure (days) & 0.602 & 0.436 \\
-Active months & 0.622 & 0.482 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-AWP exceeds EndorseRank on tenure and active months, as expected from time-decayed transfer edges. Inbound counterparty ratio is weak for both methods. This family is a robustness note, not a headline claim.
+AWP exceeds EndorseRank on tenure and active months, as expected from time-decayed transfer edges that reward sustained activity; the paired difference on the family mean (Table~\ref{tab:tau-diff}, contrast~iv) excludes zero. The inbound-counterparty ratio is weak for both methods and negative for AWP. This family is a robustness note on how much longitudinal transfer information each method carries, not a headline claim.
 
 \dissertationSubheading[sec:rank-divergence]{Rank divergence (H1 / RQ1)}
 
-Hypothesis H1 and research question RQ1 ask whether EndorseRank and AWP yield meaningfully different wallet orderings on an identical sample. Inter-method Kendall $\tau$ between the two score vectors is $0.316$ on the matched cohort ($n=5{,}521$). The rankings are related but far from interchangeable. Correlation is present because economically active wallets tend to participate in both transfer and approval markets, yet allowance and transfer graphs emphasize different relationships, so many pairwise orderings disagree.
+Hypothesis~H1 and RQ1 ask whether EndorseRank and AWP order the same wallets differently. The inter-method Kendall $\tau$ between the two score vectors, with its interval, is given in the last row of Table~\ref{tab:alignment-family-ci}. The rankings are related but far from interchangeable: agreement exceeds chance because economically active wallets participate in both approval and transfer markets, yet a large fraction of pairwise orderings disagree.
 
-Figure~\ref{fig:score-distributions} shows the marginal distributions of EndorseRank and AWP scores. Both are right-skewed, as is typical for PageRank on sparse directed graphs, but they are not identically shaped. AWP's mass reflects the denser transfer operator; EndorseRank's mass reflects the sparser endorsement operator. Skewness alone does not prove divergence---two methods could share the same ordering with different score scales---but it motivates examining rank-rank relationships directly.
+Figure~\ref{fig:score-distributions} shows the marginal score distributions. Both are right-skewed, as PageRank on sparse directed graphs typically is, but they differ in shape and in the number of wallets that sit at the teleportation floor. Skewness alone does not establish divergence, so Figure~\ref{fig:rank-scatter} plots the ranks directly: the cloud is positively sloped but wide, with substantial off-diagonal mass.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{\figpath{score-distributions.pdf}}
-\caption{Marginal distributions of EndorseRank and AWP scores on the matched cohort ($n=5{,}521$), shown on a $\log_{10}$ scale for wallets with positive score (EndorseRank excludes $966$ zero-score wallets; AWP excludes $381$). Both are right-skewed PageRank distributions; differences in shape reflect the distinct endorsement and transfer operators.}
+\caption{Marginal distributions of EndorseRank and AWP scores on the matched cohort ($n=5{,}521$), on a $\log_{10}$ scale for wallets with positive score (EndorseRank has $966$ zero-score wallets and AWP $381$, omitted from the histograms).}
 \label{fig:score-distributions}
 \end{figure}
 
-Figure~\ref{fig:rank-scatter} plots EndorseRank ranks against AWP ranks. Points along the diagonal would indicate identical orderings; the observed cloud shows substantial off-diagonal mass. Wallets that rank highly under transfer centrality are not reliably the same wallets that rank highly under allowance endorsement, and vice versa. The inter-method $\tau=0.316$ summarizes this scatter: agreement exceeds chance, but a protocol that substitutes one ranking for the other would mis-order a large fraction of wallet pairs.
-
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{\figpath{rank-scatter.pdf}}
-\caption{Rank--rank scatter of EndorseRank versus AWP on the matched cohort. Inter-method Kendall $\tau=0.316$ indicates partial overlap with substantial pairwise disagreement, supporting H1/RQ1 (construct-distinct orderings).}
+\includegraphics[width=0.8\textwidth]{\figpath{rank-scatter.pdf}}
+\caption{Rank--rank scatter of EndorseRank versus AWP on the matched cohort (random subsample of $2{,}000$ wallets for legibility). Points on the dashed identity line would indicate identical orderings.}
 \label{fig:rank-scatter}
 \end{figure}
 
-Rank divergence is the structural counterpart of construct-specific alignment. If the two methods produced nearly identical orderings, family-level winners in Table~\ref{tab:alignment-three-methods} would be difficult to interpret as construct effects; they could be noise around a shared ranking. The observed $\tau=0.316$, together with EndorseRank's allowance lead and AWP's transfer lead, supports reading the methods as related but distinct reputation instruments. H1 is supported: EndorseRank and AWP yield partially overlapping yet construct-distinct orderings on the matched cohort.
+Rank divergence is the structural counterpart of construct-specific alignment. If the two methods produced nearly identical orderings, the family-level winners of Table~\ref{tab:alignment-family-ci} could be noise around a shared ranking; the observed divergence, together with the opposite-signed between-method contrasts of Table~\ref{tab:tau-diff}, supports reading the two as related but distinct instruments. H1 is supported. Operationally, a protocol that currently uses transfer-based scores cannot assume that switching to, or blending in, allowance-based scores will preserve its wallet ordering; the largest disagreements are expected among transfer hubs that are rarely endorsed as spenders and among endorsed spenders with small transfer footprints.
 
-An operational reading of $\tau=0.316$ is that for a randomly chosen pair of wallets, the probability that EndorseRank and AWP agree on which wallet ranks higher is only moderately above chance. Protocols that currently use transfer-based scores cannot assume that switching to allowance-based scores---or blending the two---will preserve existing wallet orderings. Migration would re-rank a substantial fraction of pairs, with the largest disagreements likely concentrated among wallets that are transfer hubs but rarely endorsed as spenders, or endorsed spenders with limited transfer footprints. Figure~\ref{fig:rank-scatter} is consistent with that interpretation: the cloud is positively sloped but wide.
+\dissertationSubheading[sec:robustness-results]{Robustness and sensitivity checks}
 
-The divergence result also disciplines rhetoric about ``on-chain reputation'' as a singular object. On this cohort, reputation-from-authorization and reputation-from-transfer are empirically distinct enough that treating them as interchangeable would misstate the evidence. Chapter~\ref{ch:discussion} returns to the practical implication: method choice should follow the trust construct a protocol needs, not a generic preference for any PageRank variant.
+The results above would be of limited use if they depended on a single damping value, a single token mix or a single sample definition. Three checks follow. The first two are robustness checks in the strict sense: the sample is held fixed and a parameter or the token universe is perturbed. The third is a sensitivity analysis: the sample definition itself is changed, and the coefficients are expected to move.
+
+\dissertationSubsubheading[sub:damping]{Damping}
+
+\input{results/tables/robustness-damping.tex}
+
+Family means are flat across $d\in\{0.75,0.85,0.95\}$ to the third decimal for EndorseRank and move by at most a few thousandths for AWP; the crossed pattern is not an artefact of the conventional $d=0.85$. Because allowance edges encode a snapshot rather than a long path structure, changing how much mass teleports does not reorder wallets enough to alter family-level alignment. Runtimes do vary with $d$. AWP is markedly slowest at $d=0.95$, consistent with the slower mixing of a high-damping operator; EndorseRank's variation across the sweep is of the same order as its between-run spread in Table~\ref{tab:benchmark-runtime} and is not interpreted. The runtime ratio therefore depends on the damping setting even though the alignment conclusion does not. Figure~\ref{fig:damping-sensitivity} plots the family means.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{\figpath{damping-sensitivity.pdf}}
+\caption{Damping sensitivity of family-mean Kendall $\tau$ for the allowance and transfer families, $d\in\{0.75,0.85,0.95\}$ (values of Table~\ref{tab:robustness-damping}).}
+\label{fig:damping-sensitivity}
+\end{figure}
+
+\dissertationSubsubheading[sub:token-subgraph]{Top-token subgraph}
+
+\input{results/tables/robustness-tokens.tex}
+
+Restricting both graphs to the twenty highest-volume ERC-20 tokens changes every family mean by at most a few thousandths. The alignment pattern is therefore not driven by long-tail tokens with sparse or spam-like edges; the economically salient core of ERC-20 activity suffices to reproduce the EndorseRank--AWP contrast.
+
+\dissertationSubsubheading[sub:sample-size]{Sample-definition sensitivity}
+
+\input{results/tables/robustness-sample-size.tex}
+
+Table~\ref{tab:robustness-sample-size} recomputes the transfer and allowance family means on the staged pool subsamples used for the runtime scaling. The coefficients are much larger than on the matched cohort, and AWP's allowance coefficient turns positive. Neither change is evidence about the methods. Pool subsamples admit wallets that have no edges in one or both graphs; for such wallets the score and the proxy are both zero after alignment, and tied zeros at the bottom of both rankings raise Kendall $\tau$ mechanically (Section~\ref{sub:sample-size-protocol}). The table is therefore reported as a sensitivity analysis of the sample definition, and it answers a narrower question: does the relative ordering of the two methods on each family survive a change of population? It does---AWP stays ahead on transfer and EndorseRank on allowance at every stage---but the absolute values in the table must not be compared with those of Table~\ref{tab:alignment-family-ci}, whose cohort excludes exactly the wallets that inflate them.
+
+Taken together, the damping and top-token checks support reading Claims~C1--C3 as stable under parameter and token-mix perturbation, while the sample-definition check shows that the comparative structure, not the decimal values, is what travels across populations.
 
 \dissertationSubheading[sec:gf-pr-ceiling]{Temporal holdout of future new approvals (RQ4)}
 
-Scores are frozen at 28~February~2026. Labels are new owner--spender approval pairs first observed from 1~March~2026 through 31~May~2026, counted on the spender. The claimed cohort is t1 inbound spenders ($n=1{,}335$), of whom 222 received at least one new t2 pair.
+The same-window checks cannot separate a method from its own construct. RQ4 therefore asks whether endorsement centrality measured up to a cut-off predicts endorsement behaviour after it. Scores are frozen at 28~February~2026 and labels are new owner--spender approval pairs first observed from 1~March to 31~May~2026, counted on the spender; the protocol is that of Section~\ref{sec:gf-pr-graph}. Table~\ref{tab:holdout-spenders} reports the result.
 
-EndorseRank Kendall $\tau$ with future new approvers is $0.479$ (bootstrap 95\% CI $0.426$--$0.529$; 200 resamples). AWP is $0.044$ (CI $-0.011$--$0.095$). The result is the same endorsement construct in the future tense. It is stronger as out-of-window evidence than the same-window allowance $\tau=0.355$, because the labels are not built from the scored events.
+\begin{table}[htbp]
+\centering
+\caption{Temporal holdout on the spender cohort ($n=1{,}335$): Kendall $\tau$ between scores frozen at 28~February~2026 and the number of new owner--spender approval pairs received between 1~March and 31~May~2026. CI = 95\% percentile bootstrap over wallets (200 resamples). $222$ spenders received at least one new pair.}
+\label{tab:holdout-spenders}
+\begin{tabular}{lccc}
+\toprule
+Method & Spearman $\rho$ & Kendall $\tau$ & 95\% CI of $\tau$ \\
+\midrule
+EndorseRank & 0.522 & 0.479 & [0.426, 0.529] \\
+AWP & 0.053 & 0.044 & [$-0.011$, 0.095] \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-Revoke, drain-heuristic, and Aave-borrower labels were computed and are not reported as support: revoke and drain had the wrong sign for an endorsement reading, and Aave events on this spender set were empty or the wrong construct.
+EndorseRank's holdout coefficient is larger than its same-window allowance coefficient and its interval excludes AWP's, whose interval includes zero. Because the labels are built from events that post-date every scored event, this is out-of-window evidence for the endorsement construct, and it is the strongest single result in the chapter for the claim that EndorseRank measures something about spenders that transfer centrality does not. Two limits apply. The label is the same construct in the future tense---new approvals, not loss avoidance or repayment---so the result says nothing about credit risk. And the label is sparse: most spenders received no new pair in the outcome window, so the coefficient is driven by the ordering among the minority that did.
+
+Other candidate labels computed for the holdout are not reported as support. Revoke counts and the drain heuristic correlated positively with EndorseRank, which has the wrong sign for an endorsement reading (a heavily endorsed spender is also a frequently revoked one), and Aave liquidation events on this spender set were empty. The trading-success comparison of the research proposal was withdrawn for the reason given in Section~\ref{sub:gf-pr}: the outcome-native reference it relied on is built from the same GMX events as the proxies it would be validated against.
 
 \dissertationSubheading[sec:empirical-claims]{Primary claims (C1--C4)}
 
-Chapter~4 empirical results support the following claims, aligned with Table~\ref{tab:hrq-claim-map}.
+The results of this chapter support the following claims, mapped to hypotheses and research questions in Table~\ref{tab:hrq-claim-map}.
 
 \begin{enumerate}
-\item[\textbf{C1.}] EndorseRank runtime is lower than AWP runtime on identical $n$. On the matched cohort ($n=5{,}521$), EndorseRank completes PageRank in 2.105\,s versus 18.711\,s for AWP (speedup $\approx 8.9\times$), with 14{,}727 vs.\ 137{,}087 edges (Table~\ref{tab:benchmark-runtime}). On the expanded wallet pool, speedups remain $\approx 10.4\times$ at $n=10{,}000$ (1.18\,s vs.\ 12.28\,s) and $\approx 9.4\times$ at $N=31{,}612$ (2.29\,s vs.\ 21.40\,s) (Table~\ref{tab:benchmark-scaling}).
-
-\item[\textbf{C2.}] EndorseRank and AWP recover their intended constructs on same-window local statistics: EndorseRank allowance mean $\tau=0.355$; AWP transfer mean $\tau=0.534$ (Tables~\ref{tab:alignment-transfer}--\ref{tab:alignment-allowance}). These are construct checks.
-
-\item[\textbf{C3.}] \textbf{Construct-specific alignment:} EndorseRank exceeds AWP on allowance ($\tau=0.355$ vs.\ $-0.030$); AWP exceeds EndorseRank on transfer ($\tau=0.534$ vs.\ $0.333$). Inter-method rank agreement is only moderate ($\tau=0.316$) (Section~\ref{sec:rank-divergence}).
-
-\item[\textbf{C4.}] \textbf{Efficiency--alignment trade-off:} EndorseRank offers $\approx 8.9\times$ lower PageRank runtime than AWP on the matched cohort and $\approx 9$--$10\times$ on expanded-pool scaling while remaining the only social method that aligns with authorization checks. On the spender holdout ($n=1{,}335$), EndorseRank $\tau=0.479$ with future new approvers (CI $0.426$--$0.529$) versus AWP $\tau=0.044$ (Section~\ref{sec:gf-pr-ceiling}).
+\item[C1.] On identical wallet sets EndorseRank solves PageRank in a fraction of AWP's wall-clock time, with proportionally lower memory and fewer iterations, because its latest-allowance graph has about one ninth of the transfer graph's edges (Table~\ref{tab:benchmark-runtime}). The ratio is stable across in-cohort and pool stages whose edge counts vary by a factor of five to seven (Tables~\ref{tab:benchmark-scaling} and~\ref{tab:benchmark-scaling-incohort}); the pool stages do not test growth in edge count beyond the cohort graph.
+\item[C2.] Each method recovers its intended construct on same-window local statistics, with bootstrap intervals well away from zero (Table~\ref{tab:alignment-family-ci}). These are construct checks, not external validation.
+\item[C3.] The winners are construct-specific: AWP exceeds EndorseRank on the transfer family and EndorseRank exceeds AWP on the allowance family, with paired-difference intervals that exclude zero in opposite directions (Table~\ref{tab:tau-diff}); the two score vectors agree only moderately (Table~\ref{tab:alignment-family-ci}). EndorseRank's allowance lead over its own transfer alignment is not statistically established.
+\item[C4.] The efficiency and construct results combine into a trade-off rather than a dominance: EndorseRank is the cheaper method and the only one that aligns with authorisation checks, and on the spender holdout it predicts future new approvals where AWP does not (Table~\ref{tab:holdout-spenders}); AWP remains the stronger method for transfer-hub detection and longitudinal stability.
 \end{enumerate}
 
-RQ1 is addressed by inter-method $\tau=0.316$. RQ2 is addressed by allowance versus transfer checks. RQ3 is addressed by the runtime tables. RQ4 is addressed by the spender holdout.
+RQ1 is answered by the inter-method agreement and Figure~\ref{fig:rank-scatter}; RQ2 by the family tables and difference tests; RQ3 by the benchmark tables; RQ4 by the holdout. None of the claims states that AWP is obsolete. The contribution is a construct-aware comparison with quantified uncertainty: EndorseRank is cheaper, aligns with allowance checks, diverges moderately from AWP and predicts later new approvals on the spender holdout.
 
-It does not claim that AWP is obsolete; AWP remains the stronger method for transfer-hub detection. The contribution is a construct-aware comparison: EndorseRank is cheaper, aligns with allowance checks, diverges moderately from AWP, and predicts later new approvals on the spender holdout.
-
-Chapter~\ref{ch:discussion} interprets these findings against RQ1--RQ4 and discusses implications, threats to validity, and limitations.
+Chapter~\ref{ch:discussion} interprets these findings against the research questions and objectives of Chapter~\ref{ch:introduction}, draws out their theoretical, practical and societal implications, and examines the threats to validity and limitations that bound them.

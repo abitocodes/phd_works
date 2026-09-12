@@ -1,16 +1,52 @@
-"""Benchmark PageRank runtime, memory, and iterations for all seven methods."""
+"""Benchmark PageRank runtime, memory, and iterations for all seven methods.
+
+Timing protocol (one session per ``run_dissertation_eval.py`` invocation):
+
+* one untimed warm-up solve per configuration; peak memory is taken from that
+  warm-up under ``tracemalloc`` so the timed runs carry no tracing overhead;
+* ``repeats`` timed solves (wall clock, ``time.perf_counter``) reported as
+  mean, standard deviation, median, and minimum;
+* each unique (edge multiset, damping, tolerance, max_iter) configuration is
+  timed once per session and memoised, so any table that re-uses the same
+  graph prints the same measurement.
+"""
 
 from __future__ import annotations
 
 import hashlib
 import time
 import tracemalloc
-from statistics import mean
+from statistics import mean, median
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from pagerank_variants import SIX_AAVE_METHOD_IDS, collect_method_edges, collect_six_aave_edges
+
+TIMING_PROTOCOL: dict[str, Any] = {
+    "warmup_runs": 1,
+    "memory_measure": "tracemalloc peak during the warm-up solve",
+    "timing_measure": "time.perf_counter wall clock per timed solve, no tracing",
+    "cache": "each unique (graph, damping, tol, max_iter) is timed once per session",
+}
+
+_TIMING_CACHE: dict[tuple, dict[str, Any]] = {}
+
+
+def reset_timing_cache() -> None:
+    _TIMING_CACHE.clear()
+
+
+def _edge_signature(edges: pd.DataFrame) -> tuple:
+    """Order-invariant fingerprint of an edge multiset."""
+    if edges.empty:
+        return ("empty", 0)
+    cols = edges[["from_node", "to_node", "weight"]].reset_index(drop=True)
+    h = pd.util.hash_pandas_object(cols, index=False).to_numpy(dtype=np.uint64)
+    total = int(h.sum(dtype=np.uint64))
+    xored = int(np.bitwise_xor.reduce(h))
+    return (int(len(h)), total, xored)
 
 
 def subsample_wallets_deterministic(
@@ -49,12 +85,29 @@ def _run_timed(
 ) -> dict[str, Any]:
     from pagerank import weighted_pagerank
 
+    key = (_edge_signature(edges), float(damping), float(tol), int(max_iter), int(repeats))
+    cached = _TIMING_CACHE.get(key)
+    if cached is not None:
+        out = dict(cached)
+        out["reused_measurement"] = True
+        return out
+
+    # Warm-up: untimed solve that also yields peak memory under tracemalloc.
+    tracemalloc.start()
+    _, warm_iters = weighted_pagerank(
+        edges,
+        damping=damping,
+        tol=tol,
+        max_iter=max_iter,
+        return_iterations=True,
+    )
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    peak_mb = peak / (1024 * 1024)
+
     runtimes: list[float] = []
     iterations: list[int] = []
-    peak_mb = 0.0
-
     for _ in range(repeats):
-        tracemalloc.start()
         t0 = time.perf_counter()
         _, iters = weighted_pagerank(
             edges,
@@ -63,22 +116,26 @@ def _run_timed(
             max_iter=max_iter,
             return_iterations=True,
         )
-        elapsed = time.perf_counter() - t0
-        _, peak = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
-        runtimes.append(elapsed)
+        runtimes.append(time.perf_counter() - t0)
         iterations.append(iters)
-        peak_mb = max(peak_mb, peak / (1024 * 1024))
 
-    return {
+    result = {
         "runtime_sec_mean": round(mean(runtimes), 3),
         "runtime_sec_std": round(float(pd.Series(runtimes).std(ddof=0) or 0), 3),
+        "runtime_sec_median": round(median(runtimes), 3),
+        "runtime_sec_min": round(min(runtimes), 3),
+        "runtime_sec_runs": [round(r, 4) for r in runtimes],
         "iterations_mean": round(mean(iterations), 1),
+        "warmup_iterations": int(warm_iters),
         "peak_memory_mb": round(peak_mb, 2),
         "edge_count": len(edges),
         "node_count": len(set(edges["from_node"]) | set(edges["to_node"])) if not edges.empty else 0,
         "repeats": repeats,
+        "warmup_runs": 1,
+        "reused_measurement": False,
     }
+    _TIMING_CACHE[key] = result
+    return dict(result)
 
 
 def benchmark_er_awp_pair(

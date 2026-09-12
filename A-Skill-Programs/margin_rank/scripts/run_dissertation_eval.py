@@ -19,7 +19,13 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from benchmark_runtime import benchmark_reputation, benchmark_scaling, benchmark_tier2_scaling  # noqa: E402
+from benchmark_runtime import (  # noqa: E402
+    TIMING_PROTOCOL,
+    benchmark_reputation,
+    benchmark_scaling,
+    benchmark_tier2_scaling,
+    reset_timing_cache,
+)
 from common import ROOT, build_tier2_wallet_pool, load_config, save_json, tier2_reputation_paths  # noqa: E402
 from evaluate_alignment import (  # noqa: E402
     METHOD_LABELS,
@@ -185,10 +191,20 @@ def main() -> int:
         print(f"Missing six-aave score columns: {missing_six}; run compute_reputation_ranks.py")
         return 1
 
-    alignment = build_alignment_report(merged)
+    align_cfg = config.get("alignment") or {}
+    bootstrap_cfg = {
+        "n_boot": int(align_cfg.get("bootstrap_resamples", 400)),
+        "seed": int(align_cfg.get("bootstrap_seed", 42)),
+    }
+    print(
+        f"Alignment with paired wallet bootstrap "
+        f"(n_boot={bootstrap_cfg['n_boot']}, seed={bootstrap_cfg['seed']})..."
+    )
+    alignment = build_alignment_report(merged, bootstrap=bootstrap_cfg)
     six_aave_alignment = build_six_aave_alignment_report(merged)
 
     print("Benchmarking EndorseRank vs AWP (full cohort)...")
+    reset_timing_cache()
     benchmark = benchmark_reputation(
         wallets,
         allowances,
@@ -246,7 +262,7 @@ def main() -> int:
             merged,
             config,
             min_closes,
-            repeats=max(2, min(args.benchmark_repeats, 3)),
+            repeats=args.benchmark_repeats,
         )
 
     aave_diagnostics = _build_aave_diagnostics(
@@ -270,6 +286,22 @@ def main() -> int:
         "synthetic": args.fixtures,
         "n_wallets": len(merged),
         "note": note,
+        "timing_protocol": {
+            **TIMING_PROTOCOL,
+            "timed_repeats": args.benchmark_repeats,
+            "applies_to": [
+                "benchmark",
+                "benchmark_scaling",
+                "benchmark_tier2",
+                "robustness.damping_sweep",
+                "robustness.sample_size_sweep",
+            ],
+        },
+        "bootstrap_protocol": {
+            **bootstrap_cfg,
+            "ci_level": 0.95,
+            "design": "paired wallet resampling shared across methods and proxies",
+        },
         "benchmark": benchmark,
         "benchmark_scaling": benchmark_scaling_result,
         "benchmark_tier2": benchmark_tier2_result,

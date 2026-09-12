@@ -2,18 +2,18 @@
 \chapter{Research Methodology}
 \label{ch:methodology}
 
-This chapter specifies the empirical design used to compare EndorseRank and Adaptive Weighted PageRank (AWP) as social reputation scores on Arbitrum One. The design covers notation, data sources, a two-phase collection strategy, pipeline architecture, event decoding, graph construction algorithms, contemporaneous construct checks, a temporal holdout, statistical tests, computational benchmarks, scaling and robustness extensions, reproducibility, and ethics. The primary comparison is between EndorseRank on the ERC-20 allowance graph and AWP on the time-decayed transfer graph \cend{64,49}.
+Chapter~\ref{ch:literature} closed with the research gap: no reviewed method ranks wallets on allowance edges, the transfer-graph baseline validates against proxies drawn from its own input data, and efficiency claims are rarely tied to edge counts under a fixed protocol. This chapter specifies the empirical design used to compare EndorseRank and Adaptive Weighted PageRank (AWP) as social reputation scores on Arbitrum One so that each of those gaps is addressed by a measurable procedure. The design covers notation, data sources, a two-phase collection strategy, pipeline architecture, event decoding, graph construction algorithms, contemporaneous construct checks, a temporal holdout, statistical tests with bootstrap inference, computational benchmarks, scaling and sensitivity extensions, reproducibility, and ethics. The primary comparison is between EndorseRank on the ERC-20 allowance graph and AWP on the time-decayed transfer graph \cend{3}, both solved with classical PageRank \cend{15}.
 
-The methodological stance follows construct (domain) alignment: reputation scores are continuous rankings, and checks use observable wallet-level statistics rather than binary default labels \cend{14,16}. In measurement terms, each ranking method is an indicator of an unobserved reputation construct. Contemporaneous transfer and allowance statistics check graph coherence. A temporal holdout of future new owner--spender approvals is the out-of-window check. Alignment statistics ask whether the ordering induced by a method co-varies with the ordering induced by each check on the same wallets. This approach is appropriate when the scientific claim is comparative---EndorseRank versus AWP---rather than prediction of trading profit or credit default.
+The methodological stance follows construct (domain) alignment: reputation scores are continuous rankings, and checks use observable wallet-level statistics rather than binary default labels \cend{22}. In measurement terms, each ranking method is an indicator of an unobserved reputation construct. Contemporaneous transfer and allowance statistics check graph coherence. A temporal holdout of future new owner--spender approvals is the out-of-window check. Alignment statistics ask whether the ordering induced by a method co-varies with the ordering induced by each check on the same wallets. This approach is appropriate when the scientific claim is comparative---EndorseRank versus AWP---rather than prediction of trading profit or credit default.
 
 All procedures operate on publicly available blockchain logs within a fixed observation window, with deterministic seeds and an open evaluation pipeline so that reported tables can be regenerated from cached parquet. The chapter is organized to move from symbols and data acquisition, through graph and proxy formalisms, to evaluation statistics, computational protocol, and research ethics. Readers primarily interested in empirical outcomes may skim Sections~\ref{sec:notation}--\ref{sec:event-decoding} and focus on Sections~\ref{sec:graph-construction}--\ref{sec:statistical-tests}; readers implementing a replication should follow the full pipeline description and Section~\ref{sec:reproducibility}.
 
 Four principles govern every operational choice.
 \begin{itemize}
-\item \textbf{Same-seed comparability:} EndorseRank and AWP are always scored on identical wallet sets so that differences cannot be attributed to sampling inconsistency.
-\item \textbf{Pre-registration by configuration:} observation window, topic hashes, damping, decay parameters, and benchmark seeds are fixed in configuration before interpreting results.
-\item \textbf{Separation of construction and timing:} graph construction is performed once per cohort; computational benchmarks time only the PageRank solve.
-\item \textbf{Primary scope:} claims C1--C4 and hypotheses H1--H3 concern EndorseRank and AWP. RQ4 uses the spender holdout cohort.
+\item Same-seed comparability: EndorseRank and AWP are always scored on identical wallet sets so that differences cannot be attributed to sampling inconsistency.
+\item Pre-registration by configuration: observation window, topic hashes, damping, decay parameters, bootstrap resamples and seed, and benchmark seeds are fixed in configuration before interpreting results.
+\item Separation of construction and timing: graph construction is performed once per cohort; computational benchmarks time only the PageRank solve.
+\item Primary scope: claims C1--C4 and hypotheses H1--H3 concern EndorseRank and AWP. RQ4 uses the spender holdout cohort.
 \end{itemize}
 
 \dissertationSubheading[sec:notation]{Notation}
@@ -30,7 +30,7 @@ Table~\ref{tab:notation-methods} summarizes the operational symbols used through
 Symbol & Meaning \\
 \midrule
 $\mathcal{W}$ & Matched wallet cohort ($|\mathcal{W}|=n=5{,}521$) \\
-$\mathcal{W}_{\mathrm{pool}}$ & Expanded wallet pool ($|\mathcal{W}_{\mathrm{pool}}|=N=31{,}612$) \\
+$\mathcal{W}_{\mathrm{pool}}$ & Expanded wallet pool ($|\mathcal{W}_{\mathrm{pool}}|=N=99{,}080$) \\
 $G_{\mathrm{approve}}=(V_A,E_A,w_A)$ & EndorseRank allowance graph \\
 $G_{\mathrm{transfer}}=(V_T,E_T,w_T)$ & AWP transfer graph \\
 $w_A(u,v)$ & Latest allowance weight, owner $u\to$ spender $v$ \\
@@ -51,7 +51,7 @@ $T_{\mathrm{obs}}$ & Observation end timestamp (2026-05-31 UTC) \\
 }
 \end{table}
 
-Unless otherwise stated, PageRank is the weighted formulation of Page et al.\cend{49}: at iteration $t$,
+Unless otherwise stated, PageRank is the weighted formulation of Page et al.\cend{15}: at iteration $t$,
 \begin{equation}
 \label{eq:pagerank}
 \mathbf{r}^{(t+1)}
@@ -74,28 +74,28 @@ w(u,v)/s(u) & \text{if }s(u)>0,\\
 \end{equation}
 Dangling mass is redistributed uniformly through the teleportation term, which is the standard treatment in sparse web and transaction graphs. Iteration stops when $\|\mathbf{r}^{(t+1)}-\mathbf{r}^{(t)}\|_1 < \tau_{\mathrm{tol}}$ or after $I_{\max}$ iterations. Scores are renormalized to sum to one over reachable nodes. Dense ranks for alignment are assigned by sorting scores descending (rank $1$ = highest score), with wallet address as a deterministic tie-break when scores are equal.
 
-The damping factor $d$ interpolates between pure graph propagation ($d\to 1$) and uniform scores ($d\to 0$). The default $d=0.85$ follows the classical web setting and the AWP baseline\cend{64}. Robustness sweeps vary $d$ while holding edge weights fixed (Section~\ref{sec:scaling-robustness}). Tolerance $\tau_{\mathrm{tol}}=10^{-8}$ and $I_{\max}=300$ are intentionally strict relative to interactive analytics settings, so that runtime differences reflect graph structure rather than early stopping.
+The damping factor $d$ interpolates between pure graph propagation ($d\to 1$) and uniform scores ($d\to 0$). The default $d=0.85$ follows the classical web setting and the AWP baseline\cend{3}. Robustness sweeps vary $d$ while holding edge weights fixed (Section~\ref{sec:scaling-robustness}). Tolerance $\tau_{\mathrm{tol}}=10^{-8}$ and $I_{\max}=300$ are intentionally strict relative to interactive analytics settings, so that runtime differences reflect graph structure rather than early stopping.
 
 \dissertationSubheading[sec:data-sources]{Data sources and sampling}
 
 This section fixes the empirical universe: which chain, which time window, which public tables, which event types, and which wallets enter the primary sample. Downstream graph construction and proxy formulas never invent events outside this universe.
 
 \begin{itemize}
-\item \textbf{Primary chain:} All on-chain events are drawn from Arbitrum One (chain ID $42161$), an Ethereum Layer-2 rollup with dense DeFi activity and public log availability \cend{53}. Restricting to a single chain avoids cross-chain address aliasing---the same private key controlling addresses on multiple chains would otherwise appear as unrelated nodes---and keeps gas-cost and latency regimes comparable across wallets. The chain is the sole empirical venue for this comparison.
+\item Primary chain: All on-chain events are drawn from Arbitrum One (chain ID $42161$), an Ethereum Layer-2 rollup with dense DeFi activity and public log availability \cend{1}. Restricting to a single chain avoids cross-chain address aliasing---the same private key controlling addresses on multiple chains would otherwise appear as unrelated nodes---and keeps gas-cost and latency regimes comparable across wallets. The chain is the sole empirical venue for this comparison.
 
-\item \textbf{Observation window:} The study window is 2025-12-01 00:00:00 UTC through 2026-05-31 23:59:59 UTC (six calendar months). Exclusive end timestamps in SQL use 2026-06-01 00:00:00 UTC so that the inclusive calendar end is 2026-05-31. This window is long enough for monthly-batched reputation extracts under BigQuery byte budgets and short enough that latest-allowance snapshots remain contemporaneous with transfer histories. AWP time-decay is anchored at observation end $T_{\mathrm{obs}}=$ 2026-05-31 23:59:59 UTC, so $\Delta t=0$ for events at the window's close and $\Delta t\approx 181$ days for events at the window's open.
+\item Observation window: The study window is 2025-12-01 00:00:00 UTC through 2026-05-31 23:59:59 UTC (six calendar months). Exclusive end timestamps in SQL use 2026-06-01 00:00:00 UTC so that the inclusive calendar end is 2026-05-31. This window is long enough for monthly-batched reputation extracts under BigQuery byte budgets and short enough that latest-allowance snapshots remain contemporaneous with transfer histories. AWP time-decay is anchored at observation end $T_{\mathrm{obs}}=$ 2026-05-31 23:59:59 UTC, so $\Delta t=0$ for events at the window's close and $\Delta t\approx 181$ days for events at the window's open.
 
-\item \textbf{BigQuery source:} Event logs are read from the public dataset
+\item BigQuery source: Event logs are read from the public dataset
 \begin{center}
 \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us.logs}.
 \end{center}
 Each row corresponds to a contract log entry with block timestamp, emitting address, topics, and data. Queries filter on \texttt{block\_timestamp}, contract address (when applicable), and event topic hashes. The public dataset removes the need for a private archive node while remaining auditable: any researcher with Google Cloud access can re-issue the same SQL against the same table. SQL templates, dry-run cost guardrails, and acquisition metadata are documented in Appendix~\ref{ch:appendix-eval}.
 
-\item \textbf{Reputation events:} EndorseRank uses ERC-20 \texttt{Approval} logs \cend{18}, including allowances established via EIP-2612 \texttt{permit} flows that ultimately emit the same \texttt{Approval} event \cend{19}. AWP uses ERC-20 \texttt{Transfer} logs. Both streams are wallet-filtered to the cohort under study: a log is retained if the owner or spender (approvals) or the sender or recipient (transfers) lies in the seed wallet set. Filtering at query time reduces scanned payload relative to full-chain extracts and focuses the reputation subgraph on economically relevant neighbors of the cohort. Extracts run in six monthly batches to respect per-query byte caps and to allow resumable checkpoints if a month fails.
+\item Reputation events: EndorseRank uses ERC-20 \texttt{Approval} logs \cend{18}, including allowances established via EIP-2612 \texttt{permit} flows that ultimately emit the same \texttt{Approval} event \cend{19}. AWP uses ERC-20 \texttt{Transfer} logs. Both streams are wallet-filtered to the cohort under study: a log is retained if the owner or spender (approvals) or the sender or recipient (transfers) lies in the seed wallet set. Filtering at query time reduces scanned payload relative to full-chain extracts and focuses the reputation subgraph on economically relevant neighbors of the cohort. Extracts run in six monthly batches to respect per-query byte caps and to allow resumable checkpoints if a month fails.
 
-\item \textbf{Matched cohort definition:} The primary alignment sample is wallets with non-zero connectivity in the reputation subgraph induced by approval or transfer edges in the observation window. After BigQuery extraction and preprocessing, this matched wallet cohort has size $n=5{,}521$. Both EndorseRank and AWP are scored on the same seed set so that differences in alignment and runtime are attributable to ranking logic and graph structure, not to inconsistent sampling.
+\item Matched cohort definition: The primary alignment sample is wallets with non-zero connectivity in the reputation subgraph induced by approval or transfer edges in the observation window. After BigQuery extraction and preprocessing, this matched wallet cohort has size $n=5{,}521$. Both EndorseRank and AWP are scored on the same seed set so that differences in alignment and runtime are attributable to ranking logic and graph structure, not to inconsistent sampling.
 
-\item \textbf{What is not in scope:} The study does not ingest mempool data, off-chain order books, centralized-exchange account maps, or cross-chain bridges. It does not attempt entity resolution across multiple addresses controlled by one actor. The public log table is authoritative, and decoding is performed in the open pipeline.
+\item What is not in scope: The study does not ingest mempool data, off-chain order books, centralized-exchange account maps, or cross-chain bridges. It does not attempt entity resolution across multiple addresses controlled by one actor. The public log table is authoritative, and decoding is performed in the open pipeline.
 
 \end{itemize}
 
@@ -104,11 +104,11 @@ Each row corresponds to a contract log entry with block timestamp, emitting addr
 Data acquisition and evaluation proceed in two phases that separate expensive remote scans from local, repeatable analysis. The separation is intentional: once parquet artifacts exist, alignment tables, benchmarks, and robustness sweeps can be regenerated without further cloud cost, which is essential for third-party replication and reanalysis.
 
 \begin{itemize}
-\item \textbf{Phase 1 (reputation streams):} Extract wallet-filtered ERC-20 \texttt{Approval} and \texttt{Transfer} events in monthly batches. The matched wallet cohort is the subset with non-zero approval or transfer connectivity ($n=5{,}521$). Each month is an independent query with its own dry-run estimate and checkpoint, so a failure in one month does not invalidate prior months. Preprocess approvals to latest allowances per owner--spender--token: given multiple approvals for the same triple, only the last timestamp in the window survives, and a final zero allowance removes the edge. Preprocess transfers to decimal-adjusted event tables with timestamps, preserving sender, recipient, value, token, and block time. These tables are the sole inputs to EndorseRank and AWP graph construction for the primary comparison.
+\item Phase 1 (reputation streams): Extract wallet-filtered ERC-20 \texttt{Approval} and \texttt{Transfer} events in monthly batches. The matched wallet cohort is the subset with non-zero approval or transfer connectivity ($n=5{,}521$). Each month is an independent query with its own dry-run estimate and checkpoint, so a failure in one month does not invalidate prior months. Preprocess approvals to latest allowances per owner--spender--token: given multiple approvals for the same triple, only the last timestamp in the window survives, and a final zero allowance removes the edge. Preprocess transfers to decimal-adjusted event tables with timestamps, preserving sender, recipient, value, token, and block time. These tables are the sole inputs to EndorseRank and AWP graph construction for the primary comparison.
 
-\item \textbf{Phase 2 (local evaluation):} From cached parquet, compute reputation ranks, transfer and allowance checks, Spearman and Kendall alignment, computational benchmarks, and scaling/robustness extensions. Supplemental active wallets for the expanded pool are drawn from reputation-subgraph addresses (and optional supplemental parquet) without requiring a full-chain re-scan for every robustness experiment. No additional BigQuery scans are required once the Phase~1 extracts and any supplemental active-wallet parquet are available.
+\item Phase 2 (local evaluation): From cached parquet, compute reputation ranks, transfer and allowance checks, Spearman and Kendall alignment, computational benchmarks, and scaling/robustness extensions. Supplemental active wallets for the expanded pool are drawn from reputation-subgraph addresses (and optional supplemental parquet) without requiring a full-chain re-scan for every robustness experiment. No additional BigQuery scans are required once the Phase~1 extracts and any supplemental active-wallet parquet are available.
 
-\item \textbf{Cost guardrails:} Every remote query begins with a mandatory dry-run estimate of bytes processed before extraction. Each query is aborted if the estimate exceeds a $150$\,GiB per-query cap.\footnote{The per-query byte cap is an operational policy of this study's acquisition pipeline, not a property of BigQuery itself.} Operators must pass an explicit confirmation flag before paid scans proceed. Extraction metadata---wallet counts, row counts, bytes processed, and timestamps---is logged in the study's acquisition record (Appendix~\ref{ch:appendix-eval}). These controls implement responsible use of public cloud resources and make the acquisition cost of the study auditable.
+\item Cost guardrails: Every remote query begins with a mandatory dry-run estimate of bytes processed before extraction. Each query is aborted if the estimate exceeds a $150$\,GiB per-query cap.\footnote{The per-query byte cap is an operational policy of this study's acquisition pipeline, not a property of BigQuery itself.} Operators must pass an explicit confirmation flag before paid scans proceed. Extraction metadata---wallet counts, row counts, bytes processed, and timestamps---is logged in the study's acquisition record (Appendix~\ref{ch:appendix-eval}). These controls implement responsible use of public cloud resources and make the acquisition cost of the study auditable.
 
 \end{itemize}
 
@@ -161,21 +161,21 @@ Operationally, Phase~1 scripts write monthly approval/transfer shards and consol
 Blockchain logs store events as topics and a data payload rather than as named fields. Decoding maps each log row to a typed record used by graph construction and construct checks. Incorrect decoding would silently corrupt both reputation graphs; this section therefore records the exact topic hashes and field mappings used in the pipeline.
 
 \begin{itemize}
-\item \textbf{Log anatomy:} An Ethereum-compatible log contains an emitting contract address, an ordered list of topics, and an ABI-encoded data blob. Topic~$0$ is the keccak-256 hash of the event signature string, which uniquely identifies the event type among well-known standards. Indexed parameters occupy subsequent topics as $32$-byte words (addresses are left-padded); non-indexed parameters occupy the data field in ABI order \cend{18}. BigQuery exposes these fields as columns; the pipeline applies topic filters in SQL and performs ABI decoding in Python for fields that require numeric interpretation.
+\item Log anatomy: An Ethereum-compatible log contains an emitting contract address, an ordered list of topics, and an ABI-encoded data blob. Topic~$0$ is the keccak-256 hash of the event signature string, which uniquely identifies the event type among well-known standards. Indexed parameters occupy subsequent topics as $32$-byte words (addresses are left-padded); non-indexed parameters occupy the data field in ABI order \cend{18}. BigQuery exposes these fields as columns; the pipeline applies topic filters in SQL and performs ABI decoding in Python for fields that require numeric interpretation.
 
-\item \textbf{ERC-20 \texttt{Approval}:} Topic~$0$ is
+\item ERC-20 \texttt{Approval}: Topic~$0$ is
 \begin{center}
 \texttt{0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925},
 \end{center}
 the hash of \texttt{Approval(address,address,uint256)}. Topics~$1$ and~$2$ hold the owner and spender addresses (left-padded); the allowance amount is ABI-decoded from the data field and scaled by the token's decimals. Unlimited approvals (\texttt{type(uint256).max}) are retained as large finite weights after decimal adjustment; they contribute strong endorsement edges, which is intentional: an unlimited approval is a strong on-chain authorization. EIP-2612 \texttt{permit} does not introduce a separate reputation event: successful permits emit the same \texttt{Approval} log, so EndorseRank observes the resulting allowance snapshot regardless of whether authorization was set by an on-chain \texttt{approve} call or an off-chain signature \cend{19}.
 
-\item \textbf{ERC-20 \texttt{Transfer}:} Topic~$0$ is
+\item ERC-20 \texttt{Transfer}: Topic~$0$ is
 \begin{center}
 \texttt{0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef},
 \end{center}
 the hash of \texttt{Transfer(address,address,uint256)}. Sender and recipient are indexed; value is decimal-adjusted. Mint and burn patterns that use the zero address are retained if they touch cohort wallets, but they are rare relative to wallet-to-wallet transfers in the filtered extract. Self-transfers are retained in the event table but excluded from Sybil-stability inbound-counterparty calculations (Section~\ref{sec:proxy-formulas}), because a wallet transferring to itself does not evidence an external counterparty relationship.
 
-\item \textbf{Address normalization and units:} All addresses are lower-cased before joins so that checksummed and non-checksummed hex forms collide correctly. Token amounts are stored as floating-point decimal-adjusted values for weighting; ranking uses relative magnitudes within a cohort rather than absolute USD conversion for allowance and transfer edges.
+\item Address normalization and units: All addresses are lower-cased before joins so that checksummed and non-checksummed hex forms collide correctly. Token amounts are stored as floating-point decimal-adjusted values for weighting; ranking uses relative magnitudes within a cohort rather than absolute USD conversion for allowance and transfer edges.
 
 \end{itemize}
 
@@ -183,7 +183,7 @@ the hash of \texttt{Transfer(address,address,uint256)}. Sender and recipient are
 
 EndorseRank and AWP share the PageRank solver in Equation~\eqref{eq:pagerank} but differ in edge semantics. Both methods induce a directed, weighted graph on wallet nodes, restrict attention to the subgraph touching the seed wallet set (edges with at least one endpoint in the cohort, including one-hop neighbors), and emit a score for every cohort wallet (missing nodes receive score $0$ before ranking). Subgraph restriction is important for scalability and for interpretability: the score of a cohort wallet may receive mass from non-cohort neighbors that endorse or transfer to it, but the evaluation reports scores only on $\mathcal{W}$.
 
-The conceptual distinction is endorsement versus flow. An allowance is an explicit, revocable authorization to spend; a transfer is a completed movement of value that may reflect payment, routing, market-making, or wash activity without a trust commitment \cend{16,18}. EndorseRank therefore treats the latest allowance snapshot as a citation-like endorsement graph in the sense of Page et al.\cend{49}. AWP treats historical transfers as time-decayed citations, down-weighting older flows so that recent economic activity dominates.
+The conceptual distinction is endorsement versus flow. An allowance is an explicit, revocable authorization to spend; a transfer is a completed movement of value that may reflect payment, routing, market-making, or wash activity without a trust commitment \cend{4,18}. EndorseRank therefore treats the latest allowance snapshot as a citation-like endorsement graph in the sense of Page et al.\cend{15}. AWP treats historical transfers as time-decayed citations, down-weighting older flows so that recent economic activity dominates.
 
 \dissertationSubsubheading[sub:endorserank-graph]{EndorseRank allowance graph}
 
@@ -220,7 +220,7 @@ Algorithm~\ref{alg:endorserank} formalizes construction and scoring.
 
 \dissertationSubsubheading[sub:awp-graph]{AWP transfer graph}
 
-AWP follows the IEEE RIVF 2023 transfer-graph method\cend{64}: each transfer of value $v$ at age $\Delta t$ days before observation end $T_{\mathrm{obs}}$ contributes a decayed weight
+AWP follows the IEEE RIVF 2023 transfer-graph method\cend{3}: each transfer of value $v$ at age $\Delta t$ days before observation end $T_{\mathrm{obs}}$ contributes a decayed weight
 \begin{equation}
 \label{eq:logistic-decay}
 \sigma(\Delta t)
@@ -269,7 +269,7 @@ Algorithm~\ref{alg:awp} formalizes construction and scoring.
 Because $G_{\mathrm{approve}}$ records durable authorizations and $G_{\mathrm{transfer}}$ records historical value flows, the two graphs differ in density and temporal sensitivity. Approvals are relatively rare, high-intent events; transfers are frequent and often mechanical. On the matched cohort, the approval subgraph is substantially sparser than the transfer subgraph (Chapter~\ref{ch:results}), which is the structural basis for the computational-efficiency hypothesis (H3): per-iteration PageRank cost scales with $|E|$, so fewer edges imply faster solves and lower memory for the adjacency structures in Equation~\eqref{eq:transition-impl}.
 
 \begin{itemize}
-\item \textbf{Implementation notes shared by both methods:} Edge lists are stored as triples \texttt{(from\_node, to\_node, weight)} in memory. Duplicate edges are aggregated by summing weights before the solve. Non-positive weights are dropped. The solver builds a sparse compressed-row transition matrix, iterates Equation~\eqref{eq:pagerank}, and returns a dictionary from node identifier to score. Cohort scores are aligned to $\mathcal{W}$ with missing entries set to zero, then converted to dense ranks for correlation.
+\item Implementation notes shared by both methods: Edge lists are stored as triples \texttt{(from\_node, to\_node, weight)} in memory. Duplicate edges are aggregated by summing weights before the solve. Non-positive weights are dropped. The solver builds a sparse compressed-row transition matrix, iterates Equation~\eqref{eq:pagerank}, and returns a dictionary from node identifier to score. Cohort scores are aligned to $\mathcal{W}$ with missing entries set to zero, then converted to dense ranks for correlation.
 
 \end{itemize}
 
@@ -281,16 +281,16 @@ Other t2 quantities (revoke rate, an approval-then-outbound drain heuristic, Aav
 
 \dissertationSubheading[sec:proxy-evaluation]{Construct-check design}
 
-Primary evaluation compares EndorseRank and AWP only. For each method $M$ and each check $P$, the pipeline computes scores $\mathbf{s}_M$ and check values $\mathbf{p}_P$, then reports Spearman's $\rho$ and Kendall's $\tau$ (Section~\ref{sec:statistical-tests}). Checks are oriented so that higher values imply higher expected reputation before correlation, following Do et al.\cend{16}.
+Primary evaluation compares EndorseRank and AWP only. For each method $M$ and each check $P$, the pipeline computes scores $\mathbf{s}_M$ and check values $\mathbf{p}_P$, then reports Spearman's $\rho$ and Kendall's $\tau$ with 95\% bootstrap intervals (Section~\ref{sec:statistical-tests}). Checks are oriented so that higher values imply higher expected reputation before correlation, following the AWP validation protocol\cend{3}.
 
 Two contemporaneous families structure the same-window comparison:
 \begin{enumerate}
-\item \textbf{Transfer} (Do et al.\ baseline): inbound transfer activity.
-\item \textbf{Allowance}: inbound approval activity (wallet as spender).
+\item Transfer (AWP baseline proxies\cend{3}): inbound transfer activity.
+\item Allowance: inbound approval activity (wallet as spender).
 \end{enumerate}
 They are \emph{graph-adjacent}: they are computed from the same event classes that build $G_{\mathrm{transfer}}$ and $G_{\mathrm{approve}}$, but they are local statistics rather than global PageRank scores. Strong alignment of AWP with transfer checks, or of EndorseRank with allowance checks, is within-construct coherence, not independent predictive power. Sybil-adjusted activity summaries may appear in robustness tables; they are not headline claims.
 
-The out-of-window check is the temporal holdout in Section~\ref{sec:gf-pr-graph}. Packin and Lev-Aretz\cend{48} caution that decentralized credit scores can become opaque; publishing explicit formulas (Section~\ref{sec:proxy-formulas}) and separating same-window checks from the time split counters that opacity.
+The out-of-window check is the temporal holdout in Section~\ref{sec:gf-pr-graph}. Packin and Lev-Aretz\cend{2} caution that decentralized credit scores can become opaque; publishing explicit formulas (Section~\ref{sec:proxy-formulas}) and separating same-window checks from the time split counters that opacity.
 
 \dissertationSubheading[sec:proxy-formulas]{Operational definitions of proxies}
 
@@ -309,7 +309,7 @@ Let $\mathcal{T}_{\mathrm{in}}(w)$ be inbound transfers to wallet $w$ (any sende
 \sum_{e:\,\cdot\to w} v_e.
 \label{eq:in-value}
 \end{align}
-These are the domain-intuition baselines of Do et al.\cend{16}: economically important addresses tend to receive transfers from more counterparties and in larger aggregate value. Unlike PageRank, $\mathrm{in\_degree}$ and $\mathrm{in\_value}$ are strictly local: they ignore the reputation of senders. Comparing AWP (global, time-decayed) to these local baselines tests whether propagation and recency weighting add ordering information beyond raw inflows.
+These are the domain-intuition baselines of the AWP paper\cend{3}: economically important addresses tend to receive transfers from more counterparties and in larger aggregate value. Unlike PageRank, $\mathrm{in\_degree}$ and $\mathrm{in\_value}$ are strictly local: they ignore the reputation of senders. Comparing AWP (global, time-decayed) to these local baselines tests whether propagation and recency weighting add ordering information beyond raw inflows.
 
 \dissertationSubsubheading[sub:proxy-allowance]{Allowance family}
 
@@ -343,14 +343,14 @@ Self-transfers ($u=w$) are excluded from inbound counters. Let $N_{\mathrm{tx}}(
 M(w).
 \label{eq:active-months}
 \end{align}
-High counterparty ratio penalizes wallets that receive many transfers from few addresses (a simple Sybil/wash pattern). Tenure and active months capture persistence of on-chain activity within the observation window. These measures are imperfect Sybil defenses---coordinated adversaries can still diversify counterparties---but they operationalize the intuition that durable, multi-counterparty activity is more reputation-relevant than bursty self-dealing \cend{48}.
+High counterparty ratio penalizes wallets that receive many transfers from few addresses (a simple Sybil/wash pattern). Tenure and active months capture persistence of on-chain activity within the observation window. These measures are imperfect Sybil defenses---coordinated adversaries can still diversify counterparties---but they operationalize the intuition that durable, multi-counterparty activity is more reputation-relevant than bursty self-dealing \cend{2}.
 
 \dissertationSubheading[sec:statistical-tests]{Statistical tests}
 
-Reputation scores and validation proxies are continuous rank variables, not binary default labels. Following Do et al.\cend{16} and the construct-validity tradition of Cronbach and Meehl\cend{14}, alignment is measured with rank correlations that are invariant to monotonic transforms of either variable.
+Reputation scores and validation proxies are continuous rank variables, not binary default labels. Following the AWP validation protocol\cend{3} and the construct-validity tradition of Cronbach and Meehl\cend{22}, alignment is measured with rank correlations that are invariant to monotonic transforms of either variable, and every reported coefficient carries a bootstrap confidence interval.
 
 \begin{itemize}
-\item \textbf{Spearman's $\rho$:} Let $R_i$ and $S_i$ be the dense ranks of score and proxy for wallet $i=1,\ldots,n$. Spearman's coefficient is the Pearson correlation of these ranks:
+\item Spearman's $\rho$: Let $R_i$ and $S_i$ be the dense ranks of score and proxy for wallet $i=1,\ldots,n$. Spearman's coefficient is the Pearson correlation of these ranks:
 \begin{equation}
 \label{eq:spearman-ops}
 \rho
@@ -360,7 +360,7 @@ Reputation scores and validation proxies are continuous rank variables, not bina
 \end{equation}
 Spearman captures monotonic agreement: if higher reputation consistently co-occurs with higher proxy values, $\rho$ is positive even when the relationship is nonlinear in the raw scores.
 
-\item \textbf{Kendall's $\tau$:} Kendall's coefficient counts concordant and discordant pairs. For all pairs $i<j$,
+\item Kendall's $\tau$: Kendall's coefficient counts concordant and discordant pairs. For all pairs $i<j$,
 \begin{equation}
 \label{eq:kendall-ops}
 \tau
@@ -369,15 +369,17 @@ Spearman captures monotonic agreement: if higher reputation consistently co-occu
 \end{equation}
 where $C$ is the number of pairs ordered the same way by both rankings and $D$ is the number ordered differently (ties handled by the implementation's standard tie correction). Kendall's $\tau$ is more interpretable as a pairwise ordering probability and is less sensitive to large rank displacements than Spearman in some heavy-tailed settings.
 
-\item \textbf{Why both:} Spearman summarizes global monotonic association; Kendall emphasizes pairwise order fidelity. Reporting both follows Do et al.\cend{16} and allows readers to verify that family-level conclusions are not an artifact of a single rank statistic. In blockchain reputation settings, score distributions are often heavy-tailed: a few hubs receive large mass while many wallets share near-zero scores. Rank correlations remain well-defined in that regime, whereas Pearson correlation on raw scores would be dominated by hubs.
+\item Why both: Spearman summarizes global monotonic association; Kendall emphasizes pairwise order fidelity. Reporting both follows the AWP protocol\cend{3} and allows readers to verify that family-level conclusions are not an artifact of a single rank statistic. In blockchain reputation settings, score distributions are often heavy-tailed: a few hubs receive large mass while many wallets share near-zero scores. Rank correlations remain well-defined in that regime, whereas Pearson correlation on raw scores would be dominated by hubs.
 
-\item \textbf{Family aggregation:} Family-level summaries use mean $\tau$ across proxies within a family. For example, the transfer-family mean is $\tfrac{1}{2}(\tau_{\mathrm{in\_degree}}+\tau_{\mathrm{in\_value}})$. Method comparisons on the same cohort and proxies are relative, not absolute claims about universal reputation. Uncited absolute $\tau$ cutoffs are not used as decision rules.
+\item Family aggregation: Family-level summaries use mean $\tau$ across proxies within a family. For example, the transfer-family mean is $\tfrac{1}{2}(\tau_{\mathrm{in\_degree}}+\tau_{\mathrm{in\_value}})$. Method comparisons on the same cohort and proxies are relative, not absolute claims about universal reputation. Absolute $\tau$ cutoffs are not used as decision rules; confidence intervals are.
 
-\item \textbf{Uncertainty:} Interval estimates (bootstrap confidence intervals) are not reported in this draft. Comparative point estimates on a fixed cohort are the decision target. Adding interval estimates is planned before the next submission.
+\item Uncertainty: sampling uncertainty is quantified with a paired wallet bootstrap \cend{34}. The matched cohort is resampled with replacement $B=400$ times (seed 42, fixed in configuration); the same index matrix is used for every method and proxy so that resampled statistics are paired across methods. For each proxy $\tau$, each family mean, and the inter-method $\tau$, the 2.5th and 97.5th percentiles of the bootstrap distribution form a 95\% percentile interval \cend{35}. Because the population Kendall $\tau$ is a U-statistic, the percentile interval is first-order accurate at $n=5{,}521$; the small number of resamples was chosen to keep the $O(B\,n\log n)$ cost of the tie-corrected $\tau$ tractable across all methods and proxies, and it limits the precision of the interval end-points to roughly $\pm 0.005$.
 
-\item \textbf{Orientation and missingness:} Proxies are pre-oriented so that larger values indicate better reputation. Wallets absent from a proxy source receive zeros after alignment to $\mathcal{W}$, which is conservative for sparse activity and is applied identically to both methods. No wallet is dropped from one method but retained in the other: the correlation sample is always the full matched cohort for primary tables.
+\item Difference tests: the comparisons on which the argument rests are pre-specified as paired contrasts and tested with the same resamples: the bootstrap distribution of $\Delta\tau=\tau_A-\tau_B$ is computed resample by resample, and its 95\% percentile interval is reported. A contrast is called a difference when the interval excludes zero. The pre-specified contrasts are (i) EndorseRank on its allowance family minus EndorseRank on the transfer family; (ii) AWP on the transfer family minus EndorseRank on the transfer family; (iii) EndorseRank on the allowance family minus AWP on the allowance family; (iv) AWP minus EndorseRank on the Sybil-stability family; (v) AWP minus EndorseRank on the GMX trading-success proxies (reported for completeness only); and (vi) EndorseRank on $\mathrm{in\_approve\_degree}$ minus EndorseRank on $\mathrm{in\_degree}$. Paired resampling removes the between-resample variance shared by the two coefficients, so the contrast interval is narrower than the difference of the two marginal intervals would suggest.
 
-\item \textbf{What is not tested:} The study does not claim causal identification (reputation does not ``cause'' trading success in an interventional sense), does not fit predictive classifiers with train/test splits, and does not report $p$-values as the primary decision criterion. The scientific target is comparative construct alignment and computational cost under a fixed, transparent protocol.
+\item Orientation and missingness: Proxies are pre-oriented so that larger values indicate better reputation. Wallets absent from a proxy source receive zeros after alignment to $\mathcal{W}$, which is conservative for sparse activity and is applied identically to both methods. No wallet is dropped from one method but retained in the other: the correlation sample is always the full matched cohort for primary tables.
+
+\item What is not tested: The study does not claim causal identification (reputation does not ``cause'' future approvals in an interventional sense), does not fit predictive classifiers with train/test splits, and does not use $p$-values as the decision criterion; interval exclusion of zero for a pre-specified contrast is the decision rule. The scientific target is comparative construct alignment and computational cost under a fixed, transparent protocol.
 
 \end{itemize}
 
@@ -386,47 +388,49 @@ where $C$ is the number of pairs ordered the same way by both rankings and $D$ i
 Claim~C1 concerns computational efficiency of EndorseRank versus AWP on identical inputs. The benchmark protocol isolates PageRank solve cost from one-time graph construction, because construction cost is dominated by I/O and preprocessing that would be amortized in a deployed scorer that updates incrementally, whereas the iterative solve is the recurring computational core of both methods.
 
 \begin{itemize}
-\item \textbf{Timed quantity:} For each method, edge lists are built once per cohort outside the timed loop. The timed section runs weighted PageRank only, with damping $d=0.85$, tolerance $\tau_{\mathrm{tol}}=10^{-8}$, and at most $I_{\max}=300$ iterations. These numerical settings match the configuration used for alignment scores, so runtime and alignment refer to the same mathematical object.
+\item Timed quantity: For each method, the weighted edge list is built once per cohort outside the timed loop; extraction, decoding, allowance collapsing and transfer decay are therefore excluded. The timed section is the solver call, which assembles the sparse transition operator from that edge list and runs power iteration with damping $d=0.85$, tolerance $\tau_{\mathrm{tol}}=10^{-8}$, and at most $I_{\max}=300$ iterations. Both parts of the timed section are linear in $|E|$, and both would be repeated at every refresh of a deployed scorer. These numerical settings match the configuration used for alignment scores, so runtime and alignment refer to the same mathematical object.
 
-\item \textbf{Repetitions and metrics:} The intended protocol repeats each configuration for five independent runs to average out operating-system noise. Chapter~\ref{ch:results} tables currently report three-run means from the exported evaluation artifacts; the two statements will be reconciled to a single repetition count before the next submission. Until then, treat table values as the empirical record and five runs as the intended protocol. Per run, the pipeline records wall-clock solve time, peak memory, and iterations to convergence. Reported statistics are the mean runtime, runtime standard deviation, mean iterations, maximum peak memory across runs, and edge/node counts of the pre-built graph. Edge counts are reported because they are the leading structural explanation for runtime differences under $O(|E|)$ per-iteration complexity \cend{49}.
+\item Timing protocol: Every configuration is measured in one session with a single protocol. One untimed warm-up solve is run first; it populates caches, triggers just-in-time paths, and is the only run instrumented for peak memory (memory tracing is not active during timed runs because it would inflate wall-clock time). Five timed solves follow. Reported statistics are the mean and standard deviation of the five wall-clock times, the mean iteration count, the warm-up peak memory, and the node and edge counts of the pre-built graph. Measurements are memoized within the session by a key consisting of the edge multiset signature, damping, tolerance, iteration cap, and repeat count; wherever the same graph is tabulated under the same settings---the primary benchmark, the $d=0.85$ row of the damping sweep, the in-cohort scaling stage with $n=5{,}521$, and the full expanded-pool stage, whose induced subgraph coincides with the cohort graph (Section~\ref{sub:expanded-pool})---the tables therefore show identical numbers by construction rather than independent measurements of the same object. Edge counts are reported in every runtime table because they are the leading structural explanation for runtime differences under $O(|E|)$ per-iteration complexity \cend{15}. Per-run timings are retained in the machine-readable summary (Section~\ref{sec:reproducibility}).
 
-\item \textbf{Cohorts:} The primary benchmark uses the matched wallet cohort ($n=5{,}521$). Scaling benchmarks use deterministic subsamples of the expanded wallet pool (Section~\ref{sec:scaling-robustness}).
+\item Cohorts: The primary benchmark uses the matched wallet cohort ($n=5{,}521$). Node-count sensitivity uses deterministic subsamples of the expanded wallet pool (Section~\ref{sec:scaling-robustness}).
 
-\item \textbf{Fairness of comparison:} Both methods use the same solver, tolerance, iteration cap, damping (unless a robustness sweep varies $d$), and seed wallet set. Differences therefore reflect graph density and weight structure---allowance snapshots versus time-decayed transfers---rather than implementation asymmetry. Hardware and software versions are recorded in the evaluation manifest so that absolute seconds can be interpreted relative to the experimental machine; speedup ratios (AWP time divided by EndorseRank time) are the preferred comparative summary.
+\item Fairness of comparison: Both methods use the same solver, tolerance, iteration cap, damping (unless a sensitivity sweep varies $d$), and seed wallet set. Differences therefore reflect graph density and weight structure---allowance snapshots versus time-decayed transfers---rather than implementation asymmetry. Hardware and software versions are recorded in the evaluation manifest so that absolute seconds can be interpreted relative to the experimental machine; speedup ratios (AWP time divided by EndorseRank time) are the preferred comparative summary, and they are always reported next to the corresponding edge ratio.
 
 \end{itemize}
 
 \dissertationSubheading[sec:scaling-robustness]{Scaling and robustness extensions}
 
-Beyond the matched cohort, the study evaluates runtime scaling on a larger address set and stress-tests alignment under parameter and sample perturbations. These extensions support H3 (efficiency at larger $n$) and the stability of family-level conclusions. They are not alternative primary samples: unless otherwise noted, alignment claims in Chapter~\ref{ch:results} refer to the matched cohort, and scaling claims refer to the expanded pool.
+Beyond the matched cohort, the study evaluates runtime sensitivity to node count on a larger address set and stress-tests alignment under parameter and sample perturbations. These extensions support H3 (efficiency at larger $n$) and characterise how far family-level conclusions depend on the sample definition. They are not alternative primary samples: unless otherwise noted, alignment claims in Chapter~\ref{ch:results} refer to the matched cohort, and node-count sensitivity refers to the expanded pool.
 
-\dissertationSubsubheading[sub:expanded-pool]{Expanded wallet pool and runtime scaling}
+\dissertationSubsubheading[sub:expanded-pool]{Expanded wallet pool and node-count sensitivity of runtime}
 
-The expanded wallet pool $\mathcal{W}_{\mathrm{pool}}$ unions the matched cohort with supplemental active addresses derived from the reputation subgraph (and, when present, supplemental active-wallet parquet), yielding $N=|\mathcal{W}_{\mathrm{pool}}|=31{,}612$ addresses in this study. Supplemental addresses increase graph size for timing experiments. Runtime benchmarks at intermediate sizes use deterministic SHA256 subsampling with seed string \texttt{benchmark-tier2-v1}: wallets are ordered by
+The expanded wallet pool $\mathcal{W}_{\mathrm{pool}}$ unions the matched cohort ($5{,}521$ addresses) with $93{,}559$ supplemental addresses sampled from monthly Arbitrum One ERC-20 activity in the observation window (the supplemental active-wallet parquet produced by the sampling script), yielding $N=|\mathcal{W}_{\mathrm{pool}}|=99{,}080$ addresses in this study. Runtime benchmarks at intermediate sizes use deterministic SHA256 subsampling with seed string \texttt{benchmark-tier2-v1}: wallets are ordered by
 \begin{center}
 \texttt{SHA256(seed || address)} with seed \texttt{benchmark-tier2-v1}
 \end{center}
-and the first $n$ addresses form the subsample. The seed string is a fixed configuration constant. Reported stages include $n=10{,}000$ and the full pool $n=N=31{,}612$, always on the same approval and transfer parquet. In-cohort scaling stages with $n\le 5{,}521$ are reported in Appendix~\ref{ch:appendix-eval}. Deterministic hashing avoids the non-reproducibility of pseudorandom draws across library versions.
+and the first $n$ addresses form the subsample. The seed string is a fixed configuration constant. Reported stages are $n=10{,}000$, $n=50{,}000$ and the full pool $n=N=99{,}080$, always on the same approval and transfer parquet. In-cohort stages with $n\le 5{,}521$ are reported in Appendix~\ref{ch:appendix-eval}. Deterministic hashing avoids the non-reproducibility of pseudorandom draws across library versions.
+
+Two properties of this design must be stated because they bound what the experiment can show. First, at every stage the graph is the subgraph of the cohort-window approval and transfer parquet induced by the sampled wallets, so $|E|$ at a stage is determined by which wallets the hash order selects and is not monotone in $n$ by construction. Second, the supplemental pool addresses were meant to be accompanied by a second-tier extraction of their own approval and transfer logs; that extraction did not complete (Appendix~\ref{ch:appendix-eval}), so the full-pool stage adds nodes but no edges beyond the cohort parquet and reproduces the cohort edge counts exactly. The pool stages therefore measure how runtime responds to added isolated or weakly connected nodes at fixed edge counts; they do not scale the edge count that drives per-iteration cost. Per-stage $|V|$ and $|E|$ for both methods are reported in every scaling table so that this limitation is visible, and the scaling claim in Chapter~\ref{ch:results} is confined to what those columns support.
 
 \dissertationSubsubheading[sub:damping-protocol]{Damping sensitivity}
 
-PageRank damping is swept over $d\in\{0.75,0.85,0.95\}$ on the matched cohort, holding graphs and proxies fixed. The default $d=0.85$ matches the classical web PageRank setting \cend{49} and the AWP baseline\cend{64}. Lower $d$ increases teleportation and flattens scores; higher $d$ emphasizes multi-hop structure and can slow convergence. The sweep tests whether allowance- and transfer-family alignment are artifacts of a single teleportation weight.
+PageRank damping is swept over $d\in\{0.75,0.85,0.95\}$ on the matched cohort, holding graphs and proxies fixed. The default $d=0.85$ matches the classical web PageRank setting \cend{15} and the AWP baseline\cend{3}. Lower $d$ increases teleportation and flattens scores; higher $d$ emphasizes multi-hop structure and can slow convergence. The sweep tests whether allowance- and transfer-family alignment are artifacts of a single teleportation weight.
 
 \dissertationSubsubheading[sub:top-tokens]{Top-token subgraph}
 
 A restricted subgraph retains only the top-$20$ ERC-20 tokens by combined transfer and allowance volume within the observation window. EndorseRank and AWP are recomputed on this subgraph to assess sensitivity to long-tail tokens and possible spam assets. If family-level conclusions reverse when low-volume tokens are removed, the primary result would be fragile to token composition; stability supports interpreting the full-token graphs as representative of major economic activity.
 
-\dissertationSubsubheading[sub:sample-size-protocol]{Sample-size sensitivity}
+\dissertationSubsubheading[sub:sample-size-protocol]{Sample-definition sensitivity}
 
-Alignment statistics are recomputed on staged subsamples drawn from the expanded wallet pool using the same deterministic seed. Reported sample-size $\tau$ is interpreted primarily for transfer and allowance families on $\mathcal{W}_{\mathrm{pool}}$; primary claims remain on the matched wallet cohort ($n=5{,}521$). Because rank correlations have sampling variability, modest movement in $\tau$ across sizes is expected; the robustness question is whether EndorseRank and AWP preserve their relative ordering on key graph-adjacent families.
+Alignment statistics are recomputed on staged subsamples drawn from the expanded wallet pool using the same deterministic seed. The primary sample for every alignment claim is the matched wallet cohort ($n=5{,}521$), whose coefficients are reported with confidence intervals. The pool subsamples differ from the cohort not only in size but in composition: they admit wallets with connectivity in only one of the two graphs, for which the missing-graph score and proxy are both zero after alignment, and such tied zeros raise rank agreement mechanically. The staged coefficients are therefore reported as a sensitivity analysis of the sample definition, not as evidence of stability; the question they answer is whether EndorseRank and AWP preserve their relative ordering on the transfer and allowance families when the sample definition changes.
 
 \dissertationSubheading[sec:reproducibility]{Reproducibility}
 
-All empirical tables in Chapter~\ref{ch:results} are produced by an open evaluation pipeline. After Phase~1 parquet artifacts are present, a single evaluation driver recomputes checks, alignment statistics, and benchmarks from those inputs. Command-line flags select cached BigQuery-derived inputs versus synthetic fixtures, enable damping, top-token, and sample-size sweeps, and export the result tables reported in Chapter~\ref{ch:results}. Observation window, damping, decay parameters, topic hashes, and benchmark seeds are collected in a single versioned configuration file. Fixture mode supports offline verification without cloud credentials.
+All empirical tables in Chapter~\ref{ch:results} are produced by an open evaluation pipeline. After Phase~1 parquet artifacts are present, a single evaluation driver (\texttt{scripts/run\_dissertation\_eval.py --real --robustness --benchmark-repeats 5}) recomputes checks, alignment statistics with bootstrap intervals, and benchmarks from those inputs and writes one machine-readable summary (\texttt{data/processed/eval\_summary.json}); a separate exporter (\texttt{scripts/export\_latex\_results.py}) renders every table in Chapter~\ref{ch:results} and Appendix~\ref{ch:appendix-eval} from that file, so no number is transcribed by hand. Command-line flags select cached BigQuery-derived inputs versus synthetic fixtures and enable damping, top-token, and sample-definition sweeps. Observation window, damping, decay parameters, topic hashes, bootstrap resamples and seed, and benchmark seeds are collected in a single versioned configuration file (\texttt{config/margin\_config.yaml}). Fixture mode supports offline verification without cloud credentials.
 
-Reproducible elements include: deterministic wallet subsampling via SHA256 seeds; fixed PageRank tolerance and iteration caps; explicit proxy formulas in Section~\ref{sec:proxy-formulas}; and logged extraction manifests. Peer reviewers can regenerate alignment and benchmark tables from the same parquet without re-querying BigQuery.
+Reproducible elements include: deterministic wallet subsampling via SHA256 seeds; fixed PageRank tolerance and iteration caps; a fixed bootstrap seed and shared resample index matrix; explicit proxy formulas in Section~\ref{sec:proxy-formulas}; the timing protocol of Section~\ref{sec:computational-benchmark} with per-run timings retained; and logged extraction manifests. Peer reviewers can regenerate alignment and benchmark tables from the same parquet without re-querying BigQuery.
 
-The evaluation source, versioned configuration, and machine-readable result summary are in the public repository \url{https://github.com/abitocodes/phd_works} at commit \texttt{0c70518a35540c8b56be66b52452cb94ca3fb916}. An anonymised archive can be supplied on request.
+The evaluation source (\texttt{A-Skill-Programs/margin\_rank}), versioned configuration, and machine-readable result summary are in the public repository \url{https://github.com/abitocodes/phd_works} at commit \texttt{0c70518a35540c8b56be66b52452cb94ca3fb916}; the commit hash is updated at each submission. An anonymised archive can be supplied on request.
 
 \dissertationSubheading[sec:sampling-bias]{Sampling considerations and missingness}
 
@@ -434,39 +438,41 @@ The matched cohort is a purposeful sample, not a random sample of all Arbitrum a
 
 Missingness arises in several forms. Tokens with unknown decimals may be dropped or defaulted during preprocessing; such decisions are logged in the pipeline. Approvals that never emit standard ERC-20 logs (non-standard tokens) are invisible to EndorseRank. Transfers that occur off-chain or through custodial systems never enter AWP. These missingness patterns bias both methods toward on-chain, standard-token activity---acceptable for an on-chain reputation study, but relevant when generalizing to the full user population of a protocol.
 
-Supplemental addresses in the expanded wallet pool ($N=31{,}612$) increase coverage for runtime tests. Alignment claims therefore remain anchored to the matched cohort ($n=5{,}521$), while scaling claims use the pool.
+Supplemental addresses in the expanded wallet pool ($N=99{,}080$) increase node coverage for runtime tests. Alignment claims therefore remain anchored to the matched cohort ($n=5{,}521$), while node-count sensitivity uses the pool.
 
 \dissertationSubheading[sec:implementation-notes]{Implementation notes}
 
-PageRank is implemented with sparse adjacency lists and power iteration in Python, with optional NumPy vectorization for score updates. Graphs are built once per configuration; timed benchmarks exclude I/O and preprocessing. Randomness enters only through optional fixture generation; real-data evaluation is deterministic given parquet inputs and configuration seeds. Floating-point differences across machines are expected to be negligible relative to the reported $\tau$ precision (three decimal places).
+PageRank is implemented in Python with a SciPy sparse transition operator and NumPy power iteration. Edge lists are built once per configuration; timed benchmarks exclude I/O and preprocessing and cover operator assembly plus iteration (Section~\ref{sec:computational-benchmark}). Randomness enters only through optional fixture generation; real-data evaluation is deterministic given parquet inputs and configuration seeds. Floating-point differences across machines are expected to be negligible relative to the reported $\tau$ precision (three decimal places).
 
 Figures are generated from the same evaluation artifacts as the tables, so reported numerics and plots remain consistent.
 
 \dissertationSubheading[sec:ethics]{Ethics}
 
-This study uses exclusively publicly available blockchain data and does not intervene with human participants. Institutional ethics review was completed before empirical data collection. The clearance confirmation is retained in the research record; the certificate number will be inserted when the institutional copy is at hand.
+This study uses exclusively publicly available blockchain data and does not involve human participants. Institutional ethics review (Unisa SoC/CAES) was completed before empirical data collection. The ethics clearance certificate, reference [Unisa SoC/CAES ethics clearance ref: TBD] dated [TBD], is reproduced in Appendix~\ref{sec:ethics-certificate}.
 
 \begin{itemize}
 \item\phantomsection\label{sub:privacy-anonymity}
-  \textbf{Privacy and anonymity:} Arbitrum One addresses are pseudonymous identifiers, not inherently linked to real-world identities \cend{48}. Pseudonymity is not anonymity: determined adversaries can sometimes link addresses to persons through exchange deposits, public profiles, or clustering heuristics. This study deliberately refrains from such linkage. Collection is restricted to on-chain events---\texttt{Approval} and \texttt{Transfer}---with no scraping or integration of off-chain personal data such as IP addresses, exchange KYC records, social-media handles, or deanonymization graphs. No attempt was made to cluster addresses into real-world entities, to publish address-level rankings that could reasonably identify individuals, or to combine wallet histories with external identity providers. Reported results are cohort-level aggregates (correlations, runtimes, family means), not leaderboards of named users. Where examples are discussed in prose, they refer to abstract roles (e.g., ``high-allowance spenders'') rather than concrete addresses.
+  Privacy and anonymity: Arbitrum One addresses are pseudonymous identifiers, not inherently linked to real-world identities \cend{2}. Pseudonymity is not anonymity: determined adversaries can sometimes link addresses to persons through exchange deposits, public profiles, or clustering heuristics. This study deliberately refrains from such linkage. Collection is restricted to on-chain events---\texttt{Approval} and \texttt{Transfer}---with no scraping or integration of off-chain personal data such as IP addresses, exchange KYC records, social-media handles, or deanonymization graphs. No attempt was made to cluster addresses into real-world entities, to publish address-level rankings that could reasonably identify individuals, or to combine wallet histories with external identity providers. Reported results are cohort-level aggregates (correlations, runtimes, family means), not leaderboards of named users. Where examples are discussed in prose, they refer to abstract roles (e.g., ``high-allowance spenders'') rather than concrete addresses.
 
 
 \item\phantomsection\label{sub:data-minimization}
-  \textbf{Data minimization:} Only fields required for graph construction and checks are retained in processed tables (addresses, token amounts, timestamps). Raw logs are stored for auditability of the research pipeline but are not redistributed as a deanonymization aid. Query filters are wallet-scoped where possible to avoid indiscriminate full-chain dumps beyond the study design.
+  Data minimization: Only fields required for graph construction and checks are retained in processed tables (addresses, token amounts, timestamps). Raw logs are stored for auditability of the research pipeline but are not redistributed as a deanonymization aid. Query filters are wallet-scoped where possible to avoid indiscriminate full-chain dumps beyond the study design.
 
 
 \item\phantomsection\label{sub:data-usage-compliance}
-  \textbf{Data usage and compliance:} All queries targeted public datasets under \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us} in accordance with Google Cloud terms of service and rate limits. Dry-run byte estimates and per-query caps limit unnecessary scanning. No transactions were broadcast, no smart contracts were called in ways that could disrupt network operations, and no privileged or non-public indexer access was used.
+  Data usage and compliance: All queries targeted public datasets under \texttt{bigquery-public-data.goog\_blockchain\_arbitrum\_one\_us} in accordance with Google Cloud terms of service and rate limits. Dry-run byte estimates and per-query caps limit unnecessary scanning. No transactions were broadcast, no smart contracts were called in ways that could disrupt network operations, and no privileged or non-public indexer access was used.
 
 
 \item\phantomsection\label{sub:fairness-transparency}
-  \textbf{Fairness and transparency:} Graph reputation systems can systematically undervalue new entrants, low-volume participants, or wallets that avoid public approvals \cend{48}. EndorseRank and AWP were therefore audited for such structural biases: allowance graphs favor addresses that receive spending authority; transfer graphs favor addresses embedded in value-flow networks. Limitations---including cold-start effects and Sybil susceptibility of approval graphs---are discussed in Chapter~\ref{ch:discussion}. All code paths, parameter choices, and evaluation metrics are documented in the open pipeline (Appendix~\ref{ch:appendix-eval}) to enable peer review and independent replication.
+  Fairness and transparency: Graph reputation systems can systematically undervalue new entrants, low-volume participants, or wallets that avoid public approvals \cend{2}. EndorseRank and AWP were therefore audited for such structural biases: allowance graphs favor addresses that receive spending authority; transfer graphs favor addresses embedded in value-flow networks. Limitations---including cold-start effects and Sybil susceptibility of approval graphs---are discussed in Chapter~\ref{ch:discussion}. All code paths, parameter choices, and evaluation metrics are documented in the open pipeline (Appendix~\ref{ch:appendix-eval}) to enable peer review and independent replication.
 
 
 \item\phantomsection\label{sub:responsible-disclosure}
-  \textbf{Responsible disclosure and impact:} Although EndorseRank may inform risk assessment in DeFi contexts, it is not financial advice, credit advice, or a consumer reporting product. Human oversight remains necessary for lending, trading, and compliance decisions. Potential adversarial manipulation (for example, Sybil attacks on $G_{\mathrm{approve}}$ or wash transfers on $G_{\mathrm{transfer}}$) is acknowledged and discussed in Chapter~\ref{ch:discussion}. The study reports aggregated cohort-level findings rather than wallet-level rankings intended for targeting individual users. Any future operational deployment would require additional governance, appeal mechanisms, and fairness monitoring beyond the scope of this research.
+  Responsible disclosure and impact: Although EndorseRank may inform risk assessment in DeFi contexts, it is not financial advice, credit advice, or a consumer reporting product. Human oversight remains necessary for lending, trading, and compliance decisions. Potential adversarial manipulation (for example, Sybil attacks on $G_{\mathrm{approve}}$ or wash transfers on $G_{\mathrm{transfer}}$) is acknowledged and discussed in Chapter~\ref{ch:discussion}. The study reports aggregated cohort-level findings rather than wallet-level rankings intended for targeting individual users. Any future operational deployment would require additional governance, appeal mechanisms, and fairness monitoring beyond the scope of this research.
 
 
 \item\phantomsection\label{sub:methodological-commitments}
-  \textbf{Summary of methodological commitments:} The design fixes the chain, window, cohort rules, graph formulas, proxy definitions, and statistical tests before interpreting results. Primary claims compare only EndorseRank and AWP on the matched wallet cohort and the spender holdout; the expanded pool and robustness sweeps test efficiency and stability. Chapter~\ref{ch:results} reports the empirical outcomes of this protocol.
+  Summary of methodological commitments: The design fixes the chain, window, cohort rules, graph formulas, proxy definitions, bootstrap protocol, timing protocol, and statistical tests before interpreting results. Primary claims compare only EndorseRank and AWP on the matched wallet cohort and the spender holdout; the expanded pool and sensitivity sweeps test efficiency and the dependence of results on parameters and sample definition.
 \end{itemize}
+
+Chapter~\ref{ch:results} reports the empirical outcomes of this protocol as an Arbitrum One case study: it first characterises the dataset and cohort, then presents the runtime benchmark and its node-count sensitivity, the sensitivity sweeps, the alignment tables with intervals and contrasts, the rank-divergence test, and the temporal holdout, and closes by stating Claims~C1--C4.

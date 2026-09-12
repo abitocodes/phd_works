@@ -136,6 +136,12 @@ benchmark:
     latest_allowances: data/processed/reputation_tier2/latest_allowances.parquet
     transfer_events: data/processed/reputation_tier2/transfer_events.parquet
 
+alignment:
+  # Paired wallet bootstrap for every Kendall tau on the matched cohort
+  # (per-proxy CI, family-mean CI, inter-method CI, and delta-tau contrasts).
+  bootstrap_resamples: 400
+  bootstrap_seed: 42
+
 robustness:
   damping_values: [0.75, 0.85, 0.95]
   top_n_tokens: 20
