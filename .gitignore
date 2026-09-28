@@ -7,7 +7,8 @@
 __pycache__/
 _p1_sections.txt
 .DS_Store
-# margin_rank 로컬 산출물은 A-Skill-Programs/margin_rank/.gitignore 참조 (.venv, data/raw, data/processed)
+# margin_rank: .venv·대용량 제외 규칙은 A-Skill-Programs/margin_rank/.gitignore 참조
+# (data/raw·data/processed 수집·가공 산출물은 추적; 100MiB 초과·_chunks·tier2·캐시만 제외)
 proposal-ko/_spacing_test.*
 # dissertation QA page screenshots (local only)
 **/_qa_pages/
