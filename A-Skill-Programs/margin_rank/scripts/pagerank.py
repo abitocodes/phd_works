@@ -32,16 +32,105 @@ def filter_subgraph_edges(
     return edges[mask].copy()
 
 
+def _adjacency_on_index(
+    edges: pd.DataFrame,
+    idx: dict[str, int],
+    n: int,
+) -> tuple[sparse.csr_matrix, np.ndarray]:
+    """Weighted adjacency and out-strength on a fixed node index.
+
+    Edges whose end points are not in ``idx`` are ignored; non-positive weights
+    are dropped. The per-edge loop is the same construction path that the
+    runtime benchmark has always timed, so single-layer timings stay comparable.
+    """
+    row: list[int] = []
+    col: list[int] = []
+    data: list[float] = []
+    out_strength = np.zeros(n, dtype=np.float64)
+    for _, r in edges.iterrows():
+        u = idx.get(r["from_node"])
+        v = idx.get(r["to_node"])
+        if u is None or v is None:
+            continue
+        w = float(r["weight"])
+        if w <= 0:
+            continue
+        row.append(u)
+        col.append(v)
+        data.append(w)
+        out_strength[u] += w
+    adj = sparse.csr_matrix((data, (row, col)), shape=(n, n))
+    return adj, out_strength
+
+
+def _row_normalise(adj: sparse.csr_matrix, out_strength: np.ndarray) -> sparse.csr_matrix:
+    """P[u, v] = w[u, v] / sum_out(u) for rows with positive out-strength."""
+    n = adj.shape[0]
+    inv_out = np.zeros(n, dtype=np.float64)
+    nonzero = out_strength > 0
+    inv_out[nonzero] = 1.0 / out_strength[nonzero]
+    return sparse.diags(inv_out, format="csr") @ adj
+
+
+def _teleport_vector(
+    nodes: list[str],
+    teleport: dict[str, float] | None,
+    floor: float = 0.0,
+) -> np.ndarray:
+    """Normalised restart distribution; uniform when ``teleport`` is None or empty."""
+    n = len(nodes)
+    if not teleport:
+        return np.full(n, 1.0 / n, dtype=np.float64)
+    v = np.asarray([max(float(teleport.get(node, 0.0)), 0.0) for node in nodes], dtype=np.float64)
+    if floor > 0:
+        v = v + float(floor)
+    total = v.sum()
+    if total <= 0:
+        return np.full(n, 1.0 / n, dtype=np.float64)
+    return v / total
+
+
+def _power_iterate(
+    transition: sparse.csr_matrix,
+    dangling: np.ndarray,
+    teleport: np.ndarray,
+    damping: float,
+    tol: float,
+    max_iter: int,
+) -> tuple[np.ndarray, int]:
+    """Damped power iteration; dangling mass is redistributed by ``teleport``."""
+    n = transition.shape[0]
+    rank = np.full(n, 1.0 / n, dtype=np.float64)
+    iterations = 0
+    for i in range(max_iter):
+        iterations = i + 1
+        dangling_contrib = rank[dangling].sum() * teleport
+        new_rank = (1.0 - damping) * teleport + damping * (transition.T @ rank)
+        new_rank = new_rank + damping * dangling_contrib
+        if np.abs(new_rank - rank).sum() < tol:
+            rank = new_rank
+            break
+        rank = new_rank
+    total = rank.sum()
+    if total > 0:
+        rank = rank / total
+    return rank, iterations
+
+
 def weighted_pagerank(
     edges: pd.DataFrame,
     damping: float = 0.85,
     tol: float = 1e-8,
     max_iter: int = 100,
     return_iterations: bool = False,
+    teleport: dict[str, float] | None = None,
+    teleport_floor: float = 0.0,
 ) -> dict[str, float] | tuple[dict[str, float], int]:
     """
     Run weighted PageRank on edge list with columns: from_node, to_node, weight.
 
+    ``teleport`` (node -> non-negative mass) personalises the restart
+    distribution and the dangling redistribution; None means uniform.
     Returns mapping node -> score (sums to 1 over reachable nodes).
     """
     if edges.empty:
@@ -53,50 +142,76 @@ def weighted_pagerank(
     idx = {n: i for i, n in enumerate(nodes)}
     n = len(nodes)
 
-    row: list[int] = []
-    col: list[int] = []
-    data: list[float] = []
-    out_strength = np.zeros(n, dtype=np.float64)
+    adj, out_strength = _adjacency_on_index(edges, idx, n)
+    transition = _row_normalise(adj, out_strength)
+    dangling = ~(out_strength > 0)
+    restart = _teleport_vector(nodes, teleport, floor=teleport_floor)
 
-    for _, r in edges.iterrows():
-        u = idx[r["from_node"]]
-        v = idx[r["to_node"]]
-        w = float(r["weight"])
-        if w <= 0:
-            continue
-        row.append(u)
-        col.append(v)
-        data.append(w)
-        out_strength[u] += w
+    rank, iterations = _power_iterate(transition, dangling, restart, damping, tol, max_iter)
 
-    adj = sparse.csr_matrix((data, (row, col)), shape=(n, n))
+    scores = {nodes[i]: float(rank[i]) for i in range(n)}
+    if return_iterations:
+        return scores, iterations
+    return scores
 
-    # Transition matrix: P[u,v] = w[u,v] / sum_out(u); dangling -> uniform
-    inv_out = np.zeros(n, dtype=np.float64)
-    nonzero_out = out_strength > 0
-    inv_out[nonzero_out] = 1.0 / out_strength[nonzero_out]
 
-    diag = sparse.diags(inv_out, format="csr")
-    transition = diag @ adj
+def coupled_pagerank(
+    layers: list[tuple[pd.DataFrame, float]],
+    damping: float = 0.85,
+    tol: float = 1e-8,
+    max_iter: int = 100,
+    return_iterations: bool = False,
+) -> dict[str, float] | tuple[dict[str, float], int]:
+    """PageRank on a per-node mixture of several edge layers.
 
-    dangling = ~nonzero_out
-    rank = np.full(n, 1.0 / n, dtype=np.float64)
-    teleport = np.full(n, 1.0 / n, dtype=np.float64)
+    ``layers`` is a list of ``(edges, weight)`` pairs sharing one node set
+    (the union of all end points). For node ``u`` the transition row is
 
-    iterations = 0
-    for i in range(max_iter):
-        iterations = i + 1
-        dangling_contrib = rank[dangling].sum() * teleport
-        new_rank = (1.0 - damping) * teleport + damping * (transition.T @ rank)
-        new_rank = new_rank + damping * dangling_contrib
-        if np.abs(new_rank - rank).sum() < tol:
-            rank = new_rank
-            break
-        rank = new_rank
+        P[u, .] = sum_l a_l(u) * P_l[u, .],
+        a_l(u) = weight_l * 1[u has out-edges in l] / sum_k weight_k * 1[u has out-edges in k],
 
-    total = rank.sum()
-    if total > 0:
-        rank = rank / total
+    so a node present in only one layer follows that layer alone and a node
+    with no out-edges in any layer is dangling (uniform redistribution).
+    With two layers and weights (lambda, 1 - lambda), lambda = 1 reproduces the
+    first layer's PageRank and lambda = 0 the second's whenever both layers
+    span the same node set. Teleportation is uniform.
+    """
+    active = [(e, float(w)) for e, w in layers if e is not None and not e.empty and float(w) > 0]
+    if not active:
+        if return_iterations:
+            return {}, 0
+        return {}
+
+    node_set: set[str] = set()
+    for edges, _ in active:
+        node_set.update(edges["from_node"])
+        node_set.update(edges["to_node"])
+    nodes = sorted(node_set)
+    idx = {n: i for i, n in enumerate(nodes)}
+    n = len(nodes)
+
+    transitions: list[sparse.csr_matrix] = []
+    presence: list[np.ndarray] = []
+    weights: list[float] = []
+    for edges, weight in active:
+        adj, out_strength = _adjacency_on_index(edges, idx, n)
+        transitions.append(_row_normalise(adj, out_strength))
+        presence.append((out_strength > 0).astype(np.float64))
+        weights.append(weight)
+
+    denom = np.zeros(n, dtype=np.float64)
+    for w, has in zip(weights, presence):
+        denom += w * has
+    mixed = sparse.csr_matrix((n, n), dtype=np.float64)
+    for w, has, trans in zip(weights, presence, transitions):
+        alpha = np.zeros(n, dtype=np.float64)
+        pos = denom > 0
+        alpha[pos] = w * has[pos] / denom[pos]
+        mixed = mixed + sparse.diags(alpha, format="csr") @ trans
+
+    dangling = denom <= 0
+    restart = np.full(n, 1.0 / n, dtype=np.float64)
+    rank, iterations = _power_iterate(mixed, dangling, restart, damping, tol, max_iter)
 
     scores = {nodes[i]: float(rank[i]) for i in range(n)}
     if return_iterations:

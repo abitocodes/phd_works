@@ -59,8 +59,12 @@ python scripts/compute_reputation_ranks.py
 
 ```bash
 python scripts/sample_active_wallets.py --from-parquet --extract
-python scripts/run_dissertation_eval.py --real --robustness --export-latex
+python scripts/run_holdout_eval.py --cohort spenders
+python scripts/run_dissertation_eval.py --real --robustness --export-latex --benchmark-repeats 5
+python scripts/publish_results.py
 ```
+
+The last command copies the two JSON summaries and the configuration into the tracked `results/` folder (see `results/README.md`). Hybrid methods (`coupled_pr*`, `seeded_pr`) and the pre-registered success rules live under `reputation.hybrid` in `config/margin_config.yaml`.
 
 Optional Tier~2 BQ reputation re-extract (`--tier2` writes to `data/raw/reputation_tier2/`). Use the project venv and `--resume` after interruptions; progress bars show overall step and download ETA:
 
@@ -89,10 +93,13 @@ Dry-run bytes and extraction metadata are written to `data/processed/extraction_
 | Script | Role |
 |--------|------|
 | `run_dissertation_eval.py` | Master offline/real eval → JSON (`--robustness` for Tier 3) |
+| `run_holdout_eval.py` | Temporal holdout: t1 scores (ER, AWP, C-PR, S-PR, degree baselines) vs t2 labels, paired Δτ, primary-criterion verdict |
+| `publish_results.py` | Copy summaries + config into tracked `results/` with a SHA-256 manifest |
 | `run_robustness_eval.py` | Tier 3 damping / top-token / sample-size sweeps |
 | `sample_active_wallets.py` | Tier 2 supplemental wallet pool (BQ or `--from-parquet`) |
 | `preprocess_tier2_reputation.py` | Tier 2 processed allowances/transfers |
-| `benchmark_runtime.py` | EndorseRank vs AWP runtime (`benchmark_tier2_scaling`) |
+| `benchmark_runtime.py` | EndorseRank vs AWP vs C-PR / S-PR runtime (`benchmark_tier2_scaling`) |
+| `pagerank.py` | Shared solver: `weighted_pagerank(teleport=...)`, `coupled_pagerank(layers)` |
 | `evaluate_alignment.py` | Spearman ρ / Kendall τ vs proxies |
 | `export_latex_results.py` | JSON → dissertation LaTeX tables |
 | `extract_margin_week.py` | GMX PositionDecrease BigQuery extraction |

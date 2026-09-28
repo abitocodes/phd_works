@@ -14,11 +14,13 @@ from common import ROOT, load_config, load_json  # noqa: E402
 from evaluate_alignment import (  # noqa: E402
     DISSERTATION_METHODS,
     METHOD_LABELS,
-    METHODS,
     PROXY_FAMILIES,
+    SEVEN_METHODS,
     SIX_AAVE_LABELS,
     SIX_AAVE_METHODS,
 )  # noqa: E402
+
+METHODS = SEVEN_METHODS
 
 FAMILY_HEADERS = {
     "transfer": "Transfer",
@@ -252,7 +254,8 @@ def main() -> int:
         tex_path = (
             repo_root
             / "2-Dissertation-Draft"
-            / "en"
+            / "local-other"
+            / "en-leftover"
             / "archive"
             / "extended-baselines"
             / "tables"

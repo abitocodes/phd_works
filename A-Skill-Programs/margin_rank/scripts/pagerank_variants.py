@@ -10,6 +10,7 @@ from pagerank import (
     build_awp_edges,
     build_endorserank_edges,
     build_weighted_edges,
+    coupled_pagerank,
     filter_subgraph_edges,
     logistic_time_decay,
     weighted_pagerank,
@@ -17,6 +18,81 @@ from pagerank import (
 
 GMX_POOL_NODE = "__gmx_profit_pool__"
 GMX_SINK_NODE = "__gmx_loss_sink__"
+
+# Hybrid operators over the allowance and transfer layers. ``coupled_pr`` is
+# the primary lambda from config; the other coupled ids carry the grid value
+# in their suffix (lambda = 0.25 -> coupled_pr_l25). ``seeded_pr`` is the
+# transfer walk with EndorseRank as the restart distribution.
+SEEDED_PR_ID = "seeded_pr"
+COUPLED_PR_ID = "coupled_pr"
+
+
+def hybrid_lambda_map(config: dict[str, Any]) -> dict[str, float]:
+    """method_id -> lambda for the coupled operator (primary first)."""
+    hyb = (config.get("reputation") or {}).get("hybrid") or {}
+    primary = float(hyb.get("coupled_lambda_primary", 0.5))
+    grid = [float(x) for x in hyb.get("coupled_lambda_grid", [0.25, 0.5, 0.75])]
+    out: dict[str, float] = {COUPLED_PR_ID: primary}
+    for lam in grid:
+        if abs(lam - primary) < 1e-12:
+            continue
+        out[f"{COUPLED_PR_ID}_l{int(round(lam * 100)):02d}"] = lam
+    return out
+
+
+def hybrid_method_ids(config: dict[str, Any]) -> tuple[str, ...]:
+    return tuple(hybrid_lambda_map(config)) + (SEEDED_PR_ID,)
+
+
+def compute_hybrid_scores(
+    wallets: list[str],
+    config: dict[str, Any],
+    er_edges: pd.DataFrame,
+    awp_edges: pd.DataFrame,
+) -> tuple[dict[str, dict[str, float]], dict[str, int]]:
+    """C-PR for every configured lambda and S-PR, restricted to ``wallets``.
+
+    ``er_edges`` and ``awp_edges`` are the already filtered single-layer edge
+    lists (the same inputs EndorseRank and AWP are scored on).
+    """
+    rep = config["reputation"]
+    hyb = rep.get("hybrid") or {}
+    damping = float(rep["damping"])
+    tol = float(rep["pagerank_tolerance"])
+    max_iter = int(rep["max_iterations"])
+    scores: dict[str, dict[str, float]] = {}
+    edge_counts: dict[str, int] = {}
+
+    n_er = 0 if er_edges is None else len(er_edges)
+    n_awp = 0 if awp_edges is None else len(awp_edges)
+
+    for method_id, lam in hybrid_lambda_map(config).items():
+        full = coupled_pagerank(
+            [(er_edges, lam), (awp_edges, 1.0 - lam)],
+            damping=damping,
+            tol=tol,
+            max_iter=max_iter,
+        )
+        scores[method_id] = {w: full.get(w, 0.0) for w in wallets}
+        edge_counts[method_id] = n_er + n_awp
+
+    er_full: dict[str, float] = {}
+    if n_er:
+        er_full = weighted_pagerank(er_edges, damping=damping, tol=tol, max_iter=max_iter)
+    if n_awp:
+        seeded = weighted_pagerank(
+            awp_edges,
+            damping=damping,
+            tol=tol,
+            max_iter=max_iter,
+            teleport=er_full or None,
+            teleport_floor=float(hyb.get("seeded_teleport_floor", 0.0)),
+        )
+        scores[SEEDED_PR_ID] = {w: seeded.get(w, 0.0) for w in wallets}
+    else:
+        scores[SEEDED_PR_ID] = {w: 0.0 for w in wallets}
+    edge_counts[SEEDED_PR_ID] = n_awp
+    return scores, edge_counts
 
 SIX_AAVE_METHOD_IDS = (
     "endorserank",
@@ -584,8 +660,13 @@ def compute_variant_scores(
     )
 
     # AWP
-    awp_edges = build_awp_edges(transfers, observation_end, k, t0)
+    awp_edges = filter_subgraph_edges(build_awp_edges(transfers, observation_end, k, t0), seed)
     scores["awp"], edge_counts["awp"] = _run_pagerank_on_edges(awp_edges, wallets, seed, rep)
+
+    # Hybrids (C-PR grid and S-PR) on the same two filtered layers.
+    hybrid_scores, hybrid_counts = compute_hybrid_scores(wallets, config, er_edges, awp_edges)
+    scores.update(hybrid_scores)
+    edge_counts.update(hybrid_counts)
 
     if methods_cfg.get("gf_pr", {}).get("enabled", True):
         gf_edges = build_gf_pr_edges(decoded, wallets)

@@ -76,31 +76,26 @@ def scaling_stages_for_cohort(wallets: list[str], config: dict) -> list[int]:
     return stages
 
 
-def _run_timed(
-    edges: pd.DataFrame,
-    damping: float,
-    tol: float,
-    max_iter: int,
-    repeats: int = 5,
+def _time_solver(
+    key: tuple,
+    solve: Any,
+    edge_count: int,
+    node_count: int,
+    repeats: int,
 ) -> dict[str, Any]:
-    from pagerank import weighted_pagerank
+    """Warm-up (tracemalloc peak) plus ``repeats`` timed calls of ``solve()``.
 
-    key = (_edge_signature(edges), float(damping), float(tol), int(max_iter), int(repeats))
+    ``solve`` must return ``(scores, iterations)``. Results are memoised on
+    ``key`` so identical configurations report identical measurements.
+    """
     cached = _TIMING_CACHE.get(key)
     if cached is not None:
         out = dict(cached)
         out["reused_measurement"] = True
         return out
 
-    # Warm-up: untimed solve that also yields peak memory under tracemalloc.
     tracemalloc.start()
-    _, warm_iters = weighted_pagerank(
-        edges,
-        damping=damping,
-        tol=tol,
-        max_iter=max_iter,
-        return_iterations=True,
-    )
+    _, warm_iters = solve()
     _, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     peak_mb = peak / (1024 * 1024)
@@ -109,13 +104,7 @@ def _run_timed(
     iterations: list[int] = []
     for _ in range(repeats):
         t0 = time.perf_counter()
-        _, iters = weighted_pagerank(
-            edges,
-            damping=damping,
-            tol=tol,
-            max_iter=max_iter,
-            return_iterations=True,
-        )
+        _, iters = solve()
         runtimes.append(time.perf_counter() - t0)
         iterations.append(iters)
 
@@ -128,14 +117,111 @@ def _run_timed(
         "iterations_mean": round(mean(iterations), 1),
         "warmup_iterations": int(warm_iters),
         "peak_memory_mb": round(peak_mb, 2),
-        "edge_count": len(edges),
-        "node_count": len(set(edges["from_node"]) | set(edges["to_node"])) if not edges.empty else 0,
+        "edge_count": int(edge_count),
+        "node_count": int(node_count),
         "repeats": repeats,
         "warmup_runs": 1,
         "reused_measurement": False,
     }
     _TIMING_CACHE[key] = result
     return dict(result)
+
+
+def _node_count(edges: pd.DataFrame) -> int:
+    return len(set(edges["from_node"]) | set(edges["to_node"])) if not edges.empty else 0
+
+
+def _run_timed(
+    edges: pd.DataFrame,
+    damping: float,
+    tol: float,
+    max_iter: int,
+    repeats: int = 5,
+) -> dict[str, Any]:
+    from pagerank import weighted_pagerank
+
+    key = (_edge_signature(edges), float(damping), float(tol), int(max_iter), int(repeats))
+    return _time_solver(
+        key,
+        lambda: weighted_pagerank(
+            edges, damping=damping, tol=tol, max_iter=max_iter, return_iterations=True
+        ),
+        edge_count=len(edges),
+        node_count=_node_count(edges),
+        repeats=repeats,
+    )
+
+
+def _run_timed_hybrids(
+    er_edges: pd.DataFrame,
+    awp_edges: pd.DataFrame,
+    config: dict,
+    repeats: int = 5,
+) -> dict[str, dict[str, Any]]:
+    """Time C-PR (configured lambdas) and S-PR on the two filtered layers.
+
+    S-PR timing includes the EndorseRank solve that supplies its restart
+    vector, since that solve is part of producing the score.
+    """
+    from pagerank import coupled_pagerank, weighted_pagerank
+    from pagerank_variants import SEEDED_PR_ID, hybrid_lambda_map
+
+    rep = config["reputation"]
+    hyb = rep.get("hybrid") or {}
+    damping = float(rep["damping"])
+    tol = float(rep["pagerank_tolerance"])
+    max_iter = int(rep["max_iterations"])
+    sig_er = _edge_signature(er_edges)
+    sig_awp = _edge_signature(awp_edges)
+    union_nodes = len(
+        (set(er_edges["from_node"]) | set(er_edges["to_node"]) if not er_edges.empty else set())
+        | (set(awp_edges["from_node"]) | set(awp_edges["to_node"]) if not awp_edges.empty else set())
+    )
+    out: dict[str, dict[str, Any]] = {}
+    for method_id, lam in hybrid_lambda_map(config).items():
+        key = ("coupled", sig_er, sig_awp, float(lam), damping, tol, max_iter, int(repeats))
+        out[method_id] = _time_solver(
+            key,
+            lambda lam=lam: coupled_pagerank(
+                [(er_edges, lam), (awp_edges, 1.0 - lam)],
+                damping=damping,
+                tol=tol,
+                max_iter=max_iter,
+                return_iterations=True,
+            ),
+            edge_count=len(er_edges) + len(awp_edges),
+            node_count=union_nodes,
+            repeats=repeats,
+        )
+        out[method_id]["lambda"] = float(lam)
+
+    floor = float(hyb.get("seeded_teleport_floor", 0.0))
+
+    def _seeded() -> tuple[dict[str, float], int]:
+        er_scores, er_iters = weighted_pagerank(
+            er_edges, damping=damping, tol=tol, max_iter=max_iter, return_iterations=True
+        )
+        scores, iters = weighted_pagerank(
+            awp_edges,
+            damping=damping,
+            tol=tol,
+            max_iter=max_iter,
+            return_iterations=True,
+            teleport=er_scores or None,
+            teleport_floor=floor,
+        )
+        return scores, int(er_iters) + int(iters)
+
+    key = ("seeded", sig_er, sig_awp, floor, damping, tol, max_iter, int(repeats))
+    out[SEEDED_PR_ID] = _time_solver(
+        key,
+        _seeded,
+        edge_count=len(awp_edges),
+        node_count=_node_count(awp_edges),
+        repeats=repeats,
+    )
+    out[SEEDED_PR_ID]["iterations_note"] = "EndorseRank solve plus seeded transfer solve"
+    return out
 
 
 def benchmark_er_awp_pair(
@@ -205,6 +291,9 @@ def benchmark_all_methods(
     for method_id, edges in edge_map.items():
         results[method_id] = _run_timed(edges, damping, tol, max_iter, repeats)
 
+    results.update(
+        _run_timed_hybrids(edge_map["endorserank"], edge_map["awp"], config, repeats=repeats)
+    )
     return results
 
 

@@ -361,7 +361,15 @@ def main() -> int:
         if rc != 0:
             return rc
         repo_root = Path(__file__).resolve().parents[2].parent
-        archive_tex = repo_root / "2-Dissertation-Draft" / "en" / "archive" / "extended-baselines" / "tables"
+        archive_tex = (
+            repo_root
+            / "2-Dissertation-Draft"
+            / "local-other"
+            / "en-leftover"
+            / "archive"
+            / "extended-baselines"
+            / "tables"
+        )
         archive_csv = ROOT / "data" / "archive" / "extended-baselines"
         for preset in ("seven", "six-aave"):
             rc = _run_script(

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export eval_summary.json to LaTeX table fragments for 2-Dissertation-Draft/en."""
+"""Export eval_summary.json to LaTeX table fragments for 2-Dissertation-Draft/overleaf-github."""
 
 from __future__ import annotations
 
@@ -180,20 +180,32 @@ def write_benchmark_table(summary: dict, out: Path) -> None:
         awp["runtime_sec_mean"] / er["runtime_sec_mean"] if er["runtime_sec_mean"] > 0 else None
     )
     speedup_str = f"{speedup:.1f}" if speedup is not None else "---"
+    hybrid_rows = []
+    for method_id in ("coupled_pr", "seeded_pr"):
+        if method_id in b:
+            hybrid_rows.append(_row(METHOD_LABELS.get(method_id, method_id), b[method_id]))
+    hybrid_block = ("\\midrule\n" + "\n".join(hybrid_rows) + "\n") if hybrid_rows else ""
+    hybrid_note = (
+        " C-PR walks on the union of both layers, so $|E|$ is the sum of the two edge sets; "
+        "S-PR runs on the transfer layer and its runtime includes the EndorseRank solve that "
+        "supplies its restart vector."
+        if hybrid_rows
+        else ""
+    )
     tabular = f"""\\begin{{tabular}}{{lrrrrrr}}
 \\toprule
 Method & Runtime (s) & SD (s) & Peak mem.\\ (MB) & Iters & $|V|$ & $|E|$ \\\\
 \\midrule
 {_row('EndorseRank', er)}
 {_row('AWP', awp)}
-\\bottomrule
+{hybrid_block}\\bottomrule
 \\end{{tabular}}"""
     out.write_text(
         hdr
         + _wrap_table(
             f"Computational benchmark on the matched wallet cohort ($n={_fmt_int(n)}$; "
             f"AWP/EndorseRank runtime ratio {speedup_str}$\\times$). {_timing_note(summary)} "
-            f"$|V|$, $|E|$ = nodes and edges of each method's evaluation subgraph.",
+            f"$|V|$, $|E|$ = nodes and edges of each method's evaluation subgraph.{hybrid_note}",
             "tab:benchmark-runtime",
             tabular,
         ),
@@ -294,13 +306,7 @@ Family & ER mean $\\tau$ & ER 95\\% CI & AWP mean $\\tau$ & AWP 95\\% CI \\\\
     )
 
 
-def write_tau_diff_table(summary: dict, out: Path) -> None:
-    """Paired bootstrap differences between correlation coefficients."""
-    boot = summary.get("alignment", {}).get("bootstrap") or {}
-    rows = boot.get("tau_diff") or []
-    if not rows:
-        return
-    hdr = latex_header(summary)
+def _tau_diff_lines(rows: list[dict]) -> list[str]:
     lines = []
     for r in rows:
         lines.append(
@@ -308,13 +314,26 @@ def write_tau_diff_table(summary: dict, out: Path) -> None:
             f"{r['delta_tau']:+.3f} & {_fmt_ci(r.get('ci_low'), r.get('ci_high'))} & "
             f"{r.get('share_positive', 0.0):.3f} \\\\"
         )
-    tabular = f"""\\begin{{tabular}}{{lccccc}}
+    return lines
+
+
+def _tau_diff_tabular(lines: list[str]) -> str:
+    return f"""\\begin{{tabular}}{{lccccc}}
 \\toprule
 Contrast ($a$ minus $b$) & $\\tau_a$ & $\\tau_b$ & $\\Delta\\tau$ & 95\\% CI of $\\Delta\\tau$ & $P(\\Delta\\tau>0)$ \\\\
 \\midrule
 {chr(10).join(lines)}
 \\bottomrule
 \\end{{tabular}}"""
+
+
+def write_tau_diff_table(summary: dict, out: Path) -> None:
+    """Paired bootstrap differences between EndorseRank and AWP coefficients."""
+    boot = summary.get("alignment", {}).get("bootstrap") or {}
+    rows = [r for r in (boot.get("tau_diff") or []) if r.get("group", "primary") == "primary"]
+    if not rows:
+        return
+    hdr = latex_header(summary)
     out.write_text(
         hdr
         + _wrap_table(
@@ -324,6 +343,204 @@ Contrast ($a$ minus $b$) & $\\tau_a$ & $\\tau_b$ & $\\Delta\\tau$ & 95\\% CI of 
             f"interval is on the paired difference. An interval excluding 0 indicates a difference "
             f"not attributable to sampling variation at the 5\\% level. {_bootstrap_note(summary)}",
             "tab:tau-diff",
+            _tau_diff_tabular(_tau_diff_lines(rows)),
+        ),
+        encoding="utf-8",
+    )
+
+
+def write_tau_diff_hybrid_table(summary: dict, out: Path) -> None:
+    """Paired differences of the hybrid operators against the better single-layer method."""
+    boot = summary.get("alignment", {}).get("bootstrap") or {}
+    rows = [r for r in (boot.get("tau_diff") or []) if r.get("group") == "hybrid"]
+    if not rows:
+        return
+    hdr = latex_header(summary)
+    out.write_text(
+        hdr
+        + _wrap_table(
+            f"Same-window paired contrasts for the coupled operator (C-PR, $\\lambda=0.5$) and the "
+            f"endorsement-seeded walk (S-PR) against the single-layer method that leads each family "
+            f"(matched cohort, $n={_fmt_int(summary.get('n_wallets'))}$). Family-mean $\\tau$; the "
+            f"same wallet resamples are used for $a$ and $b$. The secondary criterion of "
+            f"Section~\\ref{{sec:holdout-protocol}} is met on a family when the interval includes "
+            f"0 or lies above it (transfer, allowance) or lies above 0 (Sybil stability). "
+            f"{_bootstrap_note(summary)}",
+            "tab:tau-diff-hybrid",
+            _tau_diff_tabular(_tau_diff_lines(rows)),
+        ),
+        encoding="utf-8",
+    )
+
+
+HYBRID_TABLE_METHODS = ("endorserank", "awp", "coupled_pr_l25", "coupled_pr", "coupled_pr_l75", "seeded_pr")
+
+
+def write_alignment_hybrid_table(summary: dict, out: Path) -> None:
+    """Family-mean tau with CI for the single-layer methods and the hybrids (core families)."""
+    boot = summary.get("alignment", {}).get("bootstrap") or {}
+    family_ci = boot.get("family_ci") or {}
+    if not any(m in family_ci for m in ("coupled_pr", "seeded_pr")):
+        return
+    hdr = latex_header(summary)
+    lines = []
+    for method_id in HYBRID_TABLE_METHODS:
+        fam = family_ci.get(method_id)
+        if not fam:
+            continue
+        cells = []
+        for family in CORE_FAMILIES:
+            row = fam.get(family, {})
+            cells.append(f"{_fmt(row.get('mean_tau'))} {_fmt_ci(row.get('ci_low'), row.get('ci_high'))}")
+        lines.append(f"{METHOD_LABELS.get(method_id, method_id)} & {' & '.join(cells)} \\\\")
+        if method_id == "awp":
+            lines.append("\\midrule")
+    heads = " & ".join(FAMILY_LABELS[f] for f in CORE_FAMILIES)
+    tabular = f"""\\begin{{tabular}}{{lccc}}
+\\toprule
+Method & {heads} \\\\
+\\midrule
+{chr(10).join(lines)}
+\\bottomrule
+\\end{{tabular}}"""
+    out.write_text(
+        hdr
+        + _wrap_table(
+            f"Same-window family-mean Kendall $\\tau$ with bootstrap intervals for the two "
+            f"single-layer methods, the coupled operator at three values of $\\lambda$ and the "
+            f"endorsement-seeded walk (matched cohort, $n={_fmt_int(summary.get('n_wallets'))}$). "
+            f"$\\lambda=1$ would reproduce EndorseRank and $\\lambda=0$ AWP on a shared node set. "
+            f"{_bootstrap_note(summary)}",
+            "tab:alignment-hybrid",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
+
+
+HOLDOUT_ROW_ORDER = (
+    ("t1_in_approve_degree", "In-approve degree at $t_1$ (baseline)"),
+    ("t1_in_degree", "Transfer in-degree at $t_1$ (baseline)"),
+    ("endorserank", "EndorseRank"),
+    ("awp", "AWP"),
+    ("coupled_pr_l25", "C-PR ($\\lambda=0.25$)"),
+    ("coupled_pr", "C-PR ($\\lambda=0.5$)"),
+    ("coupled_pr_l75", "C-PR ($\\lambda=0.75$)"),
+    ("seeded_pr", "S-PR"),
+)
+HOLDOUT_TABLE_LABELS = ("future_new_approvers", "future_new_transfer_senders")
+
+
+def _holdout_dates(holdout: dict) -> tuple[str, str, str]:
+    def _d(s: str) -> str:
+        ts = str(s)[:10]
+        try:
+            import datetime as _dt
+
+            d = _dt.date.fromisoformat(ts)
+            return f"{d.day}~{d.strftime('%B')}~{d.year}"
+        except ValueError:
+            return ts
+
+    return _d(holdout.get("score_end", "")), _d(holdout.get("outcome_start", "")), _d(holdout.get("outcome_end", ""))
+
+
+def write_holdout_table(holdout: dict, out: Path) -> None:
+    """Temporal holdout: scores at t1 against the two future-tense labels."""
+    methods = holdout.get("alignment", {}).get("methods") or {}
+    if not methods:
+        return
+    n = holdout.get("n_wallets")
+    boot = holdout.get("bootstrap") or {}
+    n_boot = boot.get("n_boot", 400)
+    prev = holdout.get("prevalence") or {}
+    score_end, o_start, o_end = _holdout_dates(holdout)
+    lines = []
+    for method_id, label in HOLDOUT_ROW_ORDER:
+        stats = methods.get(method_id)
+        if not stats:
+            continue
+        cells = []
+        for lab in HOLDOUT_TABLE_LABELS:
+            s = stats.get(lab, {})
+            cells.append(f"{_fmt(s.get('kendall_tau'))} {_fmt_ci(s.get('ci_low'), s.get('ci_high'))}")
+        lines.append(f"{label} & {' & '.join(cells)} \\\\")
+        if method_id == "t1_in_degree" or method_id == "awp":
+            lines.append("\\midrule")
+    nz_appr = (prev.get("future_new_approvers") or {}).get("n_nonzero")
+    nz_flow = (prev.get("future_new_transfer_senders") or {}).get("n_nonzero")
+    tabular = f"""\\begin{{tabular}}{{lcc}}
+\\toprule
+Score at $t_1$ & New approval pairs ($\\tau$ [95\\% CI]) & New transfer senders ($\\tau$ [95\\% CI]) \\\\
+\\midrule
+{chr(10).join(lines)}
+\\bottomrule
+\\end{{tabular}}"""
+    hdr = (
+        "% Real local parquet -- regenerate with:\n"
+        "%   A-Skill-Programs/margin_rank/scripts/run_holdout_eval.py --cohort spenders\n"
+        "% Generated by export_latex_results.py -- do not edit by hand unless re-export fails\n"
+    )
+    out.write_text(
+        hdr
+        + _wrap_table(
+            f"Temporal holdout on the spender cohort ($n={_fmt_int(n)}$): Kendall $\\tau$ between scores "
+            f"frozen at {score_end} and two labels counted on the wallet between {o_start} and "
+            f"{o_end}: the number of new owner--spender approval pairs and the number of addresses "
+            f"that sent a transfer to the wallet for the first time. CI = 95\\% percentile bootstrap over "
+            f"wallets ({n_boot} paired resamples). {_fmt_int(nz_appr)} wallets received at least one new "
+            f"pair and {_fmt_int(nz_flow)} at least one new sender. Baseline rows are the raw degrees at "
+            f"$t_1$ that each single-layer PageRank smooths.",
+            "tab:holdout-spenders",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
+
+
+def write_holdout_diff_table(holdout: dict, out: Path) -> None:
+    """Paired differences on the holdout, including the pre-registered primary criterion."""
+    rows = holdout.get("tau_diff") or []
+    if not rows:
+        return
+    label_names = {
+        "future_new_approvers": "new approval pairs",
+        "future_new_transfer_senders": "new transfer senders",
+    }
+    lines = []
+    for r in rows:
+        if r.get("delta_tau") is None:
+            continue
+        lines.append(
+            f"{r['label']} & {label_names.get(r['holdout_label'], r['holdout_label'])} & "
+            f"{_fmt(r['a']['tau'])} & {_fmt(r['b']['tau'])} & {r['delta_tau']:+.3f} & "
+            f"{_fmt_ci(r.get('ci_low'), r.get('ci_high'))} & {_fmt(r.get('share_positive'))} \\\\"
+        )
+    crit = holdout.get("primary_criterion") or {}
+    verdict = "met" if crit.get("met") else "not met"
+    n_boot = (holdout.get("bootstrap") or {}).get("n_boot", 400)
+    tabular = f"""\\begin{{tabular}}{{llccccc}}
+\\toprule
+Contrast ($a$ minus $b$) & Label & $\\tau_a$ & $\\tau_b$ & $\\Delta\\tau$ & 95\\% CI of $\\Delta\\tau$ & $P(\\Delta\\tau>0)$ \\\\
+\\midrule
+{chr(10).join(lines)}
+\\bottomrule
+\\end{{tabular}}"""
+    hdr = (
+        "% Real local parquet -- regenerate with:\n"
+        "%   A-Skill-Programs/margin_rank/scripts/run_holdout_eval.py --cohort spenders\n"
+        "% Generated by export_latex_results.py -- do not edit by hand unless re-export fails\n"
+    )
+    out.write_text(
+        hdr
+        + _wrap_table(
+            f"Paired bootstrap differences on the spender holdout ($n={_fmt_int(holdout.get('n_wallets'))}$, "
+            f"{n_boot} resamples shared by $a$ and $b$). The first two rows give the increment of each "
+            f"PageRank over its own raw degree at $t_1$; the next two compare the single-layer methods on "
+            f"the other construct's label; the last four are the pre-registered hybrid contrasts. "
+            f"Primary criterion (C-PR no worse than EndorseRank on new approval pairs and better than AWP "
+            f"on new transfer senders): {verdict}.",
+            "tab:holdout-diff",
             tabular,
         ),
         encoding="utf-8",
@@ -591,6 +808,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--summary", type=Path, help="eval_summary.json path")
     parser.add_argument(
+        "--holdout-summary",
+        type=Path,
+        help="holdout eval_summary_spenders.json path (default: config holdout dir)",
+    )
+    parser.add_argument(
         "--out-dir",
         type=Path,
         help="LaTeX tables output directory",
@@ -604,7 +826,9 @@ def main() -> int:
         return 1
 
     repo_root = ROOT.parents[1]
-    out_dir = args.out_dir or (repo_root / "2-Dissertation-Draft" / "en" / "results" / "tables")
+    out_dir = args.out_dir or (
+        repo_root / "2-Dissertation-Draft" / "overleaf-github" / "results" / "tables"
+    )
     out_dir.mkdir(parents=True, exist_ok=True)
 
     summary = load_json(summary_path)
@@ -619,6 +843,20 @@ def main() -> int:
     write_summary_table(summary, out_dir / "alignment-summary.tex")
     write_family_ci_table(summary, out_dir / "alignment-family-ci.tex")
     write_tau_diff_table(summary, out_dir / "tau-diff.tex")
+    write_tau_diff_hybrid_table(summary, out_dir / "tau-diff-hybrid.tex")
+    write_alignment_hybrid_table(summary, out_dir / "alignment-hybrid.tex")
+
+    holdout_path = Path(config["reputation"]["paths"]["holdout_summary"]).with_name(
+        "eval_summary_spenders.json"
+    )
+    if args.holdout_summary:
+        holdout_path = args.holdout_summary
+    if holdout_path.exists():
+        holdout = load_json(holdout_path)
+        write_holdout_table(holdout, out_dir / "holdout-spenders.tex")
+        write_holdout_diff_table(holdout, out_dir / "holdout-diff.tex")
+    else:
+        print(f"No holdout summary at {holdout_path}; holdout tables not written.")
 
     # The three-method matrix (with GF-PR) is an archive artifact; regenerate it
     # with `export_method_matrix.py --preset three`, which writes to

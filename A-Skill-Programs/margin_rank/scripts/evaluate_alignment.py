@@ -106,6 +106,14 @@ METHODS: dict[str, str] = {
 
     "riskprop_pr": "riskprop_pr_score",
 
+    "coupled_pr": "coupled_pr_score",
+
+    "coupled_pr_l25": "coupled_pr_l25_score",
+
+    "coupled_pr_l75": "coupled_pr_l75_score",
+
+    "seeded_pr": "seeded_pr_score",
+
 }
 
 
@@ -126,7 +134,39 @@ METHOD_LABELS: dict[str, str] = {
 
     "riskprop_pr": "RiskProp",
 
+    "coupled_pr": "C-PR ($\\lambda=0.5$)",
+
+    "coupled_pr_l25": "C-PR ($\\lambda=0.25$)",
+
+    "coupled_pr_l75": "C-PR ($\\lambda=0.75$)",
+
+    "seeded_pr": "S-PR",
+
 }
+
+# Methods that receive the paired bootstrap (CIs and contrasts).
+
+BOOTSTRAP_METHODS: tuple[str, ...] = (
+
+    "endorserank",
+
+    "awp",
+
+    "coupled_pr",
+
+    "coupled_pr_l25",
+
+    "coupled_pr_l75",
+
+    "seeded_pr",
+
+)
+
+HYBRID_METHODS: tuple[str, ...] = ("coupled_pr", "coupled_pr_l25", "coupled_pr_l75", "seeded_pr")
+
+# Original seven-method preset (archived extended baselines), without hybrids.
+
+SEVEN_METHODS: dict[str, str] = {k: v for k, v in METHODS.items() if k not in HYBRID_METHODS}
 
 
 SIX_AAVE_METHODS: dict[str, str] = {
@@ -461,23 +501,41 @@ def _percentile_ci(samples: list[float], ci: float) -> tuple[float | None, float
 
 # Paired contrasts reported with bootstrap intervals on the difference. Each
 
-# entry is (label, (method_a, family_or_proxy_a), (method_b, family_or_proxy_b)).
+# entry is (label, (method_a, family_or_proxy_a), (method_b, family_or_proxy_b), group).
 
 # Family names resolve to family mean tau; proxy names resolve to a single proxy.
 
-TAU_DIFF_CONTRASTS: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
+# Group "primary" = EndorseRank vs AWP; "hybrid" = coupled/seeded operators
 
-    ("EndorseRank allowance minus EndorseRank transfer", ("endorserank", "allowance"), ("endorserank", "transfer")),
+# against the better single-layer method on each family (secondary criterion).
 
-    ("AWP transfer minus EndorseRank transfer", ("awp", "transfer"), ("endorserank", "transfer")),
+TAU_DIFF_CONTRASTS: tuple[tuple[str, tuple[str, str], tuple[str, str], str], ...] = (
 
-    ("EndorseRank allowance minus AWP allowance", ("endorserank", "allowance"), ("awp", "allowance")),
+    ("EndorseRank allowance minus EndorseRank transfer", ("endorserank", "allowance"), ("endorserank", "transfer"), "primary"),
 
-    ("AWP sybil-stability minus EndorseRank sybil-stability", ("awp", "sybil_stability"), ("endorserank", "sybil_stability")),
+    ("AWP transfer minus EndorseRank transfer", ("awp", "transfer"), ("endorserank", "transfer"), "primary"),
 
-    ("AWP GMX-success minus EndorseRank GMX-success", ("awp", "gmx_success"), ("endorserank", "gmx_success")),
+    ("EndorseRank allowance minus AWP allowance", ("endorserank", "allowance"), ("awp", "allowance"), "primary"),
 
-    ("EndorseRank in-approve degree minus EndorseRank in-degree", ("endorserank", "in_approve_degree"), ("endorserank", "in_degree")),
+    ("AWP sybil-stability minus EndorseRank sybil-stability", ("awp", "sybil_stability"), ("endorserank", "sybil_stability"), "primary"),
+
+    ("EndorseRank in-approve degree minus EndorseRank in-degree", ("endorserank", "in_approve_degree"), ("endorserank", "in_degree"), "primary"),
+
+    ("C-PR transfer minus AWP transfer", ("coupled_pr", "transfer"), ("awp", "transfer"), "hybrid"),
+
+    ("C-PR allowance minus EndorseRank allowance", ("coupled_pr", "allowance"), ("endorserank", "allowance"), "hybrid"),
+
+    ("C-PR sybil-stability minus AWP sybil-stability", ("coupled_pr", "sybil_stability"), ("awp", "sybil_stability"), "hybrid"),
+
+    ("C-PR sybil-stability minus EndorseRank sybil-stability", ("coupled_pr", "sybil_stability"), ("endorserank", "sybil_stability"), "hybrid"),
+
+    ("S-PR transfer minus AWP transfer", ("seeded_pr", "transfer"), ("awp", "transfer"), "hybrid"),
+
+    ("S-PR allowance minus EndorseRank allowance", ("seeded_pr", "allowance"), ("endorserank", "allowance"), "hybrid"),
+
+    ("S-PR sybil-stability minus AWP sybil-stability", ("seeded_pr", "sybil_stability"), ("awp", "sybil_stability"), "hybrid"),
+
+    ("S-PR sybil-stability minus EndorseRank sybil-stability", ("seeded_pr", "sybil_stability"), ("endorserank", "sybil_stability"), "hybrid"),
 
 )
 
@@ -497,7 +555,7 @@ def bootstrap_alignment(
 
     ci: float = 0.95,
 
-    contrasts: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = TAU_DIFF_CONTRASTS,
+    contrasts: tuple[tuple[str, tuple[str, str], tuple[str, str], str], ...] = TAU_DIFF_CONTRASTS,
 
 ) -> dict[str, Any]:
 
@@ -697,7 +755,7 @@ def bootstrap_alignment(
 
     tau_diff: list[dict[str, Any]] = []
 
-    for label, spec_a, spec_b in contrasts:
+    for label, spec_a, spec_b, group in contrasts:
 
         arr_a, pt_a = _resolve(spec_a)
 
@@ -716,6 +774,8 @@ def bootstrap_alignment(
             {
 
                 "label": label,
+
+                "group": group,
 
                 "a": {"method": spec_a[0], "key": spec_a[1], "tau": pt_a},
 
@@ -819,7 +879,11 @@ def build_alignment_report(
 
         boot_methods = bootstrap.get("methods") or {
 
-            k: v for k, v in methods_dict.items() if k in ("endorserank", "awp")
+            k: v
+
+            for k, v in methods_dict.items()
+
+            if k in BOOTSTRAP_METHODS and v in merged.columns
 
         }
 

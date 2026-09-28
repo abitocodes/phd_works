@@ -17,28 +17,37 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from common import load_config, save_json  # noqa: E402
 from holdout import (  # noqa: E402
+    BASELINE_IDS,
     EXTERNAL_LABELS,
+    HOLDOUT_CONTRASTS,
     HOLDOUT_LABELS,
     build_holdout_fixture_frames,
     classify_external_result,
     correlate_holdout,
+    evaluate_primary_criterion,
     filter_transfers_as_of,
     future_aave_labels,
     future_approval_labels,
     future_drain_labels,
     future_gmx_labels,
+    future_transfer_labels,
     holdout_bounds,
+    holdout_tau_diff,
     label_prevalence,
     latest_positive_as_of,
     load_approval_events,
     load_transfer_events,
     resolve_score_wallets,
     score_awp,
+    score_coupled,
     score_endorserank,
+    score_seeded,
     scores_to_frame,
+    t1_baselines,
     t1_connected_wallets,
 )
 from pagerank import build_awp_edges, build_endorserank_edges  # noqa: E402
+from pagerank_variants import SEEDED_PR_ID, hybrid_lambda_map  # noqa: E402
 
 
 def _load_matched_wallets(config: dict) -> list[str] | None:
@@ -56,10 +65,15 @@ def _score_methods(
     wallets: list[str],
     config: dict,
 ) -> dict[str, dict[str, float]]:
-    return {
+    scores: dict[str, dict[str, float]] = {
         "endorserank": score_endorserank(latest_t1, wallets, config),
         "awp": score_awp(transfers_t1, score_end, wallets, config),
     }
+    for method_id, lam in hybrid_lambda_map(config).items():
+        scores[method_id] = score_coupled(latest_t1, transfers_t1, score_end, wallets, config, lam)
+    scores[SEEDED_PR_ID] = score_seeded(latest_t1, transfers_t1, score_end, wallets, config)
+    scores.update(t1_baselines(latest_t1, transfers_t1, wallets))
+    return scores
 
 
 def run_holdout(
@@ -100,6 +114,7 @@ def run_holdout(
     labels = future_approval_labels(
         approvals, latest_t1, outcome_start, outcome_end, wallets
     )
+    flow = future_transfer_labels(transfers, transfers_t1, outcome_start, outcome_end, wallets)
     gmx = future_gmx_labels(decoded, outcome_start, outcome_end, wallets, min_closes)
     drain = future_drain_labels(
         approvals, transfers, outcome_start, outcome_end, wallets
@@ -107,6 +122,7 @@ def run_holdout(
     aave = future_aave_labels(aave_events, outcome_start, outcome_end, wallets)
     merged = (
         frame.merge(labels, on="wallet", how="left")
+        .merge(flow, on="wallet", how="left")
         .merge(gmx, on="wallet", how="left")
         .merge(drain, on="wallet", how="left")
         .merge(aave, on="wallet", how="left")
@@ -123,6 +139,8 @@ def run_holdout(
         for lab in EXTERNAL_LABELS:
             stat = alignment["methods"].get(method, {}).get(lab, {})
             verdicts[method][lab] = classify_external_result(stat, prevalence.get(lab))
+    tau_diff = holdout_tau_diff(merged, HOLDOUT_CONTRASTS, n_resamples=n_boot, seed=seed)
+    hyb = rep.get("hybrid") or {}
     return {
         "protocol": "t1_score_vs_t2_label",
         "score_end": str(score_end),
@@ -132,9 +150,17 @@ def run_holdout(
         "n_t1_allowance_rows": int(len(latest_t1)),
         "n_t1_transfers": int(len(transfers_t1)),
         "methods": methods,
+        "baselines": list(BASELINE_IDS),
+        "hybrid": {
+            "coupled_lambda": hybrid_lambda_map(config),
+            "seeded_teleport_floor": float(hyb.get("seeded_teleport_floor", 0.0)),
+        },
+        "bootstrap": {"n_boot": n_boot, "seed": seed, "ci_level": 0.95},
         "alignment": alignment,
         "prevalence": prevalence,
         "verdicts": verdicts,
+        "tau_diff": tau_diff,
+        "primary_criterion": evaluate_primary_criterion(tau_diff),
         "at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -217,6 +243,14 @@ def main() -> int:
                 f"ci=({stat.get('ci_low')}, {stat.get('ci_high')}) "
                 f"n={stat.get('n')} [{verdict}]"
             )
+    print("== paired contrasts")
+    for row in summary.get("tau_diff", []):
+        print(
+            f"  {row['label']:40s} on {row['holdout_label']:28s} "
+            f"delta={row.get('delta_tau')} ci=({row.get('ci_low')}, {row.get('ci_high')}) "
+            f"P(>0)={row.get('share_positive')}"
+        )
+    print(f"primary criterion: {summary.get('primary_criterion')}")
     print(f"wrote {out_path}")
     return 0
 

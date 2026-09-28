@@ -5,3 +5,5 @@ __pycache__/
 data/raw/
 data/processed/
 !data/fixtures/README.md
+# results/ holds the committed evaluation summaries (see results/README.md)
+!results/

@@ -19,9 +19,10 @@ from pagerank_variants import (
     SIX_AAVE_METHOD_IDS,
     compute_six_aave_scores,
     compute_variant_scores,
+    hybrid_method_ids,
 )
 
-METHOD_IDS = (
+BASE_METHOD_IDS = (
     "endorserank",
     "awp",
     "gf_pr",
@@ -30,6 +31,8 @@ METHOD_IDS = (
     "lf_pr",
     "riskprop_pr",
 )
+# Extended at runtime with the configured hybrid ids (see main()).
+METHOD_IDS = BASE_METHOD_IDS
 
 SIX_AAVE_ALL_IDS = SIX_AAVE_METHOD_IDS + SIX_AAVE_DIAGNOSTIC_IDS
 
@@ -41,6 +44,8 @@ def main() -> int:
 
     config = load_config()
     rep = config["reputation"]
+    global METHOD_IDS
+    METHOD_IDS = BASE_METHOD_IDS + hybrid_method_ids(config)
     rankings_path = args.rankings or Path(config["paths"]["wallet_rankings"])
     allowances_path = Path(rep["paths"]["latest_allowances"])
     transfers_path = Path(rep["paths"]["transfer_events"])

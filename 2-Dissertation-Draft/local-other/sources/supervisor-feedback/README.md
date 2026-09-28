@@ -9,6 +9,7 @@
 | [`2026-08-28_Mnkandla_Re_Correction_Chapter-submissions-Turnitin.eml`](2026-08-28_Mnkandla_Re_Correction_Chapter-submissions-Turnitin.eml) | Mnkandla 표지 이메일 (첨부: 위 DOCX) |
 | [`2026-08-28_Mnkandla_cover-email.md`](2026-08-28_Mnkandla_cover-email.md) | 이메일 본문 전사 + 한국어 번역 |
 | [`2026-08-28_Moulla_Attipoe_docx-comments.md`](2026-08-28_Moulla_Attipoe_docx-comments.md) | DOCX 코멘트 27개 전문 복사 + 한국어 번역 |
+| [`2026-09-14_two-page-contribution-plan.md`](2026-09-14_two-page-contribution-plan.md) | Attipoe 코멘트(Word id 78, "two-page plan")에 대한 회신. C-PR/S-PR 정의, 홀드아웃 라벨, 사전등록 판정 기준, 결과별 논문 주장, 일정. 영문, 실행 전 작성 |
 
 ## 워크플로
 

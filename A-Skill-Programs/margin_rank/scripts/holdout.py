@@ -14,6 +14,7 @@ from pagerank import (
     assign_dense_ranks,
     build_awp_edges,
     build_endorserank_edges,
+    coupled_pagerank,
     filter_subgraph_edges,
     weighted_pagerank,
 )
@@ -21,6 +22,7 @@ from proxy_metrics import compute_gmx_success_proxies, compute_inverse_risk_prox
 
 HOLDOUT_LABELS = (
     "future_new_approvers",
+    "future_new_transfer_senders",
     "future_revoke_count",
     "future_revoke_rate",
     "future_keep_rate",
@@ -37,13 +39,32 @@ HOLDOUT_LABELS = (
     "worst_close_pnl_score",
 )
 
-# EndorseRank-native external labels (spender-side except Aave borrower liq).
+# External labels: endorsement construct (spender side), flow construct
+# (inbound transfer side) and the Aave borrower liquidation check.
 EXTERNAL_LABELS = (
     "future_new_approvers",
+    "future_new_transfer_senders",
     "future_keep_rate",
     "future_revoke_value",
     "future_no_drain",
     "future_aave_not_liquidated",
+)
+
+# Same-window baselines at the freeze date, reported next to the scores so the
+# increment of each PageRank over its own raw degree can be read directly.
+BASELINE_IDS = ("t1_in_approve_degree", "t1_in_degree")
+
+# Pre-registered paired contrasts on the holdout (label shared by a and b).
+# (label, method_a, method_b, holdout_label, role)
+HOLDOUT_CONTRASTS: tuple[tuple[str, str, str, str, str], ...] = (
+    ("EndorseRank minus t1 in-approve degree", "endorserank", "t1_in_approve_degree", "future_new_approvers", "increment"),
+    ("AWP minus t1 in-degree", "awp", "t1_in_degree", "future_new_transfer_senders", "increment"),
+    ("EndorseRank minus AWP", "endorserank", "awp", "future_new_approvers", "single_layer"),
+    ("AWP minus EndorseRank", "awp", "endorserank", "future_new_transfer_senders", "single_layer"),
+    ("C-PR minus EndorseRank", "coupled_pr", "endorserank", "future_new_approvers", "primary_a"),
+    ("C-PR minus AWP", "coupled_pr", "awp", "future_new_transfer_senders", "primary_b"),
+    ("S-PR minus EndorseRank", "seeded_pr", "endorserank", "future_new_approvers", "ablation_a"),
+    ("S-PR minus AWP", "seeded_pr", "awp", "future_new_transfer_senders", "ablation_b"),
 )
 
 UNLIMITED_ALLOWANCE = 1e30
@@ -221,6 +242,70 @@ def future_approval_labels(
             }
         )
     return pd.DataFrame(rows)
+
+
+def future_transfer_labels(
+    transfers: pd.DataFrame,
+    transfers_t1: pd.DataFrame,
+    outcome_start: pd.Timestamp,
+    outcome_end: pd.Timestamp,
+    wallets: list[str],
+) -> pd.DataFrame:
+    """Flow-side mirror of ``future_new_approvers``.
+
+    ``future_new_transfer_senders`` counts distinct addresses that send a
+    transfer to the wallet inside the outcome window and never did so up to
+    the freeze date (self-transfers excluded).
+    """
+    wallet_set = set(wallets)
+    t1 = normalize_transfers(transfers_t1) if not transfers_t1.empty else transfers_t1
+    seen: dict[str, set[str]] = {w: set() for w in wallets}
+    if not t1.empty:
+        sub = t1[t1["to_address"].isin(wallet_set) & (t1["from_address"] != t1["to_address"])]
+        for row in sub[["from_address", "to_address"]].drop_duplicates().itertuples(index=False):
+            seen[str(row.to_address)].add(str(row.from_address))
+
+    work = normalize_transfers(transfers)
+    window = work[
+        (work["block_timestamp"] >= outcome_start)
+        & (work["block_timestamp"] <= outcome_end)
+        & work["to_address"].isin(wallet_set)
+        & (work["from_address"] != work["to_address"])
+    ]
+    new_senders: dict[str, set[str]] = {w: set() for w in wallets}
+    for row in window[["from_address", "to_address"]].drop_duplicates().itertuples(index=False):
+        to = str(row.to_address)
+        frm = str(row.from_address)
+        if frm not in seen[to]:
+            new_senders[to].add(frm)
+
+    return pd.DataFrame(
+        {
+            "wallet": wallets,
+            "future_new_transfer_senders": [float(len(new_senders[w])) for w in wallets],
+        }
+    )
+
+
+def t1_baselines(
+    latest_t1: pd.DataFrame,
+    transfers_t1: pd.DataFrame,
+    wallets: list[str],
+) -> dict[str, dict[str, float]]:
+    """Raw degrees at the freeze date: distinct owners (allowance) and senders (transfer)."""
+    approve: dict[str, float] = {w: 0.0 for w in wallets}
+    if not latest_t1.empty:
+        counts = latest_t1.groupby("spender")["owner"].nunique()
+        for w in wallets:
+            approve[w] = float(counts.get(w, 0))
+    in_deg: dict[str, float] = {w: 0.0 for w in wallets}
+    if not transfers_t1.empty:
+        t1 = normalize_transfers(transfers_t1)
+        t1 = t1[t1["from_address"] != t1["to_address"]]
+        counts = t1.groupby("to_address")["from_address"].nunique()
+        for w in wallets:
+            in_deg[w] = float(counts.get(w, 0))
+    return {"t1_in_approve_degree": approve, "t1_in_degree": in_deg}
 
 
 def future_drain_labels(
@@ -532,6 +617,69 @@ def score_awp(
     return weighted_pagerank(edges, damping=damping, tol=tol, max_iter=max_iter)
 
 
+def _t1_layers(
+    latest_t1: pd.DataFrame,
+    transfers_t1: pd.DataFrame,
+    score_end: pd.Timestamp,
+    wallets: list[str],
+    config: dict[str, Any],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    rep = config["reputation"]
+    seed = set(wallets)
+    er_edges = filter_subgraph_edges(build_endorserank_edges(latest_t1), seed)
+    awp_edges = filter_subgraph_edges(
+        build_awp_edges(
+            transfers_t1,
+            score_end,
+            float(rep["awp_decay_k"]),
+            float(rep["awp_decay_t0_days"]),
+        ),
+        seed,
+    )
+    return er_edges, awp_edges
+
+
+def score_coupled(
+    latest_t1: pd.DataFrame,
+    transfers_t1: pd.DataFrame,
+    score_end: pd.Timestamp,
+    wallets: list[str],
+    config: dict[str, Any],
+    lam: float,
+) -> dict[str, float]:
+    """C-PR at t1: per-node mixture of the allowance and transfer layers."""
+    er_edges, awp_edges = _t1_layers(latest_t1, transfers_t1, score_end, wallets, config)
+    damping, tol, max_iter = pagerank_params(config)
+    return coupled_pagerank(
+        [(er_edges, lam), (awp_edges, 1.0 - lam)],
+        damping=damping,
+        tol=tol,
+        max_iter=max_iter,
+    )
+
+
+def score_seeded(
+    latest_t1: pd.DataFrame,
+    transfers_t1: pd.DataFrame,
+    score_end: pd.Timestamp,
+    wallets: list[str],
+    config: dict[str, Any],
+) -> dict[str, float]:
+    """S-PR at t1: transfer walk restarted from the EndorseRank distribution."""
+    er_edges, awp_edges = _t1_layers(latest_t1, transfers_t1, score_end, wallets, config)
+    damping, tol, max_iter = pagerank_params(config)
+    hyb = config["reputation"].get("hybrid") or {}
+    er_scores = weighted_pagerank(er_edges, damping=damping, tol=tol, max_iter=max_iter)
+    return weighted_pagerank(
+        awp_edges,
+        damping=damping,
+        tol=tol,
+        max_iter=max_iter,
+        teleport=er_scores or None,
+        teleport_floor=float(hyb.get("seeded_teleport_floor", 0.0)),
+    )
+
+
 def scores_to_frame(wallets: list[str], scores: dict[str, dict[str, float]]) -> pd.DataFrame:
     out = pd.DataFrame({"wallet": wallets})
     for method, mapping in scores.items():
@@ -567,6 +715,105 @@ def correlate_holdout(
             )
         report["methods"][method] = method_out
     return report
+
+
+def holdout_tau_diff(
+    merged: pd.DataFrame,
+    contrasts: tuple[tuple[str, str, str, str, str], ...] = HOLDOUT_CONTRASTS,
+    n_resamples: int = 400,
+    seed: int = 42,
+    ci: float = 0.95,
+) -> list[dict[str, Any]]:
+    """Paired bootstrap of tau_a - tau_b on one holdout label.
+
+    Both coefficients are recomputed on the same wallet resample, drawn with
+    the same generator state as ``bootstrap_kendall`` so the per-method
+    intervals and the contrast intervals share their resamples.
+    """
+    out: list[dict[str, Any]] = []
+    alpha = (1.0 - ci) / 2.0
+    for label, method_a, method_b, holdout_label, role in contrasts:
+        col_a = f"{method_a}_score"
+        col_b = f"{method_b}_score"
+        if col_a not in merged.columns or col_b not in merged.columns or holdout_label not in merged.columns:
+            continue
+        mask = merged[col_a].notna() & merged[col_b].notna() & merged[holdout_label].notna()
+        a = merged.loc[mask, col_a].astype(float).to_numpy()
+        b = merged.loc[mask, col_b].astype(float).to_numpy()
+        y = merged.loc[mask, holdout_label].astype(float).to_numpy()
+        n = int(len(y))
+        row: dict[str, Any] = {
+            "label": label,
+            "role": role,
+            "a": {"method": method_a, "tau": None},
+            "b": {"method": method_b, "tau": None},
+            "holdout_label": holdout_label,
+            "delta_tau": None,
+            "ci_low": None,
+            "ci_high": None,
+            "share_positive": None,
+            "n": n,
+            "n_boot": 0,
+        }
+        if n < 5 or np.unique(y).size < 2 or np.unique(a).size < 2 or np.unique(b).size < 2:
+            out.append(row)
+            continue
+        tau_a, _ = kendalltau(a, y)
+        tau_b, _ = kendalltau(b, y)
+        rng = np.random.default_rng(seed)
+        deltas: list[float] = []
+        for _ in range(n_resamples):
+            idx = rng.integers(0, n, n)
+            ys = y[idx]
+            if np.unique(ys).size < 2:
+                continue
+            xa, xb = a[idx], b[idx]
+            if np.unique(xa).size < 2 or np.unique(xb).size < 2:
+                continue
+            ta, _ = kendalltau(xa, ys)
+            tb, _ = kendalltau(xb, ys)
+            if ta is None or tb is None or not (np.isfinite(ta) and np.isfinite(tb)):
+                continue
+            deltas.append(float(ta - tb))
+        row["a"]["tau"] = float(tau_a)
+        row["b"]["tau"] = float(tau_b)
+        row["delta_tau"] = float(tau_a - tau_b)
+        row["n_boot"] = len(deltas)
+        if len(deltas) >= 20:
+            arr = np.asarray(deltas, dtype=float)
+            row["ci_low"] = float(np.quantile(arr, alpha))
+            row["ci_high"] = float(np.quantile(arr, 1.0 - alpha))
+            row["share_positive"] = float(np.mean(arr > 0))
+        out.append(row)
+    return out
+
+
+def evaluate_primary_criterion(tau_diff: list[dict[str, Any]]) -> dict[str, Any]:
+    """Pre-registered primary rule for C-PR (see config ``reputation.hybrid``).
+
+    (a) no worse than EndorseRank on future new approvers: the interval of
+        tau(C-PR) - tau(EndorseRank) includes zero or lies above it;
+    (b) better than AWP on future new transfer senders: the interval of
+        tau(C-PR) - tau(AWP) lies entirely above zero.
+    """
+    by_role = {r["role"]: r for r in tau_diff}
+    a = by_role.get("primary_a") or {}
+    b = by_role.get("primary_b") or {}
+
+    def _has(r: dict[str, Any]) -> bool:
+        return r.get("ci_low") is not None and r.get("ci_high") is not None
+
+    no_worse = bool(_has(a) and float(a["ci_high"]) >= 0.0)
+    better = bool(_has(b) and float(b["ci_low"]) > 0.0)
+    return {
+        "no_worse_than_endorserank_on_future_new_approvers": no_worse,
+        "better_than_awp_on_future_new_transfer_senders": better,
+        "met": bool(no_worse and better),
+        "delta_a": a.get("delta_tau"),
+        "delta_a_ci": [a.get("ci_low"), a.get("ci_high")],
+        "delta_b": b.get("delta_tau"),
+        "delta_b_ci": [b.get("ci_low"), b.get("ci_high")],
+    }
 
 
 def build_holdout_fixture_frames(n_wallets: int = 48, seed: int = 7) -> dict[str, pd.DataFrame]:
@@ -641,6 +888,18 @@ def build_holdout_fixture_frames(n_wallets: int = 48, seed: int = 7) -> dict[str
                 "value": float(1e17),
             }
         )
+        if i % 2 == 0:
+            # A sender that first appears in the outcome window (future_new_transfer_senders).
+            transfers.append(
+                {
+                    "block_timestamp": t2 + pd.Timedelta(hours=i + 3),
+                    "block_number": bn + 70_000 + i,
+                    "from_address": wallets[(i + 9) % n_wallets],
+                    "to_address": spender,
+                    "token_address": token,
+                    "value": float(2e17),
+                }
+            )
         n_close = 3 + int(i % 5)
         for c in range(n_close):
             decoded.append(
