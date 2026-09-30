@@ -61,9 +61,9 @@ PROXY_LABELS = {
     "liquidation_free_rate": "Liquidation-free rate",
     "zero_liquidation_flag": "Zero liquidation flag",
     "liquidation_free_closes": "Liquidation-free closes",
-    "loss_avoidance": "Loss avoidance ($-\\sum\\min(\\text{PnL},0)$)",
+    "loss_avoidance": "Loss avoidance ($\\sum\\min(\\text{PnL},0)$)",
     "non_loss_close_rate": "Non-loss close rate",
-    "worst_close_pnl_score": "Worst-close PnL score ($-\\min\\text{PnL}$)",
+    "worst_close_pnl_score": "Worst-close PnL ($\\min\\text{PnL}$)",
     "inbound_counterparty_ratio": "Inbound counterparty ratio",
     "transfer_tenure_days": "Transfer tenure (days)",
     "active_months": "Active months",
@@ -362,9 +362,11 @@ def write_tau_diff_hybrid_table(summary: dict, out: Path) -> None:
             f"Same-window paired contrasts for the coupled operator (C-PR, $\\lambda=0.5$) and the "
             f"endorsement-seeded walk (S-PR) against the single-layer method that leads each family "
             f"(matched cohort, $n={_fmt_int(summary.get('n_wallets'))}$). Family-mean $\\tau$; the "
-            f"same wallet resamples are used for $a$ and $b$. The secondary criterion of "
-            f"Section~\\ref{{sec:holdout-protocol}} is met on a family when the interval includes "
-            f"0 or lies above it (transfer, allowance) or lies above 0 (Sybil stability). "
+            f"same wallet resamples are used for $a$ and $b$. These contrasts are a stricter check "
+            f"beside the secondary criterion fixed on 14~September~2026 "
+            f"(Section~\\ref{{sec:holdout-protocol}}), which compares C-PR's point estimate with the "
+            f"leading method's interval in Table~\\ref{{tab:alignment-hybrid}}. An interval below 0 "
+            f"means C-PR is significantly below the leading method; one above 0 means it exceeds it. "
             f"{_bootstrap_note(summary)}",
             "tab:tau-diff-hybrid",
             _tau_diff_tabular(_tau_diff_lines(rows)),
@@ -536,8 +538,9 @@ Contrast ($a$ minus $b$) & Label & $\\tau_a$ & $\\tau_b$ & $\\Delta\\tau$ & 95\\
         + _wrap_table(
             f"Paired bootstrap differences on the spender holdout ($n={_fmt_int(holdout.get('n_wallets'))}$, "
             f"{n_boot} resamples shared by $a$ and $b$). The first two rows give the increment of each "
-            f"PageRank over its own raw degree at $t_1$; the next two compare the single-layer methods on "
-            f"the other construct's label; the last four are the pre-registered hybrid contrasts. "
+            f"PageRank over its own raw degree at $t_1$; the next two compare EndorseRank and AWP on each "
+            f"label, with the method whose construct the label measures as $a$; the last four are the "
+            f"hybrid contrasts fixed on 14~September~2026. "
             f"Primary criterion (C-PR no worse than EndorseRank on new approval pairs and better than AWP "
             f"on new transfer senders): {verdict}.",
             "tab:holdout-diff",
@@ -676,32 +679,31 @@ def write_robustness_tokens_table(summary: dict, out: Path) -> None:
     matrix = top.get("method_proxy_matrix") or {}
     if not matrix:
         return
+    by_count = (rob.get("top_token_subgraph_by_count") or {}).get("method_proxy_matrix") or {}
 
     hdr = latex_header(summary)
     # Main-text families only; outcome families (liquidation, inverse risk, GMX)
     # are archived together with GF-PR.
     families = [f for f in ("transfer", "allowance", "sybil_stability") if f in PROXY_FAMILIES]
     full = summary.get("alignment", {}).get("method_proxy_matrix", {})
+    subsets = [matrix] + ([by_count] if by_count else []) + [full]
+    width = len(subsets)
     lines = []
     for method_id in ("endorserank", "awp"):
-        row = matrix.get(method_id, {})
-        full_row = full.get(method_id, {})
         label = METHOD_LABELS.get(method_id, method_id)
-        cells = []
-        for fam in families:
-            cells.append(_fmt(row.get(fam)))
-            cells.append(_fmt(full_row.get(fam)))
+        cells = [_fmt(m.get(method_id, {}).get(fam)) for fam in families for m in subsets]
         lines.append(f"{label} & {' & '.join(cells)} \\\\")
 
     top_n = top.get("top_n_tokens", 20)
     group_hdr = " & ".join(
-        f"\\multicolumn{{2}}{{c}}{{{FAMILY_LABELS[f]}}}" for f in families
+        f"\\multicolumn{{{width}}}{{c}}{{{FAMILY_LABELS[f]}}}" for f in families
     )
-    sub_hdr = " & ".join("top-%d & full" % top_n for _ in families)
+    sub_names = ["by amount", "by count", "all"] if by_count else [f"top-{top_n}", "full"]
+    sub_hdr = " & ".join(" & ".join(sub_names) for _ in families)
     cmid = " ".join(
-        f"\\cmidrule(lr){{{2 + 2 * i}-{3 + 2 * i}}}" for i in range(len(families))
+        f"\\cmidrule(lr){{{2 + width * i}-{1 + width * (i + 1)}}}" for i in range(len(families))
     )
-    tabular = f"""\\begin{{tabular}}{{l{'cc' * len(families)}}}
+    tabular = f"""\\begin{{tabular}}{{l{'c' * width * len(families)}}}
 \\toprule
 Method & {group_hdr} \\\\
 {cmid}
@@ -710,13 +712,144 @@ Method & {group_hdr} \\\\
 {chr(10).join(lines)}
 \\bottomrule
 \\end{{tabular}}"""
-    out.write_text(
-        hdr
-        + _wrap_table(
+    if by_count:
+        caption = (
+            f"Robustness: mean Kendall $\\tau$ on the matched cohort when both graphs keep only "
+            f"{top_n} ERC-20 tokens, chosen by summed raw amount or by number of rows (transfer "
+            f"events and latest allowances), next to the value on all tokens from "
+            f"Table~\\ref{{tab:alignment-family-ci}}."
+        )
+    else:
+        caption = (
             f"Robustness: mean Kendall $\\tau$ on the top-{top_n} ERC-20 token subgraph "
             f"(matched cohort), next to the full-token value of "
-            f"Table~\\ref{{tab:alignment-family-ci}} for the same family.",
-            "tab:robustness-tokens",
+            f"Table~\\ref{{tab:alignment-family-ci}} for the same family."
+        )
+    out.write_text(hdr + _wrap_table(caption, "tab:robustness-tokens", tabular), encoding="utf-8")
+
+
+SUPPLEMENTARY_HEADER = (
+    "% Post hoc checks -- regenerate with:\n"
+    "%   A-Skill-Programs/margin_rank/scripts/run_supplementary_checks.py\n"
+    "% Generated by export_latex_results.py -- do not edit by hand unless re-export fails\n"
+)
+
+FAMILY_NAMES = {
+    "transfer": "Transfer",
+    "allowance": "Allowance",
+    "sybil_stability": "Sybil stability",
+    "liquidation": "Liquidation",
+    "inverse_risk": "Inverse risk",
+    "gmx_success": "GMX trading success",
+}
+
+
+def _tau_ci(row: dict) -> str:
+    tau = row.get("mean_tau", row.get("kendall_tau"))
+    return f"{_fmt(tau)} {_fmt_ci(row.get('ci_low'), row.get('ci_high'))}"
+
+
+def write_tie_sensitivity_table(checks: dict, out: Path) -> None:
+    """Same-window alignment with missing wallets scored zero or kept as isolated nodes."""
+    ties = checks.get("tie_sensitivity") or {}
+    if not ties.get("zero_rule") or not ties.get("isolated_nodes"):
+        return
+    rules = ("zero_rule", "isolated_nodes")
+    lines = []
+    for family in FAMILY_NAMES:
+        cells = [
+            _tau_ci(ties[rule]["family_ci"].get(method, {}).get(family, {}))
+            for rule in rules
+            for method in ("endorserank", "awp")
+        ]
+        lines.append(f"{FAMILY_NAMES[family]} & {' & '.join(cells)} \\\\")
+        if family == "sybil_stability":
+            lines.append("\\addlinespace")
+    inter = " & ".join(
+        f"\\multicolumn{{2}}{{c}}{{{_tau_ci(ties[rule]['inter_method_ci'])}}}" for rule in rules
+    )
+    methods = ties.get("methods") or {}
+    n_er = (methods.get("endorserank") or {}).get("n_missing")
+    n_awp = (methods.get("awp") or {}).get("n_missing")
+    boot = checks.get("bootstrap") or {}
+    tabular = f"""\\begin{{tabular}}{{lcccc}}
+\\toprule
+ & \\multicolumn{{2}}{{c}}{{Missing wallets scored zero}} & \\multicolumn{{2}}{{c}}{{Missing wallets as isolated nodes}} \\\\
+\\cmidrule(lr){{2-3}} \\cmidrule(lr){{4-5}}
+Family & EndorseRank & AWP & EndorseRank & AWP \\\\
+\\midrule
+{chr(10).join(lines)}
+\\midrule
+EndorseRank vs.\\ AWP & {inter} \\\\
+\\bottomrule
+\\end{{tabular}}"""
+    out.write_text(
+        SUPPLEMENTARY_HEADER
+        + _wrap_table(
+            f"Same-window family-mean Kendall $\\tau$ with wallets missing from a graph scored zero "
+            f"or kept as isolated nodes (matched cohort, $n={_fmt_int(ties.get('n_wallets'))}$). The "
+            f"main analysis scores a wallet that is missing from a method's graph zero; as an isolated "
+            f"node it gets the score of a node without in-edges. The rule concerns "
+            f"{_fmt_int(n_er)} wallets for EndorseRank and {_fmt_int(n_awp)} for AWP. The last row "
+            f"is the agreement between the two scores. The check was run after the results were "
+            f"known. CI = 95\\% percentile bootstrap over wallets ({boot.get('n_boot', 400)} paired "
+            f"resamples, seed {boot.get('seed', 42)}).",
+            "tab:tie-sensitivity",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
+
+
+# (method id, row name, edge weight, group); a rule separates the groups.
+WEIGHTING_ROWS = (
+    ("endorserank_raw", "EndorseRank", "raw amounts (main)", "er"),
+    ("endorserank_count", "", "one per latest allowance", "er"),
+    ("endorserank_unit", "", "one per owner--spender pair", "er"),
+    ("awp_raw", "AWP", "raw amounts (main)", "awp"),
+    ("awp_count", "", "one per transfer, decayed", "awp"),
+    ("awp_unit", "", "one per sender--recipient pair", "awp"),
+    ("t1_in_approve_degree", "In-approve degree at $t_1$", "---", "degree"),
+    ("t1_in_degree", "Transfer in-degree at $t_1$", "---", "degree"),
+)
+
+
+def write_holdout_weighting_table(checks: dict, out: Path) -> None:
+    """Spender holdout with EndorseRank and AWP under three edge weights."""
+    weighting = checks.get("holdout_weighting") or {}
+    tau = weighting.get("tau") or {}
+    if not tau:
+        return
+    lines = []
+    last_group = None
+    for method_id, name, weight, group in WEIGHTING_ROWS:
+        stats = tau.get(method_id)
+        if not stats:
+            continue
+        if last_group is not None and group != last_group:
+            lines.append("\\midrule")
+        last_group = group
+        cells = [_tau_ci(stats.get(lab, {})) for lab in HOLDOUT_TABLE_LABELS]
+        lines.append(f"{name} & {weight} & {' & '.join(cells)} \\\\")
+    boot = checks.get("bootstrap") or {}
+    tabular = f"""\\begin{{tabular}}{{llcc}}
+\\toprule
+Score at $t_1$ & Edge weight & New approval pairs ($\\tau$ [95\\% CI]) & New transfer senders ($\\tau$ [95\\% CI]) \\\\
+\\midrule
+{chr(10).join(lines)}
+\\bottomrule
+\\end{{tabular}}"""
+    out.write_text(
+        SUPPLEMENTARY_HEADER
+        + _wrap_table(
+            f"Spender holdout ($n={_fmt_int(weighting.get('n_spenders'))}$) with the edges of "
+            f"EndorseRank and AWP weighted three ways. Raw amounts are the weights of the main "
+            f"analysis (Table~\\ref{{tab:holdout-spenders}}). The other rows weight every latest "
+            f"allowance or every transfer (still discounted by its age) equally, or every pair of "
+            f"addresses equally. The re-weighting was tried "
+            f"after the results were known. CI = 95\\% percentile bootstrap over wallets "
+            f"({boot.get('n_boot', 400)} resamples, seed {boot.get('seed', 42)}).",
+            "tab:holdout-weighting",
             tabular,
         ),
         encoding="utf-8",
@@ -813,6 +946,11 @@ def main() -> int:
         help="holdout eval_summary_spenders.json path (default: config holdout dir)",
     )
     parser.add_argument(
+        "--supplementary",
+        type=Path,
+        help="supplementary_checks.json path (default: data/processed/supplementary_checks.json)",
+    )
+    parser.add_argument(
         "--out-dir",
         type=Path,
         help="LaTeX tables output directory",
@@ -857,6 +995,14 @@ def main() -> int:
         write_holdout_diff_table(holdout, out_dir / "holdout-diff.tex")
     else:
         print(f"No holdout summary at {holdout_path}; holdout tables not written.")
+
+    checks_path = args.supplementary or (ROOT / "data" / "processed" / "supplementary_checks.json")
+    if checks_path.exists():
+        checks = load_json(checks_path)
+        write_tie_sensitivity_table(checks, out_dir / "tie-sensitivity.tex")
+        write_holdout_weighting_table(checks, out_dir / "holdout-weighting.tex")
+    else:
+        print(f"No supplementary checks at {checks_path}; their tables not written.")
 
     # The three-method matrix (with GF-PR) is an archive artifact; regenerate it
     # with `export_method_matrix.py --preset three`, which writes to

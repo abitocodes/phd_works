@@ -1,23 +1,29 @@
 {
-  "published_at": "2026-09-14T09:39:57+00:00",
+  "published_at": "2026-09-30T15:31:41+00:00",
   "files": [
     {
       "path": "eval_summary.json",
       "source": "data/processed/eval_summary.json",
-      "sha256": "4d2c13eee20c5e0be5aed370eb779822acfbb787426650622cd9d45b2843aefe",
-      "bytes": 153612
+      "sha256": "344b95dc0a9966ce66c5ed5c4525889dc1f81cd30cefd85af118226ce2ac2ca1",
+      "bytes": 152082
     },
     {
       "path": "holdout/eval_summary_spenders.json",
       "source": "data/processed/holdout/eval_summary_spenders.json",
-      "sha256": "e6a6703401adf9f9f0a756daabaf307b6cf1015712b32dfbee8c9f4b3b44f132",
-      "bytes": 42708
+      "sha256": "04cd809dba2e1cd2c9afea0e1c941ce09e9f4024f5c09e8721a4d2beadc40aec",
+      "bytes": 41389
+    },
+    {
+      "path": "supplementary_checks.json",
+      "source": "data/processed/supplementary_checks.json",
+      "sha256": "0b873a7dc9b7147c26cbe032b9fcb4f1f5ce996e240d7eab711237cfc892c997",
+      "bytes": 39777
     },
     {
       "path": "config/margin_config.yaml",
       "source": "config/margin_config.yaml",
-      "sha256": "fae784e813376647cf536f443d7b7c338036607c64063700c31fa180baaadfcd",
-      "bytes": 7203
+      "sha256": "e8d9595227f0ba877584b60db22056840c87347b85a32b25b3b77cbfd1e4073f",
+      "bytes": 7031
     }
   ]
 }
