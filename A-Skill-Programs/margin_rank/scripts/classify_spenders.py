@@ -8,7 +8,9 @@ positive allowance at the spring freeze:
   contract   emitted at least one log in the window (only code emits logs)
   eoa        sent at least one transaction in the window (only EOAs sign)
   both       did both; an EOA running delegated code (EIP-7702)
-  inactive   did neither in the window, so the query cannot tell
+  inactive   did neither in the window, so the query cannot tell; routers whose
+             events come from other contracts and that never send transactions
+             land here, so run check_spender_code.py (eth_getCode) afterwards
 
 Only logs.address, transactions.from_address and their block_timestamp
 partitions are read. Run --dry-run first to see the bytes that would be billed.

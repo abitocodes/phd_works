@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-09-30T16:26:54.347001+00:00",
+  "window": [
+    "2025-12-01 00:00:00 UTC",
+    "2026-03-01 00:00:00+00:00"
+  ],
+  "bytes_processed": 49442412032,
+  "n_spenders": 1335,
+  "counts": {
+    "inactive": 686,
+    "contract": 644,
+    "eoa": 5
+  },
+  "counts_top100_endorserank": {
+    "contract": 71,
+    "inactive": 29
+  },
+  "counts_with_new_approver": {
+    "contract": 171,
+    "inactive": 51
+  }
+}

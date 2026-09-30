@@ -10,6 +10,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from check_spender_code import code_kind  # noqa: E402
 from classify_spenders import classify  # noqa: E402
 from pagerank import weighted_pagerank  # noqa: E402
 from proxy_metrics import compute_inverse_risk_proxies  # noqa: E402
@@ -58,3 +59,11 @@ def test_spender_classes_from_activity() -> None:
     )
     out = classify(activity, ["0x1", "0x2", "0x3", "0x4"]).set_index("wallet")["account_type"]
     assert out.to_dict() == {"0x1": "contract", "0x2": "both", "0x3": "inactive", "0x4": "eoa"}
+
+
+def test_code_kind_separates_contracts_eoas_and_delegations() -> None:
+    assert code_kind("0x") == "none"
+    assert code_kind(None) == "none"
+    assert code_kind("0x6080604052") == "contract"
+    assert code_kind("0xef0100" + "ab" * 20) == "eip7702"
+    assert code_kind("0xEF0100" + "AB" * 20) == "eip7702"
