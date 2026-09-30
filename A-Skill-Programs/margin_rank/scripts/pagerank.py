@@ -125,12 +125,16 @@ def weighted_pagerank(
     return_iterations: bool = False,
     teleport: dict[str, float] | None = None,
     teleport_floor: float = 0.0,
+    extra_nodes: set[str] | None = None,
 ) -> dict[str, float] | tuple[dict[str, float], int]:
     """
     Run weighted PageRank on edge list with columns: from_node, to_node, weight.
 
     ``teleport`` (node -> non-negative mass) personalises the restart
     distribution and the dangling redistribution; None means uniform.
+    ``extra_nodes`` are added as isolated nodes (no edges), so under uniform
+    teleportation they score like any node without in-edges instead of being
+    left out.
     Returns mapping node -> score (sums to 1 over reachable nodes).
     """
     if edges.empty:
@@ -138,7 +142,7 @@ def weighted_pagerank(
             return {}, 0
         return {}
 
-    nodes = sorted(set(edges["from_node"]) | set(edges["to_node"]))
+    nodes = sorted(set(edges["from_node"]) | set(edges["to_node"]) | set(extra_nodes or ()))
     idx = {n: i for i, n in enumerate(nodes)}
     n = len(nodes)
 
