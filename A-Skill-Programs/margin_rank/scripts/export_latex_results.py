@@ -856,6 +856,89 @@ Score at $t_1$ & Edge weight & New approval pairs ($\\tau$ [95\\% CI]) & New tra
     )
 
 
+PAPER_FAMILY_ORDER = ("transfer", "allowance", "sybil_stability", "liquidation", "inverse_risk", "gmx_success")
+PAPER_HOLDOUT_LABELS = {
+    "future_new_approvers": "New approval pairs",
+    "future_new_transfer_senders": "New transfer senders",
+}
+
+
+def _delta_ci(row: dict | None) -> str:
+    if not row:
+        return "---"
+    delta = row.get("delta_tau")
+    sign = "+" if delta is not None and delta > 0 else ""
+    return f"{sign}{_fmt(delta)} {_fmt_ci(row.get('ci_low'), row.get('ci_high'))}"
+
+
+def write_awp_paper_table(checks: dict, out: Path) -> None:
+    """AWP of the main analysis beside the form published by Do, Do and Nguyen (2023)."""
+    paper = checks.get("awp_paper") or {}
+    same = paper.get("same_window") or {}
+    holdout = paper.get("holdout") or {}
+    if not same.get("family_ci") or not holdout.get("tau"):
+        return
+    fam = same["family_ci"]
+    same_diff = {
+        r["a"]["key"]: r for r in same.get("tau_diff", []) if r.get("group") == "paper_vs_main"
+    }
+    hold_diff = {
+        r["holdout_label"]: r for r in holdout.get("tau_diff", []) if r.get("role") == "paper_form"
+    }
+    lines = ["\\multicolumn{4}{l}{\\emph{Same window, matched cohort ($n="
+             f"{_fmt_int(same.get('n_wallets'))}$), family mean}}}} \\\\"]
+    for family in PAPER_FAMILY_ORDER:
+        cells = [
+            _tau_ci(fam.get("awp", {}).get(family, {})),
+            _tau_ci(fam.get("awp_paper", {}).get(family, {})),
+            _delta_ci(same_diff.get(family)),
+        ]
+        lines.append(f"{FAMILY_NAMES[family]} & {' & '.join(cells)} \\\\")
+        if family == "sybil_stability":
+            lines.append("\\addlinespace")
+    lines.append("\\midrule")
+    lines.append(
+        f"\\multicolumn{{4}}{{l}}{{\\emph{{Spender holdout ($n={_fmt_int(holdout.get('n_spenders'))}$)}}}} \\\\"
+    )
+    tau = holdout["tau"]
+    for label, name in PAPER_HOLDOUT_LABELS.items():
+        cells = [
+            _tau_ci(tau.get("awp", {}).get(label, {})),
+            _tau_ci(tau.get("awp_paper", {}).get(label, {})),
+            _delta_ci(hold_diff.get(label)),
+        ]
+        lines.append(f"{name} & {' & '.join(cells)} \\\\")
+    agree_same = (same.get("between_methods") or {}).get("awp_awp_paper") or {}
+    agree_hold = (holdout.get("between_methods") or {}).get("awp_awp_paper") or {}
+    boot = checks.get("bootstrap") or {}
+    tabular = f"""\\begin{{tabular}}{{lccc}}
+\\toprule
+ & AWP (main analysis) & Published form & Published minus main \\\\
+ & $\\tau$ [95\\% CI] & $\\tau$ [95\\% CI] & $\\Delta\\tau$ [95\\% CI] \\\\
+\\midrule
+{chr(10).join(lines)}
+\\midrule
+$\\tau$ between the two forms & \\multicolumn{{3}}{{l}}{{{_tau_ci(agree_same)} in the same window, {_tau_ci(agree_hold)} on the holdout}} \\\\
+\\bottomrule
+\\end{{tabular}}"""
+    out.write_text(
+        SUPPLEMENTARY_HEADER
+        + _wrap_table(
+            "AWP as used in this thesis and in the form published by Do, Do and Nguyen, scored on "
+            "the same wallets. The main analysis weights each transfer by its raw amount and restarts "
+            "the walk uniformly. The published form weights each transfer by "
+            f"$V(z)=2/(1+e^{{-bz}})-1$ with $b={paper.get('value_b', 1.0):g}$ on raw base units, so "
+            "each transfer counts about once, and restarts the walk in proportion to each address's "
+            "sending activity. Both use the decay of Equation~\\eqref{eq:logistic-decay}. The check "
+            "was run after the results were known. CI = 95\\% percentile bootstrap over wallets "
+            f"({boot.get('n_boot', 400)} paired resamples, seed {boot.get('seed', 42)}).",
+            "tab:awp-paper-form",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
+
+
 def write_robustness_sample_size_table(summary: dict, out: Path) -> None:
     rob = summary.get("robustness") or {}
     sweep = rob.get("sample_size_sweep") or {}
@@ -1001,6 +1084,7 @@ def main() -> int:
         checks = load_json(checks_path)
         write_tie_sensitivity_table(checks, out_dir / "tie-sensitivity.tex")
         write_holdout_weighting_table(checks, out_dir / "holdout-weighting.tex")
+        write_awp_paper_table(checks, out_dir / "awp-paper-form.tex")
     else:
         print(f"No supplementary checks at {checks_path}; their tables not written.")
 

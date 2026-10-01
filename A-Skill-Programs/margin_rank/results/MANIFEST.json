@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-09-30T15:31:41+00:00",
+  "published_at": "2026-10-01T12:49:16+00:00",
   "files": [
     {
       "path": "eval_summary.json",
@@ -16,14 +16,14 @@
     {
       "path": "supplementary_checks.json",
       "source": "data/processed/supplementary_checks.json",
-      "sha256": "0b873a7dc9b7147c26cbe032b9fcb4f1f5ce996e240d7eab711237cfc892c997",
-      "bytes": 39777
+      "sha256": "71a7aebf28ee526f37ba476464824ea789a1f019466ee3657375fb1fe57901a1",
+      "bytes": 73481
     },
     {
       "path": "config/margin_config.yaml",
       "source": "config/margin_config.yaml",
-      "sha256": "e8d9595227f0ba877584b60db22056840c87347b85a32b25b3b77cbfd1e4073f",
-      "bytes": 7031
+      "sha256": "2868e618d2ab0664b4d03773c4d2cfe8bbf64423a3cdb95b643087308e08e3bc",
+      "bytes": 7533
     }
   ]
 }

@@ -15,6 +15,11 @@ holdout_weighting  Spender holdout. EndorseRank and AWP with each event counted
                    spenders that received transfers before the freeze.
 trader_counts      Spring counts behind the trader label of the registered
                    replication.
+awp_paper          AWP in the form published by Do, Do and Nguyen (2023):
+                   bounded transfer values and restarts weighted by sending
+                   activity (reputation.awp_paper in margin_config.yaml). Run
+                   on the matched cohort in the same window and on the
+                   spender holdout, beside EndorseRank, AWP and C-PR.
 
 Output: data/processed/supplementary_checks.json (read by export_latex_results.py).
 """
@@ -46,17 +51,24 @@ from holdout import (  # noqa: E402
     load_transfer_events,
     pagerank_params,
     resolve_score_wallets,
+    score_awp,
+    score_awp_paper,
+    score_coupled,
+    score_endorserank,
+    scores_to_frame,
     t1_baselines,
     t1_connected_wallets,
 )
 from pagerank import (  # noqa: E402
     build_awp_edges,
+    build_awp_paper_edges,
     build_endorserank_edges,
     build_weighted_edges,
     filter_subgraph_edges,
     logistic_time_decay,
     weighted_pagerank,
 )
+from pagerank_variants import COUPLED_PR_ID, hybrid_lambda_map  # noqa: E402
 from proxy_metrics import compute_all_proxies  # noqa: E402
 
 OUT_PATH = PROCESSED_DIR / "supplementary_checks.json"
@@ -89,6 +101,45 @@ RECEIVING_CONTRASTS: tuple[tuple[str, str, str, str, str], ...] = (
     ("EndorseRank minus AWP", "endorserank_raw", "awp_raw", "future_new_approvers", "receiving"),
     ("EndorseRank minus AWP", "endorserank_raw", "awp_raw", "future_new_transfer_senders", "receiving"),
     ("AWP minus t1 in-degree", "awp_raw", "t1_in_degree", "future_new_transfer_senders", "receiving"),
+)
+
+# AWP-P is AWP in the published form (Do, Do and Nguyen 2023).
+PAPER_METHODS = {
+    "endorserank": "endorserank_score",
+    "awp": "awp_score",
+    "awp_paper": "awp_paper_score",
+    COUPLED_PR_ID: f"{COUPLED_PR_ID}_score",
+}
+# Same layout as evaluate_alignment.TAU_DIFF_CONTRASTS; AWP-P against AWP on every family first.
+PAPER_SAME_WINDOW_CONTRASTS: tuple[tuple[str, tuple[str, str], tuple[str, str], str], ...] = tuple(
+    (f"AWP-P {family} minus AWP {family}", ("awp_paper", family), ("awp", family), "paper_vs_main")
+    for family in ("transfer", "allowance", "sybil_stability", "liquidation", "inverse_risk", "gmx_success")
+) + (
+    ("AWP-P transfer minus EndorseRank transfer", ("awp_paper", "transfer"), ("endorserank", "transfer"), "paper_form"),
+    ("EndorseRank allowance minus AWP-P allowance", ("endorserank", "allowance"), ("awp_paper", "allowance"), "paper_form"),
+    (
+        "AWP-P sybil-stability minus EndorseRank sybil-stability",
+        ("awp_paper", "sybil_stability"),
+        ("endorserank", "sybil_stability"),
+        "paper_form",
+    ),
+    ("C-PR transfer minus AWP-P transfer", (COUPLED_PR_ID, "transfer"), ("awp_paper", "transfer"), "paper_form"),
+    (
+        "C-PR sybil-stability minus AWP-P sybil-stability",
+        (COUPLED_PR_ID, "sybil_stability"),
+        ("awp_paper", "sybil_stability"),
+        "paper_form",
+    ),
+)
+# Same layout as holdout.HOLDOUT_CONTRASTS; the last two are F1 and F2 on the spring window.
+PAPER_HOLDOUT_CONTRASTS: tuple[tuple[str, str, str, str, str], ...] = (
+    ("AWP-P minus AWP", "awp_paper", "awp", "future_new_approvers", "paper_form"),
+    ("AWP-P minus AWP", "awp_paper", "awp", "future_new_transfer_senders", "paper_form"),
+    ("AWP-P minus t1 in-degree", "awp_paper", "t1_in_degree", "future_new_transfer_senders", "increment"),
+    ("EndorseRank minus AWP-P", "endorserank", "awp_paper", "future_new_approvers", "single_layer"),
+    ("AWP-P minus EndorseRank", "awp_paper", "endorserank", "future_new_transfer_senders", "single_layer"),
+    ("C-PR minus AWP-P", COUPLED_PR_ID, "awp_paper", "future_new_approvers", "registered_f1"),
+    ("C-PR minus AWP-P", COUPLED_PR_ID, "awp_paper", "future_new_transfer_senders", "registered_f2"),
 )
 
 
@@ -287,6 +338,105 @@ def trader_counts(
     return out
 
 
+def awp_paper_same_window(
+    config: dict[str, Any],
+    rankings: pd.DataFrame,
+    transfers: pd.DataFrame,
+    proxies: pd.DataFrame,
+    n_boot: int,
+    seed: int,
+) -> dict[str, Any]:
+    """Matched cohort, same window: AWP-P scored on the graph AWP uses, against every proxy."""
+    rep = config["reputation"]
+    damping, tol, max_iter = pagerank_params(config)
+    observation_end = pd.Timestamp(rep["observation_end"], tz="UTC")
+    edges, activeness = build_awp_paper_edges(
+        transfers,
+        observation_end,
+        float(rep["awp_decay_k"]),
+        float(rep["awp_decay_t0_days"]),
+        float((rep.get("awp_paper") or {}).get("value_b", 1.0)),
+    )
+    edges = filter_subgraph_edges(edges, set(rankings["wallet"]))
+    scores = weighted_pagerank(edges, damping=damping, tol=tol, max_iter=max_iter, teleport=activeness or None)
+    frame = rankings[["wallet", *(c for m, c in PAPER_METHODS.items() if m != "awp_paper")]].merge(
+        proxies, on="wallet", how="inner"
+    )
+    frame["awp_paper_score"] = [scores.get(w, 0.0) for w in frame["wallet"]]
+    boot = bootstrap_alignment(frame, PAPER_METHODS, n_boot=n_boot, seed=seed, contrasts=PAPER_SAME_WINDOW_CONTRASTS)
+    paper = frame["awp_paper_score"]
+    return {
+        "n_wallets": len(frame),
+        "n_zero": int((paper == 0).sum()),
+        "n_zero_awp": int((frame["awp_score"] == 0).sum()),
+        "tied_pair_share": {
+            "awp": _tied_pair_share(frame["awp_score"].to_numpy(float)),
+            "awp_paper": _tied_pair_share(paper.to_numpy(float)),
+        },
+        "family_ci": boot["family_ci"],
+        "proxy_ci": boot["proxy_ci"],
+        "tau_diff": boot["tau_diff"],
+        "between_methods": {
+            "endorserank_awp_paper": bootstrap_kendall(frame["endorserank_score"], paper, n_resamples=n_boot, seed=seed),
+            "awp_awp_paper": bootstrap_kendall(frame["awp_score"], paper, n_resamples=n_boot, seed=seed),
+        },
+    }
+
+
+def awp_paper_holdout(
+    config: dict[str, Any],
+    approvals: pd.DataFrame,
+    transfers: pd.DataFrame,
+    latest_t1: pd.DataFrame,
+    transfers_t1: pd.DataFrame,
+    n_boot: int,
+    seed: int,
+) -> dict[str, Any]:
+    """Spender holdout: AWP-P beside EndorseRank, AWP and C-PR, scored on the same spenders."""
+    rep = config["reputation"]
+    score_end, outcome_start, outcome_end = holdout_bounds(config)
+    spenders = sorted(set(latest_t1["spender"].astype(str).str.lower()))
+    nodes = t1_connected_wallets(
+        build_endorserank_edges(latest_t1),
+        build_awp_edges(transfers_t1, score_end, float(rep["awp_decay_k"]), float(rep["awp_decay_t0_days"])),
+    )
+    wallets = resolve_score_wallets(spenders, nodes)
+    scores = {
+        "endorserank": score_endorserank(latest_t1, wallets, config),
+        "awp": score_awp(transfers_t1, score_end, wallets, config),
+        "awp_paper": score_awp_paper(transfers_t1, score_end, wallets, config),
+        COUPLED_PR_ID: score_coupled(
+            latest_t1, transfers_t1, score_end, wallets, config, hybrid_lambda_map(config)[COUPLED_PR_ID]
+        ),
+        **t1_baselines(latest_t1, transfers_t1, wallets),
+    }
+    frame = scores_to_frame(wallets, scores)
+    labels = future_approval_labels(approvals, latest_t1, outcome_start, outcome_end, wallets)
+    flow = future_transfer_labels(transfers, transfers_t1, outcome_start, outcome_end, wallets)
+    merged = frame.merge(labels[["wallet", "future_new_approvers"]], on="wallet").merge(flow, on="wallet")
+    paper = merged["awp_paper_score"]
+    return {
+        "n_spenders": len(merged),
+        "n_zero": int((paper == 0).sum()),
+        "n_zero_awp": int((merged["awp_score"] == 0).sum()),
+        "tied_pair_share": {
+            "awp": _tied_pair_share(merged["awp_score"].to_numpy(float)),
+            "awp_paper": _tied_pair_share(paper.to_numpy(float)),
+        },
+        "tau": {
+            m: {
+                lab: bootstrap_kendall(merged[f"{m}_score"], merged[lab], n_resamples=n_boot, seed=seed)
+                for lab in HOLDOUT_LABELS
+            }
+            for m in scores
+        },
+        "tau_diff": holdout_tau_diff(merged, PAPER_HOLDOUT_CONTRASTS, n_resamples=n_boot, seed=seed),
+        "between_methods": {
+            "awp_awp_paper": bootstrap_kendall(merged["awp_score"], paper, n_resamples=n_boot, seed=seed),
+        },
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", type=Path, default=OUT_PATH)
@@ -310,6 +460,8 @@ def main() -> int:
         transfers, allowances, decoded, rankings["wallet"].tolist(), min_closes=int(config["ranking"]["min_closes"])
     )
     ties = tie_sensitivity(config, rankings, allowances, transfers, proxies, n_boot, seed)
+    print("AWP in the published form (matched cohort, same window)...")
+    paper_same = awp_paper_same_window(config, rankings, transfers, proxies, n_boot, seed)
     del transfers
 
     print("Loading raw approval and transfer events for the spring holdout...")
@@ -322,6 +474,8 @@ def main() -> int:
     weighting = holdout_weighting(config, raw_approvals, raw_transfers, latest_t1, transfers_t1, n_boot, seed)
     print("Trader counts...")
     traders = trader_counts(config, rankings, decoded, latest_t1, transfers_t1)
+    print("AWP in the published form (spender holdout)...")
+    paper_holdout = awp_paper_holdout(config, raw_approvals, raw_transfers, latest_t1, transfers_t1, n_boot, seed)
 
     summary = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -330,6 +484,11 @@ def main() -> int:
         "tie_sensitivity": ties,
         "holdout_weighting": weighting,
         "trader_counts": traders,
+        "awp_paper": {
+            "value_b": float((config["reputation"].get("awp_paper") or {}).get("value_b", 1.0)),
+            "same_window": paper_same,
+            "holdout": paper_holdout,
+        },
     }
     save_json(args.out, summary)
 
@@ -348,6 +507,22 @@ def main() -> int:
             f"new senders {row['future_new_transfer_senders']['kendall_tau']:+.3f}"
         )
     print(f"  traders: {traders}")
+    fam = paper_same["family_ci"]
+    print(
+        "  same window, transfer family: "
+        + " ".join(f"{m} {fam[m]['transfer']['mean_tau']:+.3f}" for m in PAPER_METHODS)
+    )
+    def _f(x: Any) -> str:
+        return "  n/a" if x is None else f"{float(x):+.3f}"
+
+    for row in paper_same["tau_diff"] + paper_holdout["tau_diff"]:
+        key = row.get("holdout_label") or row["a"].get("key")
+        print(f"  {row['label']:58s} {key:28s} {_f(row['delta_tau'])} [{_f(row['ci_low'])}, {_f(row['ci_high'])}]")
+    for method, row in paper_holdout["tau"].items():
+        print(
+            f"  holdout {method:22s} new approvers {row['future_new_approvers']['kendall_tau']:+.3f} "
+            f"new senders {row['future_new_transfer_senders']['kendall_tau']:+.3f}"
+        )
     print(f"wrote {args.out}")
     return 0
 
