@@ -2,9 +2,10 @@
 
 학위 논문 *Integrating ERC-20 Allowance Edges into PageRank for Enhanced On-Chain Wallet Reputation Scoring*을 초등학생도 읽을 수 있게 풀어 쓴 책입니다. 찰스 펫졸드의 『CODE』처럼, 교실의 아주 쉬운 이야기에서 시작해 한 장에 한 계단씩 올라가며 논문의 한가운데까지 갑니다.
 
-- 결과물: [`main.pdf`](main.pdf) (152 × 225 mm, 73쪽)
+- 결과물: [`main.pdf`](main.pdf) (152 × 225 mm, 74쪽)
 - 숫자는 모두 `../wallet-reputation-experiments/data/3-published-results-for-thesis/`의 결과 파일과 같습니다.
 - 본문은 어린이용, 파란 상자("조금 더 알고 싶은 사람에게")는 고학년·어른용으로 진짜 용어와 정확한 숫자를 담았습니다.
+- 책 전체를 한국어로 썼습니다. 방법 이름은 아이들이 부르기 쉽게 바꾸었고, 논문의 이름은 처음 소개할 때와 낱말 사전에만 적었습니다: 송금 랭크 = AWP, 동전 랭크 = C-PR, 씨앗 랭크 = S-PR, 약속 1~3 = F1–F3. 저자 이름은 권태홍, 학교는 남아프리카공화국 유니사로 적었습니다.
 
 ## 차례
 
@@ -17,14 +18,14 @@
 | `04-dots-and-arrows.tex` | 4. 점과 화살표 | 그래프, 두 지도, 진입 차수 |
 | `05-fake-friends.tex` | 5. 가짜 친구 작전 | 시빌 공격 |
 | `06-passing-notes.tex` | 6. 쪽지 돌리기 놀이 | PageRank, 거듭제곱법(손 계산 예시) |
-| `07-heavy-arrows.tex` | 7. 무게가 다른 화살표 | 가중치, 시간 감쇠, AWP와 원논문 형태 |
+| `07-heavy-arrows.tex` | 7. 무게가 다른 화살표 | 가중치, 시간 감쇠, 송금 랭크(AWP)와 원논문 형태 |
 | `08-endorserank.tex` | 8. 허락으로 걷기: 엔도스랭크 | EndorseRank |
-| `09-mixing-maps.tex` | 9. 두 지도를 섞으면? | C-PR, S-PR, 9월 14일 규칙 |
+| `09-mixing-maps.tex` | 9. 두 지도를 섞으면? | 동전 랭크(C-PR), 씨앗 랭크(S-PR), 9월 14일 규칙 |
 | `10-real-notebook.tex` | 10. 진짜 공책을 펼치다 | Arbitrum One, BigQuery, GMX, 매칭 코호트, 연구 일정 |
 | `11-lining-up.tex` | 11. 줄 세우기 비교 | 켄달의 τ, 정렬 결과, 부트스트랩 |
 | `12-speed.tex` | 12. 누가 더 빨리 계산할까 | 실행 시간 벤치마크 |
 | `13-sealed-envelope.tex` | 13. 봉투에 넣은 예측 | 봄 홀드아웃, 원시 차수 기준선, 9월 14일 규칙 실패 |
-| `14-promise-first.tex` | 14. 먼저 약속하고 시험 보기 | 사전 등록, 6~8월 재현, F1–F3, 판정 미충족 |
+| `14-promise-first.tex` | 14. 먼저 약속하고 시험 보기 | 사전 등록, 6~8월 재현, 약속 1~3(F1–F3), 판정 미충족 |
 | `15-what-we-learned.tex` | 15. 그래서 무엇을 알게 되었을까 | 결론, 주장하지 않는 것, 남은 질문 |
 | `16-appendix.tex` | 낱말 사전, 숫자로 보는 이 연구, 더 읽을거리 | |
 
