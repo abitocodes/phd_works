@@ -30,6 +30,11 @@ ARTIFACTS: tuple[tuple[str, str], ...] = (
     ("data/processed/holdout/eval_summary_spenders.json", "holdout/eval_summary_spenders.json"),
     ("data/processed/supplementary_checks.json", "supplementary_checks.json"),
     ("config/margin_config.yaml", "config/margin_config.yaml"),
+    # Registered replication, June-August 2026: the registration, its extraction
+    # record (bytes billed, row counts, registration hashes) and the evaluation.
+    ("config/fresh_holdout_2026q3.yaml", "config/fresh_holdout_2026q3.yaml"),
+    ("data/processed/fresh_2026q3/extraction_manifest.json", "fresh_2026q3/extraction_manifest.json"),
+    ("data/processed/fresh_2026q3/fresh_holdout_summary.json", "fresh_2026q3/fresh_holdout_summary.json"),
 )
 
 

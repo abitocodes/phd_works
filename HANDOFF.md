@@ -1,38 +1,27 @@
-# Handoff — dissertation work (2026-09-28)
+# Handoff — dissertation work (2026-10-01)
 
 This is where the thesis work stood at the end of the previous session. Read it before touching the manuscript or `margin_rank`.
 
 ## Repos
 
-- `phd_works` (this repo). Latest commit is 0097fdb: the C-PR hybrid evaluation and the pipeline for the June–August registered replication.
-- `2-Dissertation-Draft/overleaf-github` is a submodule (`phd-dissertation-draft-en`). Latest commit is 9459b33: the central claim reframed as an improvement over AWP. Run `git submodule update --init` if the folder is empty.
-- Experiment code lives in `A-Skill-Programs/margin_rank`. `data/processed/` is not tracked; the committed summaries are under `results/`.
+- `phd_works` (this repo). The June–August replication was registered in commit 4085ab9 (merged into master in f701400 on 2026-10-01), extracted in d6d26c4 and evaluated in 1462d76.
+- `2-Dissertation-Draft/overleaf-github` is a submodule (`phd-dissertation-draft-en`). Its work branch `claude/sweet-darwin-odfmmv` (latest 396ea41) carries all manuscript changes and is not yet merged into `main`; the submodule pointer here still points at 9459b33. Run `git submodule update --init` if the folder is empty.
+- Experiment code lives in `A-Skill-Programs/margin_rank`. `data/raw/` and `data/processed/` are tracked (see its `.gitignore` for exclusions); the summaries behind the thesis tables are copied to `results/` by `scripts/publish_results.py`.
 
 ## Central claim, as it now stands
 
-- Adding ERC-20 allowance edges to PageRank improves on AWP, the transfer-only walk.
-- **Settled:** in the spring holdout (freeze on 28 Feb, labels Mar–May), EndorseRank beat AWP on both future labels. The contrasts were fixed in advance: +0.435 on new approvals, +0.102 on new senders.
-- **C-PR (λ=0.5):**
-  - It failed the 14 September rule, which required beating both single-layer methods. The thesis reports that failure as it is.
-  - Against AWP alone it gained +0.251 [0.203, 0.306] on new approvals, with no difference on new senders. This was found only after the labels were in, so it is exploratory.
-- **Where the verdict comes from:** the June–August replication, with hypotheses F1–F6. The design is in `margin_rank/docs/fresh_holdout_2026q3_plan.md` and `config/fresh_holdout_2026q3.yaml`.
+- The thesis asked whether adding ERC-20 allowance edges to PageRank improves on AWP, the transfer-only walk.
+- **Spring holdout** (freeze 28 Feb, labels Mar–May): EndorseRank beat AWP on new approvals (+0.435) and on new senders (+0.102), both fixed in advance. The new-sender lead disappears when both walks weight each event once and against AWP in its published form (post hoc).
+- **AWP fidelity:** the AWP of the thesis adapts Do, Do and Nguyen (2023): raw amounts instead of the bounded value transform, uniform restarts instead of activity-weighted ones. The published form is reported as a post hoc check (Table awp-paper-form) and as a registered sensitivity analysis.
+- **C-PR (λ=0.5):** failed the 14 September rule (beat both single layers). Against AWP alone it gained +0.251 on new approvals in the spring, which was exploratory.
+- **Registered replication** (freeze 31 May, labels Jun–Aug; decision needs F1–F3): F1 holds (+0.179 [0.132, 0.225]), F2 fails (−0.011 [−0.025, 0.003], lower bound below −0.02), F3 holds (+0.018 [0.011, 0.024]). **Decision not met**, so the thesis makes no improvement claim. F4 holds, F5 fails, F6 fails. Both sensitivity analyses give the same decision. EndorseRank's lead on new approvals replicated (+0.280); its lead on new senders did not.
+- The cover title says "ENHANCED on-chain wallet reputation scoring". The rule below forbids changing it without the user; whether it still fits the result is the user's and the supervisors' decision.
 
-## Remaining steps, in order
+## Remaining steps
 
-1. The user reviews the plan and the YAML. The YAML currently says `status: draft`, which means the replication is **not yet registered**.
-2. Registration: change it to `status: registered` and commit the YAML, the plan, the scripts and the tests together, then push. This step runs on the user's PC.
-3. `python scripts/extract_fresh_window.py --dry-run`, then `--extract --yes`. This needs BigQuery credentials and runs on the user's PC.
-4. `python scripts/run_fresh_holdout.py` writes `data/processed/fresh_2026q3/fresh_holdout_summary.json`.
-5. Fill the 10 `\freshpending{…}` placeholders in the manuscript with those results. When done, a search for `\freshpending` should return nothing. Locations:
-   - Abstract l.12
-   - Ch1 l.143
-   - Ch4 l.192, l.205
-   - Ch5 l.37, l.60, l.100
-   - Ch6 l.19, l.27
-   - Appendix E l.43
-6. If the registration date changes from 28 September 2026, correct it in the abstract, Ch1, Ch3, Table 5.1 in Ch5, and Appendix E.
-
-Report F1–F3 exactly as they come out, failures included (plan §5–6). Do not change λ, the labels, the cohorts, the 0.02 margin or the window.
+1. The user and the supervisors read the results (Ch4 §4.8.2, Tables fresh-holdout, fresh-contrasts, fresh-traders) and decide on the title.
+2. Merge the manuscript work branch into `main` of `phd-dissertation-draft-en` (Overleaf reads `main`), then update the submodule pointer here if wanted.
+3. Report every coefficient as it came out; do not change λ, the labels, the cohorts, the 0.02 margin or the window (plan §6).
 
 ## Rules that must not be broken
 
@@ -43,14 +32,16 @@ Report F1–F3 exactly as they come out, failures included (plan §5–6). Do no
   - no em-dash chains, promotional tone or summary sign-offs;
   - keep sentences plain and concrete.
 - Git:
-  - files are CRLF, so stage with `git -c core.autocrlf=true add`;
+  - files are CRLF on the user's Windows checkout, so stage with `git -c core.autocrlf=true add`;
   - author is abito <33889084+abitocodes@users.noreply.github.com>;
   - commit messages have a Korean conventional title and one block per hunk, `path[start:end]`, followed by `-` bullets;
   - never commit `.cursor/journey.md`.
-- Build: 175 pages, 0 errors, 0 undefined references at 9459b33. Check the build again after every edit.
+- The registration files (`config/fresh_holdout_2026q3.yaml`, `docs/fresh_holdout_2026q3_plan.md`) are frozen; their hashes are in `results/fresh_2026q3/extraction_manifest.json` (computed on the CRLF checkout).
+- Build: 193 pages, 0 errors, 0 undefined references at 396ea41. Check the build again after every edit.
 
 ## Other numbers you will need
 
-- Raw degree baselines: in-approve degree gives τ=0.711 on new approvals, and transfer in-degree gives 0.472. The gain comes from the edge type, not from the walk.
-- Exploratory trader holdout (29 Aug, n=1,860): AWP was ahead of EndorseRank on success count (0.131 vs 0.073) and realized gain (0.153 vs 0.048). The success rate was about 0 for both.
-- Liquidation-free rate in the same window: EndorseRank 0.075, AWP 0.083. It was never computed for C-PR, and never out of window.
+- Raw degree baselines beat both walks in both windows: in-approve degree 0.711 (spring) and 0.613 (Jun–Aug) on new approvals; transfer in-degree 0.472 and 0.435 on new senders.
+- Spender cohorts: 1,335 at 28 Feb (1,174 contracts, 161 EOAs by eth_getCode), 1,964 at 31 May.
+- Trader cohorts: 4,227 matched wallets in the 28 Feb graph (1,860 with labels); 5,151 in the 31 May graph (1,402 with labels, 789 with a liquidation).
+- June–August extraction: nine queries, about 1.04 TB billed; 163,553 approval logs, 1,013,023 transfer logs, 144,152 GMX closes.

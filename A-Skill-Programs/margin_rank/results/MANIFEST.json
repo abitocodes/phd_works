@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-10-01T12:49:16+00:00",
+  "published_at": "2026-10-01T14:35:01+00:00",
   "files": [
     {
       "path": "eval_summary.json",
@@ -24,6 +24,24 @@
       "source": "config/margin_config.yaml",
       "sha256": "2868e618d2ab0664b4d03773c4d2cfe8bbf64423a3cdb95b643087308e08e3bc",
       "bytes": 7533
+    },
+    {
+      "path": "config/fresh_holdout_2026q3.yaml",
+      "source": "config/fresh_holdout_2026q3.yaml",
+      "sha256": "6291f423b31c5488ab3a8f1209c09eb09ba9d633f734b7cba39677514a1f36c0",
+      "bytes": 3752
+    },
+    {
+      "path": "fresh_2026q3/extraction_manifest.json",
+      "source": "data/processed/fresh_2026q3/extraction_manifest.json",
+      "sha256": "1f9c9d139cf2585dd4759b5d0794a49a5685c69dd40d60c9121382f08de6a8f7",
+      "bytes": 6046
+    },
+    {
+      "path": "fresh_2026q3/fresh_holdout_summary.json",
+      "source": "data/processed/fresh_2026q3/fresh_holdout_summary.json",
+      "sha256": "9c988b7e687dbede5cde2987bf1449094b93222af810a29e2879ef7864ad7c84",
+      "bytes": 70598
     }
   ]
 }
