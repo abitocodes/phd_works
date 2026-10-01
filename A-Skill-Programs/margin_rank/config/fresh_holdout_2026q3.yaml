@@ -13,7 +13,7 @@
 
 registration:
   id: fresh-holdout-2026q3
-  status: draft
+  status: registered
   plan: docs/fresh_holdout_2026q3_plan.md
   operator_fixed_on: "2026-09-14"
 
