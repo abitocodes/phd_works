@@ -13,6 +13,7 @@ from common import load_raw_parquet_dir, normalize_address, parse_token_amount
 from pagerank import (
     assign_dense_ranks,
     build_awp_edges,
+    build_awp_paper_edges,
     build_endorserank_edges,
     coupled_pagerank,
     filter_subgraph_edges,
@@ -585,15 +586,24 @@ def pagerank_params(config: dict[str, Any]) -> tuple[float, float, int]:
     )
 
 
+def _missing_wallets(edges: pd.DataFrame, wallets: list[str]) -> set[str]:
+    """Wallets that no edge touches; kept as isolated nodes when ``isolated`` is set."""
+    nodes = set(edges["from_node"]) | set(edges["to_node"]) if not edges.empty else set()
+    return {w for w in wallets if w not in nodes}
+
+
 def score_endorserank(
     latest_t1: pd.DataFrame,
     wallets: list[str],
     config: dict[str, Any],
+    isolated: bool = False,
 ) -> dict[str, float]:
+    """EndorseRank at t1; with ``isolated`` the wallets outside the graph join it as isolated nodes."""
     seed = set(wallets)
     edges = filter_subgraph_edges(build_endorserank_edges(latest_t1), seed)
     damping, tol, max_iter = pagerank_params(config)
-    return weighted_pagerank(edges, damping=damping, tol=tol, max_iter=max_iter)
+    extra = _missing_wallets(edges, wallets) if isolated else None
+    return weighted_pagerank(edges, damping=damping, tol=tol, max_iter=max_iter, extra_nodes=extra)
 
 
 def score_awp(
@@ -601,7 +611,9 @@ def score_awp(
     score_end: pd.Timestamp,
     wallets: list[str],
     config: dict[str, Any],
+    isolated: bool = False,
 ) -> dict[str, float]:
+    """AWP at t1; with ``isolated`` the wallets outside the graph join it as isolated nodes."""
     rep = config["reputation"]
     seed = set(wallets)
     edges = filter_subgraph_edges(
@@ -614,7 +626,34 @@ def score_awp(
         seed,
     )
     damping, tol, max_iter = pagerank_params(config)
-    return weighted_pagerank(edges, damping=damping, tol=tol, max_iter=max_iter)
+    extra = _missing_wallets(edges, wallets) if isolated else None
+    return weighted_pagerank(edges, damping=damping, tol=tol, max_iter=max_iter, extra_nodes=extra)
+
+
+def score_awp_paper(
+    transfers_t1: pd.DataFrame,
+    score_end: pd.Timestamp,
+    wallets: list[str],
+    config: dict[str, Any],
+) -> dict[str, float]:
+    """AWP in its published form (see pagerank.build_awp_paper_edges) at t1.
+
+    Activeness is counted over every transfer before t1, not only those inside
+    the cohort subgraph. Wallets that no edge touches score zero, as in the
+    main analysis.
+    """
+    rep = config["reputation"]
+    paper = rep.get("awp_paper") or {}
+    edges, activeness = build_awp_paper_edges(
+        transfers_t1,
+        score_end,
+        float(rep["awp_decay_k"]),
+        float(rep["awp_decay_t0_days"]),
+        float(paper.get("value_b", 1.0)),
+    )
+    edges = filter_subgraph_edges(edges, set(wallets))
+    damping, tol, max_iter = pagerank_params(config)
+    return weighted_pagerank(edges, damping=damping, tol=tol, max_iter=max_iter, teleport=activeness or None)
 
 
 def _t1_layers(

@@ -7,8 +7,9 @@
 # "draft" or while this file or the plan has uncommitted changes.
 #
 # Everything not set here (damping, tolerance, iteration cap, AWP decay, the
-# C-PR lambda grid fixed on 14 September 2026, the S-PR teleport floor) is read
-# unchanged from config/margin_config.yaml.
+# C-PR lambda grid fixed on 14 September 2026, the S-PR teleport floor, the
+# value transform of the published AWP form) is read unchanged from
+# config/margin_config.yaml.
 
 registration:
   id: fresh-holdout-2026q3
@@ -87,3 +88,12 @@ evaluation:
     - id: F6
       cohort: spenders
       rule: september_primary
+  # Added on 1 October 2026, before registration (section 8 of the plan).
+  # Both are reported next to the decision and neither enters it.
+  sensitivity:
+    # F1-F4 again, with AWP in the form published by Do, Do and Nguyen (2023)
+    # (reputation.awp_paper in margin_config.yaml) in place of the comparator.
+    comparator: awp_paper
+    # F1-F6 again, with cohort wallets that a graph leaves out kept as isolated
+    # nodes instead of scored zero. Only EndorseRank and AWP change.
+    missing_wallet_rule: isolated_nodes

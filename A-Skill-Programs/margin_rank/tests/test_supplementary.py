@@ -1,10 +1,11 @@
-"""Proxy orientation, isolated nodes, token selection and spender classes (no BigQuery)."""
+"""Proxy orientation, isolated nodes, token selection, spender classes and the published AWP form (no BigQuery)."""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,7 +13,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from check_spender_code import code_kind  # noqa: E402
 from classify_spenders import classify  # noqa: E402
-from pagerank import weighted_pagerank  # noqa: E402
+from pagerank import build_awp_paper_edges, logistic_time_decay, value_transform, weighted_pagerank  # noqa: E402
 from proxy_metrics import compute_inverse_risk_proxies  # noqa: E402
 from run_robustness_eval import _top_token_addresses  # noqa: E402
 
@@ -67,3 +68,43 @@ def test_code_kind_separates_contracts_eoas_and_delegations() -> None:
     assert code_kind("0x6080604052") == "contract"
     assert code_kind("0xef0100" + "ab" * 20) == "eip7702"
     assert code_kind("0xEF0100" + "AB" * 20) == "eip7702"
+
+
+def test_value_transform_is_bounded_and_increasing() -> None:
+    v = value_transform(pd.Series([0.0, 0.5, 1.0, 10.0, 1e30]), b=1.0).to_numpy()
+    assert v[0] == 0.0
+    assert np.all(np.diff(v) >= 0) and np.all(v < 1.0 + 1e-15)
+    assert abs(v[1] - (2.0 / (1.0 + np.exp(-0.5)) - 1.0)) < 1e-15
+    assert v[3] > 0.9999
+
+
+def test_published_awp_edges_and_activeness() -> None:
+    end = pd.Timestamp("2026-05-31", tz="UTC")
+    day = pd.Timedelta(days=1)
+    transfers = pd.DataFrame(
+        {
+            "block_timestamp": [end - 10 * day, end - 100 * day, end - 50 * day, end - 5 * day, end - 1 * day],
+            "from_address": ["a", "a", "a", "c", "c"],
+            "to_address": ["b", "b", "d", "b", "c"],
+            "value": [1e18, 3e18, 0.0, 2e6, 7.0],
+        }
+    )
+    edges, activeness = build_awp_paper_edges(transfers, end, k=0.01, t0_days=180, b=1.0)
+    decay = logistic_time_decay(pd.Series([10.0, 100.0, 50.0, 5.0, 1.0]), 0.01, 180).to_numpy()
+    w = edges.set_index(["from_node", "to_node"])["weight"]
+    # Each a -> b transfer counts once whatever its amount, discounted by its age.
+    assert abs(w[("a", "b")] - (decay[0] + decay[1])) < 1e-12
+    # The zero-value transfer adds no edge but counts as activity.
+    assert ("a", "d") not in w.index
+    assert abs(activeness["a"] - (decay[0] + decay[2])) < 1e-12
+    # A self-transfer keeps its edge, as in AWP, but Eq. 2 leaves it out of activeness.
+    assert abs(w[("c", "c")] - decay[4] * (2.0 / (1.0 + np.exp(-7.0)) - 1.0)) < 1e-12
+    assert abs(activeness["c"] - decay[3]) < 1e-12
+    assert "b" not in activeness
+
+
+def test_published_awp_restarts_follow_activeness() -> None:
+    edges = pd.DataFrame({"from_node": ["a", "c"], "to_node": ["b", "b"], "weight": [1.0, 1.0]})
+    scores = weighted_pagerank(edges, max_iter=300, teleport={"a": 0.9, "c": 0.3})
+    assert abs(scores["a"] / scores["c"] - 3.0) < 1e-9
+    assert scores["b"] > scores["a"]

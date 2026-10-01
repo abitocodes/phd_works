@@ -2,8 +2,9 @@
 
 The registration is config/fresh_holdout_2026q3.yaml. This module reads it,
 builds the in-memory configuration for the new window, loads the spring and
-fresh events, adds the trader liquidation label and judges the registered
-rule. Nothing here writes to the spring data or to the spring summaries.
+fresh events, adds the trader liquidation label, judges the registered rule
+and reruns it under the registered sensitivity analyses, which never enter the
+decision. Nothing here writes to the spring data or to the spring summaries.
 """
 
 from __future__ import annotations
@@ -34,6 +35,9 @@ from holdout import (
     label_prevalence,
     latest_positive_as_of,
     resolve_score_wallets,
+    score_awp,
+    score_awp_paper,
+    score_endorserank,
     scores_to_frame,
     t1_connected_wallets,
 )
@@ -91,6 +95,11 @@ REPORT_LABELS = (
 )
 
 COHORTS = ("spenders", "traders")
+
+# Scores recomputed with wallets outside a graph kept as isolated nodes; only
+# the methods that leave cohort wallets out of their graph need a variant (every
+# spender is in the allowance graph, every trader in the union graph of C-PR).
+ISOLATED_VARIANTS = {"endorserank": "endorserank_isolated", "awp": "awp_isolated"}
 
 
 # ---------------------------------------------------------------------------
@@ -397,7 +406,12 @@ def build_cohort_frame(
         raise RuntimeError(f"No wallets in the {cohort} cohort at {score_end}.")
 
     scores = _score_methods(latest_t1, transfers_t1, score_end, wallets, config)
-    frame = scores_to_frame(wallets, scores)
+    scores["awp_paper"] = score_awp_paper(transfers_t1, score_end, wallets, config)
+    variants = {
+        ISOLATED_VARIANTS["endorserank"]: score_endorserank(latest_t1, wallets, config, isolated=True),
+        ISOLATED_VARIANTS["awp"]: score_awp(transfers_t1, score_end, wallets, config, isolated=True),
+    }
+    frame = scores_to_frame(wallets, {**scores, **variants})
     approvals_lab = future_approval_labels(approvals, latest_t1, outcome_start, outcome_end, wallets)
     flow_lab = future_transfer_labels(transfers, transfers_t1, outcome_start, outcome_end, wallets)
     merged = frame.merge(approvals_lab, on="wallet", how="left").merge(flow_lab, on="wallet", how="left")
@@ -475,10 +489,11 @@ def evaluate_contrasts(
     reg: dict[str, Any],
     n_resamples: int,
     seed: int,
+    specs: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     margin = float(reg["evaluation"].get("non_inferiority_margin", 0.02))
     out: list[dict[str, Any]] = []
-    for spec in contrast_specs(reg):
+    for spec in contrast_specs(reg) if specs is None else specs:
         merged = merged_by_cohort.get(spec["cohort"])
         row: dict[str, Any] | None = None
         if merged is not None:
@@ -505,6 +520,74 @@ def decide(contrasts: list[dict[str, Any]], reg: dict[str, Any]) -> dict[str, An
         "met": met,
         "hypotheses": {c["id"]: c["passed"] for c in hyps},
     }
+
+
+def comparator_swap_specs(reg: dict[str, Any], comparator: str) -> list[dict[str, Any]]:
+    """The registered contrasts that involve the comparator, with ``comparator`` in its place."""
+    base = reg["evaluation"]["comparator"]
+    out: list[dict[str, Any]] = []
+    for spec in contrast_specs(reg):
+        if base not in (spec["a"], spec["b"]):
+            continue
+        out.append(
+            {
+                **spec,
+                "a": comparator if spec["a"] == base else spec["a"],
+                "b": comparator if spec["b"] == base else spec["b"],
+            }
+        )
+    return out
+
+
+def isolated_frame(merged: pd.DataFrame) -> pd.DataFrame:
+    """The cohort frame with each method in ISOLATED_VARIANTS scored by its isolated-node variant."""
+    work = merged.copy()
+    for method, variant in ISOLATED_VARIANTS.items():
+        col = f"{variant}_score"
+        if col in work.columns:
+            work[f"{method}_score"] = work[col]
+    return work
+
+
+def evaluate_sensitivity(
+    merged_by_cohort: dict[str, pd.DataFrame],
+    reg: dict[str, Any],
+    n_resamples: int,
+    seed: int,
+) -> dict[str, Any]:
+    """The registered sensitivity analyses; reported beside the decision, never part of it."""
+    sens = reg["evaluation"].get("sensitivity") or {}
+    out: dict[str, Any] = {}
+    comparator = sens.get("comparator")
+    if comparator:
+        contrasts = evaluate_contrasts(
+            merged_by_cohort, reg, n_resamples, seed, specs=comparator_swap_specs(reg, comparator)
+        )
+        out["comparator"] = {
+            "replaces": reg["evaluation"]["comparator"],
+            "with": comparator,
+            "contrasts": contrasts,
+            "decision_rule_on_these": decide(contrasts, reg),
+        }
+    rule = sens.get("missing_wallet_rule")
+    if rule:
+        if rule != "isolated_nodes":
+            raise ValueError(f"unsupported missing_wallet_rule: {rule}")
+        frames = {cohort: isolated_frame(m) for cohort, m in merged_by_cohort.items()}
+        contrasts = evaluate_contrasts(frames, reg, n_resamples, seed)
+        block: dict[str, Any] = {
+            "rule": rule,
+            "rescored": sorted(ISOLATED_VARIANTS),
+            "contrasts": contrasts,
+            "decision_rule_on_these": decide(contrasts, reg),
+        }
+        if "spenders" in frames:
+            primary = tuple(c for c in HOLDOUT_CONTRASTS if c[4] in ("primary_a", "primary_b"))
+            sept = holdout_tau_diff(frames["spenders"], primary, n_resamples=n_resamples, seed=seed)
+            block["september_contrasts"] = sept
+            block["september_primary_rule"] = evaluate_primary_criterion(sept)
+        out["missing_wallet_rule"] = block
+    return out
 
 
 def evaluate(
@@ -538,6 +621,7 @@ def evaluate(
     contrasts = evaluate_contrasts(merged_by_cohort, reg, n_boot, seed)
     report["contrasts"] = contrasts
     report["decision"] = decide(contrasts, reg)
+    report["sensitivity"] = evaluate_sensitivity(merged_by_cohort, reg, n_boot, seed)
     report["bootstrap"] = {"n_boot": n_boot, "seed": seed, "ci_level": 0.95}
     return report
 

@@ -15,17 +15,19 @@ from common import load_config  # noqa: E402
 from extract_fresh_window import merge_parts, month_done, plan_steps, split_month, stray_parts  # noqa: E402
 from fresh_holdout import (  # noqa: E402
     combine_events,
+    comparator_swap_specs,
     contrast_specs,
     decide,
     evaluate,
     future_liquidation_labels,
+    isolated_frame,
     judge,
     load_registration,
     registration_check,
     shift_fixture_frames,
     window_config,
 )
-from holdout import build_holdout_fixture_frames, holdout_bounds  # noqa: E402
+from holdout import build_holdout_fixture_frames, holdout_bounds, score_awp  # noqa: E402
 from proxy_metrics import compute_liquidation_proxies  # noqa: E402
 
 
@@ -46,6 +48,54 @@ def test_registration_matches_the_registered_design() -> None:
     for key in ("raw_approvals_dir", "raw_transfers_dir", "raw_gmx_dir", "decoded_gmx", "manifest"):
         path = Path(reg["extraction"][key])
         assert path.is_absolute() and "fresh_2026q3" in path.as_posix()
+    assert ev["sensitivity"] == {"comparator": "awp_paper", "missing_wallet_rule": "isolated_nodes"}
+
+
+def test_comparator_swap_reruns_f1_to_f4_against_the_published_form() -> None:
+    reg = load_registration()
+    specs = comparator_swap_specs(reg, "awp_paper")
+    assert [s["id"] for s in specs] == ["F1", "F2", "F3", "F4"]
+    assert all(s["a"] == "coupled_pr" and s["b"] == "awp_paper" for s in specs)
+    original = {s["id"]: s for s in contrast_specs(reg)}
+    for s in specs:
+        assert (s["cohort"], s["label"], s["test"]) == tuple(original[s["id"]][k] for k in ("cohort", "label", "test"))
+
+
+def test_isolated_rule_rescores_only_endorserank_and_awp() -> None:
+    frame = pd.DataFrame(
+        {
+            "wallet": ["0x1", "0x2"],
+            "endorserank_score": [0.5, 0.0],
+            "endorserank_isolated_score": [0.4, 0.1],
+            "awp_score": [0.0, 0.3],
+            "awp_isolated_score": [0.2, 0.25],
+            "coupled_pr_score": [0.6, 0.4],
+        }
+    )
+    out = isolated_frame(frame)
+    assert out["endorserank_score"].tolist() == [0.4, 0.1]
+    assert out["awp_score"].tolist() == [0.2, 0.25]
+    assert out["coupled_pr_score"].tolist() == [0.6, 0.4]
+    assert frame["awp_score"].tolist() == [0.0, 0.3]
+
+
+def test_isolated_awp_scores_a_wallet_without_transfers_like_a_sender() -> None:
+    config = load_config()
+    t = pd.Timestamp("2026-05-01", tz="UTC")
+    transfers = pd.DataFrame(
+        {
+            "block_timestamp": [t, t],
+            "from_address": ["0xa", "0xb"],
+            "to_address": ["0xb", "0xc"],
+            "value": [5.0, 2.0],
+        }
+    )
+    end = pd.Timestamp("2026-05-31 23:59:59", tz="UTC")
+    wallets = ["0xa", "0xb", "0xc", "0xd"]
+    zero_rule = score_awp(transfers, end, wallets, config)
+    isolated = score_awp(transfers, end, wallets, config, isolated=True)
+    assert "0xd" not in zero_rule
+    assert abs(isolated["0xd"] - isolated["0xa"]) < 1e-12 and isolated["0xd"] > 0
 
 
 def test_window_config_changes_only_the_window() -> None:
@@ -123,8 +173,17 @@ def test_fixture_run_scores_before_the_freeze_and_labels_after_it() -> None:
     assert isinstance(summary["decision"]["met"], bool)
     spenders = summary["cohorts"]["spenders"]
     assert "september_primary_rule" in spenders
+    assert "awp_paper" in spenders["methods"]
     prev = summary["cohorts"]["traders"]["prevalence"]
     assert prev["future_liquidation_free_rate"]["n_defined"] > 0
+    sens = summary["sensitivity"]
+    assert [c["id"] for c in sens["comparator"]["contrasts"]] == ["F1", "F2", "F3", "F4"]
+    assert all(c["b"] == "awp_paper" for c in sens["comparator"]["contrasts"])
+    iso = sens["missing_wallet_rule"]
+    assert [c["id"] for c in iso["contrasts"]] == ["F1", "F2", "F3", "F4", "F5"]
+    assert isinstance(iso["september_primary_rule"]["met"], bool)
+    # The sensitivity analyses never change the decision.
+    assert summary["decision"]["hypotheses"] == {c["id"]: c["passed"] for c in summary["contrasts"][:3]}
 
 
 def test_combine_events_drops_duplicate_logs() -> None:

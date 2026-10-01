@@ -90,6 +90,18 @@ def print_report(summary: dict) -> None:
             )
     if summary.get("decision"):
         print(f"== decision: {summary['decision']}")
+    sens = summary.get("sensitivity") or {}
+    for key, block in sens.items():
+        print(f"== sensitivity ({key}), reported only")
+        for c in block.get("contrasts", []):
+            r = c.get("result") or {}
+            print(
+                f"   {c['id']:3s} {c['cohort']:8s} {c['a']} - {c['b']} on {c['label']}: "
+                f"delta={_fmt(r.get('delta_tau'))} ci=[{_fmt(r.get('ci_low'))}, {_fmt(r.get('ci_high'))}] "
+                f"{c['test']} -> {'PASS' if c['passed'] else 'FAIL'}"
+            )
+        if "september_primary_rule" in block:
+            print(f"   14 September rule under this rule: met={block['september_primary_rule']['met']}")
 
 
 def run_spring_check(config: dict, n_boot: int | None) -> int:
@@ -126,6 +138,12 @@ def run_spring_check(config: dict, n_boot: int | None) -> int:
             mismatches += 1
         pub_methods = published.get("alignment", {}).get("methods", {})
         for method in methods:
+            if method not in pub_methods:
+                # Added after the spring summary was published (awp_paper); nothing to compare.
+                for lab in SPRING_LABELS:
+                    mine = alignment["methods"].get(method, {}).get(lab, {}).get("kendall_tau")
+                    print(f"  {method:22s} {lab:28s} this={_fmt(mine)} (not in the published summary)")
+                continue
             for lab in SPRING_LABELS:
                 mine = alignment["methods"].get(method, {}).get(lab, {}).get("kendall_tau")
                 theirs = pub_methods.get(method, {}).get(lab, {}).get("kendall_tau")
