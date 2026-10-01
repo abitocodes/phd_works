@@ -640,7 +640,9 @@ def score_awp_paper(
 
     Activeness is counted over every transfer before t1, not only those inside
     the cohort subgraph. Wallets that no edge touches score zero, as in the
-    main analysis.
+    main analysis. The raw holdout transfers keep zero-value logs, which the
+    same-window extract drops; on the spring spender holdout, dropping them as
+    well changes this score's coefficients on both labels by less than 0.001.
     """
     rep = config["reputation"]
     paper = rep.get("awp_paper") or {}
