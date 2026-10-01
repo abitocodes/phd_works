@@ -21,7 +21,8 @@ awp_paper          AWP in the form published by Do, Do and Nguyen (2023):
                    on the matched cohort in the same window and on the
                    spender holdout, beside EndorseRank, AWP and C-PR.
 
-Output: data/processed/supplementary_checks.json (read by export_latex_results.py).
+Output: data/2-processed-tables-and-evaluations/supplementary_checks.json (read by
+export_latex_results.py).
 """
 
 from __future__ import annotations

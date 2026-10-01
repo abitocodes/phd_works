@@ -22,6 +22,7 @@ import pyarrow.parquet as pq
 import yaml
 
 from common import ROOT
+from project_paths import current_path
 from holdout import (
     HOLDOUT_CONTRASTS,
     correlate_holdout,
@@ -119,7 +120,11 @@ def file_sha256(path: Path) -> str | None:
 
 def _resolve(value: str) -> str:
     path = Path(value)
-    return str(path if path.is_absolute() else ROOT / path)
+    if path.is_absolute():
+        return str(path)
+    # The registration is frozen and names the data folders as they were before
+    # the renaming of 1 October 2026; current_path() gives today's names.
+    return str(ROOT / current_path(value))
 
 
 def load_registration(path: Path | None = None) -> dict[str, Any]:
@@ -181,7 +186,9 @@ def git_file_state(path: Path) -> dict[str, Any]:
     state["tracked"] = _git(["ls-files", "--error-unmatch", "--", rel], root).returncode == 0
     status = _git(["status", "--porcelain", "--", rel], root)
     state["clean"] = status.returncode == 0 and not status.stdout.strip()
-    log = _git(["log", "-1", "--format=%H %cI", "--", rel], root)
+    # Last commit that changed the content: --follow looks through the folder
+    # move of 1 October 2026 and the filter skips renames that left it unchanged.
+    log = _git(["log", "-1", "--follow", "--diff-filter=AM", "--format=%H %cI", "--", rel], root)
     if log.returncode == 0 and log.stdout.strip():
         state["last_commit"] = log.stdout.strip()
     return state

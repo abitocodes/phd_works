@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from common import ROOT, load_config, load_json  # noqa: E402
+from common import load_config, load_json  # noqa: E402
 from evaluate_alignment import (  # noqa: E402
     DISSERTATION_METHODS,
     METHOD_LABELS,
@@ -19,6 +19,7 @@ from evaluate_alignment import (  # noqa: E402
     SIX_AAVE_LABELS,
     SIX_AAVE_METHODS,
 )  # noqa: E402
+from project_paths import ARCHIVE_DIR, EN_LEFTOVER_DIR  # noqa: E402
 
 METHODS = SEVEN_METHODS
 
@@ -216,7 +217,7 @@ def main() -> int:
     parser.add_argument(
         "--csv-out-dir",
         type=Path,
-        help="CSV output directory (default: data/processed or archive for seven/six-aave)",
+        help="CSV output directory (default: data/4-archived-extended-baselines)",
     )
     args = parser.parse_args()
 
@@ -240,27 +241,17 @@ def main() -> int:
     # archived: the main text reports EndorseRank vs AWP only, via
     # export_latex_results.py (alignment-family-ci.tex). GF-PR was withdrawn from
     # the narrative as circular with the GMX proxies (supervisor comment id 14).
-    repo_root = ROOT.parents[1]
     if args.csv_out_dir:
         csv_dir = args.csv_out_dir
     else:
-        csv_dir = ROOT / "data" / "archive" / "extended-baselines"
+        csv_dir = ARCHIVE_DIR
     csv_path = csv_dir / preset_cfg["csv_name"]
     write_csv(matrix, csv_path, summary, preset_cfg)
 
     if args.out_dir:
         tex_path = args.out_dir / preset_cfg["tex_name"]
     else:
-        tex_path = (
-            repo_root
-            / "2-Dissertation-Draft"
-            / "local-other"
-            / "en-leftover"
-            / "archive"
-            / "extended-baselines"
-            / "tables"
-            / preset_cfg["tex_name"]
-        )
+        tex_path = EN_LEFTOVER_DIR / "archive" / "extended-baselines" / "tables" / preset_cfg["tex_name"]
     write_latex(summary, tex_path, preset_cfg)
 
     print(f"CSV  -> {csv_path}")

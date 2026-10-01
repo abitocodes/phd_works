@@ -27,6 +27,7 @@ from common import (  # noqa: E402
     save_extraction_wallet_set,
     save_json,
 )
+from project_paths import PROCESSED  # noqa: E402
 
 OBSERVATION_MONTHS = [
     ("2025-12", "2025-12-01 00:00:00 UTC", "2026-01-01 00:00:00 UTC"),
@@ -54,7 +55,7 @@ def sample_from_parquet(config: dict, limit: int) -> pd.DataFrame:
 
 def monthly_cache_dir(config: dict) -> Path:
     bench = config.get("benchmark") or {}
-    rel = bench.get("active_wallet_cache_dir", "data/processed/active_wallet_cache")
+    rel = bench.get("active_wallet_cache_dir", f"{PROCESSED}/active-wallet-sampling-cache")
     path = Path(rel)
     if not path.is_absolute():
         path = ROOT / path

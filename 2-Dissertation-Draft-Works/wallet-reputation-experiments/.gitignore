@@ -5,6 +5,7 @@ __pycache__/
 
 # --- Blockchain data: track collected/processed artifacts by default ---
 # Still exclude regenerable intermediates and blobs over GitHub's 100 MiB hard limit.
+# data/README.md describes every folder.
 
 # Local extraction / eval run logs
 data/**/*.log
@@ -13,15 +14,15 @@ data/**/*.log
 data/**/_chunks/
 
 # Optional Tier-2 re-extract (~3.5 GiB); recreate via extract_reputation_data.py --tier2
-data/raw/reputation_tier2/
+data/1-raw-blockchain-logs/expanded-pool-tier2-2025-12-to-2026-05/
 
 # Active-wallet cache (sample_active_wallets.py); several months exceed 100 MiB
-data/processed/active_wallet_cache/
+data/2-processed-tables-and-evaluations/active-wallet-sampling-cache/
 
 # Single files over GitHub's 100 MiB hard limit (recreate via extract/preprocess scripts)
-data/raw/gmx_event_logs_2025-12_to_2026-05.parquet
-data/raw/reputation/transfers/transfers_arbitrum.parquet
-data/processed/reputation/transfer_events.parquet
+data/1-raw-blockchain-logs/observation-window-2025-12-to-2026-05/gmx_event_logs_2025-12_to_2026-05.parquet
+data/1-raw-blockchain-logs/observation-window-2025-12-to-2026-05/erc20-transfer-logs/transfers_arbitrum.parquet
+data/2-processed-tables-and-evaluations/erc20-allowances-and-transfers/transfer_events.parquet
 
-# results/ holds the committed evaluation summaries (see results/README.md)
-!results/
+# data/3-published-results-for-thesis/ holds the committed evaluation summaries
+!data/3-published-results-for-thesis/

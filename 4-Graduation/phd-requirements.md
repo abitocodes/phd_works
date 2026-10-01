@@ -87,7 +87,7 @@
 - College별 article 수·게재 단계(published / accepted / under review) 기준이 다름.
 - **등록 시점**에 supervisor와 논의해야 함.
 
-현재 `2-Dissertation-Draft/` monograph thesis를 쓰는 경로라면, 위 §1–4의 **thesis + (해당 시) viva + manuscript 2편 투고**가 적용된다. PhD by Publication으로 전환하지 않는 한, “논문만으로 출판 요건이 면제”되지는 않는다.
+현재 `2-Dissertation-Draft-Works/` monograph thesis를 쓰는 경로라면, 위 §1–4의 **thesis + (해당 시) viva + manuscript 2편 투고**가 적용된다. PhD by Publication으로 전환하지 않는 한, “논문만으로 출판 요건이 면제”되지는 않는다.
 
 ---
 

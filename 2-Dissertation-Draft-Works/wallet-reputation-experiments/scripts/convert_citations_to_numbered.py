@@ -7,9 +7,9 @@ English dissertation body/appendix/abstract with \\cend{n} / \\cend{n,m}.
 from __future__ import annotations
 
 import re
-from pathlib import Path
+from project_paths import MANUSCRIPT_DIR
 
-ROOT = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft" / "en"
+ROOT = MANUSCRIPT_DIR
 BIB = ROOT / "Chapter-07-References" / "index.tex"
 PREAMBLE = ROOT / "Config" / "preamble.tex"
 

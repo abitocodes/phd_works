@@ -1,7 +1,7 @@
 # BigQuery Data Acquisition Plan
 
 Technical reference for EndorseRank dissertation evaluation on Arbitrum One.
-LaTeX mirrors: `1-Proposal/proposal/02-Content/Chapter-05.tex`, `2-Dissertation-Draft/en/Chapter-03-Research-Methodology/index.tex`.
+LaTeX mirrors: `1-Proposal/proposal/02-Content/Chapter-05.tex`, `2-Dissertation-Draft-Works/overleaf-github/Chapter-03-Research-Methodology/index.tex`.
 
 ## Source
 
@@ -74,7 +74,7 @@ LaTeX mirrors: `1-Proposal/proposal/02-Content/Chapter-05.tex`, `2-Dissertation-
 | Full | 100,000 | Cumulative < 1 TiB; overage ~$6.25/TiB |
 
 - **Seed:** Tier 1 GMX wallets supplemented by fixed-seed addresses up to `benchmark.target_wallets` (100,000).
-- **Implementation:** `extract_reputation_data.py` merges GMX wallets with `benchmark.supplemental_path` (optional parquet of BQ-sampled active addresses) or deterministic `SHA256(seed:i)` padding. Output: `data/processed/extraction_wallet_set.parquet`. Use `--gmx-only` for Tier 1 alignment extraction without benchmark padding.
+- **Implementation:** `extract_reputation_data.py` merges GMX wallets with `benchmark.supplemental_path` (optional parquet of BQ-sampled active addresses) or deterministic `SHA256(seed:i)` padding. Output: `data/2-processed-tables-and-evaluations/extraction_wallet_set.parquet`. Use `--gmx-only` for Tier 1 alignment extraction without benchmark padding.
 - **No extra BQ cost for scaling:** Wallet filter reduces returned rows, not partition scan bytes. After Tier 1 extraction, benchmark sizes (10k/50k/100k) are subsampled from local parquet via `benchmark_runtime.py`.
 
 ### Tier 3 — Robustness (local only)
@@ -89,7 +89,7 @@ LaTeX mirrors: `1-Proposal/proposal/02-Content/Chapter-05.tex`, `2-Dissertation-
 | Monthly free tier | 1 TiB processed per billing account |
 | Overage | ~$6.25/TiB ([BigQuery pricing](https://cloud.google.com/bigquery/pricing)) |
 | Mandatory | `--dry-run` before every `--extract` |
-| Audit trail | `data/processed/extraction_manifest.json` |
+| Audit trail | `data/2-processed-tables-and-evaluations/extraction_manifest.json` |
 | Fallback | If dry-run exceeds budget, restrict to top-20 ERC-20 tokens by Arbitrum volume (robustness check in proposal §5.2.2) |
 
 ## Execution order

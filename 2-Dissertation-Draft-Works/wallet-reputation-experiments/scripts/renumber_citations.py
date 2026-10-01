@@ -13,7 +13,7 @@ Modes
                    cited are reported and, with --drop-uncited, removed.
                    Requested by the 2026-09-09 supervisory meeting (Moulla).
 
-Reads 2-Dissertation-Draft/en/Chapter-07-References/index.tex and updates the
+Reads 2-Dissertation-Draft-Works/overleaf-github/Chapter-07-References/index.tex and updates the
 \\cend{...} calls in every chapter/appendix .tex file. Prints the old->new
 mapping for QA and regenerates Config/bibentries.tex.
 """
@@ -24,7 +24,9 @@ import argparse
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft" / "en"
+from project_paths import MANUSCRIPT_DIR
+
+ROOT = MANUSCRIPT_DIR
 BIB = ROOT / "Chapter-07-References" / "index.tex"
 MAIN = ROOT / "main.tex"
 CONTENT_DIRS = [ROOT / "01-Intro"] + sorted(ROOT.glob("Chapter-*"))

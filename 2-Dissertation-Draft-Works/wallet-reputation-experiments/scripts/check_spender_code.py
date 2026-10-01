@@ -15,7 +15,8 @@ needs no credentials; the public Arbitrum RPC is the default.
 Usage:
     python scripts/check_spender_code.py
     python scripts/check_spender_code.py --rpc <url>     # or set ARBITRUM_RPC_URL
-Reads data/processed/holdout/spender_account_types.csv (from classify_spenders.py),
+Reads spender_account_types.csv (from classify_spenders.py) in
+data/2-processed-tables-and-evaluations/spring-holdout-2026-03-to-2026-05/,
 adds the columns code_kind and account_class, and adds a code_check block to
 spender_account_types.json.
 """
@@ -36,9 +37,10 @@ import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from common import PROCESSED_DIR, load_json, save_json  # noqa: E402
+from common import load_json, save_json  # noqa: E402
+from project_paths import SPRING_HOLDOUT_DIR  # noqa: E402
 
-OUT_DIR = PROCESSED_DIR / "holdout"
+OUT_DIR = SPRING_HOLDOUT_DIR
 DEFAULT_RPC = "https://arb1.arbitrum.io/rpc"
 BATCH = 25
 TOP_N = 100

@@ -18,15 +18,15 @@ from web3._utils.events import get_event_data
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from common import (  # noqa: E402
-    ROOT,
     load_config,
     load_json,
     normalize_address,
     parse_topic_address,
     save_json,
 )
+from project_paths import ABI_DIR  # noqa: E402
 
-ABI_PATH = ROOT / "abis" / "EventEmitter.json"
+ABI_PATH = ABI_DIR / "EventEmitter.json"
 _EVENT_ABI = None
 
 

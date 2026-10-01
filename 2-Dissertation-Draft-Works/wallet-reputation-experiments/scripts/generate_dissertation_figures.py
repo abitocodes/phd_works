@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import matplotlib
 
@@ -14,9 +13,10 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-ROOT = Path(__file__).resolve().parents[1]
-PROCESSED = ROOT / "data" / "processed"
-OUT = ROOT.parents[1] / "2-Dissertation-Draft" / "en" / "Figures" / "generated"
+from project_paths import MANUSCRIPT_DIR, PROCESSED_DIR
+
+PROCESSED = PROCESSED_DIR
+OUT = MANUSCRIPT_DIR / "Figures" / "generated"
 
 
 def _setup_style() -> None:

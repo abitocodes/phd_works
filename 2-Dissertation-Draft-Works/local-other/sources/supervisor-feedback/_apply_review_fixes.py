@@ -45,11 +45,11 @@ from pathlib import Path
 from lxml import etree
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parents[2]
+REPO = HERE.parents[3]  # phd_works (this folder is 2-Dissertation-Draft-Works/local-other/sources/supervisor-feedback)
 DOCX = HERE / "Taehong_Thesis_Reviewed_Moulla_Attipoe.docx"
-EN = REPO / "2-Dissertation-Draft" / "en"
-MR = REPO / "A-Skill-Programs" / "margin_rank"
-SUMMARY = MR / "data" / "processed" / "eval_summary.json"
+EN = REPO / "2-Dissertation-Draft-Works" / "overleaf-github"
+MR = REPO / "2-Dissertation-Draft-Works" / "wallet-reputation-experiments"
+SUMMARY = MR / "data" / "2-processed-tables-and-evaluations" / "eval_summary.json"
 MAPPING = MR / "scripts" / "_cite_mapping.txt"
 README = HERE / "README.md"
 

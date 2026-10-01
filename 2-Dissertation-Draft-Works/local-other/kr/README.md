@@ -5,7 +5,7 @@
 ## 빌드
 
 ```powershell
-cd 2-Dissertation-Draft/kr
+cd 2-Dissertation-Draft-Works/local-other/kr
 ./build.ps1
 ```
 

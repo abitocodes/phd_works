@@ -28,6 +28,7 @@ from fresh_holdout import (  # noqa: E402
     window_config,
 )
 from holdout import build_holdout_fixture_frames, holdout_bounds, score_awp  # noqa: E402
+from project_paths import RAW_REPLICATION_DIR, REPLICATION_DIR  # noqa: E402
 from proxy_metrics import compute_liquidation_proxies  # noqa: E402
 
 
@@ -45,9 +46,14 @@ def test_registration_matches_the_registered_design() -> None:
         "F2": ("spenders", "future_new_transfer_senders", "non_inferiority"),
         "F3": ("traders", "future_liquidation_free_rate", "non_inferiority"),
     }
-    for key in ("raw_approvals_dir", "raw_transfers_dir", "raw_gmx_dir", "decoded_gmx", "manifest"):
+    # The frozen file names the folders as they were before 1 October 2026; they
+    # resolve to the replication folders of today.
+    for key in ("raw_approvals_dir", "raw_transfers_dir", "raw_gmx_dir"):
         path = Path(reg["extraction"][key])
-        assert path.is_absolute() and "fresh_2026q3" in path.as_posix()
+        assert path.is_absolute() and path.is_relative_to(RAW_REPLICATION_DIR)
+    for key in ("decoded_gmx", "manifest"):
+        assert Path(reg["extraction"][key]).is_relative_to(REPLICATION_DIR)
+    assert Path(reg["evaluation"]["output"]).is_relative_to(REPLICATION_DIR)
     assert ev["sensitivity"] == {"comparator": "awp_paper", "missing_wallet_rule": "isolated_nodes"}
 
 
@@ -200,7 +206,7 @@ def test_extraction_plan_writes_only_to_fresh_folders(tmp_path: Path) -> None:
     spring = load_config()["reputation"]["paths"]
     for step in steps:
         out = Path(step["out_path"]).as_posix()
-        assert "fresh_2026q3" in out
+        assert Path(step["out_path"]).is_relative_to(RAW_REPLICATION_DIR)
         assert not out.startswith(Path(spring["raw_approvals_dir"]).as_posix() + "/")
         assert not out.startswith(Path(spring["raw_transfers_dir"]).as_posix() + "/")
     halves = split_month("2026-06", "2026-06-01 00:00:00 UTC", "2026-07-01 00:00:00 UTC", 2)

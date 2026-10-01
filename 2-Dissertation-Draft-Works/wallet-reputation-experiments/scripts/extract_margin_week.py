@@ -94,7 +94,7 @@ def main() -> int:
         "__LOGS_FQN__", config["bigquery"]["logs_fqn"]
     )
     out_path = Path(config["paths"]["raw_logs"])
-    raw_month_dir = out_path.parent / "gmx"
+    raw_month_dir = Path(config["paths"].get("raw_gmx_dir") or out_path.parent / "gmx")
     manifest_path = Path(config["paths"]["manifest"])
     budget_limit = config.get("budget", {}).get("max_bytes_per_query", 0)
 

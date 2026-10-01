@@ -2,16 +2,17 @@
 """Extract the June-August 2026 logs for the registered fresh holdout.
 
 Each month of each kind goes to its own parquet file in the folders named in
-config/fresh_holdout_2026q3.yaml, with a separate manifest. The spring raw
-files, the combined parquet files and data/processed/extraction_manifest.json
-are not touched.
+config/fresh_holdout_2026q3.yaml, with a separate manifest. The registration
+names the folders as they were before 1 October 2026; project_paths.current_path
+gives their present names. The spring raw files, the combined parquet files and
+data/2-processed-tables-and-evaluations/extraction_manifest.json are not touched.
 
 Kinds (same SQL and parameters as the spring extraction):
   approvals  ERC-20 Approval logs with an owner or spender in the matched cohort
   transfers  ERC-20 Transfer logs with a sender or receiver in the matched cohort
   gmx        GMX V2 PositionDecrease logs from the EventEmitter (all accounts)
 
-Usage (from A-Skill-Programs/margin_rank, with the project venv):
+Usage (from 2-Dissertation-Draft-Works/wallet-reputation-experiments, with the project venv):
   python scripts/extract_fresh_window.py --dry-run
   python scripts/extract_fresh_window.py --extract --yes
   python scripts/extract_fresh_window.py --decode-only

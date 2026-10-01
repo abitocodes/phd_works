@@ -1,4 +1,4 @@
-"""Shared helpers for margin_rank scripts."""
+"""Shared helpers for the wallet-reputation-experiments scripts."""
 
 from __future__ import annotations
 
@@ -11,12 +11,9 @@ import pandas as pd
 import yaml
 from eth_utils import keccak, to_hex
 
-ROOT = Path(__file__).resolve().parents[1]
-CONFIG_PATH = ROOT / "config" / "margin_config.yaml"
-SQL_DIR = ROOT / "sql"
-DATA_DIR = ROOT / "data"
-RAW_DIR = DATA_DIR / "raw"
-PROCESSED_DIR = DATA_DIR / "processed"
+from project_paths import CONFIG_DIR, DATA_DIR, PROCESSED_DIR, RAW_DIR, ROOT, SQL_DIR  # noqa: F401
+
+CONFIG_PATH = CONFIG_DIR / "margin_config.yaml"
 
 
 def _resolve_path(p: str | Path) -> Path:

@@ -6,10 +6,10 @@ Venue/journal details are omitted from footnotes; they appear in Section 7 Refer
 from __future__ import annotations
 
 import re
-from pathlib import Path
+from project_paths import MANUSCRIPT_DIR
 
-BIB = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft/en/Chapter-07-References/index.tex"
-OUT = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft/en/Config/bibentries.tex"
+BIB = MANUSCRIPT_DIR / "Chapter-07-References" / "index.tex"
+OUT = MANUSCRIPT_DIR / "Config" / "bibentries.tex"
 
 
 def strip_href(text: str) -> str:

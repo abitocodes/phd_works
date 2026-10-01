@@ -4,7 +4,7 @@
 Offline (--fixtures): synthetic GMX + reputation + Aave data, no BigQuery.
 Real (--real): assumes extract/preprocess scripts already ran.
 
-Output: data/processed/eval_summary.json
+Output: data/2-processed-tables-and-evaluations/eval_summary.json
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from benchmark_runtime import (  # noqa: E402
     benchmark_tier2_scaling,
     reset_timing_cache,
 )
-from common import ROOT, build_tier2_wallet_pool, load_config, save_json, tier2_reputation_paths  # noqa: E402
+from common import build_tier2_wallet_pool, load_config, save_json, tier2_reputation_paths  # noqa: E402
 from evaluate_alignment import (  # noqa: E402
     METHOD_LABELS,
     METHODS,
@@ -37,6 +37,7 @@ from evaluate_alignment import (  # noqa: E402
     build_six_aave_alignment_report,
 )
 from pagerank_variants import collect_six_aave_edges  # noqa: E402
+from project_paths import ARCHIVE_DIR, EN_LEFTOVER_DIR  # noqa: E402
 from proxy_metrics import compute_all_proxies  # noqa: E402
 from run_robustness_eval import run_robustness_eval  # noqa: E402
 
@@ -360,17 +361,8 @@ def main() -> int:
         rc = _run_script("export_method_matrix.py", ["--preset", "three"])
         if rc != 0:
             return rc
-        repo_root = Path(__file__).resolve().parents[2].parent
-        archive_tex = (
-            repo_root
-            / "2-Dissertation-Draft"
-            / "local-other"
-            / "en-leftover"
-            / "archive"
-            / "extended-baselines"
-            / "tables"
-        )
-        archive_csv = ROOT / "data" / "archive" / "extended-baselines"
+        archive_tex = EN_LEFTOVER_DIR / "archive" / "extended-baselines" / "tables"
+        archive_csv = ARCHIVE_DIR
         for preset in ("seven", "six-aave"):
             rc = _run_script(
                 "export_method_matrix.py",

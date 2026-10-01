@@ -5,13 +5,16 @@ Three modes:
 
   --spring-check  Reruns the published spring spender holdout (freeze 28 February,
                   labels March-May) through this code path and compares every
-                  coefficient with results/holdout/eval_summary_spenders.json.
+                  coefficient with the published spring summary
+                  (data/3-published-results-for-thesis/spring-holdout-2026-03-to-2026-05/
+                  eval_summary_spenders.json).
                   Run it first: if it does not reproduce the thesis numbers, stop.
   --fixtures      Synthetic events moved to straddle the new freeze date (offline test).
   (default)       The registered evaluation on the June-August extraction. Refuses to
                   run unless the registration is committed with status 'registered'.
 
-Outputs go to data/processed/fresh_2026q3/. The spring summaries are never written.
+Outputs go to data/2-processed-tables-and-evaluations/registered-replication-2026-06-to-2026-08/.
+The spring summaries are never written.
 """
 
 from __future__ import annotations
@@ -26,7 +29,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from common import ROOT, load_config, save_json  # noqa: E402
+from common import load_config, save_json  # noqa: E402
 from fresh_holdout import (  # noqa: E402
     REGISTRATION_PATH,
     build_cohort_frame,
@@ -47,8 +50,9 @@ from holdout import (  # noqa: E402
     evaluate_primary_criterion,
     holdout_tau_diff,
 )
+from project_paths import PUBLISHED_SPRING_HOLDOUT_DIR, REPLICATION_DIR  # noqa: E402
 
-SPRING_PUBLISHED = ROOT / "results" / "holdout" / "eval_summary_spenders.json"
+SPRING_PUBLISHED = PUBLISHED_SPRING_HOLDOUT_DIR / "eval_summary_spenders.json"
 SPRING_LABELS = ("future_new_approvers", "future_new_transfer_senders")
 FIXTURE_SHIFT_DAYS = 91  # moves the fixture freeze from early February to early May
 
@@ -158,7 +162,7 @@ def run_spring_check(config: dict, n_boot: int | None) -> int:
         f"exploratory C-PR - AWP on new approval pairs: delta={_fmt(row.get('delta_tau'))} "
         f"ci=[{_fmt(row.get('ci_low'))}, {_fmt(row.get('ci_high'))}]"
     )
-    out_dir = ROOT / "data" / "processed" / "fresh_2026q3"
+    out_dir = REPLICATION_DIR
     save_json(out_dir / "spring_check.json", out)
     print(f"wrote {out_dir / 'spring_check.json'}; mismatches={mismatches}")
     return 0 if mismatches == 0 else 2

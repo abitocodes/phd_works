@@ -5,7 +5,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3] / "2-Dissertation-Draft" / "en"
+from project_paths import MANUSCRIPT_DIR
+
+ROOT = MANUSCRIPT_DIR
 BIB = ROOT / "Chapter-07-References" / "index.tex"
 CONTENT_DIRS = [ROOT / "01-Intro"] + sorted(ROOT.glob("Chapter-*"))
 

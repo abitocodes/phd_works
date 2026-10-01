@@ -22,7 +22,8 @@ GOOGLE_CLOUD_PROJECT, the config (bigquery.project_id) or the key.
 Usage:
     python scripts/classify_spenders.py --dry-run
     python scripts/classify_spenders.py --run
-Output: data/processed/holdout/spender_account_types.csv and spender_account_types.json
+Output: spender_account_types.csv and spender_account_types.json in
+data/2-processed-tables-and-evaluations/spring-holdout-2026-03-to-2026-05/
 """
 
 from __future__ import annotations
@@ -39,7 +40,8 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from common import PROCESSED_DIR, format_bytes, load_config, read_sql, save_json  # noqa: E402
+from common import format_bytes, load_config, read_sql, save_json  # noqa: E402
+from project_paths import SPRING_HOLDOUT_DIR  # noqa: E402
 from holdout import (  # noqa: E402
     future_approval_labels,
     holdout_bounds,
@@ -48,7 +50,7 @@ from holdout import (  # noqa: E402
     score_endorserank,
 )
 
-OUT_DIR = PROCESSED_DIR / "holdout"
+OUT_DIR = SPRING_HOLDOUT_DIR
 TOP_N = 100
 
 
