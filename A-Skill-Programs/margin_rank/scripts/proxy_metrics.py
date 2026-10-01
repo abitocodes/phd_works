@@ -115,7 +115,7 @@ def compute_inverse_risk_proxies(
     wallets: list[str],
     min_closes: int = 3,
 ) -> pd.DataFrame:
-    """Inverse-risk family — loss avoidance and non-loss close metrics."""
+    """Inverse-risk family — loss avoidance and non-loss close metrics (higher = smaller losses)."""
     work = _gmx_wallet_frame(decoded, wallets, min_closes)
     if work.empty:
         base = pd.DataFrame({"wallet": [w.lower() for w in wallets]})
@@ -132,11 +132,13 @@ def compute_inverse_risk_proxies(
         loss_avoidance=("loss_amount", "sum"),
         worst_close_pnl=("base_pnl_usd", "min"),
     )
-    agg["loss_avoidance"] = -agg["loss_avoidance"]
+    # Summed losses and the worst close are <= 0 for a wallet that lost money, so a
+    # value nearer zero means smaller losses and ranks higher, like every other proxy.
+    # (Until 2026-09-30 both were negated, which ranked the largest losses highest.)
     agg["non_loss_close_rate"] = 1.0 - (
         agg["loss_close_count"] / agg["total_closes"].clip(lower=1)
     )
-    agg["worst_close_pnl_score"] = -agg["worst_close_pnl"]
+    agg["worst_close_pnl_score"] = agg["worst_close_pnl"]
 
     base = pd.DataFrame({"wallet": [w.lower() for w in wallets]})
     return base.merge(

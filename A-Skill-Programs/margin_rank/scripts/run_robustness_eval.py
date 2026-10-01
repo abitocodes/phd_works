@@ -29,21 +29,33 @@ from proxy_metrics import (
 )
 
 
-def _top_token_addresses(transfers: pd.DataFrame, allowances: pd.DataFrame, top_n: int) -> list[str]:
-    """Rank ERC-20 tokens by total transfer value in the cohort parquet."""
+def _top_token_addresses(
+    transfers: pd.DataFrame,
+    allowances: pd.DataFrame,
+    top_n: int,
+    rank_by: str = "value",
+) -> list[str]:
+    """Rank ERC-20 tokens over the cohort parquet (transfers plus latest allowances).
+
+    ``rank_by="value"`` sums raw base-unit amounts, which favors tokens with
+    unlimited approvals and large supplies; ``rank_by="count"`` counts rows
+    (transfer events and latest allowances) instead.
+    """
+    if rank_by not in ("value", "count"):
+        raise ValueError(f"rank_by must be 'value' or 'count', not {rank_by!r}")
     volumes: dict[str, float] = {}
-    if not transfers.empty and "token_address" in transfers.columns:
-        t = transfers.copy()
-        t["token_address"] = t["token_address"].astype(str).str.lower()
-        t["value"] = pd.to_numeric(t["value"], errors="coerce").fillna(0.0)
-        for tok, val in t.groupby("token_address")["value"].sum().items():
-            volumes[str(tok).lower()] = volumes.get(str(tok).lower(), 0.0) + float(val)
-    if not allowances.empty and "token_address" in allowances.columns:
-        a = allowances.copy()
-        a["token_address"] = a["token_address"].astype(str).str.lower()
-        a["value"] = pd.to_numeric(a["value"], errors="coerce").fillna(0.0)
-        for tok, val in a.groupby("token_address")["value"].sum().items():
-            volumes[str(tok).lower()] = volumes.get(str(tok).lower(), 0.0) + float(val)
+    for frame in (transfers, allowances):
+        if frame.empty or "token_address" not in frame.columns:
+            continue
+        work = frame.copy()
+        work["token_address"] = work["token_address"].astype(str).str.lower()
+        if rank_by == "count":
+            per_token = work.groupby("token_address").size()
+        else:
+            work["value"] = pd.to_numeric(work["value"], errors="coerce").fillna(0.0)
+            per_token = work.groupby("token_address")["value"].sum()
+        for tok, val in per_token.items():
+            volumes[str(tok)] = volumes.get(str(tok), 0.0) + float(val)
     ranked = sorted(volumes.items(), key=lambda x: x[1], reverse=True)
     return [tok for tok, _ in ranked[:top_n]]
 
@@ -103,6 +115,27 @@ def _alignment_from_scores(
     return build_alignment_report(base, methods=DISSERTATION_METHODS)
 
 
+def damping_family_taus(
+    wallets: list[str],
+    allowances: pd.DataFrame,
+    transfers: pd.DataFrame,
+    proxies: pd.DataFrame,
+    config: dict,
+    damping: float,
+) -> dict[str, float | None]:
+    """Family-mean tau of EndorseRank and AWP at one damping value (no timing)."""
+    er_scores, awp_scores = _scores_for_damping(wallets, allowances, transfers, config, damping)
+    align = _alignment_from_scores(wallets, er_scores, awp_scores, proxies)
+    er_cross = align["method_cross_proxy"].get("endorserank", {})
+    awp_cross = align["method_cross_proxy"].get("awp", {})
+    row: dict[str, float | None] = {}
+    for family in PROXY_FAMILIES:
+        key = f"{family}_mean_tau"
+        row[f"er_{family}_tau"] = er_cross.get(key)
+        row[f"awp_{family}_tau"] = awp_cross.get(key)
+    return row
+
+
 def run_damping_sweep(
     wallets: list[str],
     allowances: pd.DataFrame,
@@ -119,8 +152,7 @@ def run_damping_sweep(
     rows: list[dict[str, Any]] = []
     for damping in damping_values:
         t0 = time.perf_counter()
-        er_scores, awp_scores = _scores_for_damping(wallets, allowances, transfers, config, damping)
-        align = _alignment_from_scores(wallets, er_scores, awp_scores, proxies)
+        taus = damping_family_taus(wallets, allowances, transfers, proxies, config, damping)
         bench = benchmark_er_awp_pair(
             wallets,
             allowances,
@@ -128,18 +160,13 @@ def run_damping_sweep(
             {**config, "reputation": {**config["reputation"], "damping": damping}},
             repeats=repeats,
         )
-        er_cross = align["method_cross_proxy"].get("endorserank", {})
-        awp_cross = align["method_cross_proxy"].get("awp", {})
         row: dict[str, Any] = {
             "damping": damping,
             "elapsed_sec": round(time.perf_counter() - t0, 3),
             "endorserank_runtime_sec": bench["endorserank"]["runtime_sec_mean"],
             "awp_runtime_sec": bench["awp"]["runtime_sec_mean"],
         }
-        for family in PROXY_FAMILIES:
-            key = f"{family}_mean_tau"
-            row[f"er_{family}_tau"] = er_cross.get(key)
-            row[f"awp_{family}_tau"] = awp_cross.get(key)
+        row.update(taus)
         rows.append(row)
 
     return {"damping_values": damping_values, "rows": rows, "n_wallets": len(wallets)}
@@ -152,10 +179,11 @@ def run_top_token_sweep(
     decoded: pd.DataFrame,
     config: dict,
     min_closes: int,
+    rank_by: str = "value",
 ) -> dict[str, Any]:
     rob = config.get("robustness") or {}
     top_n = int(rob.get("top_n_tokens", 20))
-    tokens = _top_token_addresses(transfers, allowances, top_n)
+    tokens = _top_token_addresses(transfers, allowances, top_n, rank_by=rank_by)
     token_set = set(tokens)
 
     filt_allow = _filter_by_tokens(allowances, token_set)
@@ -169,6 +197,7 @@ def run_top_token_sweep(
 
     return {
         "top_n_tokens": top_n,
+        "rank_by": rank_by,
         "token_count_used": len(tokens),
         "tokens_sample": tokens[:5],
         "n_wallets": len(wallets),
@@ -294,6 +323,9 @@ def run_robustness_eval(
         ),
         "top_token_subgraph": run_top_token_sweep(
             wallets, allowances, transfers, decoded, config, min_closes
+        ),
+        "top_token_subgraph_by_count": run_top_token_sweep(
+            wallets, allowances, transfers, decoded, config, min_closes, rank_by="count"
         ),
         "sample_size_sweep": run_sample_size_sweep(
             wallet_pool, allowances, transfers, decoded, config, min_closes, repeats=repeats

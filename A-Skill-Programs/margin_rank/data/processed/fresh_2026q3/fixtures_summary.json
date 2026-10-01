@@ -18,7 +18,8 @@
         "coupled_pr_l75",
         "seeded_pr",
         "t1_in_approve_degree",
-        "t1_in_degree"
+        "t1_in_degree",
+        "awp_paper"
       ],
       "prevalence": {
         "future_new_approvers": {
@@ -604,6 +605,72 @@
               "ci_high": null,
               "n": 48,
               "n_boot": 0
+            }
+          },
+          "awp_paper": {
+            "future_new_approvers": {
+              "spearman_rho": -0.003190132147368287,
+              "kendall_tau": -0.0026317247533328716,
+              "ci_low": -0.26951487984720696,
+              "ci_high": 0.21389531416732482,
+              "n": 48,
+              "n_boot": 60
+            },
+            "future_new_transfer_senders": {
+              "spearman_rho": 0.009023056297141275,
+              "kendall_tau": 0.007443641677192671,
+              "ci_low": -0.20855108160577113,
+              "ci_high": 0.25793819336218615,
+              "n": 48,
+              "n_boot": 60
+            },
+            "future_liquidation_free_rate": {
+              "spearman_rho": 0.01591615786118637,
+              "kendall_tau": 0.017020986879284727,
+              "ci_low": -0.17027139271145272,
+              "ci_high": 0.2811213307562129,
+              "n": 48,
+              "n_boot": 60
+            },
+            "future_zero_liquidation": {
+              "spearman_rho": 0.023435023597879034,
+              "kendall_tau": 0.019332908120548203,
+              "ci_low": -0.17031751843609078,
+              "ci_high": 0.28897475819152635,
+              "n": 48,
+              "n_boot": 60
+            },
+            "close_success_count": {
+              "spearman_rho": -0.022221287506689353,
+              "kendall_tau": -0.010828905216464589,
+              "ci_low": -0.28379812957006184,
+              "ci_high": 0.22195375934353773,
+              "n": 48,
+              "n_boot": 60
+            },
+            "realized_gain_proxy": {
+              "spearman_rho": 0.34724785787098345,
+              "kendall_tau": 0.25399684826757285,
+              "ci_low": 0.053320843677604195,
+              "ci_high": 0.443585344574865,
+              "n": 48,
+              "n_boot": 60
+            },
+            "close_success_rate": {
+              "spearman_rho": 0.13949975952043983,
+              "kendall_tau": 0.11400261574230786,
+              "ci_low": -0.06154783874057829,
+              "ci_high": 0.39703024790379926,
+              "n": 48,
+              "n_boot": 60
+            },
+            "non_loss_close_rate": {
+              "spearman_rho": 0.14500415012143186,
+              "kendall_tau": 0.10787341636247523,
+              "ci_low": -0.05462367528296153,
+              "ci_high": 0.2912590745084795,
+              "n": 48,
+              "n_boot": 60
             }
           }
         },
@@ -797,7 +864,8 @@
         "coupled_pr_l75",
         "seeded_pr",
         "t1_in_approve_degree",
-        "t1_in_degree"
+        "t1_in_degree",
+        "awp_paper"
       ],
       "prevalence": {
         "future_new_approvers": {
@@ -1384,6 +1452,72 @@
               "n": 48,
               "n_boot": 0
             }
+          },
+          "awp_paper": {
+            "future_new_approvers": {
+              "spearman_rho": -0.003190132147368287,
+              "kendall_tau": -0.0026317247533328716,
+              "ci_low": -0.26951487984720696,
+              "ci_high": 0.21389531416732482,
+              "n": 48,
+              "n_boot": 60
+            },
+            "future_new_transfer_senders": {
+              "spearman_rho": 0.009023056297141275,
+              "kendall_tau": 0.007443641677192671,
+              "ci_low": -0.20855108160577113,
+              "ci_high": 0.25793819336218615,
+              "n": 48,
+              "n_boot": 60
+            },
+            "future_liquidation_free_rate": {
+              "spearman_rho": 0.01591615786118637,
+              "kendall_tau": 0.017020986879284727,
+              "ci_low": -0.17027139271145272,
+              "ci_high": 0.2811213307562129,
+              "n": 48,
+              "n_boot": 60
+            },
+            "future_zero_liquidation": {
+              "spearman_rho": 0.023435023597879034,
+              "kendall_tau": 0.019332908120548203,
+              "ci_low": -0.17031751843609078,
+              "ci_high": 0.28897475819152635,
+              "n": 48,
+              "n_boot": 60
+            },
+            "close_success_count": {
+              "spearman_rho": -0.022221287506689353,
+              "kendall_tau": -0.010828905216464589,
+              "ci_low": -0.28379812957006184,
+              "ci_high": 0.22195375934353773,
+              "n": 48,
+              "n_boot": 60
+            },
+            "realized_gain_proxy": {
+              "spearman_rho": 0.34724785787098345,
+              "kendall_tau": 0.25399684826757285,
+              "ci_low": 0.053320843677604195,
+              "ci_high": 0.443585344574865,
+              "n": 48,
+              "n_boot": 60
+            },
+            "close_success_rate": {
+              "spearman_rho": 0.13949975952043983,
+              "kendall_tau": 0.11400261574230786,
+              "ci_low": -0.06154783874057829,
+              "ci_high": 0.39703024790379926,
+              "n": 48,
+              "n_boot": 60
+            },
+            "non_loss_close_rate": {
+              "spearman_rho": 0.14500415012143186,
+              "kendall_tau": 0.10787341636247523,
+              "ci_low": -0.05462367528296153,
+              "ci_high": 0.2912590745084795,
+              "n": 48,
+              "n_boot": 60
+            }
           }
         },
         "protocol": "t1_score_vs_t2_label"
@@ -1392,7 +1526,7 @@
   },
   "contrasts": [
     {
-      "id": "H1",
+      "id": "F1",
       "kind": "hypothesis",
       "cohort": "spenders",
       "a": "coupled_pr",
@@ -1401,8 +1535,8 @@
       "test": "superiority",
       "margin": null,
       "result": {
-        "label": "H1: coupled_pr minus awp",
-        "role": "H1",
+        "label": "F1: coupled_pr minus awp",
+        "role": "F1",
         "a": {
           "method": "coupled_pr",
           "tau": 0.18257418583505539
@@ -1423,7 +1557,7 @@
       "reason": "lower bound +0.0000 <= 0"
     },
     {
-      "id": "H2",
+      "id": "F2",
       "kind": "hypothesis",
       "cohort": "spenders",
       "a": "coupled_pr",
@@ -1432,8 +1566,8 @@
       "test": "non_inferiority",
       "margin": 0.02,
       "result": {
-        "label": "H2: coupled_pr minus awp",
-        "role": "H2",
+        "label": "F2: coupled_pr minus awp",
+        "role": "F2",
         "a": {
           "method": "coupled_pr",
           "tau": 0.08606629658238706
@@ -1454,7 +1588,7 @@
       "reason": "lower bound -0.2162 <= -0.020"
     },
     {
-      "id": "H3",
+      "id": "F3",
       "kind": "hypothesis",
       "cohort": "traders",
       "a": "coupled_pr",
@@ -1463,8 +1597,8 @@
       "test": "non_inferiority",
       "margin": 0.02,
       "result": {
-        "label": "H3: coupled_pr minus awp",
-        "role": "H3",
+        "label": "F3: coupled_pr minus awp",
+        "role": "F3",
         "a": {
           "method": "coupled_pr",
           "tau": 0.15744264631823918
@@ -1485,7 +1619,7 @@
       "reason": "lower bound -0.2928 <= -0.020"
     },
     {
-      "id": "S1",
+      "id": "F4",
       "kind": "secondary",
       "cohort": "traders",
       "a": "coupled_pr",
@@ -1494,8 +1628,8 @@
       "test": "superiority",
       "margin": null,
       "result": {
-        "label": "S1: coupled_pr minus awp",
-        "role": "S1",
+        "label": "F4: coupled_pr minus awp",
+        "role": "F4",
         "a": {
           "method": "coupled_pr",
           "tau": 0.15744264631823918
@@ -1516,7 +1650,7 @@
       "reason": "lower bound -0.2928 <= 0"
     },
     {
-      "id": "S2",
+      "id": "F5",
       "kind": "secondary",
       "cohort": "traders",
       "a": "coupled_pr",
@@ -1525,8 +1659,8 @@
       "test": "superiority",
       "margin": null,
       "result": {
-        "label": "S2: coupled_pr minus endorserank",
-        "role": "S2",
+        "label": "F5: coupled_pr minus endorserank",
+        "role": "F5",
         "a": {
           "method": "coupled_pr",
           "tau": 0.15744264631823918
@@ -1551,9 +1685,378 @@
     "rule": "every registered hypothesis holds",
     "met": false,
     "hypotheses": {
-      "H1": false,
-      "H2": false,
-      "H3": false
+      "F1": false,
+      "F2": false,
+      "F3": false
+    }
+  },
+  "sensitivity": {
+    "comparator": {
+      "replaces": "awp",
+      "with": "awp_paper",
+      "contrasts": [
+        {
+          "id": "F1",
+          "kind": "hypothesis",
+          "cohort": "spenders",
+          "a": "coupled_pr",
+          "b": "awp_paper",
+          "label": "future_new_approvers",
+          "test": "superiority",
+          "margin": null,
+          "result": {
+            "label": "F1: coupled_pr minus awp_paper",
+            "role": "F1",
+            "a": {
+              "method": "coupled_pr",
+              "tau": 0.18257418583505539
+            },
+            "b": {
+              "method": "awp_paper",
+              "tau": -0.0026317247533328716
+            },
+            "holdout_label": "future_new_approvers",
+            "delta_tau": 0.18520591058838826,
+            "ci_low": -0.06297768615598696,
+            "ci_high": 0.40421739655470335,
+            "share_positive": 0.9285714285714286,
+            "n": 48,
+            "n_boot": 56
+          },
+          "passed": false,
+          "reason": "lower bound -0.0630 <= 0"
+        },
+        {
+          "id": "F2",
+          "kind": "hypothesis",
+          "cohort": "spenders",
+          "a": "coupled_pr",
+          "b": "awp_paper",
+          "label": "future_new_transfer_senders",
+          "test": "non_inferiority",
+          "margin": 0.02,
+          "result": {
+            "label": "F2: coupled_pr minus awp_paper",
+            "role": "F2",
+            "a": {
+              "method": "coupled_pr",
+              "tau": 0.08606629658238706
+            },
+            "b": {
+              "method": "awp_paper",
+              "tau": 0.007443641677192671
+            },
+            "holdout_label": "future_new_transfer_senders",
+            "delta_tau": 0.07862265490519438,
+            "ci_low": -0.25183674083226426,
+            "ci_high": 0.3715374888858473,
+            "share_positive": 0.625,
+            "n": 48,
+            "n_boot": 56
+          },
+          "passed": false,
+          "reason": "lower bound -0.2518 <= -0.020"
+        },
+        {
+          "id": "F3",
+          "kind": "hypothesis",
+          "cohort": "traders",
+          "a": "coupled_pr",
+          "b": "awp_paper",
+          "label": "future_liquidation_free_rate",
+          "test": "non_inferiority",
+          "margin": 0.02,
+          "result": {
+            "label": "F3: coupled_pr minus awp_paper",
+            "role": "F3",
+            "a": {
+              "method": "coupled_pr",
+              "tau": 0.15744264631823918
+            },
+            "b": {
+              "method": "awp_paper",
+              "tau": 0.017020986879284727
+            },
+            "holdout_label": "future_liquidation_free_rate",
+            "delta_tau": 0.14042165943895446,
+            "ci_low": -0.34338195421310636,
+            "ci_high": 0.7174828484265786,
+            "share_positive": 0.7142857142857143,
+            "n": 48,
+            "n_boot": 56
+          },
+          "passed": false,
+          "reason": "lower bound -0.3434 <= -0.020"
+        },
+        {
+          "id": "F4",
+          "kind": "secondary",
+          "cohort": "traders",
+          "a": "coupled_pr",
+          "b": "awp_paper",
+          "label": "future_liquidation_free_rate",
+          "test": "superiority",
+          "margin": null,
+          "result": {
+            "label": "F4: coupled_pr minus awp_paper",
+            "role": "F4",
+            "a": {
+              "method": "coupled_pr",
+              "tau": 0.15744264631823918
+            },
+            "b": {
+              "method": "awp_paper",
+              "tau": 0.017020986879284727
+            },
+            "holdout_label": "future_liquidation_free_rate",
+            "delta_tau": 0.14042165943895446,
+            "ci_low": -0.34338195421310636,
+            "ci_high": 0.7174828484265786,
+            "share_positive": 0.7142857142857143,
+            "n": 48,
+            "n_boot": 56
+          },
+          "passed": false,
+          "reason": "lower bound -0.3434 <= 0"
+        }
+      ],
+      "decision_rule_on_these": {
+        "rule": "every registered hypothesis holds",
+        "met": false,
+        "hypotheses": {
+          "F1": false,
+          "F2": false,
+          "F3": false
+        }
+      }
+    },
+    "missing_wallet_rule": {
+      "rule": "isolated_nodes",
+      "rescored": [
+        "awp",
+        "endorserank"
+      ],
+      "contrasts": [
+        {
+          "id": "F1",
+          "kind": "hypothesis",
+          "cohort": "spenders",
+          "a": "coupled_pr",
+          "b": "awp",
+          "label": "future_new_approvers",
+          "test": "superiority",
+          "margin": null,
+          "result": {
+            "label": "F1: coupled_pr minus awp",
+            "role": "F1",
+            "a": {
+              "method": "coupled_pr",
+              "tau": 0.18257418583505539
+            },
+            "b": {
+              "method": "awp",
+              "tau": 0.10314212462587934
+            },
+            "holdout_label": "future_new_approvers",
+            "delta_tau": 0.07943206120917605,
+            "ci_low": 0.0,
+            "ci_high": 0.1123338982492666,
+            "share_positive": 0.8780487804878049,
+            "n": 48,
+            "n_boot": 41
+          },
+          "passed": false,
+          "reason": "lower bound +0.0000 <= 0"
+        },
+        {
+          "id": "F2",
+          "kind": "hypothesis",
+          "cohort": "spenders",
+          "a": "coupled_pr",
+          "b": "awp",
+          "label": "future_new_transfer_senders",
+          "test": "non_inferiority",
+          "margin": 0.02,
+          "result": {
+            "label": "F2: coupled_pr minus awp",
+            "role": "F2",
+            "a": {
+              "method": "coupled_pr",
+              "tau": 0.08606629658238706
+            },
+            "b": {
+              "method": "awp",
+              "tau": 0.14586499149789456
+            },
+            "holdout_label": "future_new_transfer_senders",
+            "delta_tau": -0.0597986949155075,
+            "ci_low": -0.2162333634997367,
+            "ci_high": 0.10333215735028858,
+            "share_positive": 0.3902439024390244,
+            "n": 48,
+            "n_boot": 41
+          },
+          "passed": false,
+          "reason": "lower bound -0.2162 <= -0.020"
+        },
+        {
+          "id": "F3",
+          "kind": "hypothesis",
+          "cohort": "traders",
+          "a": "coupled_pr",
+          "b": "awp",
+          "label": "future_liquidation_free_rate",
+          "test": "non_inferiority",
+          "margin": 0.02,
+          "result": {
+            "label": "F3: coupled_pr minus awp",
+            "role": "F3",
+            "a": {
+              "method": "coupled_pr",
+              "tau": 0.15744264631823918
+            },
+            "b": {
+              "method": "awp",
+              "tau": 0.383573141510266
+            },
+            "holdout_label": "future_liquidation_free_rate",
+            "delta_tau": -0.22613049519202683,
+            "ci_low": -0.2928428749855839,
+            "ci_high": 0.0,
+            "share_positive": 0.0,
+            "n": 48,
+            "n_boot": 41
+          },
+          "passed": false,
+          "reason": "lower bound -0.2928 <= -0.020"
+        },
+        {
+          "id": "F4",
+          "kind": "secondary",
+          "cohort": "traders",
+          "a": "coupled_pr",
+          "b": "awp",
+          "label": "future_liquidation_free_rate",
+          "test": "superiority",
+          "margin": null,
+          "result": {
+            "label": "F4: coupled_pr minus awp",
+            "role": "F4",
+            "a": {
+              "method": "coupled_pr",
+              "tau": 0.15744264631823918
+            },
+            "b": {
+              "method": "awp",
+              "tau": 0.383573141510266
+            },
+            "holdout_label": "future_liquidation_free_rate",
+            "delta_tau": -0.22613049519202683,
+            "ci_low": -0.2928428749855839,
+            "ci_high": 0.0,
+            "share_positive": 0.0,
+            "n": 48,
+            "n_boot": 41
+          },
+          "passed": false,
+          "reason": "lower bound -0.2928 <= 0"
+        },
+        {
+          "id": "F5",
+          "kind": "secondary",
+          "cohort": "traders",
+          "a": "coupled_pr",
+          "b": "endorserank",
+          "label": "future_liquidation_free_rate",
+          "test": "superiority",
+          "margin": null,
+          "result": {
+            "label": "F5: coupled_pr minus endorserank",
+            "role": "F5",
+            "a": {
+              "method": "coupled_pr",
+              "tau": 0.15744264631823918
+            },
+            "b": {
+              "method": "endorserank",
+              "tau": -0.0834398296494177
+            },
+            "holdout_label": "future_liquidation_free_rate",
+            "delta_tau": 0.24088247596765688,
+            "ci_low": 0.0,
+            "ci_high": 0.6331267489620982,
+            "share_positive": 0.7058823529411765,
+            "n": 48,
+            "n_boot": 51
+          },
+          "passed": false,
+          "reason": "lower bound +0.0000 <= 0"
+        }
+      ],
+      "decision_rule_on_these": {
+        "rule": "every registered hypothesis holds",
+        "met": false,
+        "hypotheses": {
+          "F1": false,
+          "F2": false,
+          "F3": false
+        }
+      },
+      "september_contrasts": [
+        {
+          "label": "C-PR minus EndorseRank",
+          "role": "primary_a",
+          "a": {
+            "method": "coupled_pr",
+            "tau": 0.18257418583505539
+          },
+          "b": {
+            "method": "endorserank",
+            "tau": 0.14744195615489714
+          },
+          "holdout_label": "future_new_approvers",
+          "delta_tau": 0.03513222968015825,
+          "ci_low": 0.0,
+          "ci_high": 0.11461068970800331,
+          "share_positive": 0.7058823529411765,
+          "n": 48,
+          "n_boot": 51
+        },
+        {
+          "label": "C-PR minus AWP",
+          "role": "primary_b",
+          "a": {
+            "method": "coupled_pr",
+            "tau": 0.08606629658238706
+          },
+          "b": {
+            "method": "awp",
+            "tau": 0.14586499149789456
+          },
+          "holdout_label": "future_new_transfer_senders",
+          "delta_tau": -0.0597986949155075,
+          "ci_low": -0.2162333634997367,
+          "ci_high": 0.10333215735028858,
+          "share_positive": 0.3902439024390244,
+          "n": 48,
+          "n_boot": 41
+        }
+      ],
+      "september_primary_rule": {
+        "no_worse_than_endorserank_on_future_new_approvers": true,
+        "better_than_awp_on_future_new_transfer_senders": false,
+        "met": false,
+        "delta_a": 0.03513222968015825,
+        "delta_a_ci": [
+          0.0,
+          0.11461068970800331
+        ],
+        "delta_b": -0.0597986949155075,
+        "delta_b_ci": [
+          -0.2162333634997367,
+          0.10333215735028858
+        ]
+      }
     }
   },
   "bootstrap": {
@@ -1565,8 +2068,8 @@
   "registration": {
     "id": "fresh-holdout-2026q3",
     "status": "draft",
-    "plan": "/sessions/rcw-01jkhhihq4r7tdkkzyjzufex/mnt/margin_rank/docs/fresh_holdout_2026q3_plan.md",
+    "plan": "/home/user/phd_works/A-Skill-Programs/margin_rank/docs/fresh_holdout_2026q3_plan.md",
     "operator_fixed_on": "2026-09-14"
   },
-  "at": "2026-09-27T16:27:41.971146+00:00"
+  "at": "2026-10-01T12:30:43.609883+00:00"
 }

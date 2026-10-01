@@ -82,6 +82,14 @@ reputation:
   max_iterations: 300
   awp_decay_k: 0.01
   awp_decay_t0_days: 180
+  # AWP in the form published by Do, Do and Nguyen (2023), used only as a check
+  # beside the AWP above (added 2026-10-01). Each transfer weighs T(t) * V(z) with
+  # V(z) = 2 / (1 + exp(-b z)) - 1 on raw base units, and restarts are weighted by
+  # sending activity. The paper gives no value for b; on raw base units any b near
+  # 1 puts V(z) at about 1 for every transfer above dust, so each transfer counts
+  # once, discounted by its age. The decay is the one above.
+  awp_paper:
+    value_b: 1.0
   # Coupled operator over the allowance and transfer layers (C-PR) and the
   # endorsement-seeded transfer walk (S-PR). Fixed on 2026-09-14 before the
   # hybrid results were computed (see local-other/sources/supervisor-feedback/

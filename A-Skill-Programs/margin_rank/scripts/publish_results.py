@@ -1,9 +1,9 @@
 """Copy the machine-readable evaluation summaries into the tracked results/ folder.
 
 data/processed/ is ignored by git because it holds raw extracts and large
-parquet files. The dissertation tables are generated from two small JSON
-summaries, so those two files and the configuration in force are copied here
-and committed next to the code. A manifest records the SHA-256 of each copy so
+parquet files. The dissertation tables are generated from a few small JSON
+summaries, so those files and the configuration in force are copied here and
+committed next to the code. A manifest records the SHA-256 of each copy so
 a reader can check that the committed summary is the one the tables came from.
 
 Usage:
@@ -28,6 +28,7 @@ RESULTS = ROOT / "results"
 ARTIFACTS: tuple[tuple[str, str], ...] = (
     ("data/processed/eval_summary.json", "eval_summary.json"),
     ("data/processed/holdout/eval_summary_spenders.json", "holdout/eval_summary_spenders.json"),
+    ("data/processed/supplementary_checks.json", "supplementary_checks.json"),
     ("config/margin_config.yaml", "config/margin_config.yaml"),
 )
 

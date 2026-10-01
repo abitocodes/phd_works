@@ -125,12 +125,16 @@ def weighted_pagerank(
     return_iterations: bool = False,
     teleport: dict[str, float] | None = None,
     teleport_floor: float = 0.0,
+    extra_nodes: set[str] | None = None,
 ) -> dict[str, float] | tuple[dict[str, float], int]:
     """
     Run weighted PageRank on edge list with columns: from_node, to_node, weight.
 
     ``teleport`` (node -> non-negative mass) personalises the restart
     distribution and the dangling redistribution; None means uniform.
+    ``extra_nodes`` are added as isolated nodes (no edges), so under uniform
+    teleportation they score like any node without in-edges instead of being
+    left out.
     Returns mapping node -> score (sums to 1 over reachable nodes).
     """
     if edges.empty:
@@ -138,7 +142,7 @@ def weighted_pagerank(
             return {}, 0
         return {}
 
-    nodes = sorted(set(edges["from_node"]) | set(edges["to_node"]))
+    nodes = sorted(set(edges["from_node"]) | set(edges["to_node"]) | set(extra_nodes or ()))
     idx = {n: i for i, n in enumerate(nodes)}
     n = len(nodes)
 
@@ -253,6 +257,43 @@ def build_awp_edges(
     work["decay"] = logistic_time_decay(delta, k, t0_days)
     work["weighted_value"] = work["value"].astype(float) * work["decay"]
     return build_weighted_edges(work, "from_address", "to_address", "weighted_value")
+
+
+def value_transform(values: pd.Series, b: float) -> pd.Series:
+    """V(z) = 2 / (1 + exp(-b z)) - 1, the value transform of Do, Do and Nguyen (2023, Eq. 3).
+
+    Each transfer gets a weight in [0, 1), so one large transfer counts at most once.
+    """
+    z = values.astype(float).clip(lower=0.0)
+    return 2.0 / (1.0 + np.exp(-b * z)) - 1.0
+
+
+def build_awp_paper_edges(
+    transfers: pd.DataFrame,
+    observation_end: pd.Timestamp,
+    k: float,
+    t0_days: float,
+    b: float,
+) -> tuple[pd.DataFrame, dict[str, float]]:
+    """Edges and restart weights of AWP in the form published by Do, Do and Nguyen (2023).
+
+    The edge i -> j weighs the sum of T(t) V(z) over the transfers from i to j
+    (their Eq. 3), with T the logistic decay of build_awp_edges. The restart
+    weight of node i is its activeness X_i, the sum over j != i of the largest
+    T(t) on i -> j (their Eq. 2), so restarts favour addresses that sent recently.
+    As in Eq. 2, X_i counts transfers of zero value too; they add nothing to Y.
+    The paper gives no values for the decay or for b; this pipeline supplies its own.
+    """
+    work = transfers.copy()
+    work["block_timestamp"] = pd.to_datetime(work["block_timestamp"], utc=True)
+    delta = (observation_end - work["block_timestamp"]).dt.total_seconds() / 86400.0
+    work["decay"] = logistic_time_decay(delta, k, t0_days)
+    work["paper_weight"] = work["decay"] * value_transform(work["value"], b)
+    edges = build_weighted_edges(work, "from_address", "to_address", "paper_weight")
+    others = work[work["from_address"] != work["to_address"]]
+    latest = others.groupby(["from_address", "to_address"])["decay"].max()
+    activeness = latest.groupby(level=0).sum()
+    return edges, {str(node): float(x) for node, x in activeness.items()}
 
 
 def build_endorserank_edges(allowances: pd.DataFrame) -> pd.DataFrame:
