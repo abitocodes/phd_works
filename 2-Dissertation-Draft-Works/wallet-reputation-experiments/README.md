@@ -40,7 +40,7 @@ BigQuery ──extract_*.py──▶ data/1-raw-blockchain-logs/
 
 | 파일 | 하는 일 |
 |---|---|
-| `margin_config.yaml` | 모든 실험 설정입니다. 관측 기간(2025-12-01 ~ 2026-05-31), GMX와 Aave 계약 주소, PageRank 값(감쇠 0.85, 허용 오차 1e-8, 최대 300회), AWP 시간 감쇠, 원논문 형태 AWP의 값(`reputation.awp_paper`), C-PR의 λ와 2026-09-14에 미리 정한 성공 규칙(`reputation.hybrid`), 부트스트랩, 데이터 경로(`paths`)가 들어 있습니다. |
+| `margin_config.yaml` | 모든 실험 설정입니다. 관측 기간(2025-12-01 ~ 2026-05-31), GMX와 Aave 계약 주소, PageRank 값(감쇠 0.85, 허용 오차 1e-8, 최대 300회), AWP와 EndorseRank의 시간 감쇠와 값 가중치(`reputation.awp_paper.value_b`), C-PR의 λ와 2026-09-14에 미리 정한 성공 규칙(`reputation.hybrid`), 부트스트랩, 데이터 경로(`paths`)가 들어 있습니다. |
 | `fresh_holdout_2026q3.yaml` | 6~8월 등록 재현의 등록 파일입니다. 2026-10-01 커밋 `4085ab9`에서 `status: registered`로 고정했고, 해시가 추출 기록에 남아 있으므로 **고치면 안 됩니다**. 안의 데이터 경로는 옛 폴더 이름이며, 코드가 `scripts/project_paths.py`의 대응표로 새 이름으로 바꿔 읽습니다. |
 
 ## data/ — 데이터
@@ -97,7 +97,7 @@ BigQuery ──extract_*.py──▶ data/1-raw-blockchain-logs/
 |---|---|
 | `compute_rankings.py` | GMX 성적으로 매칭 코호트(거래를 3번 이상 닫은 5,521개 지갑)를 만듭니다 → `wallet_rankings.parquet` |
 | `compute_reputation_ranks.py` | 방법마다 점수와 순위를 계산해 `wallet_rankings.parquet`에 붙입니다. |
-| `pagerank.py` | 공통 PageRank 계산기, EndorseRank와 AWP(원논문 형태 포함) 그래프 만들기 |
+| `pagerank.py` | 공통 PageRank 계산기, EndorseRank와 AWP 그래프(시간 가중치 σ와 값 가중치 V), C-PR이 쓰는 원금액 층 만들기 |
 | `pagerank_variants.py` | C-PR, S-PR, 그리고 보관용 비교 방법들(GF-PR, LP-PR, CW-AWP, LF-PR, RiskProp, Aave 기반 방법) |
 
 ### 4. 시험하기
@@ -112,7 +112,8 @@ BigQuery ──extract_*.py──▶ data/1-raw-blockchain-logs/
 | `refresh_alignment.py` | 실행 시간은 두고 순위 상관만 다시 계산합니다(2026-09-30 부호 수정 때 사용). |
 | `holdout.py`, `run_holdout_eval.py` | 봄 홀드아웃: 2월 28일까지로 점수를 매기고 3~5월로 채점합니다. |
 | `fresh_holdout.py`, `run_fresh_holdout.py` | 6~8월 등록 재현을 채점합니다. `--spring-check`는 같은 코드로 봄 결과를 재현하는지, `--fixtures`는 가짜 데이터로 코드가 도는지 확인합니다. |
-| `run_supplementary_checks.py` | 결과를 본 뒤의 추가 점검: 동점 처리 규칙, 엣지 가중치, 트레이더 수, 원논문 형태 AWP |
+| `run_supplementary_checks.py` | 결과를 본 뒤의 추가 점검: 동점 처리 규칙, 송금을 받아 본 스펜더만 남긴 봄 홀드아웃, 트레이더 수 |
+| `run_fresh_posthoc.py` | 등록 재현이 끝난 뒤 6~8월 창에서 EndorseRank를 같은 코호트·라벨·재표본으로 채점합니다. 판정에는 들어가지 않습니다 → `posthoc_endorserank.json` |
 
 ### 5. 논문으로 내보내기
 
@@ -165,7 +166,7 @@ BigQuery ──extract_*.py──▶ data/1-raw-blockchain-logs/
 |---|---|
 | `test_holdout.py` | 봄 홀드아웃의 라벨과 채점 |
 | `test_fresh_holdout.py` | 등록 파일 내용, 6~8월 라벨, 판정 규칙, 추출 계획 |
-| `test_supplementary.py` | 추가 점검(원논문 형태 AWP 등) |
+| `test_supplementary.py` | 추가 점검, AWP와 EndorseRank의 가중치와 재시작 |
 | `test_project_paths.py` | 옛 폴더 이름 변환, 폴더와 설정 경로가 실제로 있는지 |
 
 ## 준비

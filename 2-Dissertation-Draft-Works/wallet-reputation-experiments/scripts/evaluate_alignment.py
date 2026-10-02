@@ -78,11 +78,21 @@ ALL_PROXIES = tuple(p for proxies in PROXY_FAMILIES.values() for p in proxies)
 
 
 
+# "awp_paper" is AWP as published by Do, Do and Nguyen (2023), the baseline of the
+
+# thesis, and "endorserank_vt" is EndorseRank: AWP's edge weights on the
+
+# allowance graph with uniform restarts ("endorserank_vt_activity" restarts it
+
+# as AWP does, a sensitivity analysis). "endorserank" and "awp" are the two
+
+# layers of the hybrids walked alone (C-PR at lambda = 1 and 0). See pagerank_variants.
+
 DISSERTATION_METHODS: dict[str, str] = {
 
-    "endorserank": "endorserank_score",
+    "endorserank_vt": "endorserank_vt_score",
 
-    "awp": "awp_score",
+    "awp_paper": "awp_paper_score",
 
     "gf_pr": "gf_pr_score",
 
@@ -91,6 +101,12 @@ DISSERTATION_METHODS: dict[str, str] = {
 
 
 METHODS: dict[str, str] = {
+
+    "endorserank_vt": "endorserank_vt_score",
+
+    "endorserank_vt_activity": "endorserank_vt_activity_score",
+
+    "awp_paper": "awp_paper_score",
 
     "awp": "awp_score",
 
@@ -120,9 +136,15 @@ METHODS: dict[str, str] = {
 
 METHOD_LABELS: dict[str, str] = {
 
-    "awp": "AWP",
+    "endorserank_vt": "EndorseRank",
 
-    "endorserank": "EndorseRank",
+    "endorserank_vt_activity": "EndorseRank, AWP's restarts",
+
+    "awp_paper": "AWP",
+
+    "awp": "C-PR ($\\lambda=0$)",
+
+    "endorserank": "C-PR ($\\lambda=1$)",
 
     "gf_pr": "GF-PR",
 
@@ -148,6 +170,12 @@ METHOD_LABELS: dict[str, str] = {
 
 BOOTSTRAP_METHODS: tuple[str, ...] = (
 
+    "endorserank_vt",
+
+    "endorserank_vt_activity",
+
+    "awp_paper",
+
     "endorserank",
 
     "awp",
@@ -166,7 +194,13 @@ HYBRID_METHODS: tuple[str, ...] = ("coupled_pr", "coupled_pr_l25", "coupled_pr_l
 
 # Original seven-method preset (archived extended baselines), without hybrids.
 
-SEVEN_METHODS: dict[str, str] = {k: v for k, v in METHODS.items() if k not in HYBRID_METHODS}
+SEVEN_METHODS: dict[str, str] = {
+
+    k: v
+    for k, v in METHODS.items()
+    if k not in HYBRID_METHODS and k not in ("endorserank_vt", "endorserank_vt_activity", "awp_paper")
+
+}
 
 
 SIX_AAVE_METHODS: dict[str, str] = {
@@ -197,9 +231,9 @@ SIX_AAVE_DIAGNOSTIC_METHODS: dict[str, str] = {
 
 SIX_AAVE_LABELS: dict[str, str] = {
 
-    "awp": "AWP",
+    "awp": "C-PR ($\\lambda=0$)",
 
-    "endorserank": "EndorseRank",
+    "endorserank": "C-PR ($\\lambda=1$)",
 
     "liq_pr": "LiqCall-PR",
 
@@ -309,9 +343,15 @@ def _method_comparison(
 
     er_cross: dict[str, float | None],
 
-    awp_cross: dict[str, float | None],
+    other_cross: dict[str, float | None],
+
+    other_id: str,
+
+    other_label: str,
 
 ) -> dict[str, dict[str, Any]]:
+
+    """EndorseRank against one transfer walk, family by family (keys carry the walk's id)."""
 
     out: dict[str, dict[str, Any]] = {}
 
@@ -321,15 +361,15 @@ def _method_comparison(
 
         er_tau = er_cross.get(key)
 
-        awp_tau = awp_cross.get(key)
+        other_tau = other_cross.get(key)
 
         diff = None
 
         winner = None
 
-        if er_tau is not None and awp_tau is not None:
+        if er_tau is not None and other_tau is not None:
 
-            diff = float(er_tau - awp_tau)
+            diff = float(er_tau - other_tau)
 
             if abs(diff) < 1e-9:
 
@@ -341,15 +381,15 @@ def _method_comparison(
 
             else:
 
-                winner = "AWP"
+                winner = other_label
 
         out[family] = {
 
             "endorserank_mean_tau": er_tau,
 
-            "awp_mean_tau": awp_tau,
+            f"{other_id}_mean_tau": other_tau,
 
-            "delta_er_minus_awp": diff,
+            f"delta_er_minus_{other_id}": diff,
 
             "higher_alignment": winner,
 
@@ -505,37 +545,51 @@ def _percentile_ci(samples: list[float], ci: float) -> tuple[float | None, float
 
 # Family names resolve to family mean tau; proxy names resolve to a single proxy.
 
-# Group "primary" = EndorseRank vs AWP; "hybrid" = coupled/seeded operators
+# Group "primary" = EndorseRank vs AWP ("endorserank_vt", "awp_paper");
 
-# against the better single-layer method on each family (secondary criterion).
+# "hybrid" = coupled/seeded operators against the layer that leads each family,
+
+# the allowance layer ("endorserank", C-PR at lambda = 1) or the transfer layer
+
+# ("awp", lambda = 0) walked alone, as in the secondary rule of 14 September;
+
+# "hybrid_single" = the coupled operator against EndorseRank and AWP.
 
 TAU_DIFF_CONTRASTS: tuple[tuple[str, tuple[str, str], tuple[str, str], str], ...] = (
 
-    ("EndorseRank allowance minus EndorseRank transfer", ("endorserank", "allowance"), ("endorserank", "transfer"), "primary"),
+    ("EndorseRank allowance minus EndorseRank transfer", ("endorserank_vt", "allowance"), ("endorserank_vt", "transfer"), "primary"),
 
-    ("AWP transfer minus EndorseRank transfer", ("awp", "transfer"), ("endorserank", "transfer"), "primary"),
+    ("AWP transfer minus EndorseRank transfer", ("awp_paper", "transfer"), ("endorserank_vt", "transfer"), "primary"),
 
-    ("EndorseRank allowance minus AWP allowance", ("endorserank", "allowance"), ("awp", "allowance"), "primary"),
+    ("EndorseRank allowance minus AWP allowance", ("endorserank_vt", "allowance"), ("awp_paper", "allowance"), "primary"),
 
-    ("AWP sybil-stability minus EndorseRank sybil-stability", ("awp", "sybil_stability"), ("endorserank", "sybil_stability"), "primary"),
+    ("AWP sybil-stability minus EndorseRank sybil-stability", ("awp_paper", "sybil_stability"), ("endorserank_vt", "sybil_stability"), "primary"),
 
-    ("EndorseRank in-approve degree minus EndorseRank in-degree", ("endorserank", "in_approve_degree"), ("endorserank", "in_degree"), "primary"),
+    ("EndorseRank in-approve degree minus EndorseRank in-degree", ("endorserank_vt", "in_approve_degree"), ("endorserank_vt", "in_degree"), "primary"),
 
-    ("C-PR transfer minus AWP transfer", ("coupled_pr", "transfer"), ("awp", "transfer"), "hybrid"),
+    ("C-PR transfer minus C-PR ($\\lambda=0$) transfer", ("coupled_pr", "transfer"), ("awp", "transfer"), "hybrid"),
 
-    ("C-PR allowance minus EndorseRank allowance", ("coupled_pr", "allowance"), ("endorserank", "allowance"), "hybrid"),
+    ("C-PR allowance minus C-PR ($\\lambda=1$) allowance", ("coupled_pr", "allowance"), ("endorserank", "allowance"), "hybrid"),
 
-    ("C-PR sybil-stability minus AWP sybil-stability", ("coupled_pr", "sybil_stability"), ("awp", "sybil_stability"), "hybrid"),
+    ("C-PR sybil-stability minus C-PR ($\\lambda=0$) sybil-stability", ("coupled_pr", "sybil_stability"), ("awp", "sybil_stability"), "hybrid"),
 
-    ("C-PR sybil-stability minus EndorseRank sybil-stability", ("coupled_pr", "sybil_stability"), ("endorserank", "sybil_stability"), "hybrid"),
+    ("C-PR sybil-stability minus C-PR ($\\lambda=1$) sybil-stability", ("coupled_pr", "sybil_stability"), ("endorserank", "sybil_stability"), "hybrid"),
 
-    ("S-PR transfer minus AWP transfer", ("seeded_pr", "transfer"), ("awp", "transfer"), "hybrid"),
+    ("S-PR transfer minus C-PR ($\\lambda=0$) transfer", ("seeded_pr", "transfer"), ("awp", "transfer"), "hybrid"),
 
-    ("S-PR allowance minus EndorseRank allowance", ("seeded_pr", "allowance"), ("endorserank", "allowance"), "hybrid"),
+    ("S-PR allowance minus C-PR ($\\lambda=1$) allowance", ("seeded_pr", "allowance"), ("endorserank", "allowance"), "hybrid"),
 
-    ("S-PR sybil-stability minus AWP sybil-stability", ("seeded_pr", "sybil_stability"), ("awp", "sybil_stability"), "hybrid"),
+    ("S-PR sybil-stability minus C-PR ($\\lambda=0$) sybil-stability", ("seeded_pr", "sybil_stability"), ("awp", "sybil_stability"), "hybrid"),
 
-    ("S-PR sybil-stability minus EndorseRank sybil-stability", ("seeded_pr", "sybil_stability"), ("endorserank", "sybil_stability"), "hybrid"),
+    ("S-PR sybil-stability minus C-PR ($\\lambda=1$) sybil-stability", ("seeded_pr", "sybil_stability"), ("endorserank", "sybil_stability"), "hybrid"),
+
+    ("C-PR transfer minus AWP transfer", ("coupled_pr", "transfer"), ("awp_paper", "transfer"), "hybrid_single"),
+
+    ("C-PR allowance minus EndorseRank allowance", ("coupled_pr", "allowance"), ("endorserank_vt", "allowance"), "hybrid_single"),
+
+    ("C-PR sybil-stability minus AWP sybil-stability", ("coupled_pr", "sybil_stability"), ("awp_paper", "sybil_stability"), "hybrid_single"),
+
+    ("C-PR sybil-stability minus EndorseRank sybil-stability", ("coupled_pr", "sybil_stability"), ("endorserank_vt", "sybil_stability"), "hybrid_single"),
 
 )
 
@@ -695,11 +749,11 @@ def bootstrap_alignment(
 
     inter_method_ci: dict[str, Any] = {}
 
-    if "endorserank" in score_arrays and "awp" in score_arrays:
+    if "endorserank_vt" in score_arrays and "awp_paper" in score_arrays:
 
-        a = score_arrays["endorserank"]
+        a = score_arrays["endorserank_vt"]
 
-        b_arr = score_arrays["awp"]
+        b_arr = score_arrays["awp_paper"]
 
         mask = np.isfinite(a) & np.isfinite(b_arr)
 
@@ -839,7 +893,7 @@ def build_alignment_report(
 
     ``bootstrap`` = {"n_boot": int, "seed": int, "methods": {id: col}} enables the
 
-    paired wallet bootstrap for the listed methods (default: EndorseRank and AWP).
+    paired wallet bootstrap for the listed methods (default: BOOTSTRAP_METHODS).
 
     """
 
@@ -855,21 +909,21 @@ def build_alignment_report(
 
 
 
-    er = method_results.get("endorserank", {})
+    er = method_results.get("endorserank_vt", {})
 
-    awp_res = method_results.get("awp", {})
+    awp_res = method_results.get("awp_paper", {})
 
-    er_cross = method_cross.get("endorserank", _cross_proxy_means(er))
+    er_cross = method_cross.get("endorserank_vt", _cross_proxy_means(er))
 
-    awp_cross = method_cross.get("awp", _cross_proxy_means(awp_res))
+    awp_cross = method_cross.get("awp_paper", _cross_proxy_means(awp_res))
 
 
 
     inter_method: dict[str, Any] = {}
 
-    if "endorserank_score" in merged.columns and "awp_score" in merged.columns:
+    if "endorserank_vt_score" in merged.columns and "awp_paper_score" in merged.columns:
 
-        inter_method = _correlate(merged["endorserank_score"], merged["awp_score"])
+        inter_method = _correlate(merged["endorserank_vt_score"], merged["awp_paper_score"])
 
 
 
@@ -927,37 +981,21 @@ def build_alignment_report(
 
         "family_winners": family_winners,
 
-        "endorserank": er,
+        "endorserank_vt": er,
 
-        "awp": awp_res,
+        "awp_paper": awp_res,
 
-        "endorserank_cross_proxy": er_cross,
+        "endorserank_vt_cross_proxy": er_cross,
 
-        "awp_cross_proxy": awp_cross,
+        "awp_paper_cross_proxy": awp_cross,
 
-        "method_comparison": _method_comparison(er_cross, awp_cross),
+        "method_comparison": _method_comparison(er_cross, awp_cross, "awp_paper", "AWP"),
 
         "inter_method": inter_method,
 
         "bootstrap": boot,
 
         "n_wallets": len(merged),
-
-        "awp_cross_proxy_legacy": {
-
-            "transfer_family_mean_tau": awp_cross.get("transfer_mean_tau"),
-
-            "gmx_family_mean_tau": awp_cross.get("gmx_success_mean_tau"),
-
-        },
-
-        "endorserank_cross_proxy_legacy": {
-
-            "transfer_family_mean_tau": er_cross.get("transfer_mean_tau"),
-
-            "gmx_family_mean_tau": er_cross.get("gmx_success_mean_tau"),
-
-        },
 
     }
 
@@ -991,7 +1029,7 @@ def build_six_aave_alignment_report(merged: pd.DataFrame) -> dict[str, Any]:
 
         "family_winners": family_winners,
 
-        "method_comparison": _method_comparison(er_cross, awp_cross),
+        "method_comparison": _method_comparison(er_cross, awp_cross, "awp", METHOD_LABELS["awp"]),
 
         "diagnostic_methods": {
 

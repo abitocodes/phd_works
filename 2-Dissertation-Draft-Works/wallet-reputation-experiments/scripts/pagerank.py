@@ -296,8 +296,42 @@ def build_awp_paper_edges(
     return edges, {str(node): float(x) for node, x in activeness.items()}
 
 
+def build_endorserank_vt_edges(
+    allowances: pd.DataFrame,
+    observation_end: pd.Timestamp,
+    k: float,
+    t0_days: float,
+    b: float,
+) -> tuple[pd.DataFrame, dict[str, float]]:
+    """Edges of EndorseRank: AWP's edge weights (build_awp_paper_edges) on the allowance graph.
+
+    ``allowances`` holds the latest positive allowance of each (token, owner,
+    spender), as build_endorserank_edges takes it; each one is an endorsement
+    made at the time of its approval. The edge owner -> spender weighs the sum
+    over tokens of T(t) V(z), with z the approved amount and t the time of the
+    approval. EndorseRank restarts uniformly. The second return value is the
+    restart weight AWP's rule would give each owner (the sum over the spenders
+    it endorses of the largest T(t) among its allowances to each); it is used
+    only for the sensitivity analysis with AWP's restarts.
+    """
+    work = allowances.copy()
+    work["block_timestamp"] = pd.to_datetime(work["block_timestamp"], utc=True)
+    delta = (observation_end - work["block_timestamp"]).dt.total_seconds() / 86400.0
+    work["decay"] = logistic_time_decay(delta, k, t0_days)
+    work["paper_weight"] = work["decay"] * value_transform(work["value"], b)
+    edges = build_weighted_edges(work, "owner", "spender", "paper_weight")
+    others = work[(work["owner"] != work["spender"]) & (work["value"].astype(float) > 0)]
+    latest = others.groupby(["owner", "spender"])["decay"].max()
+    activeness = latest.groupby(level=0).sum()
+    return edges, {str(node): float(x) for node, x in activeness.items()}
+
+
 def build_endorserank_edges(allowances: pd.DataFrame) -> pd.DataFrame:
-    """Sum latest allowance amounts per owner -> spender across tokens."""
+    """Sum latest allowance amounts per owner -> spender across tokens.
+
+    This is the allowance layer of C-PR (raw amounts, no decay); walked alone with
+    uniform restarts it is C-PR at lambda = 1.
+    """
     agg = (
         allowances.groupby(["owner", "spender"], as_index=False)["value"]
         .sum()

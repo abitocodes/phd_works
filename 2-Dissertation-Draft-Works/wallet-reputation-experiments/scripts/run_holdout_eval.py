@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-"""t1 EndorseRank/AWP scores versus pre-registered t2 labels.
+"""t1 scores versus pre-registered t2 labels.
 
-Does not overwrite contemporaneous dissertation eval_summary.json.
+EndorseRank ("endorserank_vt") and AWP in its published form ("awp_paper") share
+AWP's edge weights; "endorserank_vt_activity" restarts EndorseRank as AWP restarts
+(sensitivity analysis). "endorserank" and "awp" are the allowance and transfer
+layers walked alone (C-PR at lambda = 1 and 0), kept for the rule of
+14 September and the S-PR ablation. Does not overwrite contemporaneous
+dissertation eval_summary.json.
 """
 
 from __future__ import annotations
@@ -19,8 +24,8 @@ from common import load_config, save_json  # noqa: E402
 from holdout import (  # noqa: E402
     BASELINE_IDS,
     EXTERNAL_LABELS,
-    HOLDOUT_CONTRASTS,
     HOLDOUT_LABELS,
+    SPRING_CONTRASTS,
     build_holdout_fixture_frames,
     classify_external_result,
     correlate_holdout,
@@ -39,8 +44,10 @@ from holdout import (  # noqa: E402
     load_transfer_events,
     resolve_score_wallets,
     score_awp,
+    score_awp_paper,
     score_coupled,
     score_endorserank,
+    score_endorserank_vt,
     score_seeded,
     scores_to_frame,
     t1_baselines,
@@ -107,6 +114,12 @@ def run_holdout(
         raise RuntimeError("No t1-connected wallets after holdout filters.")
 
     scores = _score_methods(latest_t1, transfers_t1, score_end, wallets, config)
+    # Added here and not in _score_methods, which the registered replication reruns as it stands.
+    scores["endorserank_vt"] = score_endorserank_vt(latest_t1, score_end, wallets, config)
+    scores["endorserank_vt_activity"] = score_endorserank_vt(
+        latest_t1, score_end, wallets, config, activity_restarts=True
+    )
+    scores["awp_paper"] = score_awp_paper(transfers_t1, score_end, wallets, config)
     if extra_scores:
         scores.update(extra_scores)
 
@@ -139,7 +152,7 @@ def run_holdout(
         for lab in EXTERNAL_LABELS:
             stat = alignment["methods"].get(method, {}).get(lab, {})
             verdicts[method][lab] = classify_external_result(stat, prevalence.get(lab))
-    tau_diff = holdout_tau_diff(merged, HOLDOUT_CONTRASTS, n_resamples=n_boot, seed=seed)
+    tau_diff = holdout_tau_diff(merged, SPRING_CONTRASTS, n_resamples=n_boot, seed=seed)
     hyb = rep.get("hybrid") or {}
     return {
         "protocol": "t1_score_vs_t2_label",
@@ -175,6 +188,12 @@ def main() -> int:
     parser.add_argument("--n-wallets", type=int, default=48)
     parser.add_argument("--bootstrap", type=int, default=None)
     parser.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="summary path (default: eval_summary.json, or eval_summary_spenders.json for --cohort spenders)",
+    )
+    parser.add_argument(
         "--cohort",
         choices=("matched", "spenders"),
         default="matched",
@@ -188,6 +207,8 @@ def main() -> int:
     out_path = Path(config["reputation"]["paths"]["holdout_summary"])
     if not args.fixtures and args.cohort == "spenders":
         out_path = out_path.with_name("eval_summary_spenders.json")
+    if args.out is not None:
+        out_path = args.out
 
     if args.fixtures:
         frames = build_holdout_fixture_frames(n_wallets=args.n_wallets)

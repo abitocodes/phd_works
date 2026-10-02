@@ -48,6 +48,11 @@ ARTIFACTS: tuple[tuple[str, str], ...] = (
         f"{SPRING_HOLDOUT}/eval_summary_spenders.json",
         f"{_inside_published(PUBLISHED_SPRING_HOLDOUT)}/eval_summary_spenders.json",
     ),
+    # Spring freeze on the matched traders, GMX labels (scored after the labels were known).
+    (
+        f"{SPRING_HOLDOUT}/eval_summary_matched_traders.json",
+        f"{_inside_published(PUBLISHED_SPRING_HOLDOUT)}/eval_summary_matched_traders.json",
+    ),
     (f"{PROCESSED}/supplementary_checks.json", "supplementary_checks.json"),
     ("config/margin_config.yaml", f"{_inside_published(PUBLISHED_CONFIG)}/margin_config.yaml"),
     # Registered replication, June-August 2026: the registration, its extraction
@@ -60,6 +65,11 @@ ARTIFACTS: tuple[tuple[str, str], ...] = (
     (
         f"{REPLICATION}/fresh_holdout_summary.json",
         f"{_inside_published(PUBLISHED_REPLICATION)}/fresh_holdout_summary.json",
+    ),
+    # EndorseRank on the same cohorts and labels, scored after the registered evaluation.
+    (
+        f"{REPLICATION}/posthoc_endorserank.json",
+        f"{_inside_published(PUBLISHED_REPLICATION)}/posthoc_endorserank.json",
     ),
 )
 

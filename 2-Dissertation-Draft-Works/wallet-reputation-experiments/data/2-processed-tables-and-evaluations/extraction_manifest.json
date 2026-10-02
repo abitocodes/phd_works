@@ -32,10 +32,13 @@
     "output_path": "D:\\Github\\phd_works\\A-Skill-Programs\\margin_rank\\data\\processed\\reputation\\transfer_events.parquet"
   },
   "reputation_ranks": {
-    "at": "2026-09-14T09:19:19.890699+00:00",
+    "at": "2026-10-02T05:40:35.061199+00:00",
     "wallets": 5521,
     "methods": {
+      "endorserank_vt": 14727,
+      "endorserank_vt_activity": 14727,
       "endorserank": 14727,
+      "awp_paper": 137087,
       "awp": 137087,
       "coupled_pr": 151814,
       "coupled_pr_l25": 151814,
@@ -61,7 +64,7 @@
       "repay_pr",
       "delegation_pr"
     ],
-    "output": "D:\\Github\\phd_works\\A-Skill-Programs\\margin_rank\\data\\processed\\wallet_rankings.parquet"
+    "output": "/home/user/phd_works/2-Dissertation-Draft-Works/wallet-reputation-experiments/data/2-processed-tables-and-evaluations/wallet_rankings.parquet"
   },
   "aave_synthetic": {
     "at": "2026-06-24T01:35:33.805656+00:00",
@@ -128,10 +131,10 @@
     "output": "D:\\Github\\phd_works\\A-Skill-Programs\\margin_rank\\data\\processed\\gmx_decoded_events.parquet"
   },
   "rankings": {
-    "at": "2026-09-14T09:17:58.251277+00:00",
+    "at": "2026-10-02T05:38:53.358522+00:00",
     "wallets_ranked": 5521,
     "min_closes": 3,
-    "output": "D:\\Github\\phd_works\\A-Skill-Programs\\margin_rank\\data\\processed\\wallet_rankings.parquet"
+    "output": "/home/user/phd_works/2-Dissertation-Draft-Works/wallet-reputation-experiments/data/2-processed-tables-and-evaluations/wallet_rankings.parquet"
   },
   "preprocess_aave_lending": {
     "at": "2026-06-24T01:41:44.763878+00:00",

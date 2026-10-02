@@ -8,7 +8,9 @@ import pandas as pd
 
 from pagerank import (
     build_awp_edges,
+    build_awp_paper_edges,
     build_endorserank_edges,
+    build_endorserank_vt_edges,
     build_weighted_edges,
     coupled_pagerank,
     filter_subgraph_edges,
@@ -18,6 +20,60 @@ from pagerank import (
 
 GMX_POOL_NODE = "__gmx_profit_pool__"
 GMX_SINK_NODE = "__gmx_loss_sink__"
+
+# Method ids. AWP_ID is AWP in the form published by Do, Do and Nguyen (2023):
+# bounded transfer values V(z), logistic decay T(t) and restarts weighted by
+# sending activity; it is the transfer-graph baseline of the thesis.
+# ENDORSERANK_ID is the method the thesis proposes: the latest-allowance graph
+# with AWP's edge weights T(t) V(z) and uniform restarts.
+# ENDORSERANK_ACTIVITY_ID restarts it by approving activity, as AWP restarts by
+# sending activity (sensitivity analysis). The two layers of C-PR and S-PR are
+# weighted by raw amounts and restart uniformly. Walked alone they are C-PR at
+# lambda = 1 (ALLOWANCE_LAYER_ID, no decay) and at lambda = 0
+# (TRANSFER_LAYER_ID, with AWP's decay). They keep the ids "endorserank" and
+# "awp" because the rule of 14 September and the registered replication
+# (config/fresh_holdout_2026q3.yaml) name them so.
+AWP_ID = "awp_paper"
+ENDORSERANK_ID = "endorserank_vt"
+ENDORSERANK_ACTIVITY_ID = "endorserank_vt_activity"
+TRANSFER_LAYER_ID = "awp"
+ALLOWANCE_LAYER_ID = "endorserank"
+
+
+def build_endorserank_vt_layer(
+    allowances: pd.DataFrame,
+    config: dict[str, Any],
+    observation_end: pd.Timestamp,
+    seed: set[str],
+) -> tuple[pd.DataFrame, dict[str, float]]:
+    """EndorseRank edges kept around the seed wallets, and AWP's restart weight of every owner."""
+    rep = config["reputation"]
+    edges, activeness = build_endorserank_vt_edges(
+        allowances,
+        observation_end,
+        float(rep["awp_decay_k"]),
+        float(rep["awp_decay_t0_days"]),
+        float((rep.get("awp_paper") or {}).get("value_b", 1.0)),
+    )
+    return filter_subgraph_edges(edges, seed), activeness
+
+
+def build_awp_paper_layer(
+    transfers: pd.DataFrame,
+    config: dict[str, Any],
+    observation_end: pd.Timestamp,
+    seed: set[str],
+) -> tuple[pd.DataFrame, dict[str, float]]:
+    """AWP edges kept around the seed wallets, and the restart weight of every sender."""
+    rep = config["reputation"]
+    edges, activeness = build_awp_paper_edges(
+        transfers,
+        observation_end,
+        float(rep["awp_decay_k"]),
+        float(rep["awp_decay_t0_days"]),
+        float((rep.get("awp_paper") or {}).get("value_b", 1.0)),
+    )
+    return filter_subgraph_edges(edges, seed), activeness
 
 # Hybrid operators over the allowance and transfer layers. ``coupled_pr`` is
 # the primary lambda from config; the other coupled ids carry the grid value
@@ -52,8 +108,9 @@ def compute_hybrid_scores(
 ) -> tuple[dict[str, dict[str, float]], dict[str, int]]:
     """C-PR for every configured lambda and S-PR, restricted to ``wallets``.
 
-    ``er_edges`` and ``awp_edges`` are the already filtered single-layer edge
-    lists (the same inputs EndorseRank and AWP are scored on).
+    ``er_edges`` and ``awp_edges`` are the already filtered allowance layer
+    (ALLOWANCE_LAYER_ID) and transfer layer (TRANSFER_LAYER_ID), not the graphs
+    of EndorseRank and AWP. S-PR restarts from the allowance layer walked alone.
     """
     rep = config["reputation"]
     hyb = rep.get("hybrid") or {}
@@ -568,8 +625,13 @@ def collect_method_edges(
     transfers: pd.DataFrame,
     decoded: pd.DataFrame,
     aave_events: pd.DataFrame | None,
-) -> dict[str, pd.DataFrame]:
-    """Filtered edge lists per method (for PageRank runtime benchmarking)."""
+    with_restarts: bool = False,
+) -> dict[str, pd.DataFrame] | tuple[dict[str, pd.DataFrame], dict[str, dict[str, float]]]:
+    """Filtered edge lists per method (for PageRank runtime benchmarking).
+
+    With ``with_restarts`` it also returns the restart weights of the methods
+    that do not restart uniformly (only AWP_ID).
+    """
     rep = config["reputation"]
     seed = set(w.lower() for w in wallets)
     observation_end = pd.Timestamp(rep["observation_end"], tz="UTC")
@@ -579,11 +641,15 @@ def collect_method_edges(
     collateral = config.get("collateral_tokens", [])
 
     edges: dict[str, pd.DataFrame] = {}
+    restarts: dict[str, dict[str, float]] = {}
 
-    edges["endorserank"] = filter_subgraph_edges(build_endorserank_edges(allowances), seed)
+    edges[ENDORSERANK_ID], _ = build_endorserank_vt_layer(allowances, config, observation_end, seed)
+    edges[ALLOWANCE_LAYER_ID] = filter_subgraph_edges(build_endorserank_edges(allowances), seed)
+
+    edges[AWP_ID], restarts[AWP_ID] = build_awp_paper_layer(transfers, config, observation_end, seed)
 
     awp_edge_df = build_awp_edges(transfers, observation_end, k, t0)
-    edges["awp"] = filter_subgraph_edges(awp_edge_df, seed)
+    edges[TRANSFER_LAYER_ID] = filter_subgraph_edges(awp_edge_df, seed)
 
     if methods_cfg.get("gf_pr", {}).get("enabled", True):
         gf_edges = build_gf_pr_edges(decoded, wallets)
@@ -610,6 +676,8 @@ def collect_method_edges(
         else:
             edges["lf_pr"] = pd.DataFrame(columns=["from_node", "to_node", "weight"])
 
+    if with_restarts:
+        return edges, restarts
     return edges
 
 
@@ -618,6 +686,7 @@ def _run_pagerank_on_edges(
     wallets: list[str],
     seed: set[str],
     rep: dict[str, Any],
+    teleport: dict[str, float] | None = None,
 ) -> tuple[dict[str, float], int]:
     if edges.empty:
         return {w: 0.0 for w in wallets}, 0
@@ -628,6 +697,7 @@ def _run_pagerank_on_edges(
         damping=float(rep["damping"]),
         tol=float(rep["pagerank_tolerance"]),
         max_iter=int(rep["max_iterations"]),
+        teleport=teleport or None,
     )
     return {w: scores.get(w, 0.0) for w in wallets}, len(filtered)
 
@@ -653,17 +723,35 @@ def compute_variant_scores(
     scores: dict[str, dict[str, float]] = {}
     edge_counts: dict[str, int] = {}
 
-    # EndorseRank
+    # EndorseRank: AWP's edge weights on the latest-allowance graph, uniform restarts.
+    er_vt_edges, er_activeness = build_endorserank_vt_layer(allowances, config, observation_end, seed)
+    scores[ENDORSERANK_ID], edge_counts[ENDORSERANK_ID] = _run_pagerank_on_edges(
+        er_vt_edges, wallets, seed, rep
+    )
+    # Sensitivity analysis: the same graph restarted by approving activity, AWP's rule.
+    scores[ENDORSERANK_ACTIVITY_ID], edge_counts[ENDORSERANK_ACTIVITY_ID] = _run_pagerank_on_edges(
+        er_vt_edges, wallets, seed, rep, teleport=er_activeness
+    )
+
+    # Allowance layer walked alone (raw amounts, uniform restarts; C-PR at lambda = 1).
     er_edges = filter_subgraph_edges(build_endorserank_edges(allowances), seed)
-    scores["endorserank"], edge_counts["endorserank"] = _run_pagerank_on_edges(
+    scores[ALLOWANCE_LAYER_ID], edge_counts[ALLOWANCE_LAYER_ID] = _run_pagerank_on_edges(
         er_edges, wallets, seed, rep
     )
 
-    # AWP
-    awp_edges = filter_subgraph_edges(build_awp_edges(transfers, observation_end, k, t0), seed)
-    scores["awp"], edge_counts["awp"] = _run_pagerank_on_edges(awp_edges, wallets, seed, rep)
+    # AWP as published: bounded transfer values, restarts weighted by sending activity.
+    paper_edges, activeness = build_awp_paper_layer(transfers, config, observation_end, seed)
+    scores[AWP_ID], edge_counts[AWP_ID] = _run_pagerank_on_edges(
+        paper_edges, wallets, seed, rep, teleport=activeness
+    )
 
-    # Hybrids (C-PR grid and S-PR) on the same two filtered layers.
+    # Transfer layer walked alone (raw amounts, uniform restarts; C-PR at lambda = 0).
+    awp_edges = filter_subgraph_edges(build_awp_edges(transfers, observation_end, k, t0), seed)
+    scores[TRANSFER_LAYER_ID], edge_counts[TRANSFER_LAYER_ID] = _run_pagerank_on_edges(
+        awp_edges, wallets, seed, rep
+    )
+
+    # Hybrids (C-PR grid and S-PR) on the allowance layer and the transfer layer.
     hybrid_scores, hybrid_counts = compute_hybrid_scores(wallets, config, er_edges, awp_edges)
     scores.update(hybrid_scores)
     edge_counts.update(hybrid_counts)

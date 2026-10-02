@@ -15,6 +15,7 @@ from pagerank import (
     build_awp_edges,
     build_awp_paper_edges,
     build_endorserank_edges,
+    build_endorserank_vt_edges,
     coupled_pagerank,
     filter_subgraph_edges,
     weighted_pagerank,
@@ -57,6 +58,9 @@ BASELINE_IDS = ("t1_in_approve_degree", "t1_in_degree")
 
 # Pre-registered paired contrasts on the holdout (label shared by a and b).
 # (label, method_a, method_b, holdout_label, role)
+# Here "awp" is the transfer layer walked alone (C-PR at lambda = 0), under the
+# id the rule of 14 September gave it. The registered replication reruns this
+# tuple as it stands (fresh_holdout.py), so it is not edited.
 HOLDOUT_CONTRASTS: tuple[tuple[str, str, str, str, str], ...] = (
     ("EndorseRank minus t1 in-approve degree", "endorserank", "t1_in_approve_degree", "future_new_approvers", "increment"),
     ("AWP minus t1 in-degree", "awp", "t1_in_degree", "future_new_transfer_senders", "increment"),
@@ -66,6 +70,30 @@ HOLDOUT_CONTRASTS: tuple[tuple[str, str, str, str, str], ...] = (
     ("C-PR minus AWP", "coupled_pr", "awp", "future_new_transfer_senders", "primary_b"),
     ("S-PR minus EndorseRank", "seeded_pr", "endorserank", "future_new_approvers", "ablation_a"),
     ("S-PR minus AWP", "seeded_pr", "awp", "future_new_transfer_senders", "ablation_b"),
+)
+
+# Contrasts of the spring spender holdout as the thesis reports them.
+# EndorseRank and AWP ("endorserank_vt", "awp_paper") share AWP's edge weights;
+# their rows were computed after the spring labels were known. The rows of the rule of 14 September (primary_a,
+# primary_b) and of the S-PR ablation keep their comparators, the allowance
+# layer ("endorserank", C-PR at lambda = 1) and the transfer layer ("awp",
+# lambda = 0) walked alone; so does the EndorseRank increment fixed with them,
+# which is reported for the new EndorseRank as well. The exploratory row is the
+# spring observation that the registered replication tested again.
+SPRING_CONTRASTS: tuple[tuple[str, str, str, str, str], ...] = (
+    ("C-PR ($\\lambda=1$) minus t1 in-approve degree", "endorserank", "t1_in_approve_degree", "future_new_approvers", "increment_fixed"),
+    ("C-PR minus C-PR ($\\lambda=1$)", "coupled_pr", "endorserank", "future_new_approvers", "primary_a"),
+    ("C-PR minus C-PR ($\\lambda=0$)", "coupled_pr", "awp", "future_new_transfer_senders", "primary_b"),
+    ("S-PR minus C-PR ($\\lambda=1$)", "seeded_pr", "endorserank", "future_new_approvers", "ablation_a"),
+    ("S-PR minus C-PR ($\\lambda=0$)", "seeded_pr", "awp", "future_new_transfer_senders", "ablation_b"),
+    ("EndorseRank minus t1 in-approve degree", "endorserank_vt", "t1_in_approve_degree", "future_new_approvers", "increment"),
+    ("AWP minus t1 in-degree", "awp_paper", "t1_in_degree", "future_new_transfer_senders", "increment"),
+    ("EndorseRank minus AWP", "endorserank_vt", "awp_paper", "future_new_approvers", "single_layer"),
+    ("AWP minus EndorseRank", "awp_paper", "endorserank_vt", "future_new_transfer_senders", "single_layer"),
+    ("C-PR minus C-PR ($\\lambda=0$)", "coupled_pr", "awp", "future_new_approvers", "exploratory"),
+    ("C-PR minus EndorseRank", "coupled_pr", "endorserank_vt", "future_new_approvers", "against_single"),
+    ("C-PR minus AWP", "coupled_pr", "awp_paper", "future_new_transfer_senders", "against_single"),
+    ("C-PR minus AWP", "coupled_pr", "awp_paper", "future_new_approvers", "against_single"),
 )
 
 UNLIMITED_ALLOWANCE = 1e30
@@ -658,6 +686,35 @@ def score_awp_paper(
     return weighted_pagerank(edges, damping=damping, tol=tol, max_iter=max_iter, teleport=activeness or None)
 
 
+def score_endorserank_vt(
+    latest_t1: pd.DataFrame,
+    score_end: pd.Timestamp,
+    wallets: list[str],
+    config: dict[str, Any],
+    activity_restarts: bool = False,
+) -> dict[str, float]:
+    """EndorseRank (pagerank.build_endorserank_vt_edges) at t1.
+
+    The latest positive allowances at t1 are aged from their approval to t1, and
+    the walk restarts uniformly; with ``activity_restarts`` it restarts by
+    approving activity, AWP's rule (sensitivity analysis). Wallets that no edge
+    touches score zero, as in the main analysis.
+    """
+    rep = config["reputation"]
+    paper = rep.get("awp_paper") or {}
+    edges, activeness = build_endorserank_vt_edges(
+        latest_t1,
+        score_end,
+        float(rep["awp_decay_k"]),
+        float(rep["awp_decay_t0_days"]),
+        float(paper.get("value_b", 1.0)),
+    )
+    edges = filter_subgraph_edges(edges, set(wallets))
+    damping, tol, max_iter = pagerank_params(config)
+    teleport = (activeness or None) if activity_restarts else None
+    return weighted_pagerank(edges, damping=damping, tol=tol, max_iter=max_iter, teleport=teleport)
+
+
 def _t1_layers(
     latest_t1: pd.DataFrame,
     transfers_t1: pd.DataFrame,
@@ -832,10 +889,13 @@ def holdout_tau_diff(
 def evaluate_primary_criterion(tau_diff: list[dict[str, Any]]) -> dict[str, Any]:
     """Pre-registered primary rule for C-PR (see config ``reputation.hybrid``).
 
-    (a) no worse than EndorseRank on future new approvers: the interval of
-        tau(C-PR) - tau(EndorseRank) includes zero or lies above it;
-    (b) better than AWP on future new transfer senders: the interval of
-        tau(C-PR) - tau(AWP) lies entirely above zero.
+    (a) no worse than the allowance layer walked alone (method id
+        "endorserank", C-PR at lambda = 1; the rule calls it EndorseRank) on
+        future new approvers: the interval of tau(C-PR) - tau(endorserank)
+        includes zero or lies above it;
+    (b) better than the transfer layer walked alone (method id "awp", C-PR at
+        lambda = 0; the rule calls it AWP) on future new transfer senders: the
+        interval of tau(C-PR) - tau(awp) lies entirely above zero.
     """
     by_role = {r["role"]: r for r in tau_diff}
     a = by_role.get("primary_a") or {}

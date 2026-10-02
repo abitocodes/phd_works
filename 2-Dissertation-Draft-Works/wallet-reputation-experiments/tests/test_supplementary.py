@@ -13,7 +13,13 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from check_spender_code import code_kind  # noqa: E402
 from classify_spenders import classify  # noqa: E402
-from pagerank import build_awp_paper_edges, logistic_time_decay, value_transform, weighted_pagerank  # noqa: E402
+from pagerank import (  # noqa: E402
+    build_awp_paper_edges,
+    build_endorserank_vt_edges,
+    logistic_time_decay,
+    value_transform,
+    weighted_pagerank,
+)
 from proxy_metrics import compute_inverse_risk_proxies  # noqa: E402
 from run_robustness_eval import _top_token_addresses  # noqa: E402
 
@@ -108,3 +114,27 @@ def test_published_awp_restarts_follow_activeness() -> None:
     scores = weighted_pagerank(edges, max_iter=300, teleport={"a": 0.9, "c": 0.3})
     assert abs(scores["a"] / scores["c"] - 3.0) < 1e-9
     assert scores["b"] > scores["a"]
+
+
+def test_endorserank_takes_awp_weights_on_allowances() -> None:
+    end = pd.Timestamp("2026-05-31", tz="UTC")
+    day = pd.Timedelta(days=1)
+    allowances = pd.DataFrame(
+        {
+            "block_timestamp": [end - 20 * day, end - 60 * day, end - 30 * day, end - 2 * day],
+            "owner": ["o", "o", "o", "p"],
+            "spender": ["s", "s", "t", "s"],
+            "token_address": ["x", "y", "x", "x"],
+            "value": [2.0**256 - 1, 50.0, 1e6, 3e18],
+        }
+    )
+    edges, activeness = build_endorserank_vt_edges(allowances, end, k=0.01, t0_days=180, b=1.0)
+    decay = logistic_time_decay(pd.Series([20.0, 60.0, 30.0, 2.0]), 0.01, 180).to_numpy()
+    w = edges.set_index(["from_node", "to_node"])["weight"]
+    # One term per token; an unlimited approval counts like a small one.
+    assert abs(w[("o", "s")] - (decay[0] + decay[1])) < 1e-12
+    assert abs(w[("o", "t")] - decay[2]) < 1e-12
+    # AWP's restart weight of an owner: the latest approval to each spender, by its age.
+    assert abs(activeness["o"] - (max(decay[0], decay[1]) + decay[2])) < 1e-12
+    assert abs(activeness["p"] - decay[3]) < 1e-12
+

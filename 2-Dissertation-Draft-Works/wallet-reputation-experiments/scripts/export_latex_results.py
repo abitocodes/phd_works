@@ -17,7 +17,24 @@ from evaluate_alignment import (  # noqa: E402
     PROXY_FAMILIES,
     build_family_winners,
 )
+from pagerank_variants import (  # noqa: E402
+    ALLOWANCE_LAYER_ID,
+    AWP_ID,
+    ENDORSERANK_ACTIVITY_ID,
+    ENDORSERANK_ID,
+    TRANSFER_LAYER_ID,
+)
 from project_paths import MANUSCRIPT_DIR, PROCESSED_DIR, REPLICATION_DIR, SCRIPTS_IN_REPO  # noqa: E402
+
+# AWP is the form published by Do, Do and Nguyen (2023) (AWP_ID); EndorseRank
+# takes AWP's edge weights on the allowance graph and restarts uniformly
+# (ENDORSERANK_ID). The two layers of the hybrids walked alone
+# (ALLOWANCE_LAYER_ID, TRANSFER_LAYER_ID) appear only where the hybrids are
+# compared with their endpoints, and are printed as C-PR at lambda = 1 and 0.
+ER_LABEL = METHOD_LABELS[ENDORSERANK_ID]
+AWP_LABEL = METHOD_LABELS[AWP_ID]
+ALLOWANCE_LAYER_LABEL = METHOD_LABELS[ALLOWANCE_LAYER_ID]
+TRANSFER_LAYER_LABEL = METHOD_LABELS[TRANSFER_LAYER_ID]
 
 FAMILY_LABELS = {
     "transfer": "Transfer",
@@ -147,7 +164,7 @@ def _fmt_int(v: int | None) -> str:
 
 def _timing_note(summary: dict) -> str:
     tp = summary.get("timing_protocol") or {}
-    repeats = tp.get("timed_repeats") or summary.get("benchmark", {}).get("endorserank", {}).get("repeats", 5)
+    repeats = tp.get("timed_repeats") or summary.get("benchmark", {}).get(ENDORSERANK_ID, {}).get("repeats", 5)
     return (
         f"Runtime = mean wall-clock seconds over {repeats} timed PageRank solves after one "
         f"untimed warm-up; SD over the same {repeats} runs."
@@ -165,8 +182,8 @@ def _bootstrap_note(summary: dict) -> str:
 
 def write_benchmark_table(summary: dict, out: Path) -> None:
     b = summary["benchmark"]
-    er = b["endorserank"]
-    awp = b["awp"]
+    er = b[ENDORSERANK_ID]
+    awp = b[AWP_ID]
     n = summary.get("n_wallets", b.get("n_wallets", "---"))
     hdr = latex_header(summary)
 
@@ -187,9 +204,9 @@ def write_benchmark_table(summary: dict, out: Path) -> None:
             hybrid_rows.append(_row(METHOD_LABELS.get(method_id, method_id), b[method_id]))
     hybrid_block = ("\\midrule\n" + "\n".join(hybrid_rows) + "\n") if hybrid_rows else ""
     hybrid_note = (
-        " C-PR walks on the union of both layers, so $|E|$ is the sum of the two edge sets; "
-        "S-PR runs on the transfer layer and its runtime includes the EndorseRank solve that "
-        "supplies its restart vector."
+        " C-PR walks on the union of the allowance layer and the transfer layer, so $|E|$ is the "
+        "sum of the two edge sets; S-PR runs on the transfer layer and its runtime includes the "
+        "solve of the allowance layer that supplies its restart vector."
         if hybrid_rows
         else ""
     )
@@ -244,8 +261,8 @@ def write_family_alignment(summary: dict, family: str, out: Path) -> None:
         return f"\\multicolumn{{4}}{{l}}{{\\textit{{{label_text}}}}} \\\\\n{rows}\n\\addlinespace\n"
 
     blocks = [
-        _method_block("endorserank", "EndorseRank"),
-        _method_block("awp", "AWP"),
+        _method_block(ENDORSERANK_ID, ER_LABEL),
+        _method_block(AWP_ID, AWP_LABEL),
     ]
     body_blocks = "".join(blocks)
     if body_blocks.endswith("\\addlinespace\n"):
@@ -273,8 +290,8 @@ def write_family_ci_table(summary: dict, out: Path) -> None:
     hdr = latex_header(summary)
     lines = []
     for family in CORE_FAMILIES:
-        er = family_ci.get("endorserank", {}).get(family, {})
-        awp = family_ci.get("awp", {}).get(family, {})
+        er = family_ci.get(ENDORSERANK_ID, {}).get(family, {})
+        awp = family_ci.get(AWP_ID, {}).get(family, {})
         lines.append(
             f"{FAMILY_LABELS[family]} & {_fmt(er.get('mean_tau'))} & "
             f"{_fmt_ci(er.get('ci_low'), er.get('ci_high'))} & {_fmt(awp.get('mean_tau'))} & "
@@ -351,32 +368,49 @@ def write_tau_diff_table(summary: dict, out: Path) -> None:
 
 
 def write_tau_diff_hybrid_table(summary: dict, out: Path) -> None:
-    """Paired differences of the hybrid operators against the better single-layer method."""
+    """Paired differences of the hybrid operators against their endpoint layers, then against EndorseRank and AWP."""
     boot = summary.get("alignment", {}).get("bootstrap") or {}
     rows = [r for r in (boot.get("tau_diff") or []) if r.get("group") == "hybrid"]
     if not rows:
         return
+    against = [r for r in (boot.get("tau_diff") or []) if r.get("group") == "hybrid_single"]
+    lines = ["\\multicolumn{6}{l}{\\emph{Against the two layers walked alone}} \\\\"]
+    lines.extend(_tau_diff_lines(rows))
+    if against:
+        lines.append("\\midrule")
+        lines.append(f"\\multicolumn{{6}}{{l}}{{\\emph{{Against {ER_LABEL} and {AWP_LABEL}}}}} \\\\")
+        lines.extend(_tau_diff_lines(against))
     hdr = latex_header(summary)
     out.write_text(
         hdr
         + _wrap_table(
             f"Same-window paired contrasts for the coupled operator (C-PR, $\\lambda=0.5$) and the "
-            f"endorsement-seeded walk (S-PR) against the single-layer method that leads each family "
-            f"(matched cohort, $n={_fmt_int(summary.get('n_wallets'))}$). Family-mean $\\tau$; the "
-            f"same wallet resamples are used for $a$ and $b$. These contrasts are a stricter check "
-            f"beside the secondary criterion fixed on 14~September~2026 "
-            f"(Section~\\ref{{sec:holdout-protocol}}), which compares C-PR's point estimate with the "
-            f"leading method's interval in Table~\\ref{{tab:alignment-hybrid}}. An interval below 0 "
-            f"means C-PR is significantly below the leading method; one above 0 means it exceeds it. "
+            f"endorsement-seeded walk (S-PR) against the layer that leads each family walked alone, the "
+            f"allowance layer ({ALLOWANCE_LAYER_LABEL}) or the transfer layer ({TRANSFER_LAYER_LABEL}), and "
+            f"of C-PR against {ER_LABEL} and {AWP_LABEL} (matched cohort, $n={_fmt_int(summary.get('n_wallets'))}$). "
+            f"Family-mean $\\tau$; the same wallet resamples are used for $a$ and $b$. The contrasts "
+            f"with the endpoints are a stricter check beside the secondary criterion fixed on "
+            f"14~September~2026 (Section~\\ref{{sec:holdout-protocol}}), which compares C-PR's point "
+            f"estimate with the leading layer's interval in Table~\\ref{{tab:alignment-hybrid}}. An "
+            f"interval below 0 means $a$ is significantly below $b$; one above 0 means it exceeds it. "
             f"{_bootstrap_note(summary)}",
             "tab:tau-diff-hybrid",
-            _tau_diff_tabular(_tau_diff_lines(rows)),
+            _tau_diff_tabular(lines),
         ),
         encoding="utf-8",
     )
 
 
-HYBRID_TABLE_METHODS = ("endorserank", "awp", "coupled_pr_l25", "coupled_pr", "coupled_pr_l75", "seeded_pr")
+HYBRID_TABLE_METHODS = (
+    ENDORSERANK_ID,
+    AWP_ID,
+    ALLOWANCE_LAYER_ID,
+    TRANSFER_LAYER_ID,
+    "coupled_pr_l25",
+    "coupled_pr",
+    "coupled_pr_l75",
+    "seeded_pr",
+)
 
 
 def write_alignment_hybrid_table(summary: dict, out: Path) -> None:
@@ -396,7 +430,7 @@ def write_alignment_hybrid_table(summary: dict, out: Path) -> None:
             row = fam.get(family, {})
             cells.append(f"{_fmt(row.get('mean_tau'))} {_fmt_ci(row.get('ci_low'), row.get('ci_high'))}")
         lines.append(f"{METHOD_LABELS.get(method_id, method_id)} & {' & '.join(cells)} \\\\")
-        if method_id == "awp":
+        if method_id == AWP_ID:
             lines.append("\\midrule")
     heads = " & ".join(FAMILY_LABELS[f] for f in CORE_FAMILIES)
     tabular = f"""\\begin{{tabular}}{{lccc}}
@@ -409,11 +443,12 @@ Method & {heads} \\\\
     out.write_text(
         hdr
         + _wrap_table(
-            f"Same-window family-mean Kendall $\\tau$ with bootstrap intervals for the two "
-            f"single-layer methods, the coupled operator at three values of $\\lambda$ and the "
+            f"Same-window family-mean Kendall $\\tau$ with bootstrap intervals for {ER_LABEL} and "
+            f"{AWP_LABEL}, the coupled operator at five values of $\\lambda$ and the "
             f"endorsement-seeded walk (matched cohort, $n={_fmt_int(summary.get('n_wallets'))}$). "
-            f"$\\lambda=1$ would reproduce EndorseRank and $\\lambda=0$ AWP on a shared node set. "
-            f"{_bootstrap_note(summary)}",
+            f"$\\lambda=1$ is the allowance layer walked alone (latest allowances in raw amounts) and "
+            f"$\\lambda=0$ the transfer layer walked alone (raw amounts discounted by the decay of AWP); "
+            f"both restart uniformly. {_bootstrap_note(summary)}",
             "tab:alignment-hybrid",
             tabular,
         ),
@@ -424,8 +459,10 @@ Method & {heads} \\\\
 HOLDOUT_ROW_ORDER = (
     ("t1_in_approve_degree", "In-approve degree at $t_1$ (baseline)"),
     ("t1_in_degree", "Transfer in-degree at $t_1$ (baseline)"),
-    ("endorserank", "EndorseRank"),
-    ("awp", "AWP"),
+    (ENDORSERANK_ID, ER_LABEL),
+    (AWP_ID, AWP_LABEL),
+    (ALLOWANCE_LAYER_ID, ALLOWANCE_LAYER_LABEL),
+    (TRANSFER_LAYER_ID, TRANSFER_LAYER_LABEL),
     ("coupled_pr_l25", "C-PR ($\\lambda=0.25$)"),
     ("coupled_pr", "C-PR ($\\lambda=0.5$)"),
     ("coupled_pr_l75", "C-PR ($\\lambda=0.75$)"),
@@ -468,7 +505,7 @@ def write_holdout_table(holdout: dict, out: Path) -> None:
             s = stats.get(lab, {})
             cells.append(f"{_fmt(s.get('kendall_tau'))} {_fmt_ci(s.get('ci_low'), s.get('ci_high'))}")
         lines.append(f"{label} & {' & '.join(cells)} \\\\")
-        if method_id == "t1_in_degree" or method_id == "awp":
+        if method_id in ("t1_in_degree", AWP_ID):
             lines.append("\\midrule")
     nz_appr = (prev.get("future_new_approvers") or {}).get("n_nonzero")
     nz_flow = (prev.get("future_new_transfer_senders") or {}).get("n_nonzero")
@@ -493,12 +530,23 @@ Score at $t_1$ & New approval pairs ($\\tau$ [95\\% CI]) & New transfer senders 
             f"that sent a transfer to the wallet for the first time. CI = 95\\% percentile bootstrap over "
             f"wallets ({n_boot} paired resamples). {_fmt_int(nz_appr)} wallets received at least one new "
             f"pair and {_fmt_int(nz_flow)} at least one new sender. Baseline rows are the raw degrees at "
-            f"$t_1$ that each single-layer PageRank smooths.",
+            f"$t_1$ that each single-layer PageRank smooths. {ALLOWANCE_LAYER_LABEL} and "
+            f"{TRANSFER_LAYER_LABEL} are the allowance and transfer layers of the coupled operator walked alone.",
             "tab:holdout-spenders",
             tabular,
         ),
         encoding="utf-8",
     )
+
+
+# Roles of holdout.SPRING_CONTRASTS fixed before the spring run (the increment
+# of the allowance layer, the rule of 14 September and the S-PR ablation); the
+# other rows were computed after the spring labels were known.
+SPRING_FIXED_ROLES = ("increment_fixed", "primary_a", "primary_b", "ablation_a", "ablation_b")
+
+
+def _spring_role(r: dict) -> str:
+    return r.get("role", "")
 
 
 def write_holdout_diff_table(holdout: dict, out: Path) -> None:
@@ -510,15 +558,23 @@ def write_holdout_diff_table(holdout: dict, out: Path) -> None:
         "future_new_approvers": "new approval pairs",
         "future_new_transfer_senders": "new transfer senders",
     }
-    lines = []
-    for r in rows:
-        if r.get("delta_tau") is None:
-            continue
-        lines.append(
+
+    def _line(r: dict) -> str:
+        return (
             f"{r['label']} & {label_names.get(r['holdout_label'], r['holdout_label'])} & "
             f"{_fmt(r['a']['tau'])} & {_fmt(r['b']['tau'])} & {r['delta_tau']:+.3f} & "
             f"{_fmt_ci(r.get('ci_low'), r.get('ci_high'))} & {_fmt(r.get('share_positive'))} \\\\"
         )
+
+    rows = [r for r in rows if r.get("delta_tau") is not None]
+    fixed = [r for r in rows if _spring_role(r) in SPRING_FIXED_ROLES]
+    later = [r for r in rows if _spring_role(r) not in SPRING_FIXED_ROLES]
+    lines = ["\\multicolumn{7}{l}{\\emph{Fixed before the run}} \\\\"]
+    lines.extend(_line(r) for r in fixed)
+    if later:
+        lines.append("\\midrule")
+        lines.append("\\multicolumn{7}{l}{\\emph{Computed after the labels were known}} \\\\")
+        lines.extend(_line(r) for r in later)
     crit = holdout.get("primary_criterion") or {}
     verdict = "met" if crit.get("met") else "not met"
     n_boot = (holdout.get("bootstrap") or {}).get("n_boot", 400)
@@ -538,12 +594,16 @@ Contrast ($a$ minus $b$) & Label & $\\tau_a$ & $\\tau_b$ & $\\Delta\\tau$ & 95\\
         hdr
         + _wrap_table(
             f"Paired bootstrap differences on the spender holdout ($n={_fmt_int(holdout.get('n_wallets'))}$, "
-            f"{n_boot} resamples shared by $a$ and $b$). The first two rows give the increment of each "
-            f"PageRank over its own raw degree at $t_1$; the next two compare EndorseRank and AWP on each "
-            f"label, with the method whose construct the label measures as $a$; the last four are the "
-            f"hybrid contrasts fixed on 14~September~2026. "
-            f"Primary criterion (C-PR no worse than EndorseRank on new approval pairs and better than AWP "
-            f"on new transfer senders): {verdict}.",
+            f"{n_boot} resamples shared by $a$ and $b$). The first block was fixed before the run: the "
+            f"increment of the allowance layer walked alone ({ALLOWANCE_LAYER_LABEL}) over its raw degree at "
+            f"$t_1$, and the hybrid contrasts fixed on 14~September~2026, which compare C-PR and S-PR with "
+            f"the two layers they are built from, {ALLOWANCE_LAYER_LABEL} and {TRANSFER_LAYER_LABEL}. The "
+            f"second block was computed after the labels were known: the increments of {ER_LABEL} and "
+            f"{AWP_LABEL} over their raw degrees, the two methods against each other on each label with the "
+            f"method whose construct the label measures as $a$, C-PR against {TRANSFER_LAYER_LABEL} on new "
+            f"approval pairs, and C-PR against {ER_LABEL} and {AWP_LABEL}. Primary criterion of 14~September "
+            f"(C-PR no worse than {ALLOWANCE_LAYER_LABEL} on new approval pairs and better than "
+            f"{TRANSFER_LAYER_LABEL} on new transfer senders): {verdict}.",
             "tab:holdout-diff",
             tabular,
         ),
@@ -586,8 +646,8 @@ def write_benchmark_scaling_table(summary: dict, out: Path) -> None:
 def _scaling_rows_tex(rows: list[dict]) -> list[str]:
     rows_tex = []
     for row in rows:
-        er = row["endorserank"]
-        awp = row["awp"]
+        er = row[ENDORSERANK_ID]
+        awp = row[AWP_ID]
         speedup = row.get("er_speedup_ratio", row.get("speedup_awp_over_er"))
         speedup_str = f"{speedup:.1f}$\\times$" if speedup is not None else "---"
         rows_tex.append(
@@ -690,7 +750,7 @@ def write_robustness_tokens_table(summary: dict, out: Path) -> None:
     subsets = [matrix] + ([by_count] if by_count else []) + [full]
     width = len(subsets)
     lines = []
-    for method_id in ("endorserank", "awp"):
+    for method_id in (ENDORSERANK_ID, AWP_ID):
         label = METHOD_LABELS.get(method_id, method_id)
         cells = [_fmt(m.get(method_id, {}).get(fam)) for fam in families for m in subsets]
         lines.append(f"{label} & {' & '.join(cells)} \\\\")
@@ -761,7 +821,7 @@ def write_tie_sensitivity_table(checks: dict, out: Path) -> None:
         cells = [
             _tau_ci(ties[rule]["family_ci"].get(method, {}).get(family, {}))
             for rule in rules
-            for method in ("endorserank", "awp")
+            for method in (ENDORSERANK_ID, AWP_ID)
         ]
         lines.append(f"{FAMILY_NAMES[family]} & {' & '.join(cells)} \\\\")
         if family == "sybil_stability":
@@ -770,8 +830,8 @@ def write_tie_sensitivity_table(checks: dict, out: Path) -> None:
         f"\\multicolumn{{2}}{{c}}{{{_tau_ci(ties[rule]['inter_method_ci'])}}}" for rule in rules
     )
     methods = ties.get("methods") or {}
-    n_er = (methods.get("endorserank") or {}).get("n_missing")
-    n_awp = (methods.get("awp") or {}).get("n_missing")
+    n_er = (methods.get(ENDORSERANK_ID) or {}).get("n_missing")
+    n_awp = (methods.get(AWP_ID) or {}).get("n_missing")
     boot = checks.get("bootstrap") or {}
     tabular = f"""\\begin{{tabular}}{{lcccc}}
 \\toprule
@@ -789,9 +849,11 @@ EndorseRank vs.\\ AWP & {inter} \\\\
         + _wrap_table(
             f"Same-window family-mean Kendall $\\tau$ with wallets missing from a graph scored zero "
             f"or kept as isolated nodes (matched cohort, $n={_fmt_int(ties.get('n_wallets'))}$). The "
-            f"main analysis scores a wallet that is missing from a method's graph zero; as an isolated "
-            f"node it gets the score of a node without in-edges. The rule concerns "
-            f"{_fmt_int(n_er)} wallets for EndorseRank and {_fmt_int(n_awp)} for AWP. The last row "
+            f"main analysis scores a wallet that is missing from a method's graph zero. The rule concerns "
+            f"{_fmt_int(n_er)} wallets for EndorseRank and {_fmt_int(n_awp)} for AWP. Under EndorseRank's "
+            f"uniform restarts an isolated node gets the score of a node without in-edges. AWP restarts "
+            f"only at addresses that sent a transfer, so an isolated wallet keeps the score zero and AWP's "
+            f"coefficients are the same under both rules. The last row "
             f"is the agreement between the two scores. The check was run after the results were "
             f"known. CI = 95\\% percentile bootstrap over wallets ({boot.get('n_boot', 400)} paired "
             f"resamples, seed {boot.get('seed', 42)}).",
@@ -802,40 +864,47 @@ EndorseRank vs.\\ AWP & {inter} \\\\
     )
 
 
-# (method id, row name, edge weight, group); a rule separates the groups.
-WEIGHTING_ROWS = (
-    ("endorserank_raw", "EndorseRank", "raw amounts (main)", "er"),
-    ("endorserank_count", "", "one per latest allowance", "er"),
-    ("endorserank_unit", "", "one per owner--spender pair", "er"),
-    ("awp_raw", "AWP", "raw amounts (main)", "awp"),
-    ("awp_count", "", "one per transfer, decayed", "awp"),
-    ("awp_unit", "", "one per sender--recipient pair", "awp"),
-    ("t1_in_approve_degree", "In-approve degree at $t_1$", "---", "degree"),
-    ("t1_in_degree", "Transfer in-degree at $t_1$", "---", "degree"),
+RECEIVING_ROWS = (
+    (ENDORSERANK_ID, ER_LABEL),
+    (AWP_ID, AWP_LABEL),
+    ("t1_in_approve_degree", "In-approve degree at $t_1$"),
+    ("t1_in_degree", "Transfer in-degree at $t_1$"),
 )
 
 
-def write_holdout_weighting_table(checks: dict, out: Path) -> None:
-    """Spender holdout with EndorseRank and AWP under three edge weights."""
-    weighting = checks.get("holdout_weighting") or {}
-    tau = weighting.get("tau") or {}
+def write_holdout_receiving_table(checks: dict, out: Path) -> None:
+    """Spender holdout on the spenders that received a transfer before the freeze."""
+    rec = checks.get("holdout_receiving") or {}
+    tau = rec.get("tau") or {}
     if not tau:
         return
     lines = []
-    last_group = None
-    for method_id, name, weight, group in WEIGHTING_ROWS:
+    for method_id, name in RECEIVING_ROWS:
         stats = tau.get(method_id)
         if not stats:
             continue
-        if last_group is not None and group != last_group:
-            lines.append("\\midrule")
-        last_group = group
         cells = [_tau_ci(stats.get(lab, {})) for lab in HOLDOUT_TABLE_LABELS]
-        lines.append(f"{name} & {weight} & {' & '.join(cells)} \\\\")
+        lines.append(f"{name} & {' & '.join(cells)} \\\\")
+        if method_id == AWP_ID:
+            lines.append("\\midrule")
+    label_names = {
+        "future_new_approvers": "new approval pairs",
+        "future_new_transfer_senders": "new transfer senders",
+    }
+    diffs = [r for r in rec.get("tau_diff") or [] if r.get("delta_tau") is not None]
+    if diffs:
+        lines.append("\\midrule")
+        for r in diffs:
+            lines.append(
+                f"{r['label']} ({label_names.get(r['holdout_label'], r['holdout_label'])}) & "
+                f"\\multicolumn{{2}}{{c}}{{$\\Delta\\tau={r['delta_tau']:+.3f}$ "
+                f"{_fmt_ci(r.get('ci_low'), r.get('ci_high'))}}} \\\\"
+            )
+    comp = rec.get("composition") or {}
     boot = checks.get("bootstrap") or {}
-    tabular = f"""\\begin{{tabular}}{{llcc}}
+    tabular = f"""\\begin{{tabular}}{{lcc}}
 \\toprule
-Score at $t_1$ & Edge weight & New approval pairs ($\\tau$ [95\\% CI]) & New transfer senders ($\\tau$ [95\\% CI]) \\\\
+Score at $t_1$ & New approval pairs ($\\tau$ [95\\% CI]) & New transfer senders ($\\tau$ [95\\% CI]) \\\\
 \\midrule
 {chr(10).join(lines)}
 \\bottomrule
@@ -843,25 +912,134 @@ Score at $t_1$ & Edge weight & New approval pairs ($\\tau$ [95\\% CI]) & New tra
     out.write_text(
         SUPPLEMENTARY_HEADER
         + _wrap_table(
-            f"Spender holdout ($n={_fmt_int(weighting.get('n_spenders'))}$) with the edges of "
-            f"EndorseRank and AWP weighted three ways. Raw amounts are the weights of the main "
-            f"analysis (Table~\\ref{{tab:holdout-spenders}}). The other rows weight every latest "
-            f"allowance or every transfer (still discounted by its age) equally, or every pair of "
-            f"addresses equally. The re-weighting was tried "
-            f"after the results were known. CI = 95\\% percentile bootstrap over wallets "
-            f"({boot.get('n_boot', 400)} resamples, seed {boot.get('seed', 42)}).",
-            "tab:holdout-weighting",
+            f"Spender holdout restricted to the {_fmt_int(rec.get('n'))} of the "
+            f"{_fmt_int(rec.get('n_spenders'))} spenders that had received a transfer from another address "
+            f"before the freeze. The other {_fmt_int(comp.get('t1_in_degree_zero'))} have no inbound "
+            f"transfer edge, and {_fmt_int(comp.get('awp_zero'))} spenders score zero under {AWP_LABEL}. The "
+            f"restriction was tried after the results were known. CI = 95\\% percentile bootstrap over "
+            f"wallets ({boot.get('n_boot', 400)} resamples, seed {boot.get('seed', 42)}).",
+            "tab:holdout-receiving",
             tabular,
         ),
         encoding="utf-8",
     )
 
 
-PAPER_FAMILY_ORDER = ("transfer", "allowance", "sybil_stability", "liquidation", "inverse_risk", "gmx_success")
-PAPER_HOLDOUT_LABELS = {
-    "future_new_approvers": "New approval pairs",
-    "future_new_transfer_senders": "New transfer senders",
-}
+def write_endorserank_restarts_table(summary: dict, holdout: dict, out: Path) -> None:
+    """EndorseRank with uniform restarts and with AWP's restarts, next to AWP."""
+    family_ci = (summary.get("alignment", {}).get("bootstrap") or {}).get("family_ci") or {}
+    spring = (holdout.get("alignment") or {}).get("methods") or {}
+    rows = ((ENDORSERANK_ID, "uniform"), (ENDORSERANK_ACTIVITY_ID, "by approving activity"), (AWP_ID, "by sending activity"))
+    if not all(m in family_ci and m in spring for m, _ in rows):
+        return
+    lines = []
+    for method_id, restart in rows:
+        cells = [_tau_ci(family_ci[method_id].get(f, {})) for f in CORE_FAMILIES]
+        cells += [_tau_ci(spring[method_id].get(lab, {})) for lab in HOLDOUT_TABLE_LABELS]
+        name = AWP_LABEL if method_id == AWP_ID else ER_LABEL
+        lines.append(f"{name} & {restart} & {' & '.join(_stack(c) for c in cells)} \\\\")
+    heads = " & ".join(FAMILY_LABELS[f] for f in CORE_FAMILIES)
+    tabular = f"""\\begin{{tabular}}{{llccccc}}
+\\toprule
+ & & \\multicolumn{{3}}{{c}}{{Same window, matched cohort}} & \\multicolumn{{2}}{{c}}{{Spring holdout, spenders}} \\\\
+\\cmidrule(lr){{3-5}} \\cmidrule(lr){{6-7}}
+Method & Restarts & {heads} & New approval pairs & New senders \\\\
+\\midrule
+{chr(10).join(lines)}
+\\bottomrule
+\\end{{tabular}}"""
+    out.write_text(
+        latex_header(summary)
+        + _wrap_table(
+            f"{ER_LABEL} with uniform restarts and with restarts weighted by approving activity, AWP's rule "
+            f"applied to the allowance graph, next to {AWP_LABEL}: family-mean Kendall $\\tau$ on the matched "
+            f"cohort ($n={_fmt_int(summary.get('n_wallets'))}$) and $\\tau$ with the two spring labels on the "
+            f"spender cohort ($n={_fmt_int(holdout.get('n_wallets'))}$). Both {ER_LABEL} rows weight each "
+            f"latest allowance by $\\sigma(\\Delta t)V(z)$. {_bootstrap_note(summary)}",
+            "tab:endorserank-restarts",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
+
+
+def _stack(cell: str) -> str:
+    """Put an interval under its coefficient."""
+    tau, _, ci = cell.partition(" ")
+    if not ci:
+        return cell
+    return f"\\begin{{tabular}}[c]{{@{{}}c@{{}}}}{tau}\\\\[-1pt]{{\\footnotesize {ci}}}\\end{{tabular}}"
+
+
+POSTHOC_ROWS = (
+    ("t1_in_approve_degree", "In-approve degree at the freeze (baseline)"),
+    ("t1_in_degree", "Transfer in-degree at the freeze (baseline)"),
+    (ENDORSERANK_ID, ER_LABEL),
+    (ENDORSERANK_ACTIVITY_ID, f"{ER_LABEL}, restarts by approving activity"),
+    (AWP_ID, AWP_LABEL),
+    ("coupled_pr", "C-PR ($\\lambda=0.5$)"),
+)
+
+
+def write_fresh_posthoc_table(posthoc: dict, out: Path) -> None:
+    """June-August: EndorseRank scored after the registered evaluation."""
+    cohorts = posthoc.get("cohorts") or {}
+    sp = ((cohorts.get("spenders") or {}).get("alignment") or {}).get("methods") or {}
+    tr = ((cohorts.get("traders") or {}).get("alignment") or {}).get("methods") or {}
+    if not sp or not tr:
+        return
+    lines = []
+    for method_id, name in POSTHOC_ROWS:
+        if method_id not in sp:
+            continue
+        cells = [_tau_ci(sp[method_id].get(lab, {})) for lab in HOLDOUT_TABLE_LABELS]
+        cells.append(_tau_ci((tr.get(method_id) or {}).get("future_liquidation_free_rate", {})))
+        lines.append(f"{name} & {' & '.join(cells)} \\\\")
+        if method_id == "t1_in_degree":
+            lines.append("\\midrule")
+    names = {
+        "future_new_approvers": "new approval pairs",
+        "future_new_transfer_senders": "new transfer senders",
+        "future_liquidation_free_rate": "liquidation-free close rate",
+    }
+    diffs = [
+        r
+        for block in ("spenders", "traders")
+        for r in (cohorts.get(block) or {}).get("tau_diff") or []
+        if r.get("delta_tau") is not None
+    ]
+    if diffs:
+        lines.append("\\midrule")
+        for r in diffs:
+            lines.append(
+                f"{r['label']}, {names.get(r['holdout_label'], r['holdout_label'])} & "
+                f"\\multicolumn{{3}}{{l}}{{$\\Delta\\tau={r['delta_tau']:+.3f}$ "
+                f"{_fmt_ci(r.get('ci_low'), r.get('ci_high'))}}} \\\\"
+            )
+    boot = posthoc.get("bootstrap") or {}
+    n_sp = (cohorts.get("spenders") or {}).get("n_wallets")
+    tabular = f"""\\begin{{tabular}}{{lccc}}
+\\toprule
+ & \\multicolumn{{2}}{{c}}{{Spenders ($n={_fmt_int(n_sp)}$)}} & Traders \\\\
+\\cmidrule(lr){{2-3}} \\cmidrule(lr){{4-4}}
+Score at 31 May 2026 & New approval pairs & New transfer senders & Liquidation-free close rate \\\\
+\\midrule
+{chr(10).join(lines)}
+\\bottomrule
+\\end{{tabular}}"""
+    out.write_text(
+        FRESH_HEADER.replace("run_fresh_holdout.py", "run_fresh_posthoc.py")
+        + _wrap_table(
+            f"{ER_LABEL} on the cohorts and labels of the registered replication, scored after that "
+            f"replication was evaluated; none of these rows enters its decision. The {AWP_LABEL}, C-PR and "
+            f"degree rows repeat Table~\\ref{{tab:fresh-holdout}}, and the contrasts use the same wallet "
+            f"resamples. CI = 95\\% percentile bootstrap over wallets ({boot.get('n_boot', 400)} paired "
+            f"resamples, seed {boot.get('seed', 42)}).",
+            "tab:fresh-posthoc",
+            tabular,
+        ),
+        encoding="utf-8",
+    )
 
 
 def _delta_ci(row: dict | None) -> str:
@@ -872,87 +1050,17 @@ def _delta_ci(row: dict | None) -> str:
     return f"{sign}{_fmt(delta)} {_fmt_ci(row.get('ci_low'), row.get('ci_high'))}"
 
 
-def write_awp_paper_table(checks: dict, out: Path) -> None:
-    """AWP of the main analysis beside the form published by Do, Do and Nguyen (2023)."""
-    paper = checks.get("awp_paper") or {}
-    same = paper.get("same_window") or {}
-    holdout = paper.get("holdout") or {}
-    if not same.get("family_ci") or not holdout.get("tau"):
-        return
-    fam = same["family_ci"]
-    same_diff = {
-        r["a"]["key"]: r for r in same.get("tau_diff", []) if r.get("group") == "paper_vs_main"
-    }
-    hold_diff = {
-        r["holdout_label"]: r for r in holdout.get("tau_diff", []) if r.get("role") == "paper_form"
-    }
-    lines = ["\\multicolumn{4}{l}{\\emph{Same window, matched cohort ($n="
-             f"{_fmt_int(same.get('n_wallets'))}$), family mean}}}} \\\\"]
-    for family in PAPER_FAMILY_ORDER:
-        cells = [
-            _tau_ci(fam.get("awp", {}).get(family, {})),
-            _tau_ci(fam.get("awp_paper", {}).get(family, {})),
-            _delta_ci(same_diff.get(family)),
-        ]
-        lines.append(f"{FAMILY_NAMES[family]} & {' & '.join(cells)} \\\\")
-        if family == "sybil_stability":
-            lines.append("\\addlinespace")
-    lines.append("\\midrule")
-    lines.append(
-        f"\\multicolumn{{4}}{{l}}{{\\emph{{Spender holdout ($n={_fmt_int(holdout.get('n_spenders'))}$)}}}} \\\\"
-    )
-    tau = holdout["tau"]
-    for label, name in PAPER_HOLDOUT_LABELS.items():
-        cells = [
-            _tau_ci(tau.get("awp", {}).get(label, {})),
-            _tau_ci(tau.get("awp_paper", {}).get(label, {})),
-            _delta_ci(hold_diff.get(label)),
-        ]
-        lines.append(f"{name} & {' & '.join(cells)} \\\\")
-    agree_same = (same.get("between_methods") or {}).get("awp_awp_paper") or {}
-    agree_hold = (holdout.get("between_methods") or {}).get("awp_awp_paper") or {}
-    boot = checks.get("bootstrap") or {}
-    tabular = f"""\\begin{{tabular}}{{lccc}}
-\\toprule
- & AWP (main analysis) & Published form & Published minus main \\\\
- & $\\tau$ [95\\% CI] & $\\tau$ [95\\% CI] & $\\Delta\\tau$ [95\\% CI] \\\\
-\\midrule
-{chr(10).join(lines)}
-\\midrule
-$\\tau$ between the two forms & \\multicolumn{{3}}{{l}}{{{_tau_ci(agree_same)} in the same window, {_tau_ci(agree_hold)} on the holdout}} \\\\
-\\bottomrule
-\\end{{tabular}}"""
-    out.write_text(
-        SUPPLEMENTARY_HEADER
-        + _wrap_table(
-            "AWP as used in this thesis and in the form published by Do, Do and Nguyen, scored on "
-            "the same wallets. The main analysis weights each transfer by its raw amount and restarts "
-            "the walk uniformly. The published form weights each transfer by "
-            f"$V(z)=2/(1+e^{{-bz}})-1$ with $b={paper.get('value_b', 1.0):g}$ on raw base units, so "
-            "each transfer counts about once, and restarts the walk in proportion to each address's "
-            "sending activity. Both use the decay of Equation~\\eqref{eq:logistic-decay}. The check "
-            "was run after the results were known. CI = 95\\% percentile bootstrap over wallets "
-            f"({boot.get('n_boot', 400)} paired resamples, seed {boot.get('seed', 42)}).",
-            "tab:awp-paper-form",
-            tabular,
-        ),
-        encoding="utf-8",
-    )
-
-
 FRESH_HEADER = (
     "% Registered replication, June-August 2026 -- regenerate with:\n"
     f"%   {SCRIPTS_IN_REPO}/run_fresh_holdout.py\n"
     "% Generated by export_latex_results.py -- do not edit by hand unless re-export fails\n"
 )
-# Same rows as the spring holdout, with the published form of AWP after AWP; the
-# degree baselines are taken at the 31 May freeze, not at the spring t1.
+# Same rows as the spring holdout; the degree baselines are taken at the 31 May
+# freeze, not at the spring t1.
 FRESH_ROW_ORDER = (
     ("t1_in_approve_degree", "In-approve degree at the freeze (baseline)"),
     ("t1_in_degree", "Transfer in-degree at the freeze (baseline)"),
-    *HOLDOUT_ROW_ORDER[2:4],
-    ("awp_paper", "AWP, published form"),
-    *HOLDOUT_ROW_ORDER[4:],
+    *HOLDOUT_ROW_ORDER[2:],
 )
 FRESH_TRADER_LABELS = {
     "future_zero_liquidation": "No liquidation",
@@ -983,7 +1091,7 @@ def _fresh_rows(cohort_methods: dict[str, dict], cell) -> list[str]:
         if not stats:
             continue
         lines.append(f"{label} & {cell(method_id, stats)} \\\\")
-        if method_id in ("t1_in_degree", "awp_paper"):
+        if method_id in ("t1_in_degree", AWP_ID):
             lines.append("\\midrule")
     return lines
 
@@ -1028,9 +1136,10 @@ Score at 31 May 2026 & New approval pairs & New transfer senders & Liquidation-f
             f"approval pair and {_fmt_int((sp_prev.get('future_new_transfer_senders') or {}).get('n_nonzero'))} "
             f"a new sender. The traders are the {_fmt_int(traders.get('n_wallets'))} matched wallets in the "
             f"freeze-date graph; the label is defined for the {_fmt_int(n_liq)} with at least three closes in "
-            f"the label window, {_fmt_int(n_with_liq)} of which had at least one liquidation. The published "
-            "form of AWP belongs to a registered sensitivity analysis. CI = 95\\% percentile bootstrap over "
-            f"wallets ({boot.get('n_boot', 400)} paired resamples, seed {boot.get('seed', 42)}).",
+            f"the label window, {_fmt_int(n_with_liq)} of which had at least one liquidation. "
+            f"{TRANSFER_LAYER_LABEL} is the comparator of the registered rule and {AWP_LABEL} that of a "
+            "registered sensitivity analysis (Table~\\ref{tab:fresh-contrasts}). CI = 95\\% percentile bootstrap "
+            f"over wallets ({boot.get('n_boot', 400)} paired resamples, seed {boot.get('seed', 42)}).",
             "tab:fresh-holdout",
             tabular,
         ),
@@ -1078,7 +1187,11 @@ Score at 31 May 2026 & {head} \\\\
 def _fresh_contrast_line(c: dict, name: str) -> str:
     r = c.get("result") or {}
     test = "superiority" if c["test"] == "superiority" else f"non-inferiority, ${-float(c['margin']):.2f}$"
-    comparator = {"awp": "AWP", "awp_paper": "AWP, published", "endorserank": "EndorseRank"}.get(c["b"], c["b"])
+    comparator = {
+        TRANSFER_LAYER_ID: TRANSFER_LAYER_LABEL,
+        ALLOWANCE_LAYER_ID: ALLOWANCE_LAYER_LABEL,
+        AWP_ID: AWP_LABEL,
+    }.get(c["b"], c["b"])
     return (
         f"{name} & C-PR vs.\\ {comparator} & {FRESH_LABEL_NAMES.get(c['label'], c['label'])} & {test} & "
         f"{_fmt((r.get('a') or {}).get('tau'))} & {_fmt((r.get('b') or {}).get('tau'))} & "
@@ -1091,8 +1204,8 @@ def _fresh_september_lines(block: dict) -> list[str]:
     rule = block.get("september_primary_rule") or {}
     out = []
     for role, comparator, label, test, key in (
-        ("primary_a", "EndorseRank", "new approval pairs", "no worse", "no_worse_than_endorserank_on_future_new_approvers"),
-        ("primary_b", "AWP", "new transfer senders", "superiority", "better_than_awp_on_future_new_transfer_senders"),
+        ("primary_a", ALLOWANCE_LAYER_LABEL, "new approval pairs", "no worse", "no_worse_than_endorserank_on_future_new_approvers"),
+        ("primary_b", TRANSFER_LAYER_LABEL, "new transfer senders", "superiority", "better_than_awp_on_future_new_transfer_senders"),
     ):
         r = rows.get(role) or {}
         part = "F6a" if role == "primary_a" else "F6b"
@@ -1110,7 +1223,10 @@ def write_fresh_contrasts_table(fresh: dict, out: Path) -> None:
         return
     decision = fresh.get("decision") or {}
     sens = fresh.get("sensitivity") or {}
-    lines = ["\\multicolumn{8}{l}{\\emph{Registered rule: C-PR ($\\lambda=0.5$) against the AWP of this thesis}} \\\\"]
+    lines = [
+        "\\multicolumn{8}{l}{\\emph{Registered rule: C-PR ($\\lambda=0.5$) against its transfer layer "
+        f"alone, {TRANSFER_LAYER_LABEL}}}}} \\\\"
+    ]
     for c in contrasts:
         if c["kind"] == "hypothesis":
             lines.append(_fresh_contrast_line(c, c["id"]))
@@ -1127,7 +1243,7 @@ def write_fresh_contrasts_table(fresh: dict, out: Path) -> None:
     comp = sens.get("comparator") or {}
     if comp.get("contrasts"):
         lines.append("\\midrule")
-        lines.append("\\multicolumn{8}{l}{\\emph{Sensitivity analysis: AWP in its published form as the comparator}} \\\\")
+        lines.append(f"\\multicolumn{{8}}{{l}}{{\\emph{{Sensitivity analysis: {AWP_LABEL} as the comparator}}}} \\\\")
         for c in comp["contrasts"]:
             lines.append(_fresh_contrast_line(c, c["id"]))
     iso = sens.get("missing_wallet_rule") or {}
@@ -1150,7 +1266,9 @@ def write_fresh_contrasts_table(fresh: dict, out: Path) -> None:
         + _wrap_table(
             "Registered replication: the paired contrasts F1--F6 with their verdicts, and the two "
             "sensitivity analyses added before the extraction. $\\Delta\\tau=\\tau_a-\\tau_b$, with C-PR as "
-            "$a$. Superiority holds when the interval lies above zero; non-inferiority holds when its lower "
+            f"$a$. The registration documents call the two layers walked alone, {ALLOWANCE_LAYER_LABEL} and "
+            f"{TRANSFER_LAYER_LABEL}, EndorseRank and AWP. Superiority holds when the interval lies above zero; "
+            "non-inferiority holds when its lower "
             "end lies above $-0.02$; F6a, the first part of the 14~September rule, holds when the interval "
             "contains zero or lies above it. F1--F3 are on spenders (new approval pairs, new transfer senders) "
             "and traders (liquidation-free close rate) as in Table~\\ref{tab:fresh-holdout}. CI = 95\\% "
@@ -1213,14 +1331,14 @@ def write_summary_table(summary: dict, out: Path) -> None:
     winners = build_family_winners(matrix, DISSERTATION_METHODS)
     hdr = latex_header(summary)
 
-    main_methods = {k: v for k, v in DISSERTATION_METHODS.items() if k in ("endorserank", "awp")}
+    main_methods = {k: v for k, v in DISSERTATION_METHODS.items() if k in (ENDORSERANK_ID, AWP_ID)}
     winners = build_family_winners(matrix, main_methods)
     rows = []
     for family in PROXY_FAMILIES:
         key = f"{family}_mean_tau"
         label = FAMILY_LABELS[family]
-        er_tau = _fmt(cross.get("endorserank", {}).get(key))
-        awp_tau = _fmt(cross.get("awp", {}).get(key))
+        er_tau = _fmt(cross.get(ENDORSERANK_ID, {}).get(key))
+        awp_tau = _fmt(cross.get(AWP_ID, {}).get(key))
         winner_id = winners.get(family)
         winner = METHOD_LABELS.get(winner_id, winner_id) if winner_id else "---"
         rows.append(f"{label} & {er_tau} & {awp_tau} & {winner} \\\\")
@@ -1302,6 +1420,7 @@ def main() -> int:
         holdout = load_json(holdout_path)
         write_holdout_table(holdout, out_dir / "holdout-spenders.tex")
         write_holdout_diff_table(holdout, out_dir / "holdout-diff.tex")
+        write_endorserank_restarts_table(summary, holdout, out_dir / "endorserank-restarts.tex")
     else:
         print(f"No holdout summary at {holdout_path}; holdout tables not written.")
 
@@ -1309,8 +1428,7 @@ def main() -> int:
     if checks_path.exists():
         checks = load_json(checks_path)
         write_tie_sensitivity_table(checks, out_dir / "tie-sensitivity.tex")
-        write_holdout_weighting_table(checks, out_dir / "holdout-weighting.tex")
-        write_awp_paper_table(checks, out_dir / "awp-paper-form.tex")
+        write_holdout_receiving_table(checks, out_dir / "holdout-receiving.tex")
     else:
         print(f"No supplementary checks at {checks_path}; their tables not written.")
 
@@ -1323,6 +1441,9 @@ def main() -> int:
             write_fresh_holdout_table(fresh, out_dir / "fresh-holdout.tex")
             write_fresh_traders_table(fresh, out_dir / "fresh-traders.tex")
             write_fresh_contrasts_table(fresh, out_dir / "fresh-contrasts.tex")
+        posthoc_path = fresh_path.with_name("posthoc_endorserank.json")
+        if posthoc_path.exists():
+            write_fresh_posthoc_table(load_json(posthoc_path), out_dir / "fresh-posthoc.tex")
     else:
         print(f"No registered replication summary at {fresh_path}; fresh tables not written.")
 

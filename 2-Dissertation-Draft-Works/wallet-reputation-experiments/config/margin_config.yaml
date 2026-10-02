@@ -83,14 +83,22 @@ reputation:
   damping: 0.85
   pagerank_tolerance: 1.0e-8
   max_iterations: 300
+  # Logistic decay T(t) of AWP (Do, Do and Nguyen 2023); the paper gives no values.
   awp_decay_k: 0.01
   awp_decay_t0_days: 180
-  # AWP in the form published by Do, Do and Nguyen (2023), used only as a check
-  # beside the AWP above (added 2026-10-01). Each transfer weighs T(t) * V(z) with
-  # V(z) = 2 / (1 + exp(-b z)) - 1 on raw base units, and restarts are weighted by
-  # sending activity. The paper gives no value for b; on raw base units any b near
-  # 1 puts V(z) at about 1 for every transfer above dust, so each transfer counts
-  # once, discounted by its age. The decay is the one above.
+  # AWP in the form published by Do, Do and Nguyen (2023), the transfer-graph
+  # baseline of the thesis (method id awp_paper). Each transfer weighs T(t) * V(z)
+  # with V(z) = 2 / (1 + exp(-b z)) - 1 on raw base units, and restarts are
+  # weighted by sending activity. The paper gives no value for b; on raw base units
+  # any b near 1 puts V(z) at about 1 for every transfer above dust, so each
+  # transfer counts once, discounted by its age. The decay is the one above.
+  # EndorseRank (method id endorserank_vt) gives each latest allowance the same
+  # weight T(t) * V(z) and restarts uniformly.
+  # The transfer layer of C-PR and S-PR instead weighs each transfer by its raw
+  # amount times T(t) and restarts uniformly; walked alone (lambda = 0) it has the
+  # method id awp, the name the rule below and the registration give it. The
+  # allowance layer weighs raw amounts without decay; walked alone (lambda = 1)
+  # it has the method id endorserank.
   awp_paper:
     value_b: 1.0
   # Coupled operator over the allowance and transfer layers (C-PR) and the
@@ -98,14 +106,14 @@ reputation:
   # hybrid results were computed (see local-other/sources/supervisor-feedback/
   # 2026-09-14_two-page-contribution-plan.md).
   hybrid:
-    coupled_lambda_primary: 0.5      # lambda=1 -> EndorseRank, lambda=0 -> AWP
+    coupled_lambda_primary: 0.5      # lambda=1 -> allowance layer alone (id endorserank), lambda=0 -> transfer layer alone (id awp)
     coupled_lambda_grid: [0.25, 0.5, 0.75]
-    seeded_teleport_floor: 0.0       # mass given to nodes with zero EndorseRank
+    seeded_teleport_floor: 0.0       # mass given to nodes with zero allowance-layer score
     # Pre-registered success rules (paired bootstrap, 95% percentile CI).
     primary_criterion:
       cohort: spenders
-      no_worse_than: { method: endorserank, label: future_new_approvers }
-      better_than: { method: awp, label: future_new_transfer_senders }
+      no_worse_than: { method: endorserank, label: future_new_approvers }  # allowance layer alone
+      better_than: { method: awp, label: future_new_transfer_senders }  # transfer layer alone
     secondary_criterion:
       cohort: matched
       within_ci_of_best: [transfer, allowance]
@@ -175,9 +183,9 @@ robustness:
   top_n_tokens: 20
   sample_sizes: [50000, 200000]
   gmx_proxy_variants: [raw_sum, size_weighted]
-  primary_methods: [endorserank, awp]
+  primary_methods: [endorserank_vt, awp_paper]
 
 dissertation:
-  export_methods: [endorserank, awp, gf_pr]
+  export_methods: [endorserank_vt, awp_paper, gf_pr]
   hybrid_methods: [coupled_pr, coupled_pr_l25, coupled_pr_l75, seeded_pr]
   archive_presets: [seven, six-aave]

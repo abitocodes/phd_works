@@ -22,7 +22,17 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from pagerank_variants import SIX_AAVE_METHOD_IDS, collect_method_edges, collect_six_aave_edges
+from pagerank_variants import (
+    ALLOWANCE_LAYER_ID,
+    AWP_ID,
+    ENDORSERANK_ID,
+    SIX_AAVE_METHOD_IDS,
+    TRANSFER_LAYER_ID,
+    build_awp_paper_layer,
+    build_endorserank_vt_layer,
+    collect_method_edges,
+    collect_six_aave_edges,
+)
 
 TIMING_PROTOCOL: dict[str, Any] = {
     "warmup_runs": 1,
@@ -47,6 +57,16 @@ def _edge_signature(edges: pd.DataFrame) -> tuple:
     total = int(h.sum(dtype=np.uint64))
     xored = int(np.bitwise_xor.reduce(h))
     return (int(len(h)), total, xored)
+
+
+def _teleport_signature(teleport: dict[str, float] | None) -> tuple:
+    """Order-invariant fingerprint of a restart distribution (None = uniform)."""
+    if not teleport:
+        return ("uniform",)
+    frame = pd.DataFrame({"node": list(teleport), "mass": list(teleport.values())})
+    return ("weighted",) + _edge_signature(
+        frame.rename(columns={"node": "from_node", "mass": "weight"}).assign(to_node="")
+    )
 
 
 def subsample_wallets_deterministic(
@@ -137,14 +157,28 @@ def _run_timed(
     tol: float,
     max_iter: int,
     repeats: int = 5,
+    teleport: dict[str, float] | None = None,
 ) -> dict[str, Any]:
+    """Time one weighted PageRank; ``teleport`` is the restart distribution (None = uniform)."""
     from pagerank import weighted_pagerank
 
-    key = (_edge_signature(edges), float(damping), float(tol), int(max_iter), int(repeats))
+    key = (
+        _edge_signature(edges),
+        _teleport_signature(teleport),
+        float(damping),
+        float(tol),
+        int(max_iter),
+        int(repeats),
+    )
     return _time_solver(
         key,
         lambda: weighted_pagerank(
-            edges, damping=damping, tol=tol, max_iter=max_iter, return_iterations=True
+            edges,
+            damping=damping,
+            tol=tol,
+            max_iter=max_iter,
+            return_iterations=True,
+            teleport=teleport or None,
         ),
         edge_count=len(edges),
         node_count=_node_count(edges),
@@ -233,37 +267,31 @@ def benchmark_er_awp_pair(
     decoded: pd.DataFrame | None = None,
     aave_events: pd.DataFrame | None = None,
 ) -> dict[str, Any]:
-    """Time EndorseRank and AWP PageRank on pre-built edge lists (same path as full benchmark)."""
+    """Time EndorseRank and AWP (ENDORSERANK_ID, AWP_ID) on pre-built edge lists.
+
+    Same path as the full benchmark; AWP's solve includes its activity-weighted restarts.
+    """
     rep = config["reputation"]
     damping = float(rep["damping"])
     tol = float(rep["pagerank_tolerance"])
     max_iter = int(rep["max_iterations"])
 
     if decoded is not None:
-        edge_map = collect_method_edges(
-            wallets, config, allowances, transfers, decoded, aave_events
+        edge_map, restarts = collect_method_edges(
+            wallets, config, allowances, transfers, decoded, aave_events, with_restarts=True
         )
-        er_edges = edge_map["endorserank"]
-        awp_edges = edge_map["awp"]
+        er_edges = edge_map[ENDORSERANK_ID]
+        awp_edges = edge_map[AWP_ID]
+        activeness = restarts[AWP_ID]
     else:
-        from pagerank import build_awp_edges, build_endorserank_edges, filter_subgraph_edges
-
         seed = set(w.lower() for w in wallets)
         observation_end = pd.Timestamp(rep["observation_end"], tz="UTC")
-        er_edges = filter_subgraph_edges(build_endorserank_edges(allowances), seed)
-        awp_edges = filter_subgraph_edges(
-            build_awp_edges(
-                transfers,
-                observation_end=observation_end,
-                k=float(rep["awp_decay_k"]),
-                t0_days=float(rep["awp_decay_t0_days"]),
-            ),
-            seed,
-        )
+        er_edges, _ = build_endorserank_vt_layer(allowances, config, observation_end, seed)
+        awp_edges, activeness = build_awp_paper_layer(transfers, config, observation_end, seed)
 
     return {
-        "endorserank": _run_timed(er_edges, damping, tol, max_iter, repeats),
-        "awp": _run_timed(awp_edges, damping, tol, max_iter, repeats),
+        ENDORSERANK_ID: _run_timed(er_edges, damping, tol, max_iter, repeats),
+        AWP_ID: _run_timed(awp_edges, damping, tol, max_iter, repeats, teleport=activeness),
         "n_wallets": len(wallets),
     }
 
@@ -283,16 +311,20 @@ def benchmark_all_methods(
     tol = float(rep["pagerank_tolerance"])
     max_iter = int(rep["max_iterations"])
 
-    edge_map = collect_method_edges(
-        wallets, config, allowances, transfers, decoded, aave_events
+    edge_map, restarts = collect_method_edges(
+        wallets, config, allowances, transfers, decoded, aave_events, with_restarts=True
     )
 
     results: dict[str, Any] = {"n_wallets": len(wallets)}
     for method_id, edges in edge_map.items():
-        results[method_id] = _run_timed(edges, damping, tol, max_iter, repeats)
+        results[method_id] = _run_timed(
+            edges, damping, tol, max_iter, repeats, teleport=restarts.get(method_id)
+        )
 
     results.update(
-        _run_timed_hybrids(edge_map["endorserank"], edge_map["awp"], config, repeats=repeats)
+        _run_timed_hybrids(
+            edge_map[ALLOWANCE_LAYER_ID], edge_map[TRANSFER_LAYER_ID], config, repeats=repeats
+        )
     )
     return results
 
@@ -376,8 +408,8 @@ def benchmark_scaling(
             and len(subset) == full_n
             and n == full_n
         ):
-            er = authoritative_full_cohort["endorserank"]
-            awp = authoritative_full_cohort["awp"]
+            er = authoritative_full_cohort[ENDORSERANK_ID]
+            awp = authoritative_full_cohort[AWP_ID]
         else:
             pair = benchmark_er_awp_pair(
                 subset,
@@ -388,8 +420,8 @@ def benchmark_scaling(
                 decoded=decoded,
                 aave_events=aave_events,
             )
-            er = pair["endorserank"]
-            awp = pair["awp"]
+            er = pair[ENDORSERANK_ID]
+            awp = pair[AWP_ID]
 
         er_speedup_ratio = (
             round(awp["runtime_sec_mean"] / er["runtime_sec_mean"], 2)
@@ -400,8 +432,8 @@ def benchmark_scaling(
             {
                 "n_wallets": len(subset),
                 "scaling_seed": scaling_seed,
-                "endorserank": er,
-                "awp": awp,
+                ENDORSERANK_ID: er,
+                AWP_ID: awp,
                 "er_speedup_ratio": er_speedup_ratio,
                 "speedup_awp_over_er": er_speedup_ratio,
             }
@@ -447,8 +479,8 @@ def benchmark_tier2_scaling(
             config,
             repeats=repeats,
         )
-        er = pair["endorserank"]
-        awp = pair["awp"]
+        er = pair[ENDORSERANK_ID]
+        awp = pair[AWP_ID]
         er_speedup_ratio = (
             round(awp["runtime_sec_mean"] / er["runtime_sec_mean"], 2)
             if er["runtime_sec_mean"] > 0
@@ -458,8 +490,8 @@ def benchmark_tier2_scaling(
             {
                 "n_wallets": len(subset),
                 "scaling_seed": scaling_seed,
-                "endorserank": er,
-                "awp": awp,
+                ENDORSERANK_ID: er,
+                AWP_ID: awp,
                 "er_speedup_ratio": er_speedup_ratio,
                 "speedup_awp_over_er": er_speedup_ratio,
             }

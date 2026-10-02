@@ -17,11 +17,9 @@ from evaluate_alignment import (
 )
 from pagerank import (
     assign_dense_ranks,
-    build_awp_edges,
-    build_endorserank_edges,
-    filter_subgraph_edges,
     weighted_pagerank,
 )
+from pagerank_variants import AWP_ID, ENDORSERANK_ID, build_awp_paper_layer, build_endorserank_vt_layer
 from proxy_metrics import (
     compute_all_proxies,
     compute_gmx_success_proxies,
@@ -75,25 +73,19 @@ def _scores_for_damping(
     config: dict,
     damping: float,
 ) -> tuple[pd.Series, pd.Series]:
-    """Recompute EndorseRank and AWP scores at a given damping factor."""
+    """Recompute EndorseRank and AWP (ENDORSERANK_ID, AWP_ID) at a given damping factor."""
     rep = config["reputation"]
     seed = {w.lower() for w in wallets}
     observation_end = pd.Timestamp(rep["observation_end"], tz="UTC")
-    er_edges = filter_subgraph_edges(build_endorserank_edges(allowances), seed)
-    awp_edges = filter_subgraph_edges(
-        build_awp_edges(
-            transfers,
-            observation_end=observation_end,
-            k=float(rep["awp_decay_k"]),
-            t0_days=float(rep["awp_decay_t0_days"]),
-        ),
-        seed,
-    )
+    er_edges, _ = build_endorserank_vt_layer(allowances, config, observation_end, seed)
+    awp_edges, activeness = build_awp_paper_layer(transfers, config, observation_end, seed)
     tol = float(rep["pagerank_tolerance"])
     max_iter = int(rep["max_iterations"])
 
     er_scores = weighted_pagerank(er_edges, damping=damping, tol=tol, max_iter=max_iter)
-    awp_scores = weighted_pagerank(awp_edges, damping=damping, tol=tol, max_iter=max_iter)
+    awp_scores = weighted_pagerank(
+        awp_edges, damping=damping, tol=tol, max_iter=max_iter, teleport=activeness or None
+    )
 
     er_df = assign_dense_ranks(wallets, er_scores)
     awp_df = assign_dense_ranks(wallets, awp_scores)
@@ -110,8 +102,8 @@ def _alignment_from_scores(
 ) -> dict[str, Any]:
     base = proxies.copy()
     base["wallet"] = base["wallet"].astype(str).str.lower()
-    base["endorserank_score"] = base["wallet"].map(er_scores.to_dict())
-    base["awp_score"] = base["wallet"].map(awp_scores.to_dict())
+    base[f"{ENDORSERANK_ID}_score"] = base["wallet"].map(er_scores.to_dict())
+    base[f"{AWP_ID}_score"] = base["wallet"].map(awp_scores.to_dict())
     return build_alignment_report(base, methods=DISSERTATION_METHODS)
 
 
@@ -126,8 +118,8 @@ def damping_family_taus(
     """Family-mean tau of EndorseRank and AWP at one damping value (no timing)."""
     er_scores, awp_scores = _scores_for_damping(wallets, allowances, transfers, config, damping)
     align = _alignment_from_scores(wallets, er_scores, awp_scores, proxies)
-    er_cross = align["method_cross_proxy"].get("endorserank", {})
-    awp_cross = align["method_cross_proxy"].get("awp", {})
+    er_cross = align["method_cross_proxy"].get(ENDORSERANK_ID, {})
+    awp_cross = align["method_cross_proxy"].get(AWP_ID, {})
     row: dict[str, float | None] = {}
     for family in PROXY_FAMILIES:
         key = f"{family}_mean_tau"
@@ -163,13 +155,19 @@ def run_damping_sweep(
         row: dict[str, Any] = {
             "damping": damping,
             "elapsed_sec": round(time.perf_counter() - t0, 3),
-            "endorserank_runtime_sec": bench["endorserank"]["runtime_sec_mean"],
-            "awp_runtime_sec": bench["awp"]["runtime_sec_mean"],
+            "endorserank_runtime_sec": bench[ENDORSERANK_ID]["runtime_sec_mean"],
+            "awp_runtime_sec": bench[AWP_ID]["runtime_sec_mean"],
         }
         row.update(taus)
         rows.append(row)
 
-    return {"damping_values": damping_values, "rows": rows, "n_wallets": len(wallets)}
+    return {
+        "damping_values": damping_values,
+        "rows": rows,
+        "n_wallets": len(wallets),
+        "endorserank_method": ENDORSERANK_ID,
+        "awp_method": AWP_ID,
+    }
 
 
 def run_top_token_sweep(
@@ -198,6 +196,8 @@ def run_top_token_sweep(
     return {
         "top_n_tokens": top_n,
         "rank_by": rank_by,
+        "endorserank_method": ENDORSERANK_ID,
+        "awp_method": AWP_ID,
         "token_count_used": len(tokens),
         "tokens_sample": tokens[:5],
         "n_wallets": len(wallets),
@@ -242,17 +242,17 @@ def run_sample_size_sweep(
         bench_result = benchmark_er_awp_pair(
             subset, allowances, transfers, config, repeats=repeats
         )
-        er_cross = align["method_cross_proxy"].get("endorserank", {})
-        awp_cross = align["method_cross_proxy"].get("awp", {})
+        er_cross = align["method_cross_proxy"].get(ENDORSERANK_ID, {})
+        awp_cross = align["method_cross_proxy"].get(AWP_ID, {})
         rows.append(
             {
                 "n_wallets": n,
                 "scaling_seed": seed,
-                "endorserank_runtime_sec": bench_result["endorserank"]["runtime_sec_mean"],
-                "awp_runtime_sec": bench_result["awp"]["runtime_sec_mean"],
+                "endorserank_runtime_sec": bench_result[ENDORSERANK_ID]["runtime_sec_mean"],
+                "awp_runtime_sec": bench_result[AWP_ID]["runtime_sec_mean"],
                 "er_speedup_ratio": round(
-                    bench_result["awp"]["runtime_sec_mean"]
-                    / max(bench_result["endorserank"]["runtime_sec_mean"], 1e-9),
+                    bench_result[AWP_ID]["runtime_sec_mean"]
+                    / max(bench_result[ENDORSERANK_ID]["runtime_sec_mean"], 1e-9),
                     2,
                 ),
                 "er_allowance_tau": er_cross.get("allowance_mean_tau"),
@@ -265,6 +265,8 @@ def run_sample_size_sweep(
     return {
         "scaling_seed": seed,
         "wallet_pool_size": pool_n,
+        "endorserank_method": ENDORSERANK_ID,
+        "awp_method": AWP_ID,
         "requested_sizes": requested,
         "stages": stages,
         "rows": rows,

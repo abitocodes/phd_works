@@ -36,7 +36,7 @@ from evaluate_alignment import (  # noqa: E402
     build_alignment_report,
     build_six_aave_alignment_report,
 )
-from pagerank_variants import collect_six_aave_edges  # noqa: E402
+from pagerank_variants import AWP_ID, ENDORSERANK_ID, collect_six_aave_edges  # noqa: E402
 from project_paths import ARCHIVE_DIR, EN_LEFTOVER_DIR  # noqa: E402
 from proxy_metrics import compute_all_proxies  # noqa: E402
 from run_robustness_eval import run_robustness_eval  # noqa: E402
@@ -329,8 +329,8 @@ def main() -> int:
     save_json(out_path, summary)
     print(f"\nEval summary -> {out_path}")
 
-    er_rt = benchmark["endorserank"]["runtime_sec_mean"]
-    awp_rt = benchmark["awp"]["runtime_sec_mean"]
+    er_rt = benchmark[ENDORSERANK_ID]["runtime_sec_mean"]
+    awp_rt = benchmark[AWP_ID]["runtime_sec_mean"]
     print(f"  EndorseRank runtime: {er_rt:.3f}s | AWP: {awp_rt:.3f}s")
 
     print("\n  6-Aave method mean tau matrix:")

@@ -23,8 +23,11 @@ from pagerank_variants import (
 )
 
 BASE_METHOD_IDS = (
-    "endorserank",
-    "awp",
+    "endorserank_vt",  # EndorseRank (pagerank_variants.ENDORSERANK_ID)
+    "endorserank_vt_activity",  # EndorseRank with AWP's restarts (ENDORSERANK_ACTIVITY_ID)
+    "awp_paper",  # AWP as published (pagerank_variants.AWP_ID)
+    "endorserank",  # allowance layer walked alone, C-PR at lambda = 1 (ALLOWANCE_LAYER_ID)
+    "awp",  # transfer layer walked alone, C-PR at lambda = 0 (TRANSFER_LAYER_ID)
     "gf_pr",
     "lp_pr",
     "cw_awp",

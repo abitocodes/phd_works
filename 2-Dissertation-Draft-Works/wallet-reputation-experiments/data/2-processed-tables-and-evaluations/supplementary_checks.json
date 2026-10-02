@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-01T12:43:13.603201+00:00",
+  "generated_at": "2026-10-02T06:16:02.544150+00:00",
   "note": "Post hoc checks; none was fixed before the spring results were seen.",
   "bootstrap": {
     "n_boot": 400,
@@ -9,1346 +9,64 @@
   "tie_sensitivity": {
     "n_wallets": 5521,
     "methods": {
-      "endorserank": {
+      "endorserank_vt": {
         "n_missing": 966,
         "recomputed_matches_committed": true,
-        "isolated_node_score": 8.809558533417562e-05,
-        "n_at_isolated_node_score": 5399,
+        "isolated_node_score": 8.805217216572569e-05,
+        "n_at_isolated_node_score": 5390,
         "tied_pair_share": {
-          "zero_rule": 0.6753150027956498,
-          "isolated_nodes": 0.9563308343111545
+          "zero_rule": 0.6726862388403697,
+          "isolated_nodes": 0.9531426778912663
         }
       },
-      "awp": {
+      "awp_paper": {
         "n_missing": 381,
         "recomputed_matches_committed": true,
-        "isolated_node_score": 7.83555138480729e-06,
-        "n_at_isolated_node_score": 403,
+        "isolated_node_score": 0.0,
+        "n_at_isolated_node_score": 381,
         "tied_pair_share": {
-          "zero_rule": 0.004816195868738335,
-          "isolated_nodes": 0.005365481993652694
+          "zero_rule": 0.004750701537476145,
+          "isolated_nodes": 0.004750701537476145
         }
       }
     },
     "zero_rule": {
       "family_ci": {
-        "endorserank": {
+        "endorserank_vt": {
           "transfer": {
-            "mean_tau": 0.3326422397844445,
-            "ci_low": 0.3144159579045044,
-            "ci_high": 0.3527151694516934,
+            "mean_tau": 0.3299684645092871,
+            "ci_low": 0.311157374827216,
+            "ci_high": 0.35030614364496127,
             "n_boot": 400
           },
           "allowance": {
-            "mean_tau": 0.35512464532163696,
-            "ci_low": 0.32194052766217374,
-            "ci_high": 0.3839339298041171,
+            "mean_tau": 0.37453463153690564,
+            "ci_low": 0.34245390332404,
+            "ci_high": 0.40056832191228153,
             "n_boot": 400
           },
           "liquidation": {
-            "mean_tau": 0.09259065662428745,
-            "ci_low": 0.07756254374066562,
-            "ci_high": 0.1104053856115132,
+            "mean_tau": 0.09303110276556437,
+            "ci_low": 0.07753810569069174,
+            "ci_high": 0.11041565444598785,
             "n_boot": 400
           },
           "inverse_risk": {
-            "mean_tau": -0.05589456750676255,
-            "ci_low": -0.0718538639770905,
-            "ci_high": -0.04035686575998487,
+            "mean_tau": -0.05456213464806597,
+            "ci_low": -0.07070491227722021,
+            "ci_high": -0.03932432410351846,
             "n_boot": 400
           },
           "sybil_stability": {
-            "mean_tau": 0.23336812804431192,
-            "ci_low": 0.21400534350218142,
-            "ci_high": 0.25267551822532414,
+            "mean_tau": 0.23077737851089034,
+            "ci_low": 0.2116203840054842,
+            "ci_high": 0.2503299660248449,
             "n_boot": 400
           },
           "gmx_success": {
-            "mean_tau": 0.09641123372399096,
-            "ci_low": 0.07996662362189477,
-            "ci_high": 0.11313503294349357,
-            "n_boot": 400
-          }
-        },
-        "awp": {
-          "transfer": {
-            "mean_tau": 0.5337543694804096,
-            "ci_low": 0.521875546090857,
-            "ci_high": 0.5468173381290421,
-            "n_boot": 400
-          },
-          "allowance": {
-            "mean_tau": -0.03030534354527515,
-            "ci_low": -0.044636924647431984,
-            "ci_high": -0.01671577728112679,
-            "n_boot": 400
-          },
-          "liquidation": {
-            "mean_tau": 0.11316019736234474,
-            "ci_low": 0.09815485748655264,
-            "ci_high": 0.12762099984481765,
-            "n_boot": 400
-          },
-          "inverse_risk": {
-            "mean_tau": -0.09427764455177072,
-            "ci_low": -0.10756469416879968,
-            "ci_high": -0.080767796394769,
-            "n_boot": 400
-          },
-          "sybil_stability": {
-            "mean_tau": 0.2856847697442056,
-            "ci_low": 0.27357529457570284,
-            "ci_high": 0.3002553726288531,
-            "n_boot": 400
-          },
-          "gmx_success": {
-            "mean_tau": 0.1792154091939485,
-            "ci_low": 0.16585613016417525,
-            "ci_high": 0.19261386916223303,
-            "n_boot": 400
-          }
-        }
-      },
-      "proxy_ci": {
-        "endorserank": {
-          "in_degree": {
-            "kendall_tau": 0.34400238605902167,
-            "ci_low": 0.3236300477921825,
-            "ci_high": 0.3655468237074967,
-            "n_boot": 400
-          },
-          "in_value": {
-            "kendall_tau": 0.3212820935098674,
-            "ci_low": 0.3026537794587388,
-            "ci_high": 0.3418762579450561,
-            "n_boot": 400
-          },
-          "in_approve_degree": {
-            "kendall_tau": 0.3562198253870707,
-            "ci_low": 0.3228193022785172,
-            "ci_high": 0.3851375781412494,
-            "n_boot": 400
-          },
-          "in_approve_value": {
-            "kendall_tau": 0.3540294652562032,
-            "ci_low": 0.32106878937951894,
-            "ci_high": 0.3827289512768838,
-            "n_boot": 400
-          },
-          "liquidation_free_rate": {
-            "kendall_tau": 0.0745902918954609,
-            "ci_low": 0.0534045623943746,
-            "ci_high": 0.09759174553606799,
-            "n_boot": 400
-          },
-          "zero_liquidation_flag": {
-            "kendall_tau": 0.032812016390433504,
-            "ci_low": 0.011584269646096372,
-            "ci_high": 0.057028054288414246,
-            "n_boot": 400
-          },
-          "liquidation_free_closes": {
-            "kendall_tau": 0.17036966158696792,
-            "ci_low": 0.15177973818100415,
-            "ci_high": 0.19140583656574925,
-            "n_boot": 400
-          },
-          "loss_avoidance": {
-            "kendall_tau": -0.07940695226541132,
-            "ci_low": -0.10274518110889931,
-            "ci_high": -0.0600157184766143,
-            "n_boot": 400
-          },
-          "non_loss_close_rate": {
-            "kendall_tau": -0.031051489300799574,
-            "ci_low": -0.052633978462301285,
-            "ci_high": -0.011474323532010458,
-            "n_boot": 400
-          },
-          "worst_close_pnl_score": {
-            "kendall_tau": -0.05722526095407674,
-            "ci_low": -0.07911765598630577,
-            "ci_high": -0.03720657909700646,
-            "n_boot": 400
-          },
-          "inbound_counterparty_ratio": {
-            "kendall_tau": 0.0733518376104701,
-            "ci_low": 0.04641694694464658,
-            "ci_high": 0.09701494729329857,
-            "n_boot": 400
-          },
-          "transfer_tenure_days": {
-            "kendall_tau": 0.2966958046575088,
-            "ci_low": 0.27618969069992944,
-            "ci_high": 0.3184786054798089,
-            "n_boot": 400
-          },
-          "active_months": {
-            "kendall_tau": 0.33005674186495687,
-            "ci_low": 0.30988752031473155,
-            "ci_high": 0.3511625124716323,
-            "n_boot": 400
-          },
-          "close_success_count": {
-            "kendall_tau": 0.14882461413387343,
-            "ci_low": 0.12950507611116774,
-            "ci_high": 0.17120109788647944,
-            "n_boot": 400
-          },
-          "realized_gain_proxy": {
-            "kendall_tau": 0.1070556455312931,
-            "ci_low": 0.08584708617126334,
-            "ci_high": 0.12741431939825687,
-            "n_boot": 400
-          },
-          "close_success_rate": {
-            "kendall_tau": 0.033353441506806344,
-            "ci_low": 0.01133123070399088,
-            "ci_high": 0.05545935632264226,
-            "n_boot": 400
-          }
-        },
-        "awp": {
-          "in_degree": {
-            "kendall_tau": 0.6171115246000134,
-            "ci_low": 0.6041772490684728,
-            "ci_high": 0.6312477932388191,
-            "n_boot": 400
-          },
-          "in_value": {
-            "kendall_tau": 0.45039721436080565,
-            "ci_low": 0.43558530774582543,
-            "ci_high": 0.4667054216317435,
-            "n_boot": 400
-          },
-          "in_approve_degree": {
-            "kendall_tau": -0.030283399697366115,
-            "ci_low": -0.044704062461218524,
-            "ci_high": -0.016571912765918337,
-            "n_boot": 400
-          },
-          "in_approve_value": {
-            "kendall_tau": -0.03032728739318418,
-            "ci_low": -0.044569786833645444,
-            "ci_high": -0.016822881427337365,
-            "n_boot": 400
-          },
-          "liquidation_free_rate": {
-            "kendall_tau": 0.08300286333218564,
-            "ci_low": 0.0646949128082887,
-            "ci_high": 0.10162661165407155,
-            "n_boot": 400
-          },
-          "zero_liquidation_flag": {
-            "kendall_tau": 0.02630103918334038,
-            "ci_low": 0.005326775826339941,
-            "ci_high": 0.048160524033683094,
-            "n_boot": 400
-          },
-          "liquidation_free_closes": {
-            "kendall_tau": 0.23017668957150822,
-            "ci_low": 0.21175649784749828,
-            "ci_high": 0.24611292442177804,
-            "n_boot": 400
-          },
-          "loss_avoidance": {
-            "kendall_tau": -0.16495591236589094,
-            "ci_low": -0.18279163946720145,
-            "ci_high": -0.14773421266832723,
-            "n_boot": 400
-          },
-          "non_loss_close_rate": {
-            "kendall_tau": 0.019029104248175426,
-            "ci_low": 0.0017920506557478333,
-            "ci_high": 0.03573818547095283,
-            "n_boot": 400
-          },
-          "worst_close_pnl_score": {
-            "kendall_tau": -0.1369061255375966,
-            "ci_low": -0.1552030414803501,
-            "ci_high": -0.11916244484106685,
-            "n_boot": 400
-          },
-          "inbound_counterparty_ratio": {
-            "kendall_tau": -0.06097823889349978,
-            "ci_low": -0.08045233872511601,
-            "ci_high": -0.039552964774680656,
-            "n_boot": 400
-          },
-          "transfer_tenure_days": {
-            "kendall_tau": 0.43624083869535085,
-            "ci_low": 0.4214160300323425,
-            "ci_high": 0.452258029737819,
-            "n_boot": 400
-          },
-          "active_months": {
-            "kendall_tau": 0.4817917094307657,
-            "ci_low": 0.4664043941356302,
-            "ci_high": 0.4988503186271261,
-            "n_boot": 400
-          },
-          "close_success_count": {
-            "kendall_tau": 0.2240450441448271,
-            "ci_low": 0.2061816489822118,
-            "ci_high": 0.24116939287383543,
-            "n_boot": 400
-          },
-          "realized_gain_proxy": {
-            "kendall_tau": 0.23888843422656103,
-            "ci_low": 0.2233703045528005,
-            "ci_high": 0.254048501735787,
-            "n_boot": 400
-          },
-          "close_success_rate": {
-            "kendall_tau": 0.07471274921045735,
-            "ci_low": 0.05511076558715157,
-            "ci_high": 0.09167195483260311,
-            "n_boot": 400
-          }
-        }
-      },
-      "inter_method_ci": {
-        "kendall_tau": 0.316429832626616,
-        "ci_low": 0.2983333127109671,
-        "ci_high": 0.33595405289874775,
-        "n_boot": 400
-      },
-      "tau_diff": [
-        {
-          "label": "EndorseRank allowance minus EndorseRank transfer",
-          "group": "primary",
-          "a": {
-            "method": "endorserank",
-            "key": "allowance",
-            "tau": 0.35512464532163696
-          },
-          "b": {
-            "method": "endorserank",
-            "key": "transfer",
-            "tau": 0.3326422397844445
-          },
-          "delta_tau": 0.02248240553719244,
-          "ci_low": -0.0264677532452948,
-          "ci_high": 0.06658122898911976,
-          "share_positive": 0.81,
-          "n_boot": 400
-        },
-        {
-          "label": "AWP transfer minus EndorseRank transfer",
-          "group": "primary",
-          "a": {
-            "method": "awp",
-            "key": "transfer",
-            "tau": 0.5337543694804096
-          },
-          "b": {
-            "method": "endorserank",
-            "key": "transfer",
-            "tau": 0.3326422397844445
-          },
-          "delta_tau": 0.20111212969596504,
-          "ci_low": 0.18187913380153004,
-          "ci_high": 0.21784414457403947,
-          "share_positive": 1.0,
-          "n_boot": 400
-        },
-        {
-          "label": "EndorseRank allowance minus AWP allowance",
-          "group": "primary",
-          "a": {
-            "method": "endorserank",
-            "key": "allowance",
-            "tau": 0.35512464532163696
-          },
-          "b": {
-            "method": "awp",
-            "key": "allowance",
-            "tau": -0.03030534354527515
-          },
-          "delta_tau": 0.3854299888669121,
-          "ci_low": 0.34987269221657397,
-          "ci_high": 0.4211275411204496,
-          "share_positive": 1.0,
-          "n_boot": 400
-        },
-        {
-          "label": "AWP sybil-stability minus EndorseRank sybil-stability",
-          "group": "primary",
-          "a": {
-            "method": "awp",
-            "key": "sybil_stability",
-            "tau": 0.2856847697442056
-          },
-          "b": {
-            "method": "endorserank",
-            "key": "sybil_stability",
-            "tau": 0.23336812804431192
-          },
-          "delta_tau": 0.05231664169989367,
-          "ci_low": 0.03796071243101443,
-          "ci_high": 0.06492151103607864,
-          "share_positive": 1.0,
-          "n_boot": 400
-        },
-        {
-          "label": "EndorseRank in-approve degree minus EndorseRank in-degree",
-          "group": "primary",
-          "a": {
-            "method": "endorserank",
-            "key": "in_approve_degree",
-            "tau": 0.3562198253870707
-          },
-          "b": {
-            "method": "endorserank",
-            "key": "in_degree",
-            "tau": 0.34400238605902167
-          },
-          "delta_tau": 0.012217439328049029,
-          "ci_low": -0.040635199276391296,
-          "ci_high": 0.0595149726932965,
-          "share_positive": 0.675,
-          "n_boot": 400
-        }
-      ],
-      "endorserank_ceiling_untied_proxy": 0.5698113698447498
-    },
-    "isolated_nodes": {
-      "family_ci": {
-        "endorserank": {
-          "transfer": {
-            "mean_tau": -0.07144935771083724,
-            "ci_low": -0.08556316676996462,
-            "ci_high": -0.05663884710734109,
-            "n_boot": 400
-          },
-          "allowance": {
-            "mean_tau": 0.9556812048057657,
-            "ci_low": 0.9282162211936382,
-            "ci_high": 0.9756649369542197,
-            "n_boot": 400
-          },
-          "liquidation": {
-            "mean_tau": 0.08195008274850046,
-            "ci_low": 0.06819683696085306,
-            "ci_high": 0.09534101183418546,
-            "n_boot": 400
-          },
-          "inverse_risk": {
-            "mean_tau": 0.0025125069793958377,
-            "ci_low": -0.01874108599059814,
-            "ci_high": 0.01941942135774402,
-            "n_boot": 400
-          },
-          "sybil_stability": {
-            "mean_tau": -0.03335402469444387,
-            "ci_low": -0.04611134765794332,
-            "ci_high": -0.019802255845485672,
-            "n_boot": 400
-          },
-          "gmx_success": {
-            "mean_tau": -0.01865894150129417,
-            "ci_low": -0.03404441676629964,
-            "ci_high": -0.004096457220170159,
-            "n_boot": 400
-          }
-        },
-        "awp": {
-          "transfer": {
-            "mean_tau": 0.5337760816918824,
-            "ci_low": 0.5219076315038728,
-            "ci_high": 0.5467720589731169,
-            "n_boot": 400
-          },
-          "allowance": {
-            "mean_tau": -0.0303141669422618,
-            "ci_low": -0.04465348032537956,
-            "ci_high": -0.01672035614775723,
-            "n_boot": 400
-          },
-          "liquidation": {
-            "mean_tau": 0.11331091436670636,
-            "ci_low": 0.09831788470596971,
-            "ci_high": 0.1278040200850636,
-            "n_boot": 400
-          },
-          "inverse_risk": {
-            "mean_tau": -0.09429090659901183,
-            "ci_low": -0.10755845159750818,
-            "ci_high": -0.08072399874601416,
-            "n_boot": 400
-          },
-          "sybil_stability": {
-            "mean_tau": 0.28543782733175055,
-            "ci_low": 0.2733764065574287,
-            "ci_high": 0.3000289550393821,
-            "n_boot": 400
-          },
-          "gmx_success": {
-            "mean_tau": 0.1793219881569104,
-            "ci_low": 0.16587543020741358,
-            "ci_high": 0.19265640709992526,
-            "n_boot": 400
-          }
-        }
-      },
-      "proxy_ci": {
-        "endorserank": {
-          "in_degree": {
-            "kendall_tau": -0.09502393279953991,
-            "ci_low": -0.10977026604732879,
-            "ci_high": -0.07862122741871103,
-            "n_boot": 400
-          },
-          "in_value": {
-            "kendall_tau": -0.04787478262213456,
-            "ci_low": -0.06463309714711821,
-            "ci_high": -0.028321472601295087,
-            "n_boot": 400
-          },
-          "in_approve_degree": {
-            "kendall_tau": 0.9586540566249029,
-            "ci_low": 0.9312814416318196,
-            "ci_high": 0.9787031222454528,
-            "n_boot": 400
-          },
-          "in_approve_value": {
-            "kendall_tau": 0.9527083529866285,
-            "ci_low": 0.9244397058602689,
-            "ci_high": 0.9730732149248481,
-            "n_boot": 400
-          },
-          "liquidation_free_rate": {
-            "kendall_tau": 0.10679927113597834,
-            "ci_low": 0.0912527290745846,
-            "ci_high": 0.11976011272761096,
-            "n_boot": 400
-          },
-          "zero_liquidation_flag": {
-            "kendall_tau": 0.1313733673667516,
-            "ci_low": 0.11167991200588362,
-            "ci_high": 0.14986087638749024,
-            "n_boot": 400
-          },
-          "liquidation_free_closes": {
-            "kendall_tau": 0.007677609742771456,
-            "ci_low": -0.008555781539898197,
-            "ci_high": 0.027128965129293702,
-            "n_boot": 400
-          },
-          "loss_avoidance": {
-            "kendall_tau": 0.03666409820780809,
-            "ci_low": 0.011574348985784726,
-            "ci_high": 0.05882269029690805,
-            "n_boot": 400
-          },
-          "non_loss_close_rate": {
-            "kendall_tau": -0.06508677071814219,
-            "ci_low": -0.08734037464587001,
-            "ci_high": -0.045352657793799135,
-            "n_boot": 400
-          },
-          "worst_close_pnl_score": {
-            "kendall_tau": 0.03596019344852161,
-            "ci_low": 0.01114613426385258,
-            "ci_high": 0.05800564356979849,
-            "n_boot": 400
-          },
-          "inbound_counterparty_ratio": {
-            "kendall_tau": -0.06060201443446222,
-            "ci_low": -0.08010726586440965,
-            "ci_high": -0.0398932792728396,
-            "n_boot": 400
-          },
-          "transfer_tenure_days": {
-            "kendall_tau": -0.021444841455043762,
-            "ci_low": -0.042626852055234456,
-            "ci_high": 0.0031463042660999736,
-            "n_boot": 400
-          },
-          "active_months": {
-            "kendall_tau": -0.01801521819382564,
-            "ci_low": -0.040043194609112424,
-            "ci_high": 0.005730964019090752,
-            "n_boot": 400
-          },
-          "close_success_count": {
-            "kendall_tau": -0.013419570504285506,
-            "ci_low": -0.031332048569514576,
-            "ci_high": 0.004247808398110014,
-            "n_boot": 400
-          },
-          "realized_gain_proxy": {
-            "kendall_tau": -0.040475601857939865,
-            "ci_low": -0.060164318593988984,
-            "ci_high": -0.01884466382933114,
-            "n_boot": 400
-          },
-          "close_success_rate": {
-            "kendall_tau": -0.0020816521416571407,
-            "ci_low": -0.026116609116945154,
-            "ci_high": 0.01989629299857658,
-            "n_boot": 400
-          }
-        },
-        "awp": {
-          "in_degree": {
-            "kendall_tau": 0.6171554885122147,
-            "ci_low": 0.604225269261076,
-            "ci_high": 0.6312581320360525,
-            "n_boot": 400
-          },
-          "in_value": {
-            "kendall_tau": 0.45039667487155005,
-            "ci_low": 0.4355195400853605,
-            "ci_high": 0.4666375112527824,
-            "n_boot": 400
-          },
-          "in_approve_degree": {
-            "kendall_tau": -0.03029206576621791,
-            "ci_low": -0.04472050838049393,
-            "ci_high": -0.016576444349934282,
-            "n_boot": 400
-          },
-          "in_approve_value": {
-            "kendall_tau": -0.03033626811830569,
-            "ci_low": -0.044586452270265184,
-            "ci_high": -0.016826774931883302,
-            "n_boot": 400
-          },
-          "liquidation_free_rate": {
-            "kendall_tau": 0.08314042960411139,
-            "ci_low": 0.06470200671931156,
-            "ci_high": 0.10178235108056527,
-            "n_boot": 400
-          },
-          "zero_liquidation_flag": {
-            "kendall_tau": 0.026364081624470754,
-            "ci_low": 0.005463852172356431,
-            "ci_high": 0.048162494824990465,
-            "n_boot": 400
-          },
-          "liquidation_free_closes": {
-            "kendall_tau": 0.2304282318715369,
-            "ci_low": 0.21194427772387484,
-            "ci_high": 0.2462941277838553,
-            "n_boot": 400
-          },
-          "loss_avoidance": {
-            "kendall_tau": -0.16494326298256337,
-            "ci_low": -0.18276584951484917,
-            "ci_high": -0.14773336881814494,
-            "n_boot": 400
-          },
-          "non_loss_close_rate": {
-            "kendall_tau": 0.01893127132483171,
-            "ci_low": 0.001719729430081381,
-            "ci_high": 0.03563810742253081,
-            "n_boot": 400
-          },
-          "worst_close_pnl_score": {
-            "kendall_tau": -0.13686072813930383,
-            "ci_low": -0.15515975445393324,
-            "ci_high": -0.1191697017439437,
-            "n_boot": 400
-          },
-          "inbound_counterparty_ratio": {
-            "kendall_tau": -0.06111946469673752,
-            "ci_low": -0.08062590580911716,
-            "ci_high": -0.039710441718426734,
-            "n_boot": 400
-          },
-          "transfer_tenure_days": {
-            "kendall_tau": 0.43610979171926,
-            "ci_low": 0.42139125243694253,
-            "ci_high": 0.45220994293366285,
-            "n_boot": 400
-          },
-          "active_months": {
-            "kendall_tau": 0.48132315497272915,
-            "ci_low": 0.4660741427159734,
-            "ci_high": 0.4982193882120228,
-            "n_boot": 400
-          },
-          "close_success_count": {
-            "kendall_tau": 0.22425626945441793,
-            "ci_low": 0.20638100025255335,
-            "ci_high": 0.24145989444495106,
-            "n_boot": 400
-          },
-          "realized_gain_proxy": {
-            "kendall_tau": 0.23891454004397097,
-            "ci_low": 0.22330951620330175,
-            "ci_high": 0.2540425616351202,
-            "n_boot": 400
-          },
-          "close_success_rate": {
-            "kendall_tau": 0.07479515497234229,
-            "ci_low": 0.05530499739207299,
-            "ci_high": 0.09176349816134,
-            "n_boot": 400
-          }
-        }
-      },
-      "inter_method_ci": {
-        "kendall_tau": -0.02512762308310892,
-        "ci_low": -0.037789774813655495,
-        "ci_high": -0.012093296992091891,
-        "n_boot": 400
-      },
-      "tau_diff": [
-        {
-          "label": "EndorseRank allowance minus EndorseRank transfer",
-          "group": "primary",
-          "a": {
-            "method": "endorserank",
-            "key": "allowance",
-            "tau": 0.9556812048057657
-          },
-          "b": {
-            "method": "endorserank",
-            "key": "transfer",
-            "tau": -0.07144935771083724
-          },
-          "delta_tau": 1.027130562516603,
-          "ci_low": 0.9925716636086793,
-          "ci_high": 1.0554514238130743,
-          "share_positive": 1.0,
-          "n_boot": 400
-        },
-        {
-          "label": "AWP transfer minus EndorseRank transfer",
-          "group": "primary",
-          "a": {
-            "method": "awp",
-            "key": "transfer",
-            "tau": 0.5337760816918824
-          },
-          "b": {
-            "method": "endorserank",
-            "key": "transfer",
-            "tau": -0.07144935771083724
-          },
-          "delta_tau": 0.6052254394027197,
-          "ci_low": 0.5868615345748115,
-          "ci_high": 0.6238462860955243,
-          "share_positive": 1.0,
-          "n_boot": 400
-        },
-        {
-          "label": "EndorseRank allowance minus AWP allowance",
-          "group": "primary",
-          "a": {
-            "method": "endorserank",
-            "key": "allowance",
-            "tau": 0.9556812048057657
-          },
-          "b": {
-            "method": "awp",
-            "key": "allowance",
-            "tau": -0.0303141669422618
-          },
-          "delta_tau": 0.9859953717480274,
-          "ci_low": 0.9534753302787796,
-          "ci_high": 1.0099941128176189,
-          "share_positive": 1.0,
-          "n_boot": 400
-        },
-        {
-          "label": "AWP sybil-stability minus EndorseRank sybil-stability",
-          "group": "primary",
-          "a": {
-            "method": "awp",
-            "key": "sybil_stability",
-            "tau": 0.28543782733175055
-          },
-          "b": {
-            "method": "endorserank",
-            "key": "sybil_stability",
-            "tau": -0.03335402469444387
-          },
-          "delta_tau": 0.3187918520261944,
-          "ci_low": 0.30092494113828283,
-          "ci_high": 0.3380024220514396,
-          "share_positive": 1.0,
-          "n_boot": 400
-        },
-        {
-          "label": "EndorseRank in-approve degree minus EndorseRank in-degree",
-          "group": "primary",
-          "a": {
-            "method": "endorserank",
-            "key": "in_approve_degree",
-            "tau": 0.9586540566249029
-          },
-          "b": {
-            "method": "endorserank",
-            "key": "in_degree",
-            "tau": -0.09502393279953991
-          },
-          "delta_tau": 1.0536779894244428,
-          "ci_low": 1.0192887989359614,
-          "ci_high": 1.0827876779755266,
-          "share_positive": 1.0,
-          "n_boot": 400
-        }
-      ],
-      "endorserank_ceiling_untied_proxy": 0.2089716863329707
-    }
-  },
-  "holdout_weighting": {
-    "n_spenders": 1335,
-    "composition": {
-      "awp_zero": 318,
-      "t1_in_degree_zero": 358,
-      "endorserank_at_minimum": 913,
-      "new_approver_share": {
-        "awp_zero": 0.22327044025157233,
-        "awp_positive": 0.14847590953785644
-      },
-      "new_sender_share": {
-        "awp_zero": 0.03773584905660377,
-        "awp_positive": 0.16027531956735497
-      }
-    },
-    "tau": {
-      "endorserank_raw": {
-        "future_new_approvers": {
-          "spearman_rho": 0.5216676388692449,
-          "kendall_tau": 0.47860789811384274,
-          "ci_low": 0.42728384395183305,
-          "ci_high": 0.5294905041261468,
-          "n": 1335,
-          "n_boot": 400
-        },
-        "future_new_transfer_senders": {
-          "spearman_rho": 0.40653943431425293,
-          "kendall_tau": 0.37200516499937625,
-          "ci_low": 0.3253500220864462,
-          "ci_high": 0.42404890744410456,
-          "n": 1335,
-          "n_boot": 400
-        }
-      },
-      "endorserank_count": {
-        "future_new_approvers": {
-          "spearman_rho": 0.48093228192628773,
-          "kendall_tau": 0.39797493849211873,
-          "ci_low": 0.3630729498280075,
-          "ci_high": 0.4352527256676727,
-          "n": 1335,
-          "n_boot": 400
-        },
-        "future_new_transfer_senders": {
-          "spearman_rho": 0.3490092945352933,
-          "kendall_tau": 0.28658149161851326,
-          "ci_low": 0.25083441462109535,
-          "ci_high": 0.3240578847904785,
-          "n": 1335,
-          "n_boot": 400
-        }
-      },
-      "endorserank_unit": {
-        "future_new_approvers": {
-          "spearman_rho": 0.4937981820782573,
-          "kendall_tau": 0.40992890814845984,
-          "ci_low": 0.3773743111004866,
-          "ci_high": 0.44385916461546704,
-          "n": 1335,
-          "n_boot": 400
-        },
-        "future_new_transfer_senders": {
-          "spearman_rho": 0.3559483903612125,
-          "kendall_tau": 0.2929293037059516,
-          "ci_low": 0.25934567498207856,
-          "ci_high": 0.3255168671168886,
-          "n": 1335,
-          "n_boot": 400
-        }
-      },
-      "awp_raw": {
-        "future_new_approvers": {
-          "spearman_rho": 0.052968959232543064,
-          "kendall_tau": 0.04352575041461237,
-          "ci_low": -0.010871817681272414,
-          "ci_high": 0.09762677604082753,
-          "n": 1335,
-          "n_boot": 400
-        },
-        "future_new_transfer_senders": {
-          "spearman_rho": 0.3269346529153265,
-          "kendall_tau": 0.2701733765699188,
-          "ci_low": 0.23494210735867532,
-          "ci_high": 0.31021088092786325,
-          "n": 1335,
-          "n_boot": 400
-        }
-      },
-      "awp_count": {
-        "future_new_approvers": {
-          "spearman_rho": 0.08240314132456518,
-          "kendall_tau": 0.06911504426146296,
-          "ci_low": 0.013063920415910075,
-          "ci_high": 0.12852545623157838,
-          "n": 1335,
-          "n_boot": 400
-        },
-        "future_new_transfer_senders": {
-          "spearman_rho": 0.37896029161870326,
-          "kendall_tau": 0.3142701029502851,
-          "ci_low": 0.2751583695610747,
-          "ci_high": 0.3547587112271067,
-          "n": 1335,
-          "n_boot": 400
-        }
-      },
-      "awp_unit": {
-        "future_new_approvers": {
-          "spearman_rho": 0.10130111399159311,
-          "kendall_tau": 0.08540544967017238,
-          "ci_low": 0.02884053324769403,
-          "ci_high": 0.14246993660091942,
-          "n": 1335,
-          "n_boot": 400
-        },
-        "future_new_transfer_senders": {
-          "spearman_rho": 0.36458200600422,
-          "kendall_tau": 0.30422267444620427,
-          "ci_low": 0.2650747102432386,
-          "ci_high": 0.35019473641814425,
-          "n": 1335,
-          "n_boot": 400
-        }
-      },
-      "t1_in_approve_degree": {
-        "future_new_approvers": {
-          "spearman_rho": 0.7366517097742241,
-          "kendall_tau": 0.7111252393960045,
-          "ci_low": 0.6649518421870891,
-          "ci_high": 0.7591041011369719,
-          "n": 1335,
-          "n_boot": 400
-        },
-        "future_new_transfer_senders": {
-          "spearman_rho": 0.42316289191907247,
-          "kendall_tau": 0.40404424450129256,
-          "ci_low": 0.3478589827726423,
-          "ci_high": 0.466680323772158,
-          "n": 1335,
-          "n_boot": 400
-        }
-      },
-      "t1_in_degree": {
-        "future_new_approvers": {
-          "spearman_rho": 0.12226956070983801,
-          "kendall_tau": 0.11664986692234862,
-          "ci_low": 0.04872936125191565,
-          "ci_high": 0.19107325518964136,
-          "n": 1335,
-          "n_boot": 400
-        },
-        "future_new_transfer_senders": {
-          "spearman_rho": 0.5010855633906202,
-          "kendall_tau": 0.47163239613775,
-          "ci_low": 0.42285710337196886,
-          "ci_high": 0.5198827314671322,
-          "n": 1335,
-          "n_boot": 400
-        }
-      }
-    },
-    "tau_diff": [
-      {
-        "label": "AWP count minus AWP",
-        "role": "weights",
-        "a": {
-          "method": "awp_count",
-          "tau": 0.3142701029502851
-        },
-        "b": {
-          "method": "awp_raw",
-          "tau": 0.2701733765699188
-        },
-        "holdout_label": "future_new_transfer_senders",
-        "delta_tau": 0.044096726380366325,
-        "ci_low": 0.025341614288077668,
-        "ci_high": 0.06518127592098216,
-        "share_positive": 1.0,
-        "n": 1335,
-        "n_boot": 400
-      },
-      {
-        "label": "AWP count minus t1 in-degree",
-        "role": "weights",
-        "a": {
-          "method": "awp_count",
-          "tau": 0.3142701029502851
-        },
-        "b": {
-          "method": "t1_in_degree",
-          "tau": 0.47163239613775
-        },
-        "holdout_label": "future_new_transfer_senders",
-        "delta_tau": -0.15736229318746486,
-        "ci_low": -0.18340125371093485,
-        "ci_high": -0.13193921370495945,
-        "share_positive": 0.0,
-        "n": 1335,
-        "n_boot": 400
-      },
-      {
-        "label": "EndorseRank minus AWP count",
-        "role": "weights",
-        "a": {
-          "method": "endorserank_raw",
-          "tau": 0.37200516499937625
-        },
-        "b": {
-          "method": "awp_count",
-          "tau": 0.3142701029502851
-        },
-        "holdout_label": "future_new_transfer_senders",
-        "delta_tau": 0.057735062049091124,
-        "ci_low": 0.007403695406186819,
-        "ci_high": 0.10308073011514568,
-        "share_positive": 0.995,
-        "n": 1335,
-        "n_boot": 400
-      },
-      {
-        "label": "EndorseRank count minus EndorseRank",
-        "role": "weights",
-        "a": {
-          "method": "endorserank_count",
-          "tau": 0.39797493849211873
-        },
-        "b": {
-          "method": "endorserank_raw",
-          "tau": 0.47860789811384274
-        },
-        "holdout_label": "future_new_approvers",
-        "delta_tau": -0.08063295962172401,
-        "ci_low": -0.11872627732810645,
-        "ci_high": -0.04013026214651773,
-        "share_positive": 0.0,
-        "n": 1335,
-        "n_boot": 400
-      },
-      {
-        "label": "EndorseRank count minus AWP count",
-        "role": "weights",
-        "a": {
-          "method": "endorserank_count",
-          "tau": 0.39797493849211873
-        },
-        "b": {
-          "method": "awp_count",
-          "tau": 0.06911504426146296
-        },
-        "holdout_label": "future_new_approvers",
-        "delta_tau": 0.32885989423065576,
-        "ci_low": 0.2673126300388835,
-        "ci_high": 0.39315353548707005,
-        "share_positive": 1.0,
-        "n": 1335,
-        "n_boot": 400
-      },
-      {
-        "label": "EndorseRank count minus AWP count",
-        "role": "weights",
-        "a": {
-          "method": "endorserank_count",
-          "tau": 0.28658149161851326
-        },
-        "b": {
-          "method": "awp_count",
-          "tau": 0.3142701029502851
-        },
-        "holdout_label": "future_new_transfer_senders",
-        "delta_tau": -0.027688611331771862,
-        "ci_low": -0.06204403025615764,
-        "ci_high": 0.002296201739601821,
-        "share_positive": 0.0425,
-        "n": 1335,
-        "n_boot": 400
-      },
-      {
-        "label": "EndorseRank unit minus AWP unit",
-        "role": "weights",
-        "a": {
-          "method": "endorserank_unit",
-          "tau": 0.40992890814845984
-        },
-        "b": {
-          "method": "awp_unit",
-          "tau": 0.08540544967017238
-        },
-        "holdout_label": "future_new_approvers",
-        "delta_tau": 0.32452345847828745,
-        "ci_low": 0.2628161644548712,
-        "ci_high": 0.3940248935219117,
-        "share_positive": 1.0,
-        "n": 1335,
-        "n_boot": 400
-      },
-      {
-        "label": "EndorseRank unit minus AWP unit",
-        "role": "weights",
-        "a": {
-          "method": "endorserank_unit",
-          "tau": 0.2929293037059516
-        },
-        "b": {
-          "method": "awp_unit",
-          "tau": 0.30422267444620427
-        },
-        "holdout_label": "future_new_transfer_senders",
-        "delta_tau": -0.011293370740252662,
-        "ci_low": -0.04541662426067837,
-        "ci_high": 0.020739214013635817,
-        "share_positive": 0.245,
-        "n": 1335,
-        "n_boot": 400
-      }
-    ],
-    "receiving": {
-      "definition": "spenders with at least one sender other than themselves before the freeze",
-      "n": 977,
-      "tau": {
-        "endorserank_raw": {
-          "future_new_approvers": {
-            "spearman_rho": 0.47639393847806105,
-            "kendall_tau": 0.43799823928278314,
-            "ci_low": 0.37855365184541045,
-            "ci_high": 0.49704646810683784,
-            "n": 977,
-            "n_boot": 400
-          },
-          "future_new_transfer_senders": {
-            "spearman_rho": 0.5187341501125103,
-            "kendall_tau": 0.47449858815896573,
-            "ci_low": 0.4211273230652416,
-            "ci_high": 0.5264883542764188,
-            "n": 977,
-            "n_boot": 400
-          }
-        },
-        "awp_raw": {
-          "future_new_approvers": {
-            "spearman_rho": 0.3001820569276975,
-            "kendall_tau": 0.24117343827765778,
-            "ci_low": 0.19413880867690927,
-            "ci_high": 0.2904198522614185,
-            "n": 977,
-            "n_boot": 400
-          },
-          "future_new_transfer_senders": {
-            "spearman_rho": 0.3264562778918831,
-            "kendall_tau": 0.26258766784922866,
-            "ci_low": 0.2182023987396465,
-            "ci_high": 0.3084976644912194,
-            "n": 977,
-            "n_boot": 400
-          }
-        },
-        "awp_count": {
-          "future_new_approvers": {
-            "spearman_rho": 0.36113576967428473,
-            "kendall_tau": 0.29285173307793894,
-            "ci_low": 0.24952670487586898,
-            "ci_high": 0.332379719093156,
-            "n": 977,
-            "n_boot": 400
-          },
-          "future_new_transfer_senders": {
-            "spearman_rho": 0.41313542346572485,
-            "kendall_tau": 0.3346966393979386,
-            "ci_low": 0.2878018777379999,
-            "ci_high": 0.37701650443301277,
-            "n": 977,
-            "n_boot": 400
-          }
-        },
-        "t1_in_degree": {
-          "future_new_approvers": {
-            "spearman_rho": 0.5983238395371406,
-            "kendall_tau": 0.5687283805377775,
-            "ci_low": 0.5098625540916343,
-            "ci_high": 0.6313887404194972,
-            "n": 977,
-            "n_boot": 400
-          },
-          "future_new_transfer_senders": {
-            "spearman_rho": 0.732967648325356,
-            "kendall_tau": 0.7010602850237558,
-            "ci_low": 0.6506262072460417,
-            "ci_high": 0.7499897998672039,
-            "n": 977,
-            "n_boot": 400
-          }
-        }
-      },
-      "tau_diff": [
-        {
-          "label": "EndorseRank minus AWP",
-          "role": "receiving",
-          "a": {
-            "method": "endorserank_raw",
-            "tau": 0.43799823928278314
-          },
-          "b": {
-            "method": "awp_raw",
-            "tau": 0.24117343827765778
-          },
-          "holdout_label": "future_new_approvers",
-          "delta_tau": 0.19682480100512537,
-          "ci_low": 0.1403844468513028,
-          "ci_high": 0.24617662883949962,
-          "share_positive": 1.0,
-          "n": 977,
-          "n_boot": 400
-        },
-        {
-          "label": "EndorseRank minus AWP",
-          "role": "receiving",
-          "a": {
-            "method": "endorserank_raw",
-            "tau": 0.47449858815896573
-          },
-          "b": {
-            "method": "awp_raw",
-            "tau": 0.26258766784922866
-          },
-          "holdout_label": "future_new_transfer_senders",
-          "delta_tau": 0.21191092030973707,
-          "ci_low": 0.15631341241474392,
-          "ci_high": 0.2604721624764849,
-          "share_positive": 1.0,
-          "n": 977,
-          "n_boot": 400
-        },
-        {
-          "label": "AWP minus t1 in-degree",
-          "role": "receiving",
-          "a": {
-            "method": "awp_raw",
-            "tau": 0.26258766784922866
-          },
-          "b": {
-            "method": "t1_in_degree",
-            "tau": 0.7010602850237558
-          },
-          "holdout_label": "future_new_transfer_senders",
-          "delta_tau": -0.4384726171745272,
-          "ci_low": -0.48685131960108524,
-          "ci_high": -0.3880886960992714,
-          "share_positive": 0.0,
-          "n": 977,
-          "n_boot": 400
-        }
-      ]
-    }
-  },
-  "trader_counts": {
-    "window": [
-      "2026-03-01 00:00:00+00:00",
-      "2026-05-31 23:59:59+00:00"
-    ],
-    "min_closes": 3,
-    "matched": {
-      "wallets": 5521,
-      "with_min_closes": 2962,
-      "with_a_liquidation": 1434
-    },
-    "matched_in_freeze_graph": {
-      "wallets": 4227,
-      "with_min_closes": 1860,
-      "with_a_liquidation": 923
-    }
-  },
-  "awp_paper": {
-    "value_b": 1.0,
-    "same_window": {
-      "n_wallets": 5521,
-      "n_zero": 381,
-      "n_zero_awp": 381,
-      "tied_pair_share": {
-        "awp": 0.004816195868738335,
-        "awp_paper": 0.004750701537476145
-      },
-      "family_ci": {
-        "endorserank": {
-          "transfer": {
-            "mean_tau": 0.3326422397844445,
-            "ci_low": 0.3144159579045044,
-            "ci_high": 0.3527151694516934,
-            "n_boot": 400
-          },
-          "allowance": {
-            "mean_tau": 0.35512464532163696,
-            "ci_low": 0.32194052766217374,
-            "ci_high": 0.3839339298041171,
-            "n_boot": 400
-          },
-          "liquidation": {
-            "mean_tau": 0.09259065662428745,
-            "ci_low": 0.07756254374066562,
-            "ci_high": 0.1104053856115132,
-            "n_boot": 400
-          },
-          "inverse_risk": {
-            "mean_tau": -0.05589456750676255,
-            "ci_low": -0.0718538639770905,
-            "ci_high": -0.04035686575998487,
-            "n_boot": 400
-          },
-          "sybil_stability": {
-            "mean_tau": 0.23336812804431192,
-            "ci_low": 0.21400534350218142,
-            "ci_high": 0.25267551822532414,
-            "n_boot": 400
-          },
-          "gmx_success": {
-            "mean_tau": 0.09641123372399096,
-            "ci_low": 0.07996662362189477,
-            "ci_high": 0.11313503294349357,
-            "n_boot": 400
-          }
-        },
-        "awp": {
-          "transfer": {
-            "mean_tau": 0.5337543694804096,
-            "ci_low": 0.521875546090857,
-            "ci_high": 0.5468173381290421,
-            "n_boot": 400
-          },
-          "allowance": {
-            "mean_tau": -0.03030534354527515,
-            "ci_low": -0.044636924647431984,
-            "ci_high": -0.01671577728112679,
-            "n_boot": 400
-          },
-          "liquidation": {
-            "mean_tau": 0.11316019736234474,
-            "ci_low": 0.09815485748655264,
-            "ci_high": 0.12762099984481765,
-            "n_boot": 400
-          },
-          "inverse_risk": {
-            "mean_tau": -0.09427764455177072,
-            "ci_low": -0.10756469416879968,
-            "ci_high": -0.080767796394769,
-            "n_boot": 400
-          },
-          "sybil_stability": {
-            "mean_tau": 0.2856847697442056,
-            "ci_low": 0.27357529457570284,
-            "ci_high": 0.3002553726288531,
-            "n_boot": 400
-          },
-          "gmx_success": {
-            "mean_tau": 0.1792154091939485,
-            "ci_low": 0.16585613016417525,
-            "ci_high": 0.19261386916223303,
+            "mean_tau": 0.09606805509618145,
+            "ci_low": 0.08023024406107118,
+            "ci_high": 0.11308019559343395,
             "n_boot": 400
           }
         },
@@ -1389,240 +107,104 @@
             "ci_high": 0.2502266545530819,
             "n_boot": 400
           }
-        },
-        "coupled_pr": {
-          "transfer": {
-            "mean_tau": 0.5265248115296275,
-            "ci_low": 0.5150297645034928,
-            "ci_high": 0.5401370945278671,
-            "n_boot": 400
-          },
-          "allowance": {
-            "mean_tau": -0.0005977681096054556,
-            "ci_low": -0.01272908319483465,
-            "ci_high": 0.012885236458469453,
-            "n_boot": 400
-          },
-          "liquidation": {
-            "mean_tau": 0.11265348629348983,
-            "ci_low": 0.09762654903186492,
-            "ci_high": 0.1266792141154153,
-            "n_boot": 400
-          },
-          "inverse_risk": {
-            "mean_tau": -0.09050109436244934,
-            "ci_low": -0.10373290218537576,
-            "ci_high": -0.07663954525356657,
-            "n_boot": 400
-          },
-          "sybil_stability": {
-            "mean_tau": 0.28991280617050347,
-            "ci_low": 0.27853832179447036,
-            "ci_high": 0.30405932174659955,
-            "n_boot": 400
-          },
-          "gmx_success": {
-            "mean_tau": 0.17103272459175875,
-            "ci_low": 0.156618144877417,
-            "ci_high": 0.1846652042294027,
-            "n_boot": 400
-          }
         }
       },
       "proxy_ci": {
-        "endorserank": {
+        "endorserank_vt": {
           "in_degree": {
-            "kendall_tau": 0.34400238605902167,
-            "ci_low": 0.3236300477921825,
-            "ci_high": 0.3655468237074967,
+            "kendall_tau": 0.3407246918560187,
+            "ci_low": 0.3191570097937196,
+            "ci_high": 0.3626255622245452,
             "n_boot": 400
           },
           "in_value": {
-            "kendall_tau": 0.3212820935098674,
-            "ci_low": 0.3026537794587388,
-            "ci_high": 0.3418762579450561,
+            "kendall_tau": 0.3192122371625555,
+            "ci_low": 0.3004673566227249,
+            "ci_high": 0.3396766119141168,
             "n_boot": 400
           },
           "in_approve_degree": {
-            "kendall_tau": 0.3562198253870707,
-            "ci_low": 0.3228193022785172,
-            "ci_high": 0.3851375781412494,
+            "kendall_tau": 0.3761282951717288,
+            "ci_low": 0.3437460441123886,
+            "ci_high": 0.4029734366436237,
             "n_boot": 400
           },
           "in_approve_value": {
-            "kendall_tau": 0.3540294652562032,
-            "ci_low": 0.32106878937951894,
-            "ci_high": 0.3827289512768838,
+            "kendall_tau": 0.3729409679020825,
+            "ci_low": 0.34116176253569136,
+            "ci_high": 0.3981632071809394,
             "n_boot": 400
           },
           "liquidation_free_rate": {
-            "kendall_tau": 0.0745902918954609,
-            "ci_low": 0.0534045623943746,
-            "ci_high": 0.09759174553606799,
+            "kendall_tau": 0.0755982829823935,
+            "ci_low": 0.05343221212697434,
+            "ci_high": 0.09797354372003873,
             "n_boot": 400
           },
           "zero_liquidation_flag": {
-            "kendall_tau": 0.032812016390433504,
-            "ci_low": 0.011584269646096372,
-            "ci_high": 0.057028054288414246,
+            "kendall_tau": 0.03410289025377037,
+            "ci_low": 0.01212583599987976,
+            "ci_high": 0.058466747656964545,
             "n_boot": 400
           },
           "liquidation_free_closes": {
-            "kendall_tau": 0.17036966158696792,
-            "ci_low": 0.15177973818100415,
-            "ci_high": 0.19140583656574925,
+            "kendall_tau": 0.16939213506052925,
+            "ci_low": 0.1498977524857398,
+            "ci_high": 0.1899341926589689,
             "n_boot": 400
           },
           "loss_avoidance": {
-            "kendall_tau": -0.07940695226541132,
-            "ci_low": -0.10274518110889931,
-            "ci_high": -0.0600157184766143,
+            "kendall_tau": -0.0774351038642563,
+            "ci_low": -0.09967700241133236,
+            "ci_high": -0.058264991018741635,
             "n_boot": 400
           },
           "non_loss_close_rate": {
-            "kendall_tau": -0.031051489300799574,
-            "ci_low": -0.052633978462301285,
-            "ci_high": -0.011474323532010458,
+            "kendall_tau": -0.03084861259907555,
+            "ci_low": -0.051642284439373715,
+            "ci_high": -0.011078675017962903,
             "n_boot": 400
           },
           "worst_close_pnl_score": {
-            "kendall_tau": -0.05722526095407674,
-            "ci_low": -0.07911765598630577,
-            "ci_high": -0.03720657909700646,
+            "kendall_tau": -0.055402687480866054,
+            "ci_low": -0.077709936781762,
+            "ci_high": -0.03575245467875631,
             "n_boot": 400
           },
           "inbound_counterparty_ratio": {
-            "kendall_tau": 0.0733518376104701,
-            "ci_low": 0.04641694694464658,
-            "ci_high": 0.09701494729329857,
+            "kendall_tau": 0.0715006588211054,
+            "ci_low": 0.04452198373612952,
+            "ci_high": 0.09532236359238618,
             "n_boot": 400
           },
           "transfer_tenure_days": {
-            "kendall_tau": 0.2966958046575088,
-            "ci_low": 0.27618969069992944,
-            "ci_high": 0.3184786054798089,
+            "kendall_tau": 0.29384124956951446,
+            "ci_low": 0.2735025690447431,
+            "ci_high": 0.3159246098756409,
             "n_boot": 400
           },
           "active_months": {
-            "kendall_tau": 0.33005674186495687,
-            "ci_low": 0.30988752031473155,
-            "ci_high": 0.3511625124716323,
+            "kendall_tau": 0.3269902271420512,
+            "ci_low": 0.3065133647917096,
+            "ci_high": 0.34843048932607473,
             "n_boot": 400
           },
           "close_success_count": {
-            "kendall_tau": 0.14882461413387343,
-            "ci_low": 0.12950507611116774,
-            "ci_high": 0.17120109788647944,
+            "kendall_tau": 0.14810195086054787,
+            "ci_low": 0.1290838237942847,
+            "ci_high": 0.16961680385708075,
             "n_boot": 400
           },
           "realized_gain_proxy": {
-            "kendall_tau": 0.1070556455312931,
-            "ci_low": 0.08584708617126334,
-            "ci_high": 0.12741431939825687,
+            "kendall_tau": 0.10565124020276598,
+            "ci_low": 0.08447652231078523,
+            "ci_high": 0.1262973763730872,
             "n_boot": 400
           },
           "close_success_rate": {
-            "kendall_tau": 0.033353441506806344,
-            "ci_low": 0.01133123070399088,
-            "ci_high": 0.05545935632264226,
-            "n_boot": 400
-          }
-        },
-        "awp": {
-          "in_degree": {
-            "kendall_tau": 0.6171115246000134,
-            "ci_low": 0.6041772490684728,
-            "ci_high": 0.6312477932388191,
-            "n_boot": 400
-          },
-          "in_value": {
-            "kendall_tau": 0.45039721436080565,
-            "ci_low": 0.43558530774582543,
-            "ci_high": 0.4667054216317435,
-            "n_boot": 400
-          },
-          "in_approve_degree": {
-            "kendall_tau": -0.030283399697366115,
-            "ci_low": -0.044704062461218524,
-            "ci_high": -0.016571912765918337,
-            "n_boot": 400
-          },
-          "in_approve_value": {
-            "kendall_tau": -0.03032728739318418,
-            "ci_low": -0.044569786833645444,
-            "ci_high": -0.016822881427337365,
-            "n_boot": 400
-          },
-          "liquidation_free_rate": {
-            "kendall_tau": 0.08300286333218564,
-            "ci_low": 0.0646949128082887,
-            "ci_high": 0.10162661165407155,
-            "n_boot": 400
-          },
-          "zero_liquidation_flag": {
-            "kendall_tau": 0.02630103918334038,
-            "ci_low": 0.005326775826339941,
-            "ci_high": 0.048160524033683094,
-            "n_boot": 400
-          },
-          "liquidation_free_closes": {
-            "kendall_tau": 0.23017668957150822,
-            "ci_low": 0.21175649784749828,
-            "ci_high": 0.24611292442177804,
-            "n_boot": 400
-          },
-          "loss_avoidance": {
-            "kendall_tau": -0.16495591236589094,
-            "ci_low": -0.18279163946720145,
-            "ci_high": -0.14773421266832723,
-            "n_boot": 400
-          },
-          "non_loss_close_rate": {
-            "kendall_tau": 0.019029104248175426,
-            "ci_low": 0.0017920506557478333,
-            "ci_high": 0.03573818547095283,
-            "n_boot": 400
-          },
-          "worst_close_pnl_score": {
-            "kendall_tau": -0.1369061255375966,
-            "ci_low": -0.1552030414803501,
-            "ci_high": -0.11916244484106685,
-            "n_boot": 400
-          },
-          "inbound_counterparty_ratio": {
-            "kendall_tau": -0.06097823889349978,
-            "ci_low": -0.08045233872511601,
-            "ci_high": -0.039552964774680656,
-            "n_boot": 400
-          },
-          "transfer_tenure_days": {
-            "kendall_tau": 0.43624083869535085,
-            "ci_low": 0.4214160300323425,
-            "ci_high": 0.452258029737819,
-            "n_boot": 400
-          },
-          "active_months": {
-            "kendall_tau": 0.4817917094307657,
-            "ci_low": 0.4664043941356302,
-            "ci_high": 0.4988503186271261,
-            "n_boot": 400
-          },
-          "close_success_count": {
-            "kendall_tau": 0.2240450441448271,
-            "ci_low": 0.2061816489822118,
-            "ci_high": 0.24116939287383543,
-            "n_boot": 400
-          },
-          "realized_gain_proxy": {
-            "kendall_tau": 0.23888843422656103,
-            "ci_low": 0.2233703045528005,
-            "ci_high": 0.254048501735787,
-            "n_boot": 400
-          },
-          "close_success_rate": {
-            "kendall_tau": 0.07471274921045735,
-            "ci_low": 0.05511076558715157,
-            "ci_high": 0.09167195483260311,
+            "kendall_tau": 0.03445097422523051,
+            "ci_low": 0.012669489771543927,
+            "ci_high": 0.05594909733358444,
             "n_boot": 400
           }
         },
@@ -1723,599 +305,662 @@
             "ci_high": 0.09376863170629977,
             "n_boot": 400
           }
-        },
-        "coupled_pr": {
-          "in_degree": {
-            "kendall_tau": 0.6112895650217395,
-            "ci_low": 0.5987649375570958,
-            "ci_high": 0.6258825874675457,
-            "n_boot": 400
-          },
-          "in_value": {
-            "kendall_tau": 0.4417600580375156,
-            "ci_low": 0.4272756232317065,
-            "ci_high": 0.45768655642535855,
-            "n_boot": 400
-          },
-          "in_approve_degree": {
-            "kendall_tau": -0.0005998500227517072,
-            "ci_low": -0.01277690090314986,
-            "ci_high": 0.012960323375011885,
-            "n_boot": 400
-          },
-          "in_approve_value": {
-            "kendall_tau": -0.0005956861964592042,
-            "ci_low": -0.012644235069011207,
-            "ci_high": 0.01281014954192702,
-            "n_boot": 400
-          },
-          "liquidation_free_rate": {
-            "kendall_tau": 0.08518362850159611,
-            "ci_low": 0.066526950550242,
-            "ci_high": 0.10394850431147677,
-            "n_boot": 400
-          },
-          "zero_liquidation_flag": {
-            "kendall_tau": 0.03525741721214194,
-            "ci_low": 0.01416391429703181,
-            "ci_high": 0.05732780178082323,
-            "n_boot": 400
-          },
-          "liquidation_free_closes": {
-            "kendall_tau": 0.21751941316673143,
-            "ci_low": 0.19981253638031912,
-            "ci_high": 0.23361938372134708,
-            "n_boot": 400
-          },
-          "loss_avoidance": {
-            "kendall_tau": -0.15915162120013973,
-            "ci_low": -0.17772867620526797,
-            "ci_high": -0.141749121614608,
-            "n_boot": 400
-          },
-          "non_loss_close_rate": {
-            "kendall_tau": 0.02095712409287291,
-            "ci_low": 0.00330630480978143,
-            "ci_high": 0.03765398250338005,
-            "n_boot": 400
-          },
-          "worst_close_pnl_score": {
-            "kendall_tau": -0.13330878598008117,
-            "ci_low": -0.15116194781989145,
-            "ci_high": -0.11628561423350713,
-            "n_boot": 400
-          },
-          "inbound_counterparty_ratio": {
-            "kendall_tau": -0.04784611487231133,
-            "ci_low": -0.06745704982088124,
-            "ci_high": -0.027463321434289614,
-            "n_boot": 400
-          },
-          "transfer_tenure_days": {
-            "kendall_tau": 0.43493602823946736,
-            "ci_low": 0.4203033520072182,
-            "ci_high": 0.45171336498409903,
-            "n_boot": 400
-          },
-          "active_months": {
-            "kendall_tau": 0.48264850514435437,
-            "ci_low": 0.4671767682453197,
-            "ci_high": 0.4999096470125576,
-            "n_boot": 400
-          },
-          "close_success_count": {
-            "kendall_tau": 0.21061336801020983,
-            "ci_low": 0.19243168626079135,
-            "ci_high": 0.22776420161674435,
-            "n_boot": 400
-          },
-          "realized_gain_proxy": {
-            "kendall_tau": 0.23256861424028855,
-            "ci_low": 0.21684840461059238,
-            "ci_high": 0.247950047753493,
-            "n_boot": 400
-          },
-          "close_success_rate": {
-            "kendall_tau": 0.06991619152477783,
-            "ci_low": 0.05046751334622769,
-            "ci_high": 0.08670171105534517,
-            "n_boot": 400
-          }
         }
+      },
+      "inter_method_ci": {
+        "kendall_tau": 0.36029858692096606,
+        "ci_low": 0.34155521564421154,
+        "ci_high": 0.37914330361009335,
+        "n_boot": 400
       },
       "tau_diff": [
         {
-          "label": "AWP-P transfer minus AWP transfer",
-          "group": "paper_vs_main",
+          "label": "EndorseRank allowance minus EndorseRank transfer",
+          "group": "primary",
+          "a": {
+            "method": "endorserank_vt",
+            "key": "allowance",
+            "tau": 0.37453463153690564
+          },
+          "b": {
+            "method": "endorserank_vt",
+            "key": "transfer",
+            "tau": 0.3299684645092871
+          },
+          "delta_tau": 0.044566167027618564,
+          "ci_low": -0.0012228528294698383,
+          "ci_high": 0.08364500933507689,
+          "share_positive": 0.97,
+          "n_boot": 400
+        },
+        {
+          "label": "AWP transfer minus EndorseRank transfer",
+          "group": "primary",
           "a": {
             "method": "awp_paper",
             "key": "transfer",
             "tau": 0.6116590434956162
           },
           "b": {
-            "method": "awp",
+            "method": "endorserank_vt",
             "key": "transfer",
-            "tau": 0.5337543694804096
+            "tau": 0.3299684645092871
           },
-          "delta_tau": 0.07790467401520662,
-          "ci_low": 0.0680866621950626,
-          "ci_high": 0.08762676551118968,
+          "delta_tau": 0.2816905789863291,
+          "ci_low": 0.26314021846120994,
+          "ci_high": 0.29886476509072724,
           "share_positive": 1.0,
           "n_boot": 400
         },
         {
-          "label": "AWP-P allowance minus AWP allowance",
-          "group": "paper_vs_main",
+          "label": "EndorseRank allowance minus AWP allowance",
+          "group": "primary",
           "a": {
-            "method": "awp_paper",
+            "method": "endorserank_vt",
             "key": "allowance",
-            "tau": -0.023668548882180396
-          },
-          "b": {
-            "method": "awp",
-            "key": "allowance",
-            "tau": -0.03030534354527515
-          },
-          "delta_tau": 0.006636794663094754,
-          "ci_low": -0.015730861931173103,
-          "ci_high": 0.03508176758608188,
-          "share_positive": 0.7075,
-          "n_boot": 400
-        },
-        {
-          "label": "AWP-P sybil_stability minus AWP sybil_stability",
-          "group": "paper_vs_main",
-          "a": {
-            "method": "awp_paper",
-            "key": "sybil_stability",
-            "tau": 0.27787377899437915
-          },
-          "b": {
-            "method": "awp",
-            "key": "sybil_stability",
-            "tau": 0.2856847697442056
-          },
-          "delta_tau": -0.007810990749826441,
-          "ci_low": -0.015112963066101208,
-          "ci_high": -0.0004795588013164833,
-          "share_positive": 0.02,
-          "n_boot": 400
-        },
-        {
-          "label": "AWP-P liquidation minus AWP liquidation",
-          "group": "paper_vs_main",
-          "a": {
-            "method": "awp_paper",
-            "key": "liquidation",
-            "tau": 0.14149391458155355
-          },
-          "b": {
-            "method": "awp",
-            "key": "liquidation",
-            "tau": 0.11316019736234474
-          },
-          "delta_tau": 0.028333717219208812,
-          "ci_low": 0.018941903247005794,
-          "ci_high": 0.03741880537410601,
-          "share_positive": 1.0,
-          "n_boot": 400
-        },
-        {
-          "label": "AWP-P inverse_risk minus AWP inverse_risk",
-          "group": "paper_vs_main",
-          "a": {
-            "method": "awp_paper",
-            "key": "inverse_risk",
-            "tau": -0.1272083548450524
-          },
-          "b": {
-            "method": "awp",
-            "key": "inverse_risk",
-            "tau": -0.09427764455177072
-          },
-          "delta_tau": -0.03293071029328169,
-          "ci_low": -0.043043152452382376,
-          "ci_high": -0.02331552393174089,
-          "share_positive": 0.0,
-          "n_boot": 400
-        },
-        {
-          "label": "AWP-P gmx_success minus AWP gmx_success",
-          "group": "paper_vs_main",
-          "a": {
-            "method": "awp_paper",
-            "key": "gmx_success",
-            "tau": 0.2364499709265867
-          },
-          "b": {
-            "method": "awp",
-            "key": "gmx_success",
-            "tau": 0.1792154091939485
-          },
-          "delta_tau": 0.05723456173263822,
-          "ci_low": 0.04811669876905688,
-          "ci_high": 0.06490633437572799,
-          "share_positive": 1.0,
-          "n_boot": 400
-        },
-        {
-          "label": "AWP-P transfer minus EndorseRank transfer",
-          "group": "paper_form",
-          "a": {
-            "method": "awp_paper",
-            "key": "transfer",
-            "tau": 0.6116590434956162
-          },
-          "b": {
-            "method": "endorserank",
-            "key": "transfer",
-            "tau": 0.3326422397844445
-          },
-          "delta_tau": 0.27901680371117166,
-          "ci_low": 0.2600813720115042,
-          "ci_high": 0.2959254369607071,
-          "share_positive": 1.0,
-          "n_boot": 400
-        },
-        {
-          "label": "EndorseRank allowance minus AWP-P allowance",
-          "group": "paper_form",
-          "a": {
-            "method": "endorserank",
-            "key": "allowance",
-            "tau": 0.35512464532163696
+            "tau": 0.37453463153690564
           },
           "b": {
             "method": "awp_paper",
             "key": "allowance",
             "tau": -0.023668548882180396
           },
-          "delta_tau": 0.37879319420381735,
-          "ci_low": 0.3367402547311553,
-          "ci_high": 0.4146997165665279,
+          "delta_tau": 0.39820318041908603,
+          "ci_low": 0.3564081107390731,
+          "ci_high": 0.4323235529434486,
           "share_positive": 1.0,
           "n_boot": 400
         },
         {
-          "label": "AWP-P sybil-stability minus EndorseRank sybil-stability",
-          "group": "paper_form",
+          "label": "AWP sybil-stability minus EndorseRank sybil-stability",
+          "group": "primary",
           "a": {
             "method": "awp_paper",
             "key": "sybil_stability",
             "tau": 0.27787377899437915
           },
           "b": {
-            "method": "endorserank",
+            "method": "endorserank_vt",
             "key": "sybil_stability",
-            "tau": 0.23336812804431192
+            "tau": 0.23077737851089034
           },
-          "delta_tau": 0.04450565095006723,
-          "ci_low": 0.029137777745839682,
-          "ci_high": 0.058481228294745925,
+          "delta_tau": 0.047096400483488815,
+          "ci_low": 0.03137879005863119,
+          "ci_high": 0.061734014229782724,
           "share_positive": 1.0,
           "n_boot": 400
         },
         {
-          "label": "C-PR transfer minus AWP-P transfer",
-          "group": "paper_form",
+          "label": "EndorseRank in-approve degree minus EndorseRank in-degree",
+          "group": "primary",
           "a": {
-            "method": "coupled_pr",
-            "key": "transfer",
-            "tau": 0.5265248115296275
+            "method": "endorserank_vt",
+            "key": "in_approve_degree",
+            "tau": 0.3761282951717288
           },
           "b": {
-            "method": "awp_paper",
-            "key": "transfer",
-            "tau": 0.6116590434956162
+            "method": "endorserank_vt",
+            "key": "in_degree",
+            "tau": 0.3407246918560187
           },
-          "delta_tau": -0.08513423196598868,
-          "ci_low": -0.09496654519808816,
-          "ci_high": -0.07493002340956637,
-          "share_positive": 0.0,
-          "n_boot": 400
-        },
-        {
-          "label": "C-PR sybil-stability minus AWP-P sybil-stability",
-          "group": "paper_form",
-          "a": {
-            "method": "coupled_pr",
-            "key": "sybil_stability",
-            "tau": 0.28991280617050347
-          },
-          "b": {
-            "method": "awp_paper",
-            "key": "sybil_stability",
-            "tau": 0.27787377899437915
-          },
-          "delta_tau": 0.012039027176124317,
-          "ci_low": 0.00481720206347813,
-          "ci_high": 0.019960303474393582,
-          "share_positive": 1.0,
+          "delta_tau": 0.035403603315710075,
+          "ci_low": -0.015037179824099156,
+          "ci_high": 0.0792072632246594,
+          "share_positive": 0.925,
           "n_boot": 400
         }
       ],
-      "between_methods": {
-        "endorserank_awp_paper": {
-          "spearman_rho": 0.44832391482828576,
-          "kendall_tau": 0.36253680206966143,
-          "ci_low": 0.34317353451904326,
-          "ci_high": 0.38168745532488607,
-          "n": 5521,
-          "n_boot": 400
-        },
-        "awp_awp_paper": {
-          "spearman_rho": 0.7828411067157656,
-          "kendall_tau": 0.5982548715509711,
-          "ci_low": 0.5853700744061265,
-          "ci_high": 0.6105021228574843,
-          "n": 5521,
-          "n_boot": 400
-        }
-      }
+      "endorserank_ceiling_untied_proxy": 0.5721134163429751
     },
-    "holdout": {
-      "n_spenders": 1335,
-      "n_zero": 318,
-      "n_zero_awp": 318,
-      "tied_pair_share": {
-        "awp": 0.05779469815653971,
-        "awp_paper": 0.056604282128598624
-      },
-      "tau": {
-        "endorserank": {
-          "future_new_approvers": {
-            "spearman_rho": 0.5216676388692449,
-            "kendall_tau": 0.47860789811384274,
-            "ci_low": 0.42728384395183305,
-            "ci_high": 0.5294905041261468,
-            "n": 1335,
+    "isolated_nodes": {
+      "family_ci": {
+        "endorserank_vt": {
+          "transfer": {
+            "mean_tau": -0.07133651205030576,
+            "ci_low": -0.08579559012178191,
+            "ci_high": -0.055706292304972684,
             "n_boot": 400
           },
-          "future_new_transfer_senders": {
-            "spearman_rho": 0.40653943431425293,
-            "kendall_tau": 0.37200516499937625,
-            "ci_low": 0.3253500220864462,
-            "ci_high": 0.42404890744410456,
-            "n": 1335,
-            "n_boot": 400
-          }
-        },
-        "awp": {
-          "future_new_approvers": {
-            "spearman_rho": 0.052968959232543064,
-            "kendall_tau": 0.04352575041461237,
-            "ci_low": -0.010871817681272414,
-            "ci_high": 0.09762677604082753,
-            "n": 1335,
+          "allowance": {
+            "mean_tau": 0.9898864532786893,
+            "ci_low": 0.9880653166043233,
+            "ci_high": 0.9918083079959137,
             "n_boot": 400
           },
-          "future_new_transfer_senders": {
-            "spearman_rho": 0.3269346529153265,
-            "kendall_tau": 0.2701733765699188,
-            "ci_low": 0.23494210735867532,
-            "ci_high": 0.31021088092786325,
-            "n": 1335,
+          "liquidation": {
+            "mean_tau": 0.08207182103863565,
+            "ci_low": 0.06906805280305242,
+            "ci_high": 0.09552718342501504,
+            "n_boot": 400
+          },
+          "inverse_risk": {
+            "mean_tau": 0.005729530962818248,
+            "ci_low": -0.01456776725354344,
+            "ci_high": 0.023406362408419878,
+            "n_boot": 400
+          },
+          "sybil_stability": {
+            "mean_tau": -0.0358586250052626,
+            "ci_low": -0.048668402787889115,
+            "ci_high": -0.021958090355394585,
+            "n_boot": 400
+          },
+          "gmx_success": {
+            "mean_tau": -0.01727680333814895,
+            "ci_low": -0.03321217259070994,
+            "ci_high": -0.002937408345670998,
             "n_boot": 400
           }
         },
         "awp_paper": {
-          "future_new_approvers": {
-            "spearman_rho": 0.14885939279628105,
-            "kendall_tau": 0.12315286203250951,
-            "ci_low": 0.06801699240884239,
-            "ci_high": 0.17729598523971843,
-            "n": 1335,
+          "transfer": {
+            "mean_tau": 0.6116590434956162,
+            "ci_low": 0.6021583386152365,
+            "ci_high": 0.6220229005091722,
             "n_boot": 400
           },
-          "future_new_transfer_senders": {
-            "spearman_rho": 0.4181433490648773,
-            "kendall_tau": 0.3442513030719671,
-            "ci_low": 0.3070300623262825,
-            "ci_high": 0.3833913615123507,
-            "n": 1335,
-            "n_boot": 400
-          }
-        },
-        "coupled_pr": {
-          "future_new_approvers": {
-            "spearman_rho": 0.36147770467096857,
-            "kendall_tau": 0.29498981729927687,
-            "ci_low": 0.25227270954428854,
-            "ci_high": 0.3364945891640311,
-            "n": 1335,
+          "allowance": {
+            "mean_tau": -0.023668548882180396,
+            "ci_low": -0.04284145435810677,
+            "ci_high": -0.001834634208618811,
             "n_boot": 400
           },
-          "future_new_transfer_senders": {
-            "spearman_rho": 0.3374971702700359,
-            "kendall_tau": 0.2767568762214579,
-            "ci_low": 0.2412203076768108,
-            "ci_high": 0.31778608350142734,
-            "n": 1335,
-            "n_boot": 400
-          }
-        },
-        "t1_in_approve_degree": {
-          "future_new_approvers": {
-            "spearman_rho": 0.7366517097742241,
-            "kendall_tau": 0.7111252393960045,
-            "ci_low": 0.6649518421870891,
-            "ci_high": 0.7591041011369719,
-            "n": 1335,
+          "liquidation": {
+            "mean_tau": 0.14149391458155355,
+            "ci_low": 0.12874872141107968,
+            "ci_high": 0.15524866444699748,
             "n_boot": 400
           },
-          "future_new_transfer_senders": {
-            "spearman_rho": 0.42316289191907247,
-            "kendall_tau": 0.40404424450129256,
-            "ci_low": 0.3478589827726423,
-            "ci_high": 0.466680323772158,
-            "n": 1335,
-            "n_boot": 400
-          }
-        },
-        "t1_in_degree": {
-          "future_new_approvers": {
-            "spearman_rho": 0.12226956070983801,
-            "kendall_tau": 0.11664986692234862,
-            "ci_low": 0.04872936125191565,
-            "ci_high": 0.19107325518964136,
-            "n": 1335,
+          "inverse_risk": {
+            "mean_tau": -0.1272083548450524,
+            "ci_low": -0.13957430605051324,
+            "ci_high": -0.11528301039158126,
             "n_boot": 400
           },
-          "future_new_transfer_senders": {
-            "spearman_rho": 0.5010855633906202,
-            "kendall_tau": 0.47163239613775,
-            "ci_low": 0.42285710337196886,
-            "ci_high": 0.5198827314671322,
-            "n": 1335,
+          "sybil_stability": {
+            "mean_tau": 0.27787377899437915,
+            "ci_low": 0.26377467695900925,
+            "ci_high": 0.2924107190815592,
+            "n_boot": 400
+          },
+          "gmx_success": {
+            "mean_tau": 0.2364499709265867,
+            "ci_low": 0.22277238926172205,
+            "ci_high": 0.2502266545530819,
             "n_boot": 400
           }
         }
       },
+      "proxy_ci": {
+        "endorserank_vt": {
+          "in_degree": {
+            "kendall_tau": -0.09566867508546485,
+            "ci_low": -0.11119539873114098,
+            "ci_high": -0.07778619847475145,
+            "n_boot": 400
+          },
+          "in_value": {
+            "kendall_tau": -0.04700434901514667,
+            "ci_low": -0.06656327661621261,
+            "ci_high": -0.027164586576561185,
+            "n_boot": 400
+          },
+          "in_approve_degree": {
+            "kendall_tau": 0.9940984697662457,
+            "ci_low": 0.9929798434448764,
+            "ci_high": 0.9952730705442624,
+            "n_boot": 400
+          },
+          "in_approve_value": {
+            "kendall_tau": 0.9856744367911328,
+            "ci_low": 0.9828953396936507,
+            "ci_high": 0.9887549936313162,
+            "n_boot": 400
+          },
+          "liquidation_free_rate": {
+            "kendall_tau": 0.10738578165488047,
+            "ci_low": 0.09213727236863473,
+            "ci_high": 0.12155477881559029,
+            "n_boot": 400
+          },
+          "zero_liquidation_flag": {
+            "kendall_tau": 0.1313561728332122,
+            "ci_low": 0.11046941049948783,
+            "ci_high": 0.1506649085304455,
+            "n_boot": 400
+          },
+          "liquidation_free_closes": {
+            "kendall_tau": 0.007473508627814325,
+            "ci_low": -0.008976282229733979,
+            "ci_high": 0.026423385041946433,
+            "n_boot": 400
+          },
+          "loss_avoidance": {
+            "kendall_tau": 0.040305396018223916,
+            "ci_low": 0.015370147543066195,
+            "ci_high": 0.0628879610250928,
+            "n_boot": 400
+          },
+          "non_loss_close_rate": {
+            "kendall_tau": -0.06269857792154135,
+            "ci_low": -0.08367100609099996,
+            "ci_high": -0.04283414283367025,
+            "n_boot": 400
+          },
+          "worst_close_pnl_score": {
+            "kendall_tau": 0.039581774791772176,
+            "ci_low": 0.014612513302439506,
+            "ci_high": 0.06131688996912755,
+            "n_boot": 400
+          },
+          "inbound_counterparty_ratio": {
+            "kendall_tau": -0.06253614201809626,
+            "ci_low": -0.08238302141433326,
+            "ci_high": -0.04208235452920752,
+            "n_boot": 400
+          },
+          "transfer_tenure_days": {
+            "kendall_tau": -0.024137388736818224,
+            "ci_low": -0.04485635260468244,
+            "ci_high": 0.0005744646343613125,
+            "n_boot": 400
+          },
+          "active_months": {
+            "kendall_tau": -0.020902344260873305,
+            "ci_low": -0.04393409392088798,
+            "ci_high": 0.003489352446963673,
+            "n_boot": 400
+          },
+          "close_success_count": {
+            "kendall_tau": -0.01246579470568257,
+            "ci_low": -0.030048851170488285,
+            "ci_high": 0.005637099264840037,
+            "n_boot": 400
+          },
+          "realized_gain_proxy": {
+            "kendall_tau": -0.041432478162957545,
+            "ci_low": -0.06140918100299986,
+            "ci_high": -0.020342101191507513,
+            "n_boot": 400
+          },
+          "close_success_rate": {
+            "kendall_tau": 0.0020678628541932623,
+            "ci_low": -0.021893109013606193,
+            "ci_high": 0.02266095946155454,
+            "n_boot": 400
+          }
+        },
+        "awp_paper": {
+          "in_degree": {
+            "kendall_tau": 0.7282294155430296,
+            "ci_low": 0.7183791938696161,
+            "ci_high": 0.7372191876336829,
+            "n_boot": 400
+          },
+          "in_value": {
+            "kendall_tau": 0.49508867144820273,
+            "ci_low": 0.48117973942488607,
+            "ci_high": 0.5101394526460865,
+            "n_boot": 400
+          },
+          "in_approve_degree": {
+            "kendall_tau": -0.02383882584028253,
+            "ci_low": -0.043014008897331174,
+            "ci_high": -0.0020497664865514135,
+            "n_boot": 400
+          },
+          "in_approve_value": {
+            "kendall_tau": -0.023498271924078266,
+            "ci_low": -0.042668899818882375,
+            "ci_high": -0.0016195019306862084,
+            "n_boot": 400
+          },
+          "liquidation_free_rate": {
+            "kendall_tau": 0.07293008901029133,
+            "ci_low": 0.05609356425361645,
+            "ci_high": 0.09132990284235408,
+            "n_boot": 400
+          },
+          "zero_liquidation_flag": {
+            "kendall_tau": -0.02069305810088279,
+            "ci_low": -0.04227970923180226,
+            "ci_high": 0.001105474989391228,
+            "n_boot": 400
+          },
+          "liquidation_free_closes": {
+            "kendall_tau": 0.3722447128352521,
+            "ci_low": 0.3545238222009347,
+            "ci_high": 0.38650511662114345,
+            "n_boot": 400
+          },
+          "loss_avoidance": {
+            "kendall_tau": -0.21400333435227223,
+            "ci_low": -0.23169835681303716,
+            "ci_high": -0.1975967470282477,
+            "n_boot": 400
+          },
+          "non_loss_close_rate": {
+            "kendall_tau": -0.006033862781139628,
+            "ci_low": -0.023080691189497547,
+            "ci_high": 0.009957875106477367,
+            "n_boot": 400
+          },
+          "worst_close_pnl_score": {
+            "kendall_tau": -0.16158786740174536,
+            "ci_low": -0.1786981619133689,
+            "ci_high": -0.14540491816404333,
+            "n_boot": 400
+          },
+          "inbound_counterparty_ratio": {
+            "kendall_tau": -0.22811320349541495,
+            "ci_low": -0.2504910174221361,
+            "ci_high": -0.20743651244256894,
+            "n_boot": 400
+          },
+          "transfer_tenure_days": {
+            "kendall_tau": 0.5071352454566509,
+            "ci_low": 0.49329547235510596,
+            "ci_high": 0.5209079815992768,
+            "n_boot": 400
+          },
+          "active_months": {
+            "kendall_tau": 0.5545992950219015,
+            "ci_low": 0.5399962395196426,
+            "ci_high": 0.5692288316250756,
+            "n_boot": 400
+          },
+          "close_success_count": {
+            "kendall_tau": 0.34976307497062137,
+            "ci_low": 0.3316685719192023,
+            "ci_high": 0.3665490154524837,
+            "n_boot": 400
+          },
+          "realized_gain_proxy": {
+            "kendall_tau": 0.2842744584010224,
+            "ci_low": 0.2677238078984636,
+            "ci_high": 0.3002895334632009,
+            "n_boot": 400
+          },
+          "close_success_rate": {
+            "kendall_tau": 0.07531237940811646,
+            "ci_low": 0.058492159047620604,
+            "ci_high": 0.09376863170629977,
+            "n_boot": 400
+          }
+        }
+      },
+      "inter_method_ci": {
+        "kendall_tau": -0.02471427702056078,
+        "ci_low": -0.04390198304176552,
+        "ci_high": -0.0029319221354718555,
+        "n_boot": 400
+      },
       "tau_diff": [
         {
-          "label": "AWP-P minus AWP",
-          "role": "paper_form",
+          "label": "EndorseRank allowance minus EndorseRank transfer",
+          "group": "primary",
           "a": {
-            "method": "awp_paper",
-            "tau": 0.12315286203250951
+            "method": "endorserank_vt",
+            "key": "allowance",
+            "tau": 0.9898864532786893
           },
           "b": {
-            "method": "awp",
-            "tau": 0.04352575041461237
+            "method": "endorserank_vt",
+            "key": "transfer",
+            "tau": -0.07133651205030576
           },
-          "holdout_label": "future_new_approvers",
-          "delta_tau": 0.07962711161789715,
-          "ci_low": 0.047833907013855065,
-          "ci_high": 0.1113655057982489,
+          "delta_tau": 1.061222965328995,
+          "ci_low": 1.0466569498204312,
+          "ci_high": 1.0749114300441052,
           "share_positive": 1.0,
-          "n": 1335,
           "n_boot": 400
         },
         {
-          "label": "AWP-P minus AWP",
-          "role": "paper_form",
+          "label": "AWP transfer minus EndorseRank transfer",
+          "group": "primary",
           "a": {
             "method": "awp_paper",
-            "tau": 0.3442513030719671
+            "key": "transfer",
+            "tau": 0.6116590434956162
           },
           "b": {
-            "method": "awp",
-            "tau": 0.2701733765699188
+            "method": "endorserank_vt",
+            "key": "transfer",
+            "tau": -0.07133651205030576
           },
-          "holdout_label": "future_new_transfer_senders",
-          "delta_tau": 0.07407792650204831,
-          "ci_low": 0.04875531167137084,
-          "ci_high": 0.10062879213010238,
+          "delta_tau": 0.682995555545922,
+          "ci_low": 0.6638630660688057,
+          "ci_high": 0.7025141422259439,
           "share_positive": 1.0,
-          "n": 1335,
           "n_boot": 400
         },
         {
-          "label": "AWP-P minus t1 in-degree",
-          "role": "increment",
+          "label": "EndorseRank allowance minus AWP allowance",
+          "group": "primary",
           "a": {
-            "method": "awp_paper",
-            "tau": 0.3442513030719671
-          },
-          "b": {
-            "method": "t1_in_degree",
-            "tau": 0.47163239613775
-          },
-          "holdout_label": "future_new_transfer_senders",
-          "delta_tau": -0.12738109306578288,
-          "ci_low": -0.14966996120771944,
-          "ci_high": -0.09865149874854459,
-          "share_positive": 0.0,
-          "n": 1335,
-          "n_boot": 400
-        },
-        {
-          "label": "EndorseRank minus AWP-P",
-          "role": "single_layer",
-          "a": {
-            "method": "endorserank",
-            "tau": 0.47860789811384274
+            "method": "endorserank_vt",
+            "key": "allowance",
+            "tau": 0.9898864532786893
           },
           "b": {
             "method": "awp_paper",
-            "tau": 0.12315286203250951
+            "key": "allowance",
+            "tau": -0.023668548882180396
           },
-          "holdout_label": "future_new_approvers",
-          "delta_tau": 0.3554550360813332,
-          "ci_low": 0.2835772827319092,
-          "ci_high": 0.42702445531179756,
+          "delta_tau": 1.0135550021608697,
+          "ci_low": 0.9908579061601349,
+          "ci_high": 1.0330245082710754,
           "share_positive": 1.0,
-          "n": 1335,
           "n_boot": 400
         },
         {
-          "label": "AWP-P minus EndorseRank",
-          "role": "single_layer",
+          "label": "AWP sybil-stability minus EndorseRank sybil-stability",
+          "group": "primary",
           "a": {
             "method": "awp_paper",
-            "tau": 0.3442513030719671
+            "key": "sybil_stability",
+            "tau": 0.27787377899437915
           },
           "b": {
-            "method": "endorserank",
-            "tau": 0.37200516499937625
+            "method": "endorserank_vt",
+            "key": "sybil_stability",
+            "tau": -0.0358586250052626
           },
-          "holdout_label": "future_new_transfer_senders",
-          "delta_tau": -0.02775386192740914,
-          "ci_low": -0.07196905069610479,
-          "ci_high": 0.021608934551257047,
-          "share_positive": 0.1275,
-          "n": 1335,
-          "n_boot": 400
-        },
-        {
-          "label": "C-PR minus AWP-P",
-          "role": "registered_f1",
-          "a": {
-            "method": "coupled_pr",
-            "tau": 0.29498981729927687
-          },
-          "b": {
-            "method": "awp_paper",
-            "tau": 0.12315286203250951
-          },
-          "holdout_label": "future_new_approvers",
-          "delta_tau": 0.17183695526676734,
-          "ci_low": 0.11069106193211742,
-          "ci_high": 0.22561692125984784,
+          "delta_tau": 0.31373240399964175,
+          "ci_low": 0.29549621973344065,
+          "ci_high": 0.33298739235888963,
           "share_positive": 1.0,
-          "n": 1335,
           "n_boot": 400
         },
         {
-          "label": "C-PR minus AWP-P",
-          "role": "registered_f2",
+          "label": "EndorseRank in-approve degree minus EndorseRank in-degree",
+          "group": "primary",
           "a": {
-            "method": "coupled_pr",
-            "tau": 0.2767568762214579
+            "method": "endorserank_vt",
+            "key": "in_approve_degree",
+            "tau": 0.9940984697662457
           },
           "b": {
-            "method": "awp_paper",
-            "tau": 0.3442513030719671
+            "method": "endorserank_vt",
+            "key": "in_degree",
+            "tau": -0.09566867508546485
           },
-          "holdout_label": "future_new_transfer_senders",
-          "delta_tau": -0.06749442685050921,
-          "ci_low": -0.09546629223023738,
-          "ci_high": -0.03936888345905312,
-          "share_positive": 0.0,
-          "n": 1335,
+          "delta_tau": 1.0897671448517106,
+          "ci_low": 1.072375482544281,
+          "ci_high": 1.1048916615029885,
+          "share_positive": 1.0,
           "n_boot": 400
         }
       ],
-      "between_methods": {
-        "awp_awp_paper": {
-          "spearman_rho": 0.7640301894733473,
-          "kendall_tau": 0.5850161735305349,
-          "ci_low": 0.5527733785941973,
-          "ci_high": 0.6120039214223468,
-          "n": 1335,
+      "endorserank_ceiling_untied_proxy": 0.21646552175516018
+    }
+  },
+  "holdout_receiving": {
+    "n_spenders": 1335,
+    "composition": {
+      "awp_zero": 318,
+      "t1_in_degree_zero": 358,
+      "endorserank_zero": 0,
+      "new_approver_share": {
+        "awp_zero": 0.22327044025157233,
+        "awp_positive": 0.14847590953785644
+      },
+      "new_sender_share": {
+        "awp_zero": 0.03773584905660377,
+        "awp_positive": 0.16027531956735497
+      }
+    },
+    "definition": "spenders with at least one sender other than themselves before the freeze",
+    "n": 977,
+    "tau": {
+      "endorserank_vt": {
+        "future_new_approvers": {
+          "spearman_rho": 0.4166369617788338,
+          "kendall_tau": 0.34025827563836203,
+          "ci_low": 0.29856406210683856,
+          "ci_high": 0.3857949707482991,
+          "n": 977,
+          "n_boot": 400
+        },
+        "future_new_transfer_senders": {
+          "spearman_rho": 0.4409235957902254,
+          "kendall_tau": 0.35803452844848255,
+          "ci_low": 0.31628161753322415,
+          "ci_high": 0.395634558820657,
+          "n": 977,
+          "n_boot": 400
+        }
+      },
+      "awp_paper": {
+        "future_new_approvers": {
+          "spearman_rho": 0.368241931871655,
+          "kendall_tau": 0.2979164813332717,
+          "ci_low": 0.2520953156031854,
+          "ci_high": 0.3428395133678867,
+          "n": 977,
+          "n_boot": 400
+        },
+        "future_new_transfer_senders": {
+          "spearman_rho": 0.48223767896791564,
+          "kendall_tau": 0.3875055871928577,
+          "ci_low": 0.347507192316101,
+          "ci_high": 0.42974144450410134,
+          "n": 977,
+          "n_boot": 400
+        }
+      },
+      "t1_in_approve_degree": {
+        "future_new_approvers": {
+          "spearman_rho": 0.7003959211836088,
+          "kendall_tau": 0.6786579381737964,
+          "ci_low": 0.6161802822595771,
+          "ci_high": 0.7359737995310851,
+          "n": 977,
+          "n_boot": 400
+        },
+        "future_new_transfer_senders": {
+          "spearman_rho": 0.5939916794963194,
+          "kendall_tau": 0.5699158171541084,
+          "ci_low": 0.5047404077080248,
+          "ci_high": 0.6346195063161475,
+          "n": 977,
+          "n_boot": 400
+        }
+      },
+      "t1_in_degree": {
+        "future_new_approvers": {
+          "spearman_rho": 0.5983238395371406,
+          "kendall_tau": 0.5687283805377775,
+          "ci_low": 0.5098625540916343,
+          "ci_high": 0.6313887404194972,
+          "n": 977,
+          "n_boot": 400
+        },
+        "future_new_transfer_senders": {
+          "spearman_rho": 0.732967648325356,
+          "kendall_tau": 0.7010602850237558,
+          "ci_low": 0.6506262072460417,
+          "ci_high": 0.7499897998672039,
+          "n": 977,
           "n_boot": 400
         }
       }
+    },
+    "tau_diff": [
+      {
+        "label": "EndorseRank minus AWP",
+        "role": "receiving",
+        "a": {
+          "method": "endorserank_vt",
+          "tau": 0.34025827563836203
+        },
+        "b": {
+          "method": "awp_paper",
+          "tau": 0.2979164813332717
+        },
+        "holdout_label": "future_new_approvers",
+        "delta_tau": 0.04234179430509033,
+        "ci_low": 0.0025894641185535247,
+        "ci_high": 0.08485234133769949,
+        "share_positive": 0.9775,
+        "n": 977,
+        "n_boot": 400
+      },
+      {
+        "label": "EndorseRank minus AWP",
+        "role": "receiving",
+        "a": {
+          "method": "endorserank_vt",
+          "tau": 0.35803452844848255
+        },
+        "b": {
+          "method": "awp_paper",
+          "tau": 0.3875055871928577
+        },
+        "holdout_label": "future_new_transfer_senders",
+        "delta_tau": -0.029471058744375167,
+        "ci_low": -0.06989442393506799,
+        "ci_high": 0.01109670902733786,
+        "share_positive": 0.085,
+        "n": 977,
+        "n_boot": 400
+      },
+      {
+        "label": "AWP minus t1 in-degree",
+        "role": "receiving",
+        "a": {
+          "method": "awp_paper",
+          "tau": 0.3875055871928577
+        },
+        "b": {
+          "method": "t1_in_degree",
+          "tau": 0.7010602850237558
+        },
+        "holdout_label": "future_new_transfer_senders",
+        "delta_tau": -0.3135546978308981,
+        "ci_low": -0.3526439536846593,
+        "ci_high": -0.2763800062622296,
+        "share_positive": 0.0,
+        "n": 977,
+        "n_boot": 400
+      }
+    ]
+  },
+  "trader_counts": {
+    "window": [
+      "2026-03-01 00:00:00+00:00",
+      "2026-05-31 23:59:59+00:00"
+    ],
+    "min_closes": 3,
+    "matched": {
+      "wallets": 5521,
+      "with_min_closes": 2962,
+      "with_a_liquidation": 1434
+    },
+    "matched_in_freeze_graph": {
+      "wallets": 4227,
+      "with_min_closes": 1860,
+      "with_a_liquidation": 923
     }
   }
 }
