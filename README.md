@@ -84,6 +84,7 @@ flowchart TB
 | `1-Proposal/` | 완료된 제안서 (정본 LaTeX: `1-Proposal/proposal/`) |
 | `proposal-ko/` | 제안서 한국어 LaTeX 번역본 (`build.ps1` → `main.pdf`) |
 | `2-Dissertation-Draft-Works/overleaf-github/` | **활성** 영문 논문 초안 (정본, Overleaf 저장소 서브모듈) |
+| `2-Dissertation-Draft-Works/overleaf-github-ko/` | 영문 논문 초안을 초등학생도 읽을 수 있는 쉬운 한국어로 옮긴 번역본 (`main.pdf`, 번역 기준 `TRANSLATION-GUIDE.md`) |
 | `2-Dissertation-Draft-Works/wallet-reputation-experiments/` | 실증 실험 코드와 데이터 (설명: 그 폴더의 `README.md`, `data/README.md`) |
 | `2-Dissertation-Draft-Works/local-other/kr/` | 한국어 논문 초안 |
 | `2-Dissertation-Draft-Works/customized-books/book-for-children/` | 논문을 어린이 눈높이로 풀어 쓴 책 『허락의 화살표』 (`main.pdf`) |
@@ -123,7 +124,7 @@ flowchart TB
 | `Config/preamble.tex` | Report 클래스, 폰트, `booktabs`, `siunitx` |
 | `build.ps1` | XeLaTeX full + per-chapter PDF 빌드 |
 
-한국어본은 `2-Dissertation-Draft-Works/local-other/kr/`에 같은 구조로 있습니다.
+한국어본은 `2-Dissertation-Draft-Works/local-other/kr/`에 같은 구조로 있습니다. 지금의 영문 원고를 쉬운 한국어로 옮긴 번역본은 `2-Dissertation-Draft-Works/overleaf-github-ko/`에 같은 구조로 있습니다.
 
 ### `2-Dissertation-Draft-Works/wallet-reputation-experiments/`
 

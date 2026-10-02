@@ -6,18 +6,18 @@
   refbox/.style={draw, dashed, rounded corners, align=center, minimum width=3.4cm, minimum height=0.95cm},
   arrow/.style={-{Stealth[length=2.5mm]}, thick}
 ]
-\node[box] (center) at (0,3.2) {Allowance and transfer scores on one wallet cohort};
+\node[box] (center) at (0,3.2) {한 지갑 코호트에서 구한 허락 점수와 송금 점수};
 
-\node[smallbox] (rep) at (-5,1.2) {Reputation\\Structure};
-\node[smallbox] (risk) at (0,1.2) {Construct\\Checks};
-\node[smallbox] (eff) at (5,1.2) {Computational\\Cost};
+\node[smallbox] (rep) at (-5,1.2) {평판\\구조};
+\node[smallbox] (risk) at (0,1.2) {구성개념\\점검};
+\node[smallbox] (eff) at (5,1.2) {계산\\비용};
 
-\node[smallbox] (h1) at (-5,-1.0) {H1 / RQ1\\EndorseRank--AWP\\divergence};
-\node[smallbox] (h2) at (0,-1.0) {H2 / RQ2\\Agreement with\\each construct};
-\node[smallbox] (h3) at (5,-1.0) {H3 / RQ3\\Cost of\\each score};
+\node[smallbox] (h1) at (-5,-1.0) {H1 / RQ1\\엔도스랭크--AWP\\갈라짐};
+\node[smallbox] (h2) at (0,-1.0) {H2 / RQ2\\각 구성개념과\\맞는 정도};
+\node[smallbox] (h3) at (5,-1.0) {H3 / RQ3\\점수마다\\드는 비용};
 
-\node[refbox] (hold) at (0,-3.0) {RQ4: temporal holdout\\scores vs.\ raw degrees};
-\node[refbox] (rq5) at (5,-3.0) {RQ5: coupled operator C-PR\\both edge types, both labels};
+\node[refbox] (hold) at (0,-3.0) {RQ4: 시간 홀드아웃\\점수 대 원시 차수};
+\node[refbox] (rq5) at (5,-3.0) {RQ5: 결합 연산자 C-PR\\화살표 두 종류, 라벨 두 개};
 
 \draw[arrow] (center.south -| rep.north) -- (rep.north);
 \draw[arrow] (center.south) -- (risk.north);
