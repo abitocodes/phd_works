@@ -27,22 +27,22 @@
 \begin{tikzpicture}
 \begin{axis}[
   xbar, bar width=11pt, width=0.92\linewidth, height=4.6cm,
-  xmin=0, xmax=5.6, xlabel={계산에 걸린 시간 (초)},
+  xmin=0, xmax=6.6, xlabel={계산에 걸린 시간 (초)},
   symbolic y coords={S, C, A, E}, ytick=data,
   yticklabels={씨앗 랭크, 동전 랭크, 송금 랭크, 엔도스랭크},
   nodes near coords, nodes near coords style={font=\scriptsize},
-  every node near coord/.append style={/pgf/number format/fixed, /pgf/number format/precision=3},
+  every node near coord/.append style={/pgf/number format/fixed, /pgf/number format/fixed zerofill, /pgf/number format/precision=3},
   tick label style={font=\small}, label style={font=\small}, axis y line*=left,
   enlarge y limits=0.2,
 ]
-\addplot[fill=inkblue!70, draw=inkblue] coordinates {(4.156,S) (4.760,C) (4.105,A) (0.401,E)};
+\addplot[fill=inkblue!70, draw=inkblue] coordinates {(5.600,S) (5.667,C) (5.029,A) (0.547,E)};
 \end{axis}
 \end{tikzpicture}
 \caption{지갑 5,521개로 점수를 한 번 계산하는 데 걸린 평균 시간.}
 \end{figure}
 
-엔도스랭크는 0.401초, 송금 랭크는 4.105초가 걸렸어요.
-엔도스랭크가 약 \textbf{10.2배} 빨랐어요.
+엔도스랭크는 0.547초, 송금 랭크는 5.029초가 걸렸어요.
+엔도스랭크가 약 \textbf{9.2배} 빨랐어요.
 화살표 수의 차이(약 9.3배)와 거의 같은 비율이에요.
 기억하는 데 쓴 메모리도 4.6메가바이트와 38.2메가바이트로 비슷한 차이가 났어요.
 
@@ -59,7 +59,7 @@
 \item \textbf{말할 수 없는 것}: 지갑이 훨씬 많아져도 늘 이만큼 빠를지는 확인하지 못했어요.
       지갑 수를 10만 개 가까이 늘려서도 재 보았지만, 새로 더한 지갑들에는 허락이나 송금 화살표를 따로 가져오지 못했어요.
       그래서 지도 자체는 커지지 않았어요.
-\item 두 지도를 섞는 동전 랭크는 화살표를 둘 다 쓰니 송금 랭크보다 빠를 수 없어요. 실제로 4.76초가 걸렸어요.
+\item 두 지도를 섞는 동전 랭크는 화살표를 둘 다 쓰니 송금 랭크보다 빠를 수 없어요. 실제로 5.67초가 걸렸어요.
       빠르다는 장점은 엔도스랭크에만 해당해요.
 \end{itemize}
 
@@ -70,22 +70,23 @@
 \toprule
 & 시간(초) & 반복 수 & 점 & 화살표 \\
 \midrule
-엔도스랭크 & 0.401 & 37 & 6,442 & 14,727 \\
-송금 랭크 & 4.105 & 100 & 30,791 & 137,087 \\
-동전 랭크 ($\lambda=0.5$) & 4.760 & 76 & 31,242 & 151,814 \\
-씨앗 랭크 & 4.156 & 145 & 30,791 & 137,087 \\
+엔도스랭크 & 0.547 & 37 & 6,442 & 14,727 \\
+송금 랭크 & 5.029 & 91 & 30,791 & 137,087 \\
+동전 랭크 ($\lambda=0.5$) & 5.667 & 76 & 31,242 & 151,814 \\
+씨앗 랭크 & 5.600 & 145 & 30,791 & 137,087 \\
 \bottomrule
 \end{tabular}
 \end{center}
-시간은 몸풀기 1회 뒤 5회 잰 평균이에요. 지갑 수를 1,000개, 2,000개, 4,000개로 줄여 가며 잰 결과와,
-확장 지갑 풀(10,000개, 50,000개, 99,080개)로 잰 결과에서도 엔도스랭크가 8.1배에서 12.2배 빨랐어요.
+시간은 몸풀기 1회 뒤 5회 잰 평균이고, 2026년 10월 2일에 클라우드의 컴퓨터(4코어 프로세서, 2.8기가헤르츠)에서 쟀어요. 지갑 수를 1,000개, 2,000개, 4,000개로 줄여 가며 잰 결과와,
+확장 지갑 풀(10,000개, 50,000개, 99,080개)로 잰 결과에서도 엔도스랭크가 8.6배에서 14.4배 빨랐어요.
+반복 수(37번과 91번)가 적은 것도 조금 도와요. 허락 지도에서는 화살표의 99\%가 다시 나가는 화살표가 없는 통에서 끝나서 쪽지가 금방 선생님께 돌아오지만, 송금 지도에는 서로 주고받는 길이 많아서 쪽지가 오래 돌아다녀요.
 확장 풀의 새 지갑들은 화살표가 없어서 지도에 점을 더하지 못했어요. 그래서 99,080개 단계의 지도는 5,521개 단계와 같아요.
 \end{deeper}
 
 \begin{learned}
 \begin{itemize}
 \item 계산 시간은 화살표 수에 거의 비례해요.
-\item 엔도스랭크는 화살표가 약 9배 적어서 송금 랭크보다 약 10배 빨랐어요.
+\item 엔도스랭크는 화살표가 약 9배 적어서 송금 랭크보다 약 9배 빨랐어요.
 \item 지도가 훨씬 커져도 그런지는 아직 확인하지 못했어요.
 \end{itemize}
 \end{learned}
