@@ -116,7 +116,7 @@ Google BigQuery의 공개 테이블 `bigquery-public-data.goog_blockchain_arbitr
 | `supplemental_wallets.parquet` | 보충용으로 뽑아 둔 활동 지갑 94,479개 | `sample_active_wallets.py`가 BigQuery에서 송금이 많은 지갑을 뽑았습니다. 확장 풀을 채울 때 앞에서부터 씁니다. |
 | `extraction_manifest.json` | 12~5월 기록을 어떻게 가져오고 정리했는지 적은 일지 | 쿼리마다 읽은 바이트, 줄 수, 출력 파일, 해독 결과. 안에 적힌 경로는 그때의 위치(옛 폴더 이름, 사용자 PC의 `D:\`)입니다. |
 | `eval_summary.json` | 같은 6개월 안에서 점수를 시험한 결과 | 점수와 검증 지표 사이의 순위 상관(Kendall τ, Spearman ρ)과 95% 부트스트랩 구간, Δτ 대비, 실행 시간, 강건성 점검. 2026-10-02에 클라우드 컨테이너(4코어 Xeon 2.8 GHz)에서 다시 만들었습니다. 4장 표 대부분의 근거입니다. |
-| `supplementary_checks.json` | 결과를 본 뒤에 해 본 추가 점검 | 동점 처리 규칙, 송금을 받아 본 스펜더 977개만 남긴 봄 홀드아웃, 트레이더 수. `run_supplementary_checks.py`. 표 tie-sensitivity, holdout-receiving의 근거입니다. |
+| `supplementary_checks.json` | 결과를 본 뒤에 해 본 추가 점검 | 동점 처리 규칙, 송금을 받아 본 스펜더 977개만 남긴 봄 홀드아웃, 트레이더 수. `run_supplementary_checks.py`. 표 tie-sensitivity, holdout-receiving과 부록 표 endorserank-awp-holdout(둘째 묶음)의 근거입니다. |
 
 ### erc20-allowances-and-transfers/
 
@@ -166,12 +166,12 @@ Google BigQuery의 공개 테이블 `bigquery-public-data.goog_blockchain_arbitr
 | 파일 | 쉽게 말하면 | 논문에서 |
 |---|---|---|
 | `eval_summary.json` | 2번 폴더 같은 이름 파일의 사본 | 정렬, 대비, 실행 시간, 강건성 표 |
-| `supplementary_checks.json` | 2번 폴더 같은 이름 파일의 사본 | 표 tie-sensitivity, holdout-receiving |
-| `spring-holdout-2026-03-to-2026-05/eval_summary_spenders.json` | 봄 홀드아웃 채점표 사본 | 표 holdout-spenders, holdout-diff, endorserank-restarts |
-| `spring-holdout-2026-03-to-2026-05/eval_summary_matched_traders.json` | 트레이더 탐색용 채점표 사본 | 4장 트레이더 결과 문단 |
+| `supplementary_checks.json` | 2번 폴더 같은 이름 파일의 사본 | 표 tie-sensitivity, holdout-receiving, 부록 표 endorserank-awp-holdout |
+| `spring-holdout-2026-03-to-2026-05/eval_summary_spenders.json` | 봄 홀드아웃 채점표 사본 | 표 holdout-spenders, holdout-diff, endorserank-restarts, 부록 표 endorserank-awp-holdout |
+| `spring-holdout-2026-03-to-2026-05/eval_summary_matched_traders.json` | 트레이더 탐색용 채점표 사본 | 표 holdout-traders |
 | `registered-replication-2026-06-to-2026-08/extraction_manifest.json` | 6~8월 추출 일지 사본 | 등록 파일 해시 확인용 |
 | `registered-replication-2026-06-to-2026-08/fresh_holdout_summary.json` | 등록 재현 채점표 사본 | 표 fresh-holdout, fresh-contrasts, fresh-traders |
-| `registered-replication-2026-06-to-2026-08/posthoc_endorserank.json` | 등록 재현 뒤 EndorseRank 채점 사본 | 표 fresh-posthoc |
+| `registered-replication-2026-06-to-2026-08/posthoc_endorserank.json` | 등록 재현 뒤 EndorseRank 채점 사본 | 표 fresh-posthoc, 부록 표 endorserank-awp-holdout |
 | `config-copies/margin_config.yaml` | 설정 파일 사본 | 2026-09-14에 고정한 C-PR 규칙(`reputation.hybrid`) 포함 |
 | `config-copies/fresh_holdout_2026q3.yaml` | 등록 파일 사본 | `status: registered`, 커밋 `4085ab9` |
 | `MANIFEST.json` | 위 파일들의 지문 목록 | 파일마다 원본 위치, 크기, SHA-256 |
@@ -184,7 +184,7 @@ Google BigQuery의 공개 테이블 `bigquery-public-data.goog_blockchain_arbitr
 
 ## 4-archived-extended-baselines/ — 창고
 
-다른 PageRank 방법들과 넓게 비교해 본 결과입니다. 논문 본문에는 EndorseRank와 AWP만 쓰기로 해서 창고에 두었습니다. 이 표들의 허락 기준과 송금 기준은 금액을 그대로 쓰는 두 층을 각각 혼자 걸은 점수(지금의 C-PR λ=1, λ=0)입니다. 표의 줄은 방법, 칸은 검증 지표 여섯 가족의 평균 τ와 실행 시간(초)입니다. `python scripts/export_method_matrix.py --preset three|seven|six-aave`로 다시 만듭니다.
+다른 PageRank 방법들과 넓게 비교해 본 결과입니다. 논문에서는 EndorseRank, AWP, 그리고 두 층으로 만든 C-PR과 S-PR만 다루기로 해서 창고에 두었습니다. 이 표들의 허락 기준과 송금 기준은 금액을 그대로 쓰는 두 층을 각각 혼자 걸은 점수(지금의 C-PR λ=1, λ=0)입니다. 표의 줄은 방법, 칸은 검증 지표 여섯 가족의 평균 τ와 실행 시간(초)입니다. `python scripts/export_method_matrix.py --preset three|seven|six-aave`로 다시 만듭니다.
 
 | 파일 | 쉽게 말하면 |
 |---|---|
