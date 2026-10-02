@@ -76,6 +76,7 @@ def english_leftovers(s: str):
     for cmd in ["texttt", "url", "label", "ref", "eqref", "cend", "input", "include", "includegraphics", "hyperref"]:
         s = re.sub(r"\\" + cmd + r"(\[[^\]]*\])*\s*" + BRACE, " ", s)
     s = re.sub(r"\\href" + BRACE + BRACE, " ", s)
+    s = re.sub(r"\\(node|draw|path|coordinate)\s*\[[^\]]*\]", " ", s)  # TikZ options are code
     s = re.sub(r"\\[A-Za-z]+\*?", " ", s)  # command names
     bad = []
     for line in s.split("\n"):
