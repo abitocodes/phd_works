@@ -1,7 +1,7 @@
 # 5-Roundtable
 
 UNISA Postgraduate Research Roundtable 및 박사과정 **중간·진전 발표** 자료 보관 위치입니다.  
-`1-Proposal/`, `2-Dissertation-Draft/`와 동등한 최상위 경로에 둡니다.
+`1-Proposal/`, `2-Dissertation-Draft-Works/`와 동등한 최상위 경로에 둡니다.
 
 제안서 전용 산출물이 아니라 **박사과정 전체 진행 보고**이므로 제안서 폴더 밖에 둡니다.
 

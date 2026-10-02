@@ -1,3 +1,6 @@
+# The submodule keeps its old name (2-Dissertation-Draft/overleaf-github) on purpose:
+# the name is where each local clone keeps its git data (.git/modules/<name>), and
+# changing it would make every existing checkout clone the manuscript again.
 [submodule "2-Dissertation-Draft/overleaf-github"]
-	path = 2-Dissertation-Draft/overleaf-github
+	path = 2-Dissertation-Draft-Works/overleaf-github
 	url = https://github.com/abitocodes/phd-dissertation-draft-en.git

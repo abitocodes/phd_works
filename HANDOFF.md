@@ -1,12 +1,13 @@
 # Handoff — dissertation work (2026-10-01)
 
-This is where the thesis work stood at the end of the previous session. Read it before touching the manuscript or `margin_rank`.
+This is where the thesis work stood at the end of the previous session. Read it before touching the manuscript or the experiments folder.
 
 ## Repos
 
 - `phd_works` (this repo). The June–August replication was registered in commit 4085ab9 (merged into master in f701400 on 2026-10-01), extracted in d6d26c4 and evaluated in 1462d76.
-- `2-Dissertation-Draft/overleaf-github` is a submodule (`phd-dissertation-draft-en`). Its work branch `claude/sweet-darwin-odfmmv` (latest 396ea41) carries all manuscript changes and is not yet merged into `main`; the submodule pointer here still points at 9459b33. Run `git submodule update --init` if the folder is empty.
-- Experiment code lives in `A-Skill-Programs/margin_rank`. `data/raw/` and `data/processed/` are tracked (see its `.gitignore` for exclusions); the summaries behind the thesis tables are copied to `results/` by `scripts/publish_results.py`.
+- `2-Dissertation-Draft-Works/overleaf-github` is a submodule (`phd-dissertation-draft-en`; its name in `.gitmodules` is still `2-Dissertation-Draft/overleaf-github`, on purpose). Its work branch `claude/sweet-darwin-odfmmv` (latest 8a60745) carries all manuscript changes and is not yet merged into `main`; the submodule pointer here still points at 9459b33. Run `git submodule update --init` if the folder is empty.
+- Experiment code and data live in `2-Dissertation-Draft-Works/wallet-reputation-experiments` (until 1 October 2026: `A-Skill-Programs/margin_rank`). All data sit under its `data/`: `1-raw-blockchain-logs/` and `2-processed-tables-and-evaluations/` are tracked (see its `.gitignore` for exclusions), and the summaries behind the thesis tables are copied to `3-published-results-for-thesis/` by `scripts/publish_results.py`. Its `README.md` and `data/README.md` describe every folder and file; `scripts/project_paths.py` holds the folder names and the old-to-new map.
+- After pulling the folder move, run `scripts/finish_folder_move.py` (dry run, then `--apply`) on each checkout to move what git does not track (the `.venv`, files over 100 MiB, the submodule checkout) out of the old folders.
 
 ## Central claim, as it now stands
 
@@ -36,8 +37,8 @@ This is where the thesis work stood at the end of the previous session. Read it 
   - author is abito <33889084+abitocodes@users.noreply.github.com>;
   - commit messages have a Korean conventional title and one block per hunk, `path[start:end]`, followed by `-` bullets;
   - never commit `.cursor/journey.md`.
-- The registration files (`config/fresh_holdout_2026q3.yaml`, `docs/fresh_holdout_2026q3_plan.md`) are frozen; their hashes are in `results/fresh_2026q3/extraction_manifest.json` (computed on the CRLF checkout).
-- Build: 193 pages, 0 errors, 0 undefined references at 396ea41. Check the build again after every edit.
+- The registration files (`config/fresh_holdout_2026q3.yaml`, `docs/fresh_holdout_2026q3_plan.md`) are frozen; their hashes are in `data/3-published-results-for-thesis/registered-replication-2026-06-to-2026-08/extraction_manifest.json` (computed on the CRLF checkout). The registration still names the old data folders; `fresh_holdout.load_registration` translates them.
+- Build: 193 pages, 0 errors, 0 undefined references at 8a60745. Check the build again after every edit.
 
 ## Other numbers you will need
 
