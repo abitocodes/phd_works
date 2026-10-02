@@ -86,15 +86,15 @@ C-PR & 두 층 모두, 금액 그대로, 점마다 비율 $\lambda$로 섞은 �
 항목 & 다루는 내용 & 보고한 곳 \\
 \midrule
 H1 / RQ1 & EndorseRank와 AWP는 서로 다른 지갑 순서를 만드나요? & \ref{sec:rank-divergence}절; 방법 사이의 $\tau$와 95\% 신뢰구간(믿을 만한 범위); 표~\ref{tab:tie-sensitivity}; 주장 C3 \\
-H2 / RQ2 & 각 점수는 허락 점검, 그리고 송금 점검과 얼마나 잘 맞나요? & 표~\ref{tab:alignment-hybrid}와~\ref{tab:tie-sensitivity}; 주장 C2 \\
+H2 / RQ2 & 각 점수는 허락 점검, 그리고 송금 점검과 얼마나 잘 맞나요? & 표~\ref{tab:alignment-hybrid}과~\ref{tab:tie-sensitivity}; 주장 C2 \\
 H3 / RQ3 & 같은 $n$에서 각 점수를 계산하는 데 얼마나 드나요? & 표~\ref{tab:benchmark-runtime}--\ref{tab:benchmark-scaling}; 주장 C1 \\
-RQ4 & $t_1$의 점수가 $t_2$의 새 허락과 새 송금자를 예측하나요(미리 맞히나요)? 그리고 어떤 페이지랭크라도 자기가 다듬는 원시 차수보다 나은가요? & \ref{sec:holdout-results}절; 표~\ref{tab:holdout-spenders}, \ref{tab:holdout-diff}, \ref{tab:holdout-receiving}, \ref{tab:holdout-traders}와~\ref{tab:fresh-posthoc}; 주장 C4 \\
+RQ4 & $t_1$의 점수가 $t_2$의 새 허락과 새 송금자를 예측하나요(미리 맞히나요)? 그리고 어떤 페이지랭크라도 자기가 다듬는 원시 차수보다 나은가요? & \ref{sec:holdout-results}절; 표~\ref{tab:holdout-spenders}, \ref{tab:holdout-diff}, \ref{tab:holdout-receiving}, \ref{tab:holdout-traders}과~\ref{tab:fresh-posthoc}; 주장 C4 \\
 RQ5 & 결합 연산자 C-PR은 송금만 걷는 걷기보다 나은가요? 그리고 어느 한 층만 걷는 걷기보다 지갑 순위를 더 잘 매기나요? & \ref{sec:coupled-results}절, \ref{sec:holdout-results}절, \ref{sub:fresh-results}절; 표~\ref{tab:alignment-hybrid}, \ref{tab:tau-diff-hybrid}, \ref{tab:holdout-diff}, \ref{tab:fresh-holdout}와~\ref{tab:fresh-contrasts} \\
 C1 & 각 점수의 실행 시간과 그래프 크기 & 표~\ref{tab:benchmark-runtime} \\
-C2 & 같은 기간 안에서 각 점수가 자기 화살표 종류의 점검과 맞는 정도예요. 이 일치는 어느 정도 처음부터 생길 수밖에 없고, EndorseRank에서는 동점(점수가 똑같은 것)이 그 정도를 정해요 & 표~\ref{tab:alignment-hybrid}와~\ref{tab:tie-sensitivity} \\
+C2 & 같은 기간 안에서 각 점수가 자기 화살표 종류의 점검과 맞는 정도예요. 이 일치는 어느 정도 처음부터 생길 수밖에 없고, EndorseRank에서는 동점(점수가 똑같은 것)이 그 정도를 정해요 & 표~\ref{tab:alignment-hybrid}과~\ref{tab:tie-sensitivity} \\
 C3 & EndorseRank와 AWP는 코호트의 순서를 다르게 매겨요. 주로 어떤 지갑이 허락 그래프에 들어 있는지 때문이에요 & 표~\ref{tab:tie-sensitivity}; 그림~\ref{fig:rank-scatter} \\
 C4 & 점수를 매긴 기간 밖에서는, 두 기간 어느 쪽에서도 어떤 페이지랭크도 같은 종류 화살표의 원시 차수만큼 라벨을 잘 줄 세우지 못해요 & 표~\ref{tab:holdout-spenders}, \ref{tab:holdout-diff}, \ref{tab:holdout-receiving}와~\ref{tab:fresh-posthoc} \\
-C5 & 두 종류의 화살표를 결합해도, 그 두 층을 따로 걷는 것을 이기지 못해요. 또 등록 재현(계획을 먼저 공개해 두고 새 자료로 다시 해 보기)은 송금 걷기보다 낫다는 탐색적(미리 정하지 않고 살펴본) 결과를 확인해 주지 않아요. 새 허락에서 나아진 것은 다시 나타나지만, 새 송금자에서 비열등성(정한 폭보다 더 나쁘지 않음)은 통과하지 못하고, AWP와 견주면 분명히 실패해요 & 표~\ref{tab:alignment-hybrid}, \ref{tab:tau-diff-hybrid}, \ref{tab:holdout-diff}와~\ref{tab:fresh-contrasts}; \ref{sub:fresh-results}절 \\
+C5 & 두 종류의 화살표를 결합해도, 그 두 층을 따로 걷는 것을 이기지 못해요. 또 등록 재현(계획을 먼저 공개해 두고 새 자료로 다시 해 보기)은 송금 걷기보다 낫다는 탐색적(미리 정하지 않고 살펴본) 결과를 확인해 주지 않아요. 새 허락에서 나아진 것은 다시 나타나지만, 새 송금자에서 비열등성(정한 폭보다 더 나쁘지 않음)은 통과하지 못하고, AWP와 견주면 분명히 실패해요 & 표~\ref{tab:alignment-hybrid}, \ref{tab:tau-diff-hybrid}, \ref{tab:holdout-diff}과~\ref{tab:fresh-contrasts}; \ref{sub:fresh-results}절 \\
 \bottomrule
 \end{tabular}
 }
