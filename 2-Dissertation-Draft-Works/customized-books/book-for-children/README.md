@@ -36,7 +36,7 @@
 XeLaTeX와 `kotex`(TeX Live의 `collection-langkorean`, MiKTeX는 자동 설치)가 필요합니다. 차례와 그림 번호를 맞추려고 두 번 실행합니다.
 
 ```powershell
-cd 2-Dissertation-Draft-Works\book-for-children
+cd 2-Dissertation-Draft-Works\customized-books\book-for-children
 .\build.ps1
 ```
 

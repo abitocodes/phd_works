@@ -86,7 +86,7 @@ flowchart TB
 | `2-Dissertation-Draft-Works/overleaf-github/` | **활성** 영문 논문 초안 (정본, Overleaf 저장소 서브모듈) |
 | `2-Dissertation-Draft-Works/wallet-reputation-experiments/` | 실증 실험 코드와 데이터 (설명: 그 폴더의 `README.md`, `data/README.md`) |
 | `2-Dissertation-Draft-Works/local-other/kr/` | 한국어 논문 초안 |
-| `2-Dissertation-Draft-Works/book-for-children/` | 논문을 어린이 눈높이로 풀어 쓴 책 『허락의 화살표』 (`main.pdf`) |
+| `2-Dissertation-Draft-Works/customized-books/book-for-children/` | 논문을 어린이 눈높이로 풀어 쓴 책 『허락의 화살표』 (`main.pdf`) |
 | `2-Dissertation-Draft-Works/local-other/sources/supervisor-feedback/` | 지도교수 초안 리뷰 (DOCX·이메일·코멘트 전사) |
 | `5-Roundtable/` | Roundtable·진전 발표 (일자별 `pptx` / `html`) |
 | `papers/` | 공유 참고 PDF |
