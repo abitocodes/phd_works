@@ -595,7 +595,7 @@ Contrast ($a$ minus $b$) & Label & $\\tau_a$ & $\\tau_b$ & $\\Delta\\tau$ & 95\\
         + _wrap_table(
             f"Paired bootstrap differences on the spender holdout ($n={_fmt_int(holdout.get('n_wallets'))}$, "
             f"{n_boot} resamples shared by $a$ and $b$). The first block was fixed before the run: the "
-            f"increment of the allowance layer walked alone ({ALLOWANCE_LAYER_LABEL}) over its raw degree at "
+            f"increment of {ALLOWANCE_LAYER_LABEL}, the allowance layer walked alone, over its raw degree at "
             f"$t_1$, and the hybrid contrasts fixed on 14~September~2026, which compare C-PR and S-PR with "
             f"the two layers they are built from, {ALLOWANCE_LAYER_LABEL} and {TRANSFER_LAYER_LABEL}. The "
             f"second block was computed after the labels were known: the increments of {ER_LABEL} and "
