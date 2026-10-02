@@ -25,6 +25,7 @@
 | `results/tables/` | 결과 표 28개(원문 표를 번역한 것, 숫자는 그대로) |
 | `Figures/` | TikZ 그림 두 개(번역)와 `generated/`의 그래프 다섯 개(같은 자료로 한국어 글자를 넣어 다시 그림) |
 | `scripts/check_ko.py` | 원문과 번역을 파일마다 대조(레이블, 참조, 인용, 수식, 숫자, 표 구조, 문단 수, 남은 영어 문장) |
+| `scripts/check_particles.py` | 빌드 뒤 `\ref` 뒤의 조사를 실제 번호에 맞춰 검사(표 4.3은, 표 4.2는) |
 | `scripts/make_toc.py` | 번역한 절 제목으로 `01-Intro/03-TOC.tex`를 다시 만듦 |
 | `scripts/make_ko_figures.py` | `../wallet-reputation-experiments`의 자료로 한국어 그래프 다섯 개를 다시 그림 |
 
@@ -41,4 +42,5 @@ cd 2-Dissertation-Draft-Works\overleaf-github-ko
 
 1. 바뀐 원문 문단만 같은 기준으로 다시 번역해요.
 2. `python scripts/check_ko.py ../overleaf-github/<파일> <파일>`로 대조해요.
-3. 절 제목이 바뀌었으면 `python scripts/make_toc.py`, 그래프 자료가 바뀌었으면 `python scripts/make_ko_figures.py`를 실행해요.
+3. 빌드한 뒤 `python scripts/check_particles.py`로 참조 번호 뒤의 조사를 확인해요.
+4. 절 제목이 바뀌었으면 `python scripts/make_toc.py`, 그래프 자료가 바뀌었으면 `python scripts/make_ko_figures.py`를 실행해요.

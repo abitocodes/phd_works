@@ -204,6 +204,22 @@
 | prediction / predict | 예측 / 예측하다(미리 맞히다) |
 | scalability / scaling | 규모 키우기 / 규모에 따른 변화 |
 | significance (statistical) | (이 논문은 p값을 쓰지 않음) 구간이 0을 벗어난다 |
+| alignment (점수와 대리 지표) / aligns with | 일치도 / ~와 잘 맞다 |
+| domain alignment | 분야 일치도 |
+| agreement (두 점수 사이) | 일치 |
+| Sybil-adjusted stability / Sybil stability | 시빌 보정 안정성 / 시빌 안정성 (원문이 쓴 쪽을 따름) |
+| inverse risk | 위험 반대 (지표 / 가족), 처음 나올 때 (값이 클수록 손실이 적은 지표) |
+| solver | 풀이 프로그램(solver) |
+| ablation, seeded ablation | 빼 보기 실험, 씨앗을 쓰는 빼 보기 실험 |
+| rank divergence | 순위 갈라짐 |
+| glossary | 용어 풀이 |
+| et al. | 등 (예: Lin 등\cend{12}은) |
+| walk / coupled walk | 걷기 / 결합 걷기 |
+| seed set (S-PR) / random seed | 씨앗 집합, 씨앗 지갑 / 시드 |
+| spring holdout / same-window / out-of-window | 봄 홀드아웃 / 같은 기간 / 기간 밖 |
+| protocol (DeFi) | 서비스(프로토콜) |
+| point estimate | 점 추정값 |
+| superiority / non-inferiority / verdict | 우월성 / 비열등성 / 판정 |
 
 ## 6. 예시
 
@@ -234,6 +250,13 @@ python3 scripts/check_ko.py ../overleaf-github/<파일> <파일>
 ```
 
 검사하는 것: 레이블·참조·인용·입력 파일·그림 파일, 환경 개수, \item 개수, 수식(글자 그대로), \texttt 내용, 숫자, 문단 수, 남은 영어 문장. "영어 문장이 남음"이 나오면 번역을 빠뜨린 것이다.
+
+전체를 빌드한 뒤에는 \ref·\eqref 뒤의 조사(은/는, 이/가, 을/를, 과/와, (으)로)를 실제 번호의 읽는 소리에 맞춘다(표 4.3은, 표 4.2는, 표 4.10과).
+
+```
+python3 scripts/check_particles.py          # 맞지 않는 조사를 보여 줌
+python3 scripts/check_particles.py --fix    # 고쳐 씀
+```
 
 ## 8. 본보기
 

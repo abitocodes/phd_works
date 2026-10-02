@@ -100,7 +100,7 @@ S-PR 재시작 벡터 & 허락 걷기, 정규화, 하한 $0$ & 보증을 씨앗�
 \begin{itemize}
 \item 송금: $\mathrm{in\_degree}(w)=|\{u:\exists u\to w\}|$; $\mathrm{in\_value}(w)=\sum_{e:u\to w}\mathrm{value}(e)$.
 
-\item 허락: $\mathrm{in\_approve\_degree}(w)=|\{o:\exists o\to w\}|$; $\mathrm{in\_approve\_value}(w)=\sum_{o,\mathrm{token}} a^{\star}(o,w,\mathrm{token})$. 여기서 $w$는 스펜더예요.
+\item 허락: 여기서 $w$는 스펜더예요. $\mathrm{in\_approve\_degree}(w)=|\{o:\exists o\to w\}|$; $\mathrm{in\_approve\_value}(w)=\sum_{o,\mathrm{token}} a^{\star}(o,w,\mathrm{token})$.
 
 \item 시빌 보정 안정성: $\mathrm{inbound\_counterparty\_ratio}(w)=|\{u:u\to w\}|/|T^{\mathrm{in}}(w)|$(자기 자신에게 보낸 송금은 뺌); 날 수로 센 활동 기간; 활동한 달 수.
 \end{itemize}
