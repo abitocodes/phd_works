@@ -88,6 +88,7 @@ flowchart TB
 | `2-Dissertation-Draft-Works/wallet-reputation-experiments/` | 실증 실험 코드와 데이터 (설명: 그 폴더의 `README.md`, `data/README.md`) |
 | `2-Dissertation-Draft-Works/local-other/kr/` | 한국어 논문 초안 |
 | `2-Dissertation-Draft-Works/customized-books/book-for-children/` | 논문을 어린이 눈높이로 풀어 쓴 책 『허락의 화살표』 (`main.pdf`) |
+| `2-Dissertation-Draft-Works/customized-books/audiobook-ko/` | 쉬운 한국어 번역본을 귀로 듣는 오디오북: 그림과 표를 말로 푼 대본(`script/`), 음성 파일(`audio/`), 대본 기준과 합성 도구 |
 | `2-Dissertation-Draft-Works/local-other/sources/supervisor-feedback/` | 지도교수 초안 리뷰 (DOCX·이메일·코멘트 전사) |
 | `2-Dissertation-Draft-Works/professor-feedback-summary.md` | 계획서·초안에 받은 교수님·심사위원 피드백 정리, 원고에 반영된 상태, 원고를 고치거나 줄일 때의 체크리스트 |
 | `5-Roundtable/` | Roundtable·진전 발표 (일자별 `pptx` / `html`) |
