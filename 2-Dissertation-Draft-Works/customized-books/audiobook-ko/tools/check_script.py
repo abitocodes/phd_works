@@ -51,7 +51,7 @@ def main():
     report("percent", [m.group(0) for m in re.finditer(r".{0,10}(?<!\d)%.{0,10}", body_text)])
     report("hash in body", [l[:30] for l in body if "#" in l])
     report("numbered cross-reference", [m.group(0) for m in re.finditer(
-        r"(표|그림|식|알고리즘|부록)\s?\(?\d+(\.\d+)*\)?|\d+\.\d+(\.\d+)*\s?절", text)])
+        r"(?<![가-힣])(표|그림|식|알고리즘|부록)\s?\(?\d+(\.\d+)*\)?|\d+\.\d+(\.\d+)*\s?절", text)])
     report("native count as digits", [m.group(0) for m in re.finditer(
         r"(?<![\d,.])(1[0-9]|[1-9])\s?(번|개|가지|명|층|살|달|쌍|줄|마리|시간)(?![가-힣])", body_text)])
     report("삭제", [m.group(0) for m in re.finditer(r".{0,10}삭제.{0,10}", text)])
