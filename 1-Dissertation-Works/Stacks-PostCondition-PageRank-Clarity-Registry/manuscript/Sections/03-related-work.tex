@@ -1,0 +1,23 @@
+% !TEX root = ../main.tex
+\section{Related work}
+\label{sec:related}
+
+\subsection{Graph-based ranking on blockchains}
+
+Do and Do computed PageRank and HodgeRank scores for Ethereum addresses from the transaction graph, with transferred value as edge weight \cite{do2023hodgerank}. AWP refines this with a logistic decay so that recent transfers count more than old ones \cite{do2023awp}. RiskProp propagates risk labels through a bipartite transaction graph to rate accounts \cite{lin2025riskprop}. Chen et al. built three Ethereum graphs, for money flow, contract creation and contract invocation, and analyzed them with PageRank and other measures; their invocation graph is the closest earlier object to the contract graph we rank, although their aim was measurement rather than recommendation \cite{chen2018ethereum}. EndorseRank replaced transfers with the latest ERC-20 allowance between each owner and spender \cite{kwon2026endorserank}. In that study most spenders turned out to be contracts, so the allowance graph already pointed mostly from wallets to contracts. Address-clustering heuristics, some of them based on approvals, group Ethereum addresses that are likely to share an owner \cite{victor2020clustering}; we return to such heuristics when discussing wallet weights.
+
+All of these methods rank addresses for credit or risk. None of them asks which contracts a developer should reuse, and none studies what an attacker must pay to move a contract up the ranking.
+
+\subsection{Dependency networks and registry security}
+
+Studies of package ecosystems treat dependencies as a directed graph and measure its growth and fragility \cite{kikas2017structure,decan2019empirical}. Mujahid et al. tracked the PageRank of npm packages month by month and used falling centrality to flag packages in decline \cite{mujahid2021centrality}. Registry security work catalogs attacks on open-source supply chains, among them typosquatting, malicious maintainers and account takeover \cite{ohm2020backstabber,ladisa2023sok,vu2020typosquatting}, and shows how far a compromised maintainer account can reach through transitive dependencies \cite{zimmermann2019small}. Signing systems such as Sigstore bind a published artifact to an identity \cite{newman2022sigstore}. On Stacks the binding between a contract and its publisher comes for free, since the deployer's address is part of the contract identifier, but a registry still has to decide how names, versions and scopes relate to that address.
+
+\subsection{Code clones in smart contracts}
+
+Copying is common in smart contracts. Kondo et al. found that 79.2\% of the verified Ethereum contracts they studied were clones \cite{kondo2020cloning}, and He et al. found duplicates for more than 96\% of contracts in a set of about ten million \cite{he2020clones}. Clones also serve fraud: copies of popular tokens are used to trick traders on decentralized exchanges \cite{xia2021scam}. Clone detection techniques range from exact hashes to token- and tree-based similarity \cite{roy2009clones}; near-duplicate detection at scale often uses MinHash over shingles \cite{broder1997resemblance}. A Stacks registry can add an exact on-chain check, because \code{contract-hash?} returns the hash of any contract's code \cite{sip033}.
+
+\subsection{Tools for finding Clarity contracts}
+
+Several pieces of a registry already exist. The Stacks Blockchain API returns source code and ABIs and lists contracts by trait \cite{hiroapi}. Clarinet downloads mainnet contracts as project requirements and remaps their addresses for local networks \cite{clarinet}. A public GitHub repository mirrors the source of deployed contracts \cite{boomcrypto}, and Chainhooks streams chain events to applications \cite{chainhooks2026}. STACY, a static analyzer for Clarity, flags patterns such as calls to other contracts inside \code{as-contract} \cite{stacy}. None of these tools ranks contracts, groups clones, records versions or separates referencing a contract from copying it.
+
+Taken together, earlier work offers ranking methods for addresses and measurement of dependency graphs, and Stacks offers the raw material for a registry. What is missing is a ranking of deployed contracts that uses an explicit authorization signal, that can be computed on a chain without allowances, and whose resistance to Sybil attacks is analyzed rather than assumed.

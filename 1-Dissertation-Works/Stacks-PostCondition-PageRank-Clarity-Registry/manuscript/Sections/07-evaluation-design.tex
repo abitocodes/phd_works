@@ -1,0 +1,87 @@
+% !TEX root = ../main.tex
+\section{Evaluation design}
+\label{sec:evaluation}
+
+The evaluation is fixed before its label window opens, following the registered replication of the ERC-20 study \cite{kwon2026endorserank}. The configuration file that holds the dates, parameters, random seeds and decision rules below is committed before 1 November 2026, and its hash is reported with the results.
+
+\subsection{Research questions}
+
+\begin{itemize}
+\item \textbf{RQ1 (signal):} How often do Stacks transactions carry authorizing post-conditions, and how often do contracts use asset allowances, legacy \code{as-contract} and extension maps?
+\item \textbf{RQ2 (attacker cost):} How much must an attacker pay to lift a contract into the top of each ranking?
+\item \textbf{RQ3 (adoption):} Does \PCER\ at the freeze time agree with later adoption as well as the best baseline does, and do the edges between contracts add information beyond the restart distribution?
+\item \textbf{RQ4 (noise):} What share of deployed contracts are copies or show no use, and how much does grouping by family change search results?
+\end{itemize}
+
+\subsection{Data and windows}
+
+All data come from Stacks mainnet through a self-hosted node and Stacks Blockchain API. The ranking is frozen at $T_0=$ 31 October 2026, 23:59:59 UTC. The contract graph uses every contract deployed up to $T_0$. Authorizations and fees use the 180 days before $T_0$, which begin after the planned Epoch~3.4 activation at Bitcoin block 943,333, so that every transaction in the window follows the same post-condition rules \cite{sip039,sip040}; if activation came later, the window starts at activation and is shorter. Labels come from the window $L$ from 1 November 2026 to 31 January 2027. A replication repeats everything with $T_0'=$ 31 January 2027 and labels from 1 February to 30 April 2027. Prices are taken once, at $T_0$, from a public market source named in the configuration file.
+
+\subsection{Methods compared}
+
+Table~\ref{tab:methods} lists the methods. Raw counts are included because in the ERC-20 study they matched held-out approvals better than both PageRank variants \cite{kwon2026endorserank}, and a new ranking should be shown to beat them or to be no worse while costing an attacker more.
+
+\begin{table}[htbp]
+\centering
+\caption{Methods compared. All PageRank variants use $d=0.85$, an $\ell_1$ tolerance of $10^{-8}$ and at most 300 iterations.}
+\label{tab:methods}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Method & Definition \\
+\midrule
+\PCER & Section~\ref{sec:method}: contracts as nodes, delegation and dependency edges, restart from fee-weighted authorizations. \\
+B1 Callers & Number of distinct wallets with an authorizing call to the contract in the window. \\
+B2 Dependents & Number of distinct contracts from other deployers with an edge to the contract, the analogue of pkg.go.dev's importer count \cite{pkgsite}. \\
+B3 Dependency PageRank & Contracts as nodes, all references with weight one, uniform restart (the teaRank pattern). \\
+B4 AWP & Transfer graph of wallets and contracts with logistic decay ($k=0.01$, $t_0=180$ days), uniform restart \cite{do2023awp}; contract scores reported. \\
+B5 EndorseRank on Stacks & Wallets and contracts as nodes, edges $u\to c$ weighted by $A(u,c)$ plus contract edges, uniform restart. \\
+\addlinespace
+Ablations & Score equal to $\boldsymbol{\pi}$ alone (no contract edges); run-time trait bindings added as edges; Allow-mode authorizations dropped; $\omega\equiv1$; $\omega$ from capital-days; raw token units instead of prices; $\beta_{\mathrm{del}}\in\{1,4\}$. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Labels for adoption}
+
+No ground truth says which contracts matter. As in the ERC-20 study, we use observable outcomes as labels and report rank agreement with each.
+
+\begin{itemize}
+\item \textbf{Y1 New callers:} wallets whose first authorizing call to the contract falls in $L$. A filtered version counts only wallets that originated transactions on at least three different days in $L$.
+\item \textbf{Y2 New dependents:} contracts deployed in $L$ by other deployers with a delegation or dependency edge to the contract.
+\item \textbf{Y3 Developer adoption:} public GitHub repositories whose \code{Clarinet.toml} lists the contract as a requirement and that first do so in $L$, from code-search snapshots at $T_0$ and at the end of $L$. Used in the hypothesis test only if at least 100 contracts have a non-zero value.
+\item \textbf{Y4 Curated set:} contracts of protocols listed for Stacks by DefiLlama at $T_0$ \cite{defillama} or covered by a public audit report dated before $T_0$, collected by a rule written in the configuration file before scores are computed.
+\end{itemize}
+
+Y1 is close to B1 by construction, as the transfer checks of the ERC-20 study were close to AWP; agreement between them shows consistency rather than independent predictive power. Rank agreement is computed over the evidence set, the contracts with at least one authorization in the window or at least one incoming edge at $T_0$, using Kendall's $\tau_b$ \cite{kendall1938} and Spearman's $\rho$ \cite{spearman1904}. We also report NDCG@100 with Y1 and Y2 as graded gains \cite{jarvelin2002ndcg}, and precision at 100 and the area under the ROC curve for Y4.
+
+\subsection{Attack simulation}
+
+Attacks are injected into a copy of the frozen data, and every method is recomputed on the modified copy.
+
+\begin{itemize}
+\item \textbf{A1 Contract farm:} $k$ new contracts, each calling the target by static dispatch.
+\item \textbf{A2 Wallet farm:} $k$ new wallets, each sending one authorizing call to the target at the lowest fee that was included in the window; for AWP each call also transfers the smallest priced amount to the target.
+\item \textbf{A3 Wash flow:} one wallet sends value to the target and receives it back $m$ times, the target being under the attacker's control.
+\item \textbf{A4 Binding injection:} $m$ calls to the highest-scored router that takes a SIP-010 trait argument, with the target as that argument; relevant only to the ablation with run-time bindings.
+\end{itemize}
+
+Costs are measured in STX: a deployment costs the median fee of contract deployments under 2\,KB in the window, a call costs the 5th percentile of included contract-call fees, and capital that returns to the attacker is not counted. For each of 200 targets drawn at random from evidence-set contracts that lie in the lower half of every method's ranking, we find by doubling and bisection the smallest $k$ or $m$ that lifts the target into the top 100 overall (the top 5\% if the evidence set has fewer than 2,000 contracts) and into the top 10 of its trait category. A method that the attack cannot move within a budget of 100,000 STX is assigned that budget, which understates its advantage.
+
+\subsection{Hypotheses and decision rules}
+
+\begin{itemize}
+\item \textbf{H1 (attacker cost):} the median over targets of the log ratio between the cost under \PCER\ and the cost under a baseline is positive, with the lower bound of its 95\% bootstrap confidence interval above zero, for every pair in which the attack moves the baseline: A1 against B2, B3 and B5, and A2 against B1, B4 and B5. A3 against B4 is reported without a test.
+\item \textbf{H2 (adoption, non-inferiority):} the mean of $\tau_b$ over Y1 and Y2 (and Y3 if eligible) for \PCER\ is at least that of the best baseline minus 0.02, judged by the lower bound of a paired 95\% bootstrap interval of the difference. The margin is the one used in the ERC-20 replication \cite{kwon2026endorserank}.
+\item \textbf{H3 (propagation):} $\tau_b$ with Y2 is higher for \PCER\ than for the ablation that scores contracts by $\boldsymbol{\pi}$ alone, with the lower bound of the paired interval above zero.
+\end{itemize}
+
+The paper will claim that \PCER\ raises the cost of manipulation without losing agreement with adoption only if H1 and H2 both hold in the main window. H3 is secondary. All coefficients are reported whatever their direction, together with the replication and the sensitivity analyses. Intervals use 2,000 bootstrap resamples over contracts for agreement and over targets for costs, with percentile limits \cite{efron1979}.
+
+\subsection{Descriptive measures}
+
+For RQ1 we report the share of contract calls in the window by post-condition mode; the share with at least one authorizing post-condition on the origin; the ratio between declared bounds and realized outflows; for each Clarity version, the share of contracts that use \code{as-contract?}, \code{restrict-assets?}, \code{with-all-assets-unsafe}, or legacy \code{as-contract} around external calls; the number of ExecutorDAO-style contracts and enabled extensions; and the share of calls that pass a trait-typed argument. For RQ4 we report the share of contracts with no evidence of use, the distribution of family sizes, the largest families, and, for 50 queries drawn from frequent function and trait names, the share of top-10 results that are not their family's representative with and without grouping, and how often a representative is the earliest deployment of its family. We also report graph sizes and the running time of each method.
+
+\subsection{Checks of \cpm}
+
+On a Clarinet devnet we check three cases: \code{cpm add} of a SIP-010 token package and of a pool that depends on it produces requirements under which the project's tests pass; \code{cpm create} from a template produces a contract that deploys; and \code{cpm verify} detects a contract whose source has been altered by a mock API.

@@ -1,0 +1,89 @@
+% !TEX root = ../main.tex
+\documentclass[12pt]{article}
+\usepackage[a4paper,left=1in,right=1in,top=1in,bottom=1in]{geometry}
+\usepackage{fontspec}
+% Times New Roman as in the other manuscripts in this repository. Where it is not
+% installed (Linux), Liberation Serif has the same metrics, so pages break the same way.
+\IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{%
+  \IfFontExistsTF{Liberation Serif}{\setmainfont{Liberation Serif}}{\setmainfont{TeX Gyre Termes}}}
+\usepackage{setspace}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{hyperref}
+\usepackage{xurl}
+\hypersetup{hidelinks}
+
+\setstretch{1.5}
+\setlength{\emergencystretch}{2em}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55\baselineskip}
+\setlist[itemize]{leftmargin=2.2em,labelsep=0.55em,itemsep=0.15\baselineskip,topsep=0.2\baselineskip,parsep=0pt}
+\setlist[enumerate]{leftmargin=2.4em,labelsep=0.55em,itemsep=0.15\baselineskip,topsep=0.2\baselineskip,parsep=0pt}
+\captionsetup{font=small,labelfont=bf}
+% Let large tables sit on text pages instead of pages of their own.
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.12}
+\renewcommand{\floatpagefraction}{0.7}
+\renewcommand{\arraystretch}{1.15}
+
+\newtheorem{proposition}{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+% Names used throughout
+\newcommand{\PCER}{PC-EndorseRank}
+\newcommand{\cpm}{\texttt{cpm}}
+% Inline code. Clarity names are long and full of hyphens, so allow a line break
+% after each hyphen, dot and underscore (no hyphen is added at the break).
+\ExplSyntaxOn
+\tl_new:N \l__ms_code_tl
+\NewDocumentCommand{\code}{m}
+ {
+  \tl_set:Nn \l__ms_code_tl {#1}
+  \tl_replace_all:Nnn \l__ms_code_tl {-} {-\allowbreak}
+  \tl_replace_all:Nnn \l__ms_code_tl {.} {.\allowbreak}
+  \tl_replace_all:Nnn \l__ms_code_tl {\_} {\_\allowbreak}
+  \texttt{\tl_use:N \l__ms_code_tl}
+ }
+\ExplSyntaxOff
+\newcommand{\R}{\mathbb{R}}
+
+% Clarity listings: plain monospace, keywords in bold
+\lstdefinelanguage{Clarity}{
+  sensitive=true,
+  alsoletter={-?!},
+  morekeywords={define-public,define-private,define-read-only,define-constant,define-map,
+    define-data-var,define-trait,impl-trait,use-trait,contract-call?,as-contract?,
+    restrict-assets?,with-ft,with-stx,with-nft,with-stacking,with-all-assets-unsafe,
+    try!,unwrap!,asserts!,begin,let,ok,err,tx-sender,contract-caller,current-contract},
+  morecomment=[l]{;;},
+  morestring=[b]",
+}
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  frame=single,
+  framesep=4pt,
+  xleftmargin=6pt,
+  xrightmargin=6pt,
+  aboveskip=0.6\baselineskip,
+  belowskip=0.4\baselineskip,
+  showstringspaces=false,
+}

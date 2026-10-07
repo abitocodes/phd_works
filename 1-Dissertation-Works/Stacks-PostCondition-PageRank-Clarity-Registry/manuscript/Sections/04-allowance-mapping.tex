@@ -1,0 +1,74 @@
+% !TEX root = ../main.tex
+\section{From ERC-20 allowances to Stacks}
+\label{sec:mapping}
+
+\subsection{What EndorseRank takes from an allowance}
+
+EndorseRank builds a graph $G_{\mathrm{approve}}$ in which an edge $u\to v$ carries the latest allowance that owner $u$ has granted to spender $v$, summed over tokens, and runs weighted PageRank on it \cite{kwon2026endorserank}. Five properties of the ERC-20 allowance make this work:
+
+\begin{itemize}
+\item \textbf{An explicit act by the asset owner:} the owner signs an \code{approve} transaction or a \code{permit} message \cite{eip20,eip2612}.
+\item \textbf{A named counterparty:} the approval names the spender, usually a router or vault contract.
+\item \textbf{A bound per asset:} the allowance is an amount of one token.
+\item \textbf{A standing state:} the allowance stays in force until the owner changes it, and a new approval overwrites the old one. EndorseRank keeps only the latest value for each owner, spender and token, and needs no time decay.
+\item \textbf{A cost:} an approval costs one transaction fee. It does not require the owner to hold the approved amount.
+\end{itemize}
+
+The last property matters for what follows. An allowance is cheap to create, so the defense against fake endorsements cannot come from the edge itself.
+
+\subsection{Candidate mechanisms on Stacks}
+
+Table~\ref{tab:mechanisms} compares the ERC-20 allowance with the Stacks mechanisms of Section~\ref{sec:bg-authorization}. No single mechanism has all five properties. Post-conditions are explicit, signed by the asset owner and bounded per asset, but they last for one transaction and do not name a spender. Asset allowances in Clarity~4 name a bound but are written into code, so they express the developer's decision rather than a user's. Extension maps are standing and revocable but usually unbounded. Static references are permanent and say nothing about assets.
+
+\begin{table}[htbp]
+\centering
+\caption{The ERC-20 allowance and the Stacks mechanisms that carry part of its meaning.}
+\label{tab:mechanisms}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.17\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Mechanism & Granted by, to & Bound & Lifetime & Cost to create \\
+\midrule
+ERC-20 \code{approve} / \code{permit} & Token owner, to a named spender & Amount per token & Until overwritten & One fee; no balance needed \\
+\addlinespace
+Post-condition on the origin's outflow & Transaction origin, to the called contract and whatever it calls & Amount per asset, or a named NFT & One transaction & One fee \\
+\addlinespace
+\code{as-contract?} allowance (Clarity~4) & Contract code, to the code in its body & Amount per asset per call; none with \code{with-all-assets-unsafe} & Permanent & One deployment \\
+\addlinespace
+\code{restrict-assets?} (Clarity~4) & Contract code on behalf of a principal, to the code in its body & Amount per asset per call & Permanent & One deployment \\
+\addlinespace
+Legacy \code{as-contract} & Contract code, to the code in its body & None & Permanent & One deployment \\
+\addlinespace
+Extension or allow-list map & Contract governance, to another contract & Usually none & Until disabled & A governance decision \\
+\addlinespace
+\code{contract-call?}, \code{use-trait}, \code{impl-trait} & Contract code, to the referenced contract & Not about assets & Permanent & One deployment \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{The choice}
+
+We split the role of the allowance in two.
+
+\textbf{Wallet to contract: post-conditions.} When a user signs a transaction that calls contract $c$ and bounds their own outflow of asset $a$ by $x$, they let $c$, and every contract that $c$ calls in that transaction, move up to $x$ of $a$ from their account. This is the meaning of \code{approve}$(c,x)$ on token $a$, restricted to one transaction. A post-condition does not name a spender, so we attribute the authorization to the contract named in the transaction's payload, the entry point the user chose. On Ethereum the user approves the router, and the router moves the tokens into a pool; on Stacks the user calls the router, and the router's calls move the tokens. In both cases the endorsement goes to the router, and the pool receives score from the router through a contract edge. To recover a standing state from per-transaction authorizations we apply EndorseRank's overwrite rule to each wallet, contract and asset: only the most recent authorization counts (Section~\ref{sec:method-records}).
+
+\textbf{Contract to contract: references in code.} A contract's source states which contracts it calls, which traits it implements and uses, and which code it lets act with its own authority. We use two kinds of edges. A \emph{delegation} edge $A\to B$ means that $A$ calls $B$ inside \code{as-contract?}, legacy \code{as-contract} or \code{restrict-assets?}, or that $A$'s governance has enabled $B$ as an extension. In each case $A$'s developer or governance has put assets or authority at $B$'s disposal, which is the contract-level counterpart of an approval. A \emph{dependency} edge $A\to B$ means that $A$ calls $B$ by static dispatch, or that $A$ implements or uses a trait defined in $B$. These are the edges a package registry counts as imports.
+
+\textbf{What we leave out.} Under dynamic dispatch the concrete callee is chosen by whoever calls $A$, not by $A$'s developer. If a user passes token $X$ to router $R$, the choice of $X$ is the user's, and the user's post-condition on $X$ already records it as an authorization of $R$. Turning such a run-time binding into an edge $R\to X$ would credit $R$ with an endorsement its developer never made, and it would let anyone create edges out of a popular router by calling it. We therefore do not add edges for run-time trait bindings. Section~\ref{sec:method-toy} shows what happens when they are added.
+
+\subsection{Which post-conditions count}
+\label{sec:mapping-rules}
+
+A post-condition counts as an authorization of the entry contract when all of the following hold:
+
+\begin{itemize}
+\item \textbf{Principal:} it constrains the transaction origin, either through the origin principal type or through a standard principal equal to the origin's address. Post-conditions on other principals do not authorize anything on the origin's behalf. A lower bound on what a pool contract must send, for example, is the user's guard against slippage.
+\item \textbf{Condition:} for STX and fungible tokens it is an upper bound ($=$, $<$ or $\leq$); for a non-fungible token it is \emph{will send} or \emph{may send}. A lower bound ($>$ or $\geq$) on the origin's own outflow leaves the amount open, and we treat it like an outflow in Allow mode.
+\item \textbf{Outcome:} the transaction succeeded. Failed transactions move no assets.
+\end{itemize}
+
+Transactions in Allow mode let uncovered assets leave the origin's account without limit. We count such outflows as \emph{blanket authorizations} of the entry contract, the counterpart of an unlimited ERC-20 approval, which EndorseRank kept as a strong endorsement \cite{kwon2026endorserank}. They are flagged so that a sensitivity analysis can drop them. Originator mode, available since Epoch~3.4, still requires the origin's outflows to be covered, so it fits the rules above unchanged.
+
+\subsection{AWP needs no replacement}
+
+AWP is built from transfers, and Stacks records every STX, fungible and non-fungible transfer as an event of the transaction that caused it \cite{hiroapi}. AWP can therefore run on Stacks as published: an edge from sender to recipient for each transfer, weighted by value and by the logistic decay $\sigma(\Delta t)=1/(1+\exp(k(\Delta t-t_0)))$ with $k=0.01$ and $t_0=180$ days \cite{do2023awp}. Its graph contains wallets and contracts; we report the scores of contracts only. AWP serves as a baseline in Section~\ref{sec:evaluation}.

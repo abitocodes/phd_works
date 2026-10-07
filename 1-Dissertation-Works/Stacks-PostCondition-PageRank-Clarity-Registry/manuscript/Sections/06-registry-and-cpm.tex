@@ -1,0 +1,100 @@
+% !TEX root = ../main.tex
+\section{The registry and \cpm}
+\label{sec:registry}
+
+\subsection{Architecture}
+
+Figure~\ref{fig:architecture} shows the components. An indexer fills a PostgreSQL database with contracts, transactions, post-conditions and asset events. For the history it reads a self-hosted Stacks node and Stacks Blockchain API rather than the hosted API, because a full backfill through the hosted service is slow under its rate limits and because a pinned archive makes the evaluation reproducible. New blocks arrive through Chainhooks or the node's event interface \cite{hiroapi,chainhooks2026}. An analyzer parses each contract, extracts the references and allowances of Section~\ref{sec:method}, computes the normalized hash and runs static checks. A daily job builds the graph, computes \PCER\ and the clone families, and refreshes the search index. The web front end and the \cpm\ client read from the same search API, and \cpm\ checks what it receives against the chain.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw,rounded corners=2pt,align=center,font=\footnotesize,text width=2.5cm,minimum height=2.6em,inner sep=3pt},
+  arr/.style={-{Stealth[length=2mm]},thick}]
+\node[box] (node) at (0,0.4) {Stacks node and Blockchain API (archive)};
+\node[box] (hook) at (0,-2.2) {Chainhooks or event interface};
+\node[box] (idx) at (3.2,-0.9) {Indexer};
+\node[box] (db) at (6.4,-0.9) {PostgreSQL: contracts, transactions, post-conditions, events};
+\node[box] (ana) at (9.6,0.4) {Analyzer: references, allowances, hashes, checks};
+\node[box] (rank) at (9.6,-2.2) {Daily job: ranking, families, search index};
+\node[box] (api) at (12.8,-2.2) {Search API};
+\node[box] (web) at (12.8,0.4) {Web registry};
+\node[box] (cli) at (12.8,-4.0) {\cpm\ client};
+\draw[arr] (node) -- (idx);
+\draw[arr] (hook) -- (idx);
+\draw[arr] (idx) -- (db);
+\draw[arr] (db) -- (ana);
+\draw[arr] (db) -- (rank);
+\draw[arr] (ana) -- (rank);
+\draw[arr] (rank) -- (api);
+\draw[arr] (api) -- (web);
+\draw[arr] (api) -- (cli);
+\end{tikzpicture}
+\caption{Components of the Clarity Registry. The \cpm\ client also reads code hashes directly from a Stacks node to check what the API returns.}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Package model}
+
+\textbf{Scopes.} Every contract already has a publisher: the address in its principal. The registry therefore indexes every contract under its principal, and a publisher may claim a readable scope in two ways. The address itself is always a valid scope. A BNS name such as \code{alice.btc} becomes a scope if it resolved to the deployer's address when the claim was made. BNS names are SIP-009 tokens and can be sold \cite{bnsv2}, so the registry records the name, its owner and the block height of the claim. If the name later changes hands, the scope is frozen: existing versions keep their identity, new versions need a new claim, and \cpm\ warns when a scope's owner differs from the one recorded in the project's lockfile. This guards against the takeover of a trusted name, an attack known from other registries \cite{ladisa2023sok}.
+
+\textbf{Versions.} A deployed contract cannot change, so each version of a package is a separate contract, and \code{token-v1} and \code{token-v2} are unrelated on chain. The publisher states the relation in a manifest: the package name, the semantic version of each contract, the predecessor of each version, the matching testnet principal, a license identifier, a repository URL, a README and links to audit reports. The registry accepts a manifest only if every listed contract was deployed by the scope's address, and only if the manifest is signed by that address with a SIP-018 structured-data signature \cite{sip018} or submitted in a transaction from it. No other key infrastructure is needed, because the address that signs is the address that deployed.
+
+\textbf{Unclaimed contracts.} Contracts without a manifest are still indexed, under their principal, with trait labels, a clone family and a score, but without versions or a README.
+
+\subsection{Commands}
+
+\cpm\ wraps Clarinet rather than replacing it. Table~\ref{tab:cpm} lists its commands. The central distinction is between referencing and copying. On npm, installing a package copies code into the project. A Clarity contract that a project wants to \emph{use} is already deployed, shared by everyone, and called by its principal; what a project adds is a reference. \code{cpm add} records that reference as a Clarinet requirement, so that local tests can call a copy that Clarinet deploys on its local networks \cite{clarinet}, while a mainnet deployment deploys nothing for it. A project that wants its own instance, a token built from a SIP-010 template for example, \emph{copies} the source with \code{cpm create} or \code{cpm fork} and deploys the copy under its own address. Copying is allowed only when the package's license permits it; publication on chain does not make code open source.
+
+\begin{table}[htbp]
+\centering
+\caption{Commands of the \cpm\ client.}
+\label{tab:cpm}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.27\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Command & Effect \\
+\midrule
+\code{cpm search <query>} & Searches with Equation~\eqref{eq:search}; filters for trait, Clarity version and network. \\
+\code{cpm info <pkg>} & Shows versions, principals, family, score and the signals of Table~\ref{tab:signals}. \\
+\code{cpm add <pkg>[@ver]} & References a deployed contract: resolves it and its static dependencies, checks Clarity version and epoch against the project, adds Clarinet requirements and writes the lockfile. \code{cpm install} is an alias. \\
+\code{cpm create <template> <name>} & Copies a template's source into \code{contracts/}, renames it, fills its declared parameters and records the template's family hash. Refused if the license does not allow copying. \\
+\code{cpm fork <pkg>} & As \code{create}, for any package whose license allows it. \\
+\code{cpm why <contract>} & Prints the dependency paths from the project's contracts to the given contract. \\
+\code{cpm audit} & Reports the signals of Table~\ref{tab:signals} for every dependency. \\
+\code{cpm verify} & Reads the code hash of every locked contract from a node and compares it with the lockfile. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Lockfile}
+
+Version ranges, the main subject of npm lockfiles, do not exist for deployed contracts. The \cpm\ lockfile records identities instead: for each dependency, its mainnet principal and testnet counterpart, its code hash as returned by \code{contract-hash?}, its deployment height and Clarity version, its family hash, its license, the scope owner seen when it was added, and whether it was referenced or copied. \code{cpm verify} reads the code hashes from a node, through a read-only call to a contract that returns \code{contract-hash?} such as the registry contract below, and compares them with the lockfile, so that a compromised API or mirror cannot substitute different source for a contract the project depends on.
+
+\subsection{An optional registry contract}
+
+Names can also live on chain. A small registry contract offers \code{publish(name, version, contract)}, which checks with \code{principal-destruct?} that the address part of \code{contract} equals \code{tx-sender}, stores the result of \code{contract-hash?} for that contract next to the name and version, and prints an event for indexers. It also offers a read-only function that returns \code{contract-hash?} for any principal, which \cpm\ uses for verification. The registry works without this contract; with it, names and hashes are recorded on chain and do not depend on the operator of the web service.
+
+\subsection{Signals shown to users}
+
+A ranking orders results; it does not say that a contract is safe. Each contract page and \code{cpm audit} show the signals of Table~\ref{tab:signals} next to the score, and the registry keeps indexing separate from recommending. Every contract is indexed. A ``recommended'' label, if offered, requires criteria beyond the score, such as an audit link, a minimum age and no high-severity findings, and the registry does not call a contract malicious on the strength of its score.
+
+\begin{table}[htbp]
+\centering
+\caption{Signals shown with each contract.}
+\label{tab:signals}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.34\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Signal & Why it matters \\
+\midrule
+\code{with-all-assets-unsafe}, or legacy \code{as-contract} around calls to other contracts & The contract lets other code move its assets without a limit; STACY flags calls inside \code{as-contract} \cite{stacy}. \\
+Trait-typed argument called inside \code{as-contract?} & The contract's assets are exposed to code chosen by its caller. \\
+Share of calls in Allow mode & Users of the contract are signing transactions without post-condition protection. \\
+Clone family and representative & Shows whether the contract is the most used member of its family or one of many copies. \\
+Age, Clarity version, epoch & Older Clarity versions lack asset allowances; very new contracts have little history. \\
+Static analysis findings & Output of STACY and the registry's own checks. \\
+Audit links & Taken from the manifest; the registry does not verify the audit itself. \\
+\bottomrule
+\end{tabularx}
+\end{table}

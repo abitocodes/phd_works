@@ -1,0 +1,25 @@
+% !TEX root = ../main.tex
+\begin{titlepage}
+\centering
+\vspace*{1.2cm}
+{\LARGE\bfseries Ranking Clarity Smart Contracts for a Package Registry on Stacks:\\[0.3em]
+Post-Conditions in Place of ERC-20 Allowances\par}
+\vspace{1.4cm}
+% Co-authors (supervisors) and the corresponding-author e-mail are to be decided.
+{\large Taehong Kwon\par}
+\vspace{0.3cm}
+{University of South Africa\par}
+\vspace{1.0cm}
+{Manuscript draft, 7 October 2026\par}
+\vfill
+\end{titlepage}
+
+\section*{Abstract}
+
+Every Clarity smart contract deployed on Stacks is stored on chain as readable source, yet developers have no registry comparable to npm or pkg.go.dev for finding, judging and reusing these contracts. Such a registry needs a ranking that keeps clones, test deployments and spam below the contracts people actually depend on, and that an attacker cannot buy cheaply with fake identities. Earlier work ranked Ethereum wallets with PageRank over ERC-20 transfers (AWP) or over ERC-20 allowances (EndorseRank). Stacks has no allowance. The SIP-010 token standard has no \code{approve} or \code{transferFrom}; a user lets a contract move their tokens by calling it and bounds what may leave their account with post-conditions on the signed transaction, and since Clarity~4 a contract bounds its own outflows with asset allowances in \code{as-contract?} and \code{restrict-assets?}.
+
+This paper maps the allowance relation onto these mechanisms and defines \PCER, a ranking whose only nodes are contracts. Post-condition authorizations, reduced to their latest state per wallet, contract and asset as in EndorseRank, decide how each wallet divides its endorsement among contracts. The fees a wallet has paid decide how much that endorsement counts. Delegation and dependency references in contract code carry the score from contract to contract. We show that PageRank with a uniform restart on a wallet--contract graph reduces to a fractional count of wallets, so it offers no protection against Sybil wallets, and we bound the score that a group of attacker contracts can collect by its share of the restart and the score flowing into it from honest contracts. A synthetic example illustrates both results. We then describe the registry and its command-line client, \cpm, which separates referencing a deployed contract from copying its source, and we set out an evaluation on Stacks mainnet, fixed before its label window opens, that measures attacker cost, prospective adoption and clone suppression against count-based, dependency-PageRank, AWP and EndorseRank baselines.
+
+\textbf{Keywords:} Stacks; Clarity; smart contracts; package registry; PageRank; Sybil resistance; post-conditions; software supply chain
+
+\clearpage

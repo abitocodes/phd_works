@@ -1,0 +1,67 @@
+% !TEX root = ../main.tex
+\section{Extraction rules}
+\label{app:rules}
+
+\subsection{Post-conditions}
+
+Table~\ref{tab:pc-fields} maps the post-condition fields of a transaction, as the Stacks Blockchain API returns them \cite{hiroapi}, to the rules of Section~\ref{sec:mapping-rules}. Field names follow the API schema at the time of writing; the evaluation pins one API version in its configuration file and checks there how Originator mode and the \emph{may send} condition of SIP-040 are encoded.
+
+\begin{table}[htbp]
+\centering
+\caption{Post-condition fields and how the extraction uses them.}
+\label{tab:pc-fields}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.3\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Field & Use \\
+\midrule
+\code{tx\_status} & Only successful transactions are used. \\
+\code{tx\_type}, \code{contract\_call.contract\_id} & Contract calls only; the contract named here is the entry contract $c(\tau)$. \\
+\code{sender\_address}, \code{sponsored} & The origin $o(\tau)$; fees count for the origin whether or not a sponsor paid them. \\
+\code{fee\_rate} & The fee $f(\tau)$, capped at $f_{\max}$. \\
+\code{post\_condition\_mode} & Deny and Originator: only covered outflows of the origin count as explicit authorizations. Allow: uncovered outflows of the origin count as blanket authorizations and are flagged. \\
+\code{post\_conditions[].principal.type\_id} & \code{principal\_origin}, or \code{principal\_standard} with the origin's address: the condition can authorize. Contract principals: never an authorization. \\
+\code{post\_conditions[].type} & \code{stx}, \code{fungible} or \code{non\_fungible}; with \code{asset}, identifies the asset $a$. \\
+\code{post\_conditions[].condition\_code} & Upper bounds (\code{sent\_equal\_to}, \code{sent\_less\_than}, \code{sent\_less\_than\_or\_equal\_to}) and NFT \code{sent} or \emph{may send}: explicit authorization. Lower bounds on the origin: blanket authorization. \code{not\_sent}: none. \\
+\code{events[]} (asset transfers and burns) & The realized outflow $\mathrm{out}_a(\tau)$: amounts sent or burned by the origin. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Clarity constructs}
+
+Table~\ref{tab:clarity-edges} lists the constructs the analyzer reads and the edges they produce.
+
+\begin{table}[htbp]
+\centering
+\caption{Clarity constructs and the edges they produce for a contract $A$.}
+\label{tab:clarity-edges}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.42\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Construct in $A$ & Edge \\
+\midrule
+\code{(contract-call? 'SP\ldots.b f \ldots)} & Dependency $A\to b$ \\
+\code{(contract-call? .b f \ldots)} & Dependency $A\to b$ of the same deployer \\
+\code{(define-constant T 'SP\ldots.b)} with \code{(contract-call? T f \ldots)} (Clarity~5) & Dependency $A\to b$ \\
+\code{(impl-trait 'SP\ldots.d.t)}, \code{(use-trait x 'SP\ldots.d.t)} & Dependency $A\to d$, the contract defining trait $t$ \\
+Any resolved call to $b$ inside \code{as-contract?}, \code{as-contract} or \code{restrict-assets?} & Delegation $A\to b$ \\
+\code{set-extension} in an ExecutorDAO-style $A$, latest call enabling $b$ & Delegation $A\to b$ \\
+\code{(contract-call? x f \ldots)} with \code{x} a trait-typed argument & No edge; recorded as dynamic dispatch \\
+\code{with-all-assets-unsafe}; \code{as-contract} around an external call; trait-typed call inside \code{as-contract?} & No edge; shown as a signal (Table~\ref{tab:signals}) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{The synthetic example}
+\label{app:toy}
+
+The example of Section~\ref{sec:method-toy} is produced by \code{scripts/toy\_sybil\_example.py} with a fixed random seed. Its \ToyContracts\ honest contracts are a SIP-010 trait, six tokens that implement it, a math library, three pools that each use the trait and the library and pay out their two tokens inside \code{as-contract?}, a router that calls the three pools, a vault that pays out two tokens and uses the library, and a DAO that has enabled the vault and the router as extensions. Each of the \ToyWallets\ honest wallets authorizes one to three entry contracts (router, vault, DAO or a token) with values drawn from a log-normal distribution, and pays fees for $1+\mathrm{Poisson}(8)$ transactions, each costing a log-normal multiple of the minimum fee with median three. Each router user makes one to five router calls, each binding the two tokens of one pool. A deployment costs \ToyDeployFee\ minimum fees. Ranks are counted among all contracts, including the attacker's, with ties resolved against the target. Table~\ref{tab:toy-ranks} gives the target's rank for several attack sizes.
+
+\begin{table}[htbp]
+\centering
+\caption{Rank of the attacker's token among all contracts in the synthetic example (1 is the top). $k$ is the number of farm contracts (A1), Sybil wallets (A2) or router calls (A3).}
+\label{tab:toy-ranks}
+\small
+\input{tables/toy-sybil-ranks.tex}
+\end{table}

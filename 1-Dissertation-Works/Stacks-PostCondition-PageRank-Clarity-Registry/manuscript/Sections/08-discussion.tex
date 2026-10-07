@@ -1,0 +1,21 @@
+% !TEX root = ../main.tex
+\section{Discussion and limitations}
+\label{sec:discussion}
+
+\textbf{Who writes post-conditions.} Users rarely write post-conditions themselves; the application's front end builds them and the wallet displays them for approval. An ERC-20 approval is built the same way, often for an unlimited amount, so post-conditions are no weaker as evidence of intent than the allowances EndorseRank used. A malicious front end could set loose bounds, but \PCER\ values an authorization by the realized outflow rather than by the bound, and a front end only shapes the transactions sent to its own contracts. If Allow mode turns out to be common (RQ1), much of the signal will consist of blanket authorizations. The sensitivity analysis that drops them shows how much the ranking depends on them.
+
+\textbf{Fees as identity.} Weighting wallets by fees makes the ranking favor contracts used by active wallets, and heavy users count more than occasional ones. We accept this because the alternative, one vote per wallet, is what Sybil wallets exploit (Proposition~\ref{prop:bipartite}). Two weaknesses remain. Stacks miners collect fees, so a miner can pay fees to itself; the cap $f_{\max}$ bounds what each such transaction can buy but does not remove the incentive. Fees on Stacks are low, so the absolute cost of an attack on a sparsely used category may be small even when it is many times the cost under a uniform restart. Capital-days, the alternative weight, cannot be recycled across wallets at the same moment but favor wealthy wallets even more.
+
+\textbf{Prices.} Valuing outflows needs prices. Illiquid tokens get no price and therefore no influence over how a wallet splits its endorsement; tokens with manipulated prices could gain influence, which is why prices are taken from one public source at one time. The ablation with raw token units, the convention of the ERC-20 study, shows how much the prices matter.
+
+\textbf{Run-time bindings.} Excluding run-time trait bindings protects popular routers from being used as amplifiers, but it means that a token traded only through routers receives score only from the users who authorize it directly and from pools that name it in code. Tokens are among the most searched contracts, so the evaluation reports the ablation with bindings added.
+
+\textbf{Static extraction.} The parser resolves literal, relative and constant targets. Principals stored in data variables or maps at run time are not resolved, and allow-lists other than the ExecutorDAO pattern are not read. Such references are missing edges, which lower the scores of the contracts they point to. Extracting state-based references from governance transactions is future work.
+
+\textbf{Families.} Normalization can merge contracts that share code but differ in parameters that matter, such as a fee rate, and it cannot detect a copy that has been reformatted with renamed functions. Choosing the most used member as a family's representative can place a popular copy above the original author; the registry therefore shows each family's deployment history, with the earliest member marked.
+
+\textbf{Data access and reproducibility.} The hosted Stacks Blockchain API limits request rates, and some research environments block it, so the evaluation uses a self-hosted node and API and publishes extraction scripts and manifests. Transaction-level data contain wallet addresses; they are public, but results are reported only in aggregate, wallets are never ranked or displayed, and the registry shows counts rather than lists of users.
+
+\textbf{Harm to new projects.} Any ranking based on use is slow to notice new contracts. The registry lists unused contracts and offers a view sorted by deployment date, and it does not attach negative labels to a contract because its score is low.
+
+\textbf{Relation to the ERC-20 study.} Proposition~\ref{prop:bipartite} offers one explanation for a result of the ERC-20 study, where raw in-degree counts matched held-out approvals better than EndorseRank \cite{kwon2026endorserank}: on a nearly bipartite graph with a uniform restart, the walk adds little beyond a count. \PCER\ differs in what it is meant to gain. Its claim is not better agreement with adoption, which H2 only requires to be no worse, but a higher price for manipulation, which H1 tests.
