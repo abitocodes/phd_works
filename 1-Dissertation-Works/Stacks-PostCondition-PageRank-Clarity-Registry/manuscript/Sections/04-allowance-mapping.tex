@@ -63,7 +63,7 @@ A post-condition counts as an authorization of the entry contract when all of th
 
 \begin{itemize}
 \item \textbf{Principal:} it constrains the transaction origin, either through the origin principal type or through a standard principal equal to the origin's address. Post-conditions on other principals do not authorize anything on the origin's behalf. A lower bound on what a pool contract must send, for example, is the user's guard against slippage.
-\item \textbf{Condition:} for STX and fungible tokens it is an upper bound ($=$, $<$ or $\leq$); for a non-fungible token it is \emph{will send} or \emph{may send}. A lower bound ($>$ or $\geq$) on the origin's own outflow leaves the amount open, and we treat it like an outflow in Allow mode.
+\item \textbf{Condition:} for STX and fungible tokens it is an upper bound ($=$, $<$ or $\leq$) that permits a positive amount; for a non-fungible token it is \emph{will send} or \emph{may send}. A bound of zero forbids the outflow; it protects the user and authorizes nothing. A lower bound ($>$ or $\geq$) on the origin's own outflow leaves the amount open, and we treat it like an outflow in Allow mode.
 \item \textbf{Outcome:} the transaction succeeded. Failed transactions move no assets.
 \end{itemize}
 

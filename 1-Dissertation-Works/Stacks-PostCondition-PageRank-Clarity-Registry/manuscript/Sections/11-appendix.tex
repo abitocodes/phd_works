@@ -15,7 +15,7 @@ Table~\ref{tab:pc-fields} maps the post-condition fields of a transaction, as th
 \toprule
 Field & Use \\
 \midrule
-\code{tx\_status} & Only successful transactions are used. \\
+\code{tx\_status} & Authorizations come from successful transactions only; fees count for every transaction the wallet originated, failed ones included. \\
 \code{tx\_type}, \code{contract\_call.contract\_id} & Contract calls only; the contract named here is the entry contract $c(\tau)$. \\
 \code{sender\_address}, \code{sponsored} & The origin $o(\tau)$; fees count for the origin whether or not a sponsor paid them. \\
 \code{fee\_rate} & The fee $f(\tau)$, capped at $f_{\max}$. \\
@@ -48,7 +48,7 @@ Construct in $A$ & Edge \\
 Any resolved call to $b$ inside \code{as-contract?}, \code{as-contract} or \code{restrict-assets?} & Delegation $A\to b$ \\
 \code{set-extension} in an ExecutorDAO-style $A$, latest call enabling $b$ & Delegation $A\to b$ \\
 \code{(contract-call? x f \ldots)} with \code{x} a trait-typed argument & No edge; recorded as dynamic dispatch \\
-\code{with-all-assets-unsafe}; \code{as-contract} around an external call; trait-typed call inside \code{as-contract?} & No edge; shown as a signal (Table~\ref{tab:signals}) \\
+\code{with-all-assets-unsafe}; \code{as-contract} around an external call; trait-typed call inside \code{as-contract?} & Shown as a signal (Table~\ref{tab:signals}), in addition to any edge from the rows above \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -56,11 +56,11 @@ Any resolved call to $b$ inside \code{as-contract?}, \code{as-contract} or \code
 \section{The synthetic example}
 \label{app:toy}
 
-The example of Section~\ref{sec:method-toy} is produced by \code{scripts/toy\_sybil\_example.py} with a fixed random seed. Its \ToyContracts\ honest contracts are a SIP-010 trait, six tokens that implement it, a math library, three pools that each use the trait and the library and pay out their two tokens inside \code{as-contract?}, a router that calls the three pools, a vault that pays out two tokens and uses the library, and a DAO that has enabled the vault and the router as extensions. Each of the \ToyWallets\ honest wallets authorizes one to three entry contracts (router, vault, DAO or a token) with values drawn from a log-normal distribution, and pays fees for $1+\mathrm{Poisson}(8)$ transactions, each costing a log-normal multiple of the minimum fee with median three. Each router user makes one to five router calls, each binding the two tokens of one pool. A deployment costs \ToyDeployFee\ minimum fees. Ranks are counted among all contracts, including the attacker's, with ties resolved against the target. Table~\ref{tab:toy-ranks} gives the target's rank for several attack sizes.
+The example of Section~\ref{sec:method-toy} is produced by \code{scripts/toy\_sybil\_example.py} with a fixed random seed. Its \ToyContracts\ honest contracts are a SIP-010 trait, six tokens that implement it, a math library, three pools that each use the trait and the library and pay out their two tokens inside \code{as-contract?}, a router that calls the three pools, a vault that pays out two tokens and uses the library, and a DAO that has enabled the vault and the router as extensions. Each of the \ToyWallets\ honest wallets authorizes one to three entry contracts (router, vault, DAO or a token) with values drawn from a log-normal distribution, and pays fees for $1+\mathrm{Poisson}(8)$ transactions, each costing a log-normal multiple of the minimum fee with median three. Each router user makes one to five router calls, each binding the two tokens of one pool. A deployment costs \ToyDeployFee\ minimum fees. Ranks count the contracts, the attacker's included, whose score is strictly higher than the target's, so ties go in the target's favor and the costs in Table~\ref{tab:toy-cost} can only be too low. PageRank uses the settings of Section~\ref{sec:method}; the fee cap $f_{\max}$ is left out. In the ablation with run-time bindings, the router's binding edges together get the same weight as its static references, split by how often each token was bound. Table~\ref{tab:toy-ranks} gives the target's rank for several attack sizes.
 
 \begin{table}[htbp]
 \centering
-\caption{Rank of the attacker's token among all contracts in the synthetic example (1 is the top). $k$ is the number of farm contracts (A1), Sybil wallets (A2) or router calls (A3).}
+\caption{Rank of the attacker's token among all contracts in the synthetic example (1 is the top). $k$ is the number of farm contracts (A1), Sybil wallets (A2) or router calls (A4). The columns are the scoring rules of Table~\ref{tab:toy-cost}: distinct callers, dependency PageRank, EndorseRank on Stacks with a uniform restart, \PCER, and \PCER\ with run-time trait bindings.}
 \label{tab:toy-ranks}
 \small
 \input{tables/toy-sybil-ranks.tex}

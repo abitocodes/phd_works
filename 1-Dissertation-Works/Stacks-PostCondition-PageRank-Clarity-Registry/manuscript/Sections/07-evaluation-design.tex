@@ -15,11 +15,11 @@ The evaluation is fixed before its label window opens, following the registered 
 
 \subsection{Data and windows}
 
-All data come from Stacks mainnet through a self-hosted node and Stacks Blockchain API. The ranking is frozen at $T_0=$ 31 October 2026, 23:59:59 UTC. The contract graph uses every contract deployed up to $T_0$. Authorizations and fees use the 180 days before $T_0$, which begin after the planned Epoch~3.4 activation at Bitcoin block 943,333, so that every transaction in the window follows the same post-condition rules \cite{sip039,sip040}; if activation came later, the window starts at activation and is shorter. Labels come from the window $L$ from 1 November 2026 to 31 January 2027. A replication repeats everything with $T_0'=$ 31 January 2027 and labels from 1 February to 30 April 2027. Prices are taken once, at $T_0$, from a public market source named in the configuration file.
+All data come from Stacks mainnet through a self-hosted Stacks node and a self-hosted instance of the Stacks Blockchain API. The ranking is frozen at $T_0=$ 31 October 2026, 23:59:59 UTC. The contract graph uses every contract deployed up to $T_0$. Authorizations and fees use the 180 days before $T_0$. The window begins after Epoch~3.4 (Bitcoin block 943,333, April 2026), so Originator mode is available throughout \cite{sip039,sip040}. Epoch~4.0 (Bitcoin block 960,230, July 2026) falls inside the window; it renames one Clarity allowance and adds another but no new kind of transaction post-condition, so the rules of Section~\ref{sec:mapping-rules} hold for the whole window \cite{sip044}. Labels come from the window $L$ from 1 November 2026 to 31 January 2027. A replication repeats everything with $T_0'=$ 31 January 2027 and labels from 1 February to 30 April 2027. Prices are median daily prices over the 30 days before $T_0$, from a public market source named in the configuration file, so that a short price pump at $T_0$ has little effect.
 
 \subsection{Methods compared}
 
-Table~\ref{tab:methods} lists the methods. Raw counts are included because in the ERC-20 study they matched held-out approvals better than both PageRank variants \cite{kwon2026endorserank}, and a new ranking should be shown to beat them or to be no worse while costing an attacker more.
+Table~\ref{tab:methods} lists the methods. Raw counts are included for the reason given in Section~\ref{sec:introduction}: a new ranking should be shown to beat them, or to be no worse while costing an attacker more.
 
 \begin{table}[htbp]
 \centering
@@ -61,12 +61,12 @@ Attacks are injected into a copy of the frozen data, and every method is recompu
 
 \begin{itemize}
 \item \textbf{A1 Contract farm:} $k$ new contracts, each calling the target by static dispatch.
-\item \textbf{A2 Wallet farm:} $k$ new wallets, each sending one authorizing call to the target at the lowest fee that was included in the window; for AWP each call also transfers the smallest priced amount to the target.
+\item \textbf{A2 Wallet farm:} $k$ new wallets, each sending one authorizing call to the target at the call fee $c_{\mathrm{call}}$ defined below; for AWP each call also transfers the smallest priced amount to the target.
 \item \textbf{A3 Wash flow:} one wallet sends value to the target and receives it back $m$ times, the target being under the attacker's control.
 \item \textbf{A4 Binding injection:} $m$ calls to the highest-scored router that takes a SIP-010 trait argument, with the target as that argument; relevant only to the ablation with run-time bindings.
 \end{itemize}
 
-Costs are measured in STX: a deployment costs the median fee of contract deployments under 2\,KB in the window, a call costs the 5th percentile of included contract-call fees, and capital that returns to the attacker is not counted. For each of 200 targets drawn at random from evidence-set contracts that lie in the lower half of every method's ranking, we find by doubling and bisection the smallest $k$ or $m$ that lifts the target into the top 100 overall (the top 5\% if the evidence set has fewer than 2,000 contracts) and into the top 10 of its trait category. A method that the attack cannot move within a budget of 100,000 STX is assigned that budget, which understates its advantage.
+Costs are measured in STX. A deployment costs the median fee of contract deployments under 2\,KB in the window. Every simulated call is sent at, and costs, $c_{\mathrm{call}}$, the 5th percentile of the fees of contract calls included in the window. Capital that returns to the attacker is not counted. For each of 200 targets drawn at random from evidence-set contracts that lie in the lower half of every method's ranking, we find by doubling and bisection the smallest $k$ or $m$ that lifts the target into the top 100 overall (the top 5\% if the evidence set has fewer than 2,000 contracts) and into the top 10 of its trait category. A method that the attack cannot move within a budget of 100,000 STX is assigned that budget, which understates its advantage.
 
 \subsection{Hypotheses and decision rules}
 
@@ -80,7 +80,7 @@ The paper will claim that \PCER\ raises the cost of manipulation without losing 
 
 \subsection{Descriptive measures}
 
-For RQ1 we report the share of contract calls in the window by post-condition mode; the share with at least one authorizing post-condition on the origin; the ratio between declared bounds and realized outflows; for each Clarity version, the share of contracts that use \code{as-contract?}, \code{restrict-assets?}, \code{with-all-assets-unsafe}, or legacy \code{as-contract} around external calls; the number of ExecutorDAO-style contracts and enabled extensions; and the share of calls that pass a trait-typed argument. For RQ4 we report the share of contracts with no evidence of use, the distribution of family sizes, the largest families, and, for 50 queries drawn from frequent function and trait names, the share of top-10 results that are not their family's representative with and without grouping, and how often a representative is the earliest deployment of its family. We also report graph sizes and the running time of each method.
+For RQ1 we report the share of contract calls in the window by post-condition mode; the share with at least one authorizing post-condition on the origin; the ratio between declared bounds and realized outflows; for each Clarity version, the share of contracts that use \code{as-contract?}, \code{restrict-assets?}, \code{with-all-assets-unsafe}, or legacy \code{as-contract} around external calls; the number of ExecutorDAO-style contracts and enabled extensions; and the share of calls that pass a trait-typed argument. For RQ4 we report the share of contracts with no evidence of use, the distribution of family sizes, the largest families, and, for 50 queries drawn from frequent function and trait names, the share of top-10 results that are not their family's representative with and without grouping, and how often a representative is the earliest deployment of its family. We also report the ratio between the mean fees paid by a wallet active in the window and $c_{\mathrm{call}}$, the factor by which Section~\ref{sec:method-weights} expects fee weights to raise the cost of a wallet farm, and the graph sizes and running time of each method.
 
 \subsection{Checks of \cpm}
 

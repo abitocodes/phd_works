@@ -21,7 +21,7 @@ A(u,c)\big/\sum_{c'\in C_u}A(u,c') & \text{if the denominator is positive,}\\
 \end{equation}
 \end{definition}
 
-Two choices differ from a literal copy of EndorseRank. First, the value is the amount that actually left the wallet, not the bound written in the post-condition. In a successful transaction an upper bound is never below the outflow, and a bound, like an ERC-20 allowance, can be set far above what the wallet holds at no cost; the realized outflow requires the asset to move. Second, the latest-state rule applies per wallet, contract and asset, as EndorseRank applies it per owner, spender and token. A wallet that calls the same contract a thousand times counts once, with the value of its most recent call, so repeated calls from one wallet do not add weight.
+Two choices need comment. First, unlike EndorseRank, which uses the allowance itself, the value is the amount that actually left the wallet, not the bound written in the post-condition. In a successful transaction an upper bound is never below the outflow, and a bound, like an ERC-20 allowance, can be set far above what the wallet holds at no cost; the realized outflow requires the asset to move. Second, the latest-state rule is EndorseRank's own, applied per wallet, contract and asset instead of per owner, spender and token. A wallet that calls the same contract a thousand times enters its own split once, with the value of its most recent call; the repeated calls raise the wallet's weight only through the fees they cost (Section~\ref{sec:method-weights}).
 
 \subsection{Why the restart has to change}
 
@@ -29,7 +29,7 @@ Moving EndorseRank to Stacks without further change would mean a graph with wall
 
 \begin{proposition}[Uniform restart counts wallets]
 \label{prop:bipartite}
-Let $G$ have node set $W\cup C$ with $N$ nodes, edges $u\to c$ from wallets to contracts with transition probabilities $s_u(c)$, edges among contracts, and the uniform restart $\pi_v=1/N$. Then every wallet has the same score $r_W=(1-d+d\,\delta)/N$, where $\delta$ is the score held by dangling nodes, and the score that wallets pass to a contract $c$ is $d\,r_W\sum_{u}s_u(c)$. Adding $k$ wallets that each authorize only a contract $x$ adds $k\,d\,r_W$ to the score passed to $x$, whatever amounts they authorize.
+Let $G$ have node set $W\cup C$ with $N$ nodes, edges $u\to c$ from wallets to contracts with transition probabilities $s_u(c)$, edges among contracts, and the uniform restart $\pi_v=1/N$. Then every wallet has the same score $r_W=(1-d+d\,\delta)/N$, where $\delta$ is the score held by dangling nodes, and the score that wallets pass to a contract $c$ is $d\,r_W\sum_{u}s_u(c)$. If $k$ of the wallets each authorize only a contract $x$, together they pass $k\,d\,r_W$ to $x$, whatever amounts they authorize; $N$, $\delta$ and therefore $r_W$ are those of the graph that includes them.
 \end{proposition}
 
 \begin{proof}
@@ -39,6 +39,7 @@ No edge ends at a wallet: contracts do not originate transactions, and edges bet
 Under a uniform restart, the authorized amounts only decide how each wallet splits a fixed contribution among its contracts. The part of a contract's score that comes from wallets is a count of wallets in which each wallet's single vote is divided among the contracts it uses, and a Sybil wallet costs one transaction fee and brings a full vote. Value weighting does not change this. The proposition also suggests one reason why, in the ERC-20 study, raw in-degree counts matched held-out approvals better than EndorseRank \cite{kwon2026endorserank}: an allowance graph in which few spenders are also owners is close to bipartite, and on such a graph the walk adds little to a count.
 
 \subsection{Wallet weights and the restart distribution}
+\label{sec:method-weights}
 
 We therefore remove wallets from the node set and let them act only through the restart distribution, with a weight $\omega(u)$ that the attacker has to pay for:
 \begin{equation}
@@ -47,7 +48,7 @@ We therefore remove wallets from the node set and let them act only through the 
 \qquad
 \pi_c=\frac{\sum_{u}\omega(u)\,s_u(c)}{\sum_{u:\,C_u\neq\emptyset}\omega(u)} .
 \end{equation}
-The weight of a wallet is the fees of all transactions it originated in the window, each capped at $f_{\max}$, the 99th percentile of fees in $\mathcal{W}$. Fees are counted for the origin even when a sponsor paid them, since sponsored fees are still a cost to the party that wants the endorsement. Equation~\eqref{eq:restart} is the restart a walk would see if it started at a wallet chosen in proportion to $\omega$ and took one step along the authorization edges.
+The weight of a wallet is the fees of all transactions it originated in the window, each capped at $f_{\max}$, the 99th percentile of fees in $\mathcal{W}$. Fees are counted for the origin even when a sponsor paid them: someone paid them, and an attacker that sponsors its own wallets pays them itself. Equation~\eqref{eq:restart} is the restart a walk would see if it started at a wallet chosen in proportion to $\omega$ and took one step along the authorization edges.
 
 \begin{proposition}[Splitting a fee budget gains nothing]
 \label{prop:split}
@@ -91,7 +92,7 @@ In particular, if $\pi(S)=0$ and no contract outside $S$ has an edge into $S$, t
 Summing Equation~\eqref{eq:pagerank} over $S$ gives $r(S)=(1-d)\pi(S)+d\sum_{v}r_vP_{vS}+d\,\delta\,\pi(S)$. Nodes of $S$ with out-edges send at most all of their score into $S$ and dangling nodes send none, so $\sum_{v\in S}r_vP_{vS}\leq r(S)-\delta_S$, where $\delta_S$ is the dangling score in $S$. Hence $(1-d)\,r(S)\leq(1-d)\pi(S)+d\,\Phi_{\mathrm{in}}(S)+d\,(\delta\,\pi(S)-\delta_S)$. Since $\delta\leq1$ and $\delta_S\geq0$, the last term is at most $d\,\pi(S)$, which gives the bound. If $\pi(S)=0$ and $\Phi_{\mathrm{in}}(S)=0$, the inequality reads $r(S)\leq 0$.
 \end{proof}
 
-The two terms on the right are the two things an attacker must obtain. $\pi(S)$ is bought with fees on transactions that authorize contracts in $S$, at the price set by Proposition~\ref{prop:split}. $\Phi_{\mathrm{in}}(S)$ requires contracts that already have score to reference $S$ in their code or to enable it as an extension, which are decisions of other developers and of governance; these are the attack edges of the social-graph defenses \cite{yu2006sybilguard,cao2012sybilrank}. Deploying contracts that reference a target adds members to $S$ but raises neither term. Under a uniform restart, by contrast, every deployed contract brings restart mass $1/|C|$ with it, so the bound grows with the number of contracts the attacker deploys.
+The two terms on the right are the two things an attacker must obtain. $\pi(S)$ is bought with the fees paid by wallets whose authorizations go to contracts in $S$, at the price set by Proposition~\ref{prop:split}. $\Phi_{\mathrm{in}}(S)$ requires contracts that already have score to reference $S$ in their code or to enable it as an extension, which are decisions of other developers and of governance; these are the attack edges of the social-graph defenses \cite{yu2006sybilguard,cao2012sybilrank}. Deploying contracts that reference a target adds members to $S$ but raises neither term. Under a uniform restart, by contrast, every deployed contract brings restart mass $1/|C|$ with it, so the bound grows with the number of contracts the attacker deploys.
 
 \begin{algorithm}[htbp]
 \caption{\PCER}
@@ -117,17 +118,17 @@ The two terms on the right are the two things an attacker must obtain. $\pi(S)$ 
 \subsection{A synthetic illustration}
 \label{sec:method-toy}
 
-To show the propositions at work we built a small synthetic graph (script in the paper's repository; parameters in Appendix~\ref{app:toy}). It has \ToyContracts\ honest contracts, among them a SIP-010 trait, six tokens, three pools that pay out tokens inside \code{as-contract?}, a router, a vault and a DAO, and \ToyWallets\ honest wallets that authorize one to three entry contracts and pay on average \ToyMeanFee\ times the minimum fee over the window. An attacker deploys a token $x$ and tries to lift it into the top \ToyTop\ by three attacks: A1 deploys contracts that each call $x$ (cost \ToyDeployFee\ fee units per contract); A2 creates wallets that each authorize $x$ once at the minimum fee; A3 calls the honest router with $x$ as its trait argument. Table~\ref{tab:toy-cost} reports the smallest cost that reaches the top \ToyTop\ under five scoring rules.
+To show the propositions at work we built a small synthetic graph (script in the paper's repository; parameters in Appendix~\ref{app:toy}). It has \ToyContracts\ honest contracts, among them a SIP-010 trait, six tokens, three pools that pay out tokens inside \code{as-contract?}, a router, a vault and a DAO, and \ToyWallets\ honest wallets that authorize one to three entry contracts and pay on average \ToyMeanFee\ times the minimum fee over the window. An attacker deploys a token $x$ and tries to lift it into the top \ToyTop\ by three of the attacks of Section~\ref{sec:evaluation}: A1 deploys contracts that each call $x$ (cost \ToyDeployFee\ fee units per contract); A2 creates wallets that each authorize $x$ once at the minimum fee; A4 calls the honest router with $x$ as its trait argument. A3, a wash flow, moves only AWP, which the example leaves out. Table~\ref{tab:toy-cost} reports the smallest cost that reaches the top \ToyTop\ under five scoring rules.
 
 \begin{table}[htbp]
 \centering
-\caption{Smallest attack cost, in units of the minimum call fee, that lifts the attacker's token into the top \ToyTop\ of a synthetic graph with \ToyContracts\ honest contracts. ``Not reached'' means the token stays outside the top \ToyTop\ for every attack size up to 200,000. The graph is made up; the table illustrates Propositions~\ref{prop:bipartite}--\ref{prop:region} and is not a result about Stacks mainnet.}
+\caption{Smallest attack cost, in units of the minimum call fee, that lifts the attacker's token into the top \ToyTop\ of a synthetic graph with \ToyContracts\ honest contracts. Attack sizes are tried by doubling and then narrowed by bisection, assuming that a larger attack never lowers the token's rank; ties go in the token's favor. ``Not reached'' means the token is still outside the top \ToyTop\ at an attack size of 200,000. The graph is made up; the table illustrates Propositions~\ref{prop:bipartite}--\ref{prop:region} and is not a result about Stacks mainnet.}
 \label{tab:toy-cost}
 \small
 \input{tables/toy-sybil-cost.tex}
 \end{table}
 
-Each baseline fails against one attack. Counting callers falls to the wallet farm (A2) at \ToyCostCallersATwo\ units. Dependency PageRank with a uniform restart, the teaRank pattern, falls to a single farm contract (A1, \ToyCostDepPRAOne\ units) because each deployed contract brings its own restart mass. EndorseRank with a uniform restart falls to both: \ToyCostERUniformATwo\ wallets suffice, close to the count of callers as Proposition~\ref{prop:bipartite} predicts, and farm contracts work too because they are nodes with restart mass. \PCER\ is not moved by A1 at any size, as Proposition~\ref{prop:region} requires, and A2 costs \ToyCostPCERATwo\ units, about \ToyRatioATwo\ times the cost under the uniform restart and close to the mean fee of an honest wallet (\ToyMeanFee\ units). A3 moves the token only when run-time trait bindings are added as router edges. In this graph that attack costs more than A2, because honest calls already bind the router's tokens hundreds of times; a router whose score comes mostly from delegation rather than from calls would be cheaper to capture.
+Each baseline falls to at least one attack. Counting callers falls to the wallet farm (A2) at \ToyCostCallersATwo\ units. Dependency PageRank with a uniform restart, the teaRank pattern, falls to a single farm contract (A1, \ToyCostDepPRAOne\ units) because each deployed contract brings its own restart mass. EndorseRank with a uniform restart falls to both: \ToyCostERUniformATwo\ wallets suffice, not far from the \ToyCostCallersATwo\ that the count of callers needs, as Proposition~\ref{prop:bipartite} predicts, and farm contracts work too because they are nodes with restart mass. \PCER\ is not moved by A1 at any size, as Proposition~\ref{prop:region} implies, and A2 costs \ToyCostPCERATwo\ units, about \ToyRatioATwo\ times its cost under the uniform restart. That factor is close to the mean fee an honest wallet paid, \ToyMeanFee\ minimum fees, as Section~\ref{sec:method-weights} predicts. A4 moves the token only when run-time trait bindings are added as router edges (\ToyCostPCERBindAFour\ units). In this graph that attack costs more than A2, because honest calls already bind the router's tokens hundreds of times; a router whose score comes mostly from delegation rather than from calls would be cheaper to capture.
 
 \subsection{Families, packages and search}
 \label{sec:method-search}
