@@ -20,7 +20,7 @@ ERC-20 논문(`../ERC20-Allowance-PageRank-Wallet-Reputation/`)의 EndorseRank�
 | `manuscript/` | 한국어 원고 LaTeX(XeLaTeX, kotex). `main.tex`가 `Sections/`의 절을 묶습니다. 빌드한 `main.pdf`도 함께 둡니다. |
 | `manuscript/Sections/` | 00 제목·초록, 01 서론, 02 배경, 03 관련 연구, 04 allowance → Stacks 대응, 05 PC-EndorseRank, 06 레지스트리와 `cpm`, 07 평가 설계, 08 논의와 한계, 09 결론, 10 참고문헌(원어 그대로), 11 부록 |
 | `manuscript/tables/` | `scripts/toy_sybil_example.py --latex`가 만든 표와 숫자 매크로. **손으로 고치지 않습니다.** |
-| `scripts/toy_sybil_example.py` | 합성 그래프에서 세 가지 공격(가짜 컨트랙트, 가짜 지갑, 라우터 trait 인자 끼워 넣기)의 비용을 다섯 가지 순위 규칙으로 비교하는 스크립트(numpy만 필요, 시드 고정) |
+| `scripts/toy_sybil_example.py` | 합성 그래프에서 세 가지 공격(가짜 컨트랙트, 가짜 지갑, 라우터 trait 인자 끼워 넣기)의 비용을 다섯 가지 점수 규칙으로 비교하는 스크립트(numpy만 필요, 시드 고정) |
 | `docs/allowance-replacement.ko.md` | "allowance를 무엇으로 대체하나"에 대한 설계 메모 |
 
 ## 빌드

@@ -13,16 +13,16 @@
    내고 그런 간선을 얻으므로, 바인딩은 간선이 아니다.
 
 이 스크립트는 정직한 컨트랙트와 지갑으로 된 작은 가짜 그래프를 만들고, 공격자의
-대상 토큰을 더한 뒤, 순위 규칙마다 대상을 상위 3위 안에 올리는 데 공격자가 얼마를
+대상 토큰을 더한 뒤, 점수 규칙마다 대상을 상위 3위 안에 올리는 데 공격자가 얼마를
 내야 하는지(최소 호출 수수료 단위)를 잰다. 그래프는 꾸며 낸 것이다. 출력은 명제를
 예시할 뿐 Stacks 메인넷에 대해서는 아무것도 말하지 않는다.
 
 공격(원고 7절의 번호를 따른다. A3 왕복 송금은 AWP에만 통하므로 여기서는 뺐다):
-    A1  대상을 참조하는 컨트랙트 k개 배포(링크 팜)
-    A2  대상을 한 번씩 승인하는 지갑 k개 생성(지갑 농장)
+    A1  대상을 참조하는 컨트랙트 k개 배포(컨트랙트 팜)
+    A2  대상을 한 번씩 승인하는 지갑 k개 생성(지갑 팜)
     A4  대상을 trait 인자로 넣어 정직한 라우터를 k번 호출
 
-순위 규칙:
+점수 규칙:
     callers      그 컨트랙트를 승인한 서로 다른 지갑의 수
     dep-pr       컨트랙트 참조 위의 PageRank, 균등 재시작
     er-uniform   Stacks로 옮긴 EndorseRank: 지갑과 컨트랙트가 노드, 지갑 간선에
@@ -264,7 +264,7 @@ def min_cost_to_top(base: World, attack: str, method: str) -> float | None:
 
 METHODS = ["callers", "dep-pr", "er-uniform", "pc-er", "pc-er+bind"]
 METHOD_LABELS = {
-    "callers": "호출자 수",
+    "callers": "서로 다른 호출자 수",
     "dep-pr": "의존성 PageRank, 균등 재시작",
     "er-uniform": "Stacks로 옮긴 EndorseRank, 균등 재시작",
     "pc-er": "PC-EndorseRank(수수료 가중 재시작)",
@@ -287,7 +287,7 @@ def write_latex(costs: dict, ranks: dict, stats: dict) -> None:
     head = "% scripts/toy_sybil_example.py가 만든 파일이다. 손으로 고치지 않는다.\n"
     lines = [head,
              "\\begin{tabular}{@{}lrrr@{}}\n\\toprule\n",
-             "순위 규칙 & A1 & A2 & A4 \\\\\n\\midrule\n"]
+             "점수 규칙 & A1 & A2 & A4 \\\\\n\\midrule\n"]
     for m in METHODS:
         cells = " & ".join(fmt_cost(costs[(m, a)]) for a in ATTACKS)
         lines.append(f"{METHOD_LABELS[m]} & {cells} \\\\\n")
@@ -311,7 +311,7 @@ def write_latex(costs: dict, ranks: dict, stats: dict) -> None:
         macros.append(f"\\newcommand{{\\Toy{key}}}{{{val}}}\n")
     for (m, a), c in costs.items():
         macros.append(f"\\newcommand{{\\ToyCost{MACRO_NAMES[m]}{MACRO_NAMES[a]}}}{{{fmt_cost(c)}}}\n")
-    # 지갑 농장(A2)의 비용이 균등 재시작보다 수수료 가중에서 몇 배인지.
+    # 지갑 팜(A2)의 비용이 균등 재시작보다 수수료 가중에서 몇 배인지.
     ratio = costs[("pc-er", "A2")] / costs[("er-uniform", "A2")]
     macros.append(f"\\newcommand{{\\ToyRatioATwo}}{{{ratio:.0f}}}\n")
     (TABLE_DIR / "toy-sybil-stats.tex").write_text("".join(macros), encoding="utf-8")
@@ -351,7 +351,7 @@ def main() -> None:
 
     print(f"\n상위 {TOP}위 안에 드는 최소 공격 비용(최소 호출 수수료 단위):")
     costs = {}
-    print(f"{'순위 규칙':12} " + " ".join(f"{a:>12}" for a in ATTACKS))
+    print(f"{'점수 규칙':12} " + " ".join(f"{a:>12}" for a in ATTACKS))
     for m in METHODS:
         row = [min_cost_to_top(base, a, m) for a in ATTACKS]
         for a, c in zip(ATTACKS, row):

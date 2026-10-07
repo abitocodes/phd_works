@@ -4,7 +4,7 @@
 
 \subsection{포스트컨디션}
 
-표~\ref{tab:pc-fields}는 Stacks Blockchain API가 돌려주는 트랜잭션의 포스트컨디션 필드를 \cite{hiroapi} \ref{sec:mapping-rules}절의 규칙에 대응시킨다. 필드 이름은 이 글을 쓰는 시점의 API 스키마를 따랐다. 평가에서는 설정 파일에 API 버전 하나를 고정하고, Originator 모드와 SIP-040의 \emph{may send} 조건이 어떻게 표현되는지 그 버전에서 확인한다.
+표~\ref{tab:pc-fields}에서는 Stacks Blockchain API가 돌려주는 트랜잭션의 포스트컨디션 필드를 \ref{sec:mapping-rules}절의 규칙에 대응시킨다 \cite{hiroapi}. 필드 이름은 이 글을 쓰는 시점의 API 스키마를 따랐다. 평가에서는 설정 파일에 API 버전 하나를 고정하고, Originator 모드와 SIP-040의 \emph{may send} 조건이 어떻게 표현되는지 그 버전에서 확인한다.
 
 \begin{table}[htbp]
 \centering
@@ -56,11 +56,11 @@ ExecutorDAO 형태인 $A$에서 $b$를 켠 가장 최근의 \code{set-extension}
 \section{합성 예제}
 \label{app:toy}
 
-\ref{sec:method-toy}절의 예제는 난수 시드를 고정한 \code{scripts/toy\_sybil\_example.py}로 만든다. 정직한 컨트랙트 \ToyContracts 개는 SIP-010 trait 하나, 그 trait을 구현하는 토큰 여섯 개, 수학 라이브러리 하나, trait과 라이브러리를 쓰고 \code{as-contract?} 안에서 두 토큰을 내주는 풀 세 개, 세 풀을 호출하는 라우터, 두 토큰을 내주고 라이브러리를 쓰는 볼트, 볼트와 라우터를 확장으로 켠 DAO로 이루어진다. 정직한 지갑 \ToyWallets 개는 저마다 진입 컨트랙트(라우터, 볼트, DAO, 토큰 중) 한 개에서 세 개를 로그정규분포에서 뽑은 값으로 승인하고, $1+\mathrm{Poisson}(8)$개 트랜잭션의 수수료를 낸다. 트랜잭션 하나의 수수료는 최소 수수료에 중앙값이 3인 로그정규분포의 배수를 곱한 값이다. 라우터를 쓰는 지갑은 라우터를 한 번에서 다섯 번 호출하며, 호출마다 풀 하나의 두 토큰을 바인딩한다. 배포 한 번에는 최소 수수료의 \ToyDeployFee 배가 든다. 순위는 공격자의 컨트랙트를 포함해 점수가 대상보다 엄격히 높은 컨트랙트만 세므로, 동점은 대상에게 유리하게 처리되고 표~\ref{tab:toy-cost}의 비용은 실제보다 낮게 나올 수는 있어도 높게 나오지는 않는다. PageRank는 \ref{sec:method}절의 설정을 쓰고, 수수료 상한 $f_{\max}$는 뺐다. 실행 시점 바인딩을 더한 절제 분석에서는 라우터의 바인딩 간선 전체에 라우터의 정적 참조와 같은 가중치를 주고, 그 가중치를 토큰이 바인딩된 횟수에 비례해 나눈다. 표~\ref{tab:toy-ranks}에 공격 크기별 대상의 순위를 적었다.
+\ref{sec:method-toy}절의 예제는 난수 시드를 고정한 \code{scripts/toy\_sybil\_example.py}로 만든다. 정직한 컨트랙트 \ToyContracts 개는 SIP-010 trait 하나, 그 trait를 구현하는 토큰 여섯 개, 수학 라이브러리 하나, trait와 라이브러리를 쓰고 \code{as-contract?} 안에서 두 토큰을 내주는 풀 세 개, 세 풀을 호출하는 라우터, 두 토큰을 내주고 라이브러리를 쓰는 볼트, 볼트와 라우터를 확장으로 켠 DAO로 이루어진다. 정직한 지갑 \ToyWallets 개는 저마다 진입 컨트랙트(라우터, 볼트, DAO, 토큰 중) 한 개에서 세 개를 로그정규분포에서 뽑은 값으로 승인하고, $1+\mathrm{Poisson}(8)$개 트랜잭션의 수수료를 낸다. 트랜잭션 하나의 수수료는 최소 수수료에 중앙값이 3인 로그정규분포의 배수를 곱한 값이다. 라우터를 쓰는 지갑은 라우터를 한 번에서 다섯 번 호출하며, 호출마다 풀 하나의 두 토큰을 바인딩한다. 배포 한 번에는 최소 수수료의 \ToyDeployFee 배가 든다. 순위는 공격자의 컨트랙트를 포함해 점수가 대상보다 엄격히 높은 컨트랙트만 세므로, 동점은 대상에게 유리하게 처리되고 표~\ref{tab:toy-cost}의 비용은 실제보다 낮게 나올 수는 있어도 높게 나오지는 않는다. PageRank는 \ref{sec:method}절의 설정을 쓰고, 수수료 상한 $f_{\max}$는 뺐다. 실행 시점 바인딩을 더한 절제 분석에서는 라우터의 바인딩 간선 전체에 라우터의 정적 참조와 같은 가중치를 주고, 그 가중치를 토큰이 바인딩된 횟수에 비례해 나눈다. 표~\ref{tab:toy-ranks}에 공격 크기별 대상의 순위를 적었다.
 
 \begin{table}[htbp]
 \centering
-\caption{합성 예제에서 공격자 토큰이 전체 컨트랙트 가운데 차지하는 순위(1이 맨 위). $k$는 농장 컨트랙트(A1), 시빌 지갑(A2), 라우터 호출(A4)의 수이다. 열은 표~\ref{tab:toy-cost}의 순위 규칙으로, 차례로 호출자 수, 의존성 PageRank, 균등 재시작으로 Stacks에 옮긴 EndorseRank, \PCER, 실행 시점 trait 바인딩을 더한 \PCER이다.}
+\caption{합성 예제에서 공격자 토큰이 전체 컨트랙트 가운데 차지하는 순위(1이 맨 위). $k$는 팜 컨트랙트(A1), 시빌 지갑(A2), 라우터 호출(A4)의 수이다. 열은 표~\ref{tab:toy-cost}의 점수 규칙으로, 차례로 서로 다른 호출자 수, 의존성 PageRank, 균등 재시작으로 Stacks에 옮긴 EndorseRank, \PCER, 실행 시점 trait 바인딩을 더한 \PCER이다.}
 \label{tab:toy-ranks}
 \small
 \input{tables/toy-sybil-ranks.tex}
