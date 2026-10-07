@@ -2,5 +2,5 @@
 # the name is where each local clone keeps its git data (.git/modules/<name>), and
 # changing it would make every existing checkout clone the manuscript again.
 [submodule "2-Dissertation-Draft/overleaf-github"]
-	path = 2-Dissertation-Draft-Works/overleaf-github
+	path = 1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/overleaf-github
 	url = https://github.com/abitocodes/phd-dissertation-draft-en.git

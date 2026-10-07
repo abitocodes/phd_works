@@ -5,9 +5,9 @@ This is where the thesis work stood at the end of the previous session. Read it 
 ## Repos
 
 - `phd_works` (this repo). The June–August replication was registered in commit 4085ab9 (merged into master in f701400 on 2026-10-01), extracted in d6d26c4 and evaluated in 1462d76.
-- `2-Dissertation-Draft-Works/overleaf-github` is a submodule (`phd-dissertation-draft-en`; its name in `.gitmodules` is still `2-Dissertation-Draft/overleaf-github`, on purpose). Its work branch `claude/sweet-darwin-odfmmv` (latest 8a60745) carries all manuscript changes and is not yet merged into `main`; the submodule pointer here still points at 9459b33. Run `git submodule update --init` if the folder is empty.
-- Experiment code and data live in `2-Dissertation-Draft-Works/wallet-reputation-experiments` (until 1 October 2026: `A-Skill-Programs/margin_rank`). All data sit under its `data/`: `1-raw-blockchain-logs/` and `2-processed-tables-and-evaluations/` are tracked (see its `.gitignore` for exclusions), and the summaries behind the thesis tables are copied to `3-published-results-for-thesis/` by `scripts/publish_results.py`. Its `README.md` and `data/README.md` describe every folder and file; `scripts/project_paths.py` holds the folder names and the old-to-new map.
-- After pulling the folder move, run `scripts/finish_folder_move.py` (dry run, then `--apply`) on each checkout to move what git does not track (the `.venv`, files over 100 MiB, the submodule checkout) out of the old folders.
+- `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/overleaf-github` is a submodule (`phd-dissertation-draft-en`; its name in `.gitmodules` is still `2-Dissertation-Draft/overleaf-github`, on purpose). Its work branch `claude/sweet-darwin-odfmmv` (latest 8a60745) carries all manuscript changes and is not yet merged into `main`; the submodule pointer here still points at 9459b33. Run `git submodule update --init` if the folder is empty.
+- Experiment code and data live in `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/wallet-reputation-experiments` (until 1 October 2026: `A-Skill-Programs/margin_rank`). All data sit under its `data/`: `1-raw-blockchain-logs/` and `2-processed-tables-and-evaluations/` are tracked (see its `.gitignore` for exclusions), and the summaries behind the thesis tables are copied to `3-published-results-for-thesis/` by `scripts/publish_results.py`. Its `README.md` and `data/README.md` describe every folder and file; `scripts/project_paths.py` holds the folder names and the old-to-new map.
+- After pulling a folder move (1 October, and 7 October: proposal and dissertation work moved under `1-Dissertation-Works/<title>/`), run `scripts/finish_folder_move.py` (dry run, then `--apply`) on each checkout to move what git does not track (the `.venv`, files over 100 MiB, the submodule checkout) out of the old folders.
 
 ## Central claim, as it now stands
 
@@ -27,7 +27,7 @@ This is where the thesis work stood at the end of the previous session. Read it 
 ## Rules that must not be broken
 
 - Do not change the cover or the table-of-contents titles. New content goes into unnumbered-in-TOC subsections (3.7.1/3.7.2, 4.8.1/4.8.2).
-- Do not modify `1-Proposal`.
+- Do not modify `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/proposal`.
 - Dissertation prose must not read as AI-written:
   - no inflated vocabulary, formulaic triplets or "not only…but also";
   - no em-dash chains, promotional tone or summary sign-offs;
