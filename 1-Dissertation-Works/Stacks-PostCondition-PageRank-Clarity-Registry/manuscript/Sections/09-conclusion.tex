@@ -1,9 +1,9 @@
 % !TEX root = ../main.tex
-\section{Conclusion}
+\section{결론}
 \label{sec:conclusion}
 
-Clarity contracts are published as source, so a registry for them can be built from chain data alone, but it needs a ranking that resists fake popularity. EndorseRank cannot be moved to Stacks unchanged because Stacks has no allowance. The allowance relation splits into two parts: post-conditions record which contracts a wallet let move its assets, and delegation and dependency references in code record which contracts a contract relies on. AWP can be applied to Stacks transfers as it stands.
+Clarity 컨트랙트는 소스로 공개되므로 체인 데이터만으로 레지스트리를 만들 수 있다. 다만 가짜 인기에 버티는 순위가 있어야 한다. Stacks에는 allowance가 없으므로 EndorseRank를 그대로 옮길 수는 없다. allowance 관계는 두 부분으로 나뉜다. 포스트컨디션은 지갑이 어떤 컨트랙트에 자기 자산을 옮기게 했는지를 기록하고, 코드 안의 위임 참조와 의존 참조는 컨트랙트가 어떤 컨트랙트에 기대는지를 기록한다. AWP는 Stacks의 전송에 그대로 적용할 수 있다.
 
-The propositions point to one change: wallets leave the graph and act only through the restart distribution. With a uniform restart, the part of a contract's score that comes from wallets is a count of wallets, and dependency PageRank grows with the number of contracts deployed around a target; both are cheap to inflate. With a restart weighted by fees, splitting a budget across wallets buys nothing, and a group of contracts that no wallet authorizes and no outside contract references receives no score. The synthetic example shows these effects on a made-up graph. The registry built on this ranking separates referencing a contract from copying it, ties scopes and versions to deployer addresses, groups clones by hash and checks code hashes on chain.
+명제들이 가리키는 변화는 하나이다. 지갑을 그래프에서 빼서 재시작 분포를 통해서만 작용하게 하는 것이다. 균등 재시작에서는 컨트랙트 점수 가운데 지갑에서 오는 부분이 지갑 수가 되고, 의존성 PageRank는 대상 주위에 배포한 컨트랙트 수에 따라 커진다. 둘 다 부풀리기 쉽다. 수수료로 가중한 재시작에서는 예산을 여러 지갑에 나눠도 얻는 것이 없고, 어떤 지갑도 승인하지 않고 바깥의 어떤 컨트랙트도 참조하지 않는 컨트랙트 묶음은 점수를 받지 못한다. 합성 예제는 꾸며 낸 그래프에서 이 효과들을 보여 준다. 이 순위 위에 만든 레지스트리는 컨트랙트를 참조하는 일과 복제하는 일을 구분하고, 스코프와 버전을 배포자 주소에 묶고, 클론을 해시로 모으고, 코드 해시를 체인에서 확인한다.
 
-Whether the higher cost of manipulation holds on Stacks mainnet, and whether it comes without a loss of agreement with later adoption, is what the evaluation of Section~\ref{sec:evaluation} tests. Both outcomes will be reported whatever their direction.
+조작 비용이 높아지는 효과가 Stacks 메인넷에서도 성립하는지, 그리고 그 대가로 이후 채택과의 일치를 잃지 않는지는 \ref{sec:evaluation}절의 평가가 검정한다. 두 결과 모두 방향과 관계없이 보고한다.

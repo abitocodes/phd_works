@@ -2,24 +2,25 @@
 \begin{titlepage}
 \centering
 \vspace*{1.2cm}
-{\LARGE\bfseries Ranking Clarity Smart Contracts for a Package Registry on Stacks:\\[0.3em]
-Post-Conditions in Place of ERC-20 Allowances\par}
+{\LARGE\bfseries Stacks 패키지 레지스트리를 위한\\[0.3em]
+Clarity 스마트 컨트랙트 순위 산정:\\[0.3em]
+ERC-20 allowance를 대신하는 포스트컨디션\par}
 \vspace{1.4cm}
-% Co-authors (supervisors) and the corresponding-author e-mail are to be decided.
-{\large Taehong Kwon\par}
+% 공저자(지도교수 포함 여부)와 교신 저자 이메일은 정하지 않았다.
+{\large 권태홍 (Taehong Kwon)\par}
 \vspace{0.3cm}
-{University of South Africa\par}
+{남아프리카대학교(University of South Africa)\par}
 \vspace{1.0cm}
-{Manuscript draft, 7 October 2026\par}
+{원고 초안, 2026년 10월 7일\par}
 \vfill
 \end{titlepage}
 
-\section*{Abstract}
+\section*{초록}
 
-Every Clarity smart contract deployed on Stacks is stored on chain as readable source, yet developers have no registry comparable to npm or pkg.go.dev for finding and reusing these contracts. Such a registry needs a ranking that keeps copies and spam below the contracts people actually depend on, and that an attacker cannot buy cheaply with fake identities. Earlier work ranked Ethereum wallets with PageRank over ERC-20 transfers (AWP) or over ERC-20 allowances (EndorseRank). Stacks has no allowance. The SIP-010 token standard has no \code{approve} or \code{transferFrom}; a user lets a contract move their tokens by calling it and bounds what may leave their account with post-conditions on the signed transaction, and since Clarity~4 a contract bounds its own outflows with asset allowances in \code{as-contract?} and \code{restrict-assets?}.
+Stacks에 배포된 Clarity 스마트 컨트랙트는 모두 사람이 읽을 수 있는 소스 형태로 체인에 저장된다. 그런데도 개발자가 이 컨트랙트를 찾아 다시 쓸 수 있는, npm이나 pkg.go.dev 같은 레지스트리는 없다. 이런 레지스트리에는 복제본과 스팸을 사람들이 실제로 의존하는 컨트랙트보다 아래에 두고, 공격자가 가짜 신원으로 싸게 살 수 없는 순위가 필요하다. 선행 연구는 이더리움 지갑의 순위를 ERC-20 전송 위의 PageRank(AWP)나 ERC-20 allowance 위의 PageRank(EndorseRank)로 매겼다. Stacks에는 allowance가 없다. SIP-010 토큰 표준에는 \code{approve}도 \code{transferFrom}도 없다. 사용자는 컨트랙트를 직접 호출해 자기 토큰을 옮기게 하고, 서명한 트랜잭션에 붙인 포스트컨디션으로 자기 계정에서 나갈 수 있는 양을 제한한다. Clarity~4부터는 컨트랙트도 \code{as-contract?}와 \code{restrict-assets?}의 자산 한도로 자기 자산의 유출을 제한한다.
 
-This paper maps the allowance relation onto these mechanisms and defines \PCER, a ranking whose only nodes are contracts. Post-condition authorizations, reduced to their latest state per wallet, contract and asset as in EndorseRank, decide how each wallet divides its endorsement among contracts. The fees a wallet has paid decide how much that endorsement counts. Delegation and dependency references in contract code carry the score from contract to contract. We show that with a uniform restart the part of a contract's PageRank that comes from wallets reduces to a fractional count of wallets, so it offers no protection against Sybil wallets, and we bound the score that a group of attacker contracts can collect by its share of the restart and the score flowing into it from honest contracts. A synthetic example illustrates both results. We then describe the registry and its command-line client, \cpm, which separates referencing a deployed contract from copying its source, and we set out an evaluation on Stacks mainnet, fixed before its label window opens, that measures what an attacker must pay to lift a contract and how well the ranking agrees with later adoption, against count-based, dependency-PageRank, AWP and EndorseRank baselines.
+이 논문은 allowance 관계를 이 메커니즘들에 대응시키고, 노드가 컨트랙트뿐인 순위 \PCER를 정의한다. 포스트컨디션 승인은 EndorseRank처럼 지갑·컨트랙트·자산마다 최신 상태 하나로 줄이며, 각 지갑이 보증을 여러 컨트랙트에 어떻게 나누는지를 정한다. 지갑이 낸 수수료는 그 보증을 얼마나 무겁게 셀지를 정한다. 컨트랙트 코드의 위임 참조와 의존 참조는 점수를 컨트랙트에서 컨트랙트로 옮긴다. 균등 재시작을 쓰면 컨트랙트 점수 가운데 지갑에서 오는 부분이 지갑 수를 나누어 센 값이 되어 시빌 지갑을 막지 못한다는 것을 보이고, 공격자 컨트랙트 묶음이 모을 수 있는 점수의 상한을 그 묶음의 재시작 몫과 정직한 컨트랙트에서 흘러드는 점수로 나타낸다. 합성 예제로 두 결과를 보인다. 이어서 레지스트리와 명령줄 클라이언트 \cpm을 설명한다. \cpm은 배포된 컨트랙트를 참조하는 일과 그 소스를 복제하는 일을 구분한다. 끝으로 라벨 기간이 열리기 전에 고정한 Stacks 메인넷 평가 계획을 제시한다. 이 평가는 공격자가 컨트랙트를 끌어올리는 데 드는 비용과, 순위가 이후의 채택과 얼마나 맞는지를 개수 기반, 의존성 PageRank, AWP, EndorseRank 기준선과 비교한다.
 
-\textbf{Keywords:} Stacks; Clarity; smart contracts; package registry; PageRank; Sybil resistance; post-conditions; software supply chain
+\textbf{주제어:} Stacks; Clarity; 스마트 컨트랙트; 패키지 레지스트리; PageRank; 시빌 공격 저항; 포스트컨디션; 소프트웨어 공급망
 
 \clearpage

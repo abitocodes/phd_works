@@ -1,74 +1,74 @@
 % !TEX root = ../main.tex
-\section{From ERC-20 allowances to Stacks}
+\section{ERC-20 allowance에서 Stacks로}
 \label{sec:mapping}
 
-\subsection{What EndorseRank takes from an allowance}
+\subsection{EndorseRank가 allowance에서 가져오는 것}
 
-EndorseRank builds a graph $G_{\mathrm{approve}}$ in which an edge $u\to v$ carries the latest allowance that owner $u$ has granted to spender $v$, summed over tokens, and runs weighted PageRank on it \cite{kwon2026endorserank}. Five properties of the ERC-20 allowance make this work:
+EndorseRank는 간선 $u\to v$에 소유자 $u$가 지출자 $v$에게 내준 최신 allowance를 토큰에 걸쳐 합한 값을 싣는 그래프 $G_{\mathrm{approve}}$를 만들고, 그 위에서 가중 PageRank를 돌린다 \cite{kwon2026endorserank}. 이것이 가능한 것은 ERC-20 allowance의 다섯 가지 성질 덕분이다.
 
 \begin{itemize}
-\item \textbf{An explicit act by the asset owner:} the owner signs an \code{approve} transaction or a \code{permit} message \cite{eip20,eip2612}.
-\item \textbf{A named counterparty:} the approval names the spender, usually a router or vault contract.
-\item \textbf{A bound per asset:} the allowance is an amount of one token.
-\item \textbf{A standing state:} the allowance stays in force until the owner changes it, and a new approval overwrites the old one. EndorseRank keeps only the latest value for each owner, spender and token, and needs no time decay.
-\item \textbf{A cost:} an approval costs one transaction fee. It does not require the owner to hold the approved amount.
+\item \textbf{자산 소유자의 명시적 행위:} 소유자가 \code{approve} 트랜잭션이나 \code{permit} 메시지에 서명한다 \cite{eip20,eip2612}.
+\item \textbf{지목된 상대:} 승인은 지출자를 지목하며, 지출자는 보통 라우터나 볼트 컨트랙트이다.
+\item \textbf{자산별 한도:} allowance는 토큰 하나의 양이다.
+\item \textbf{지속되는 상태:} allowance는 소유자가 바꿀 때까지 효력이 있고, 새 승인이 이전 승인을 덮어쓴다. EndorseRank는 소유자·지출자·토큰마다 최신 값만 남기므로 시간 감쇠가 필요 없다.
+\item \textbf{비용:} 승인에는 트랜잭션 수수료 한 번이 든다. 소유자가 승인한 양만큼 가지고 있을 필요는 없다.
 \end{itemize}
 
-The last property matters for what follows. An allowance is cheap to create, so the defense against fake endorsements cannot come from the edge itself.
+마지막 성질이 뒤의 논의에서 중요하다. allowance는 만들기 싸므로, 가짜 보증에 대한 방어는 간선 자체에서 나올 수 없다.
 
-\subsection{Candidate mechanisms on Stacks}
+\subsection{Stacks의 후보 메커니즘}
 
-Table~\ref{tab:mechanisms} compares the ERC-20 allowance with the Stacks mechanisms of Section~\ref{sec:bg-authorization}. No single mechanism has all five properties. Post-conditions are explicit, signed by the asset owner and bounded per asset, but they last for one transaction and do not name a spender. Asset allowances in Clarity~4 name a bound but are written into code, so they express the developer's decision rather than a user's. Extension maps are standing and revocable but usually unbounded. Static references are permanent and say nothing about assets.
+표~\ref{tab:mechanisms}는 ERC-20 allowance를 \ref{sec:bg-authorization}절에서 본 Stacks의 메커니즘들과 비교한다. 다섯 성질을 모두 갖춘 메커니즘은 없다. 포스트컨디션은 명시적이고, 자산 소유자가 서명하며, 자산별 한도가 있지만, 트랜잭션 하나 동안만 유효하고 지출자를 지목하지 않는다. Clarity~4의 자산 한도는 한도를 정하지만 코드에 쓰여 있으므로 사용자가 아니라 개발자의 결정을 나타낸다. 확장 맵은 지속되고 철회할 수 있지만 대개 한도가 없다. 정적 참조는 영구적이며 자산에 대해서는 아무것도 말하지 않는다.
 
 \begin{table}[htbp]
 \centering
-\caption{The ERC-20 allowance and the Stacks mechanisms that carry part of its meaning.}
+\caption{ERC-20 allowance와, 그 의미의 일부를 담는 Stacks의 메커니즘}
 \label{tab:mechanisms}
 \small
-\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.17\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
 \toprule
-Mechanism & Granted by, to & Bound & Lifetime & Cost to create \\
+메커니즘 & 주는 쪽과 받는 쪽 & 한도 & 유효 기간 & 만드는 비용 \\
 \midrule
-ERC-20 \code{approve} / \code{permit} & Token owner, to a named spender & Amount per token & Until overwritten & One fee; no balance needed \\
+ERC-20 \code{approve} / \code{permit} & 토큰 소유자가 지목한 지출자에게 & 토큰별 양 & 덮어쓸 때까지 & 수수료 한 번, 잔액 불필요 \\
 \addlinespace
-Post-condition on the origin's outflow & Transaction origin, to the called contract and whatever it calls & Amount per asset, or a named NFT & One transaction & One fee \\
+발신자 유출에 대한 포스트컨디션 & 트랜잭션 발신자가 호출한 컨트랙트와 그 컨트랙트가 부르는 모든 것에게 & 자산별 양 또는 지정한 NFT & 트랜잭션 하나 & 수수료 한 번 \\
 \addlinespace
-\code{as-contract?} allowance (Clarity~4) & Contract code, to the code in its body & Amount per asset per call; none with \code{with-all-assets-unsafe} & Permanent & One deployment \\
+\code{as-contract?} 한도 (Clarity~4) & 컨트랙트 코드가 본문 안의 코드에게 & 호출마다 자산별 양, \code{with-all-assets-unsafe}이면 없음 & 영구 & 배포 한 번 \\
 \addlinespace
-\code{restrict-assets?} (Clarity~4) & Contract code on behalf of a principal, to the code in its body & Amount per asset per call & Permanent & One deployment \\
+\code{restrict-assets?} (Clarity~4) & 컨트랙트 코드가 어떤 principal을 대신해 본문 안의 코드에게 & 호출마다 자산별 양 & 영구 & 배포 한 번 \\
 \addlinespace
-Legacy \code{as-contract} & Contract code, to the code in its body & None & Permanent & One deployment \\
+옛 \code{as-contract} & 컨트랙트 코드가 본문 안의 코드에게 & 없음 & 영구 & 배포 한 번 \\
 \addlinespace
-Extension or allow-list map & Contract governance, to another contract & Usually none & Until disabled & A governance decision \\
+확장 맵, 허용 목록 맵 & 컨트랙트 거버넌스가 다른 컨트랙트에게 & 대개 없음 & 끌 때까지 & 거버넌스 결정 \\
 \addlinespace
-\code{contract-call?}, \code{use-trait}, \code{impl-trait} & Contract code, to the referenced contract & Not about assets & Permanent & One deployment \\
+\code{contract-call?}, \code{use-trait}, \code{impl-trait} & 컨트랙트 코드가 참조한 컨트랙트에게 & 자산과 무관 & 영구 & 배포 한 번 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\subsection{The choice}
+\subsection{선택}
 
-We split the role of the allowance in two.
+allowance의 역할을 둘로 나눈다.
 
-\textbf{Wallet to contract: post-conditions.} When a user signs a transaction that calls contract $c$ and bounds their own outflow of asset $a$ by $x$, they let $c$, and every contract that $c$ calls in that transaction, move up to $x$ of $a$ from their account. This is the meaning of \code{approve}$(c,x)$ on token $a$, restricted to one transaction. A post-condition does not name a spender, so we attribute the authorization to the contract named in the transaction's payload, the entry point the user chose. On Ethereum the user approves the router, and the router moves the tokens into a pool; on Stacks the user calls the router, and the router's calls move the tokens. In both cases the endorsement goes to the router, and the pool receives score from the router through a contract edge. To recover a standing state from per-transaction authorizations we apply EndorseRank's overwrite rule to each wallet, contract and asset: only the most recent authorization counts (Section~\ref{sec:method-records}).
+\textbf{지갑→컨트랙트: 포스트컨디션.} 사용자가 컨트랙트 $c$를 호출하면서 자산 $a$의 유출을 $x$로 제한하는 트랜잭션에 서명하면, 그 사용자는 $c$와, 그 트랜잭션에서 $c$가 호출하는 모든 컨트랙트가 자기 계정에서 $a$를 $x$까지 옮기도록 허락한 것이다. 이것은 토큰 $a$에 대한 \code{approve}$(c,x)$를 트랜잭션 하나로 좁힌 의미이다. 포스트컨디션은 지출자를 지목하지 않으므로, 승인은 트랜잭션 페이로드에 적힌 컨트랙트, 곧 사용자가 고른 진입점에 귀속한다. 이더리움에서는 사용자가 라우터를 승인하고 라우터가 토큰을 풀로 옮긴다. Stacks에서는 사용자가 라우터를 호출하고 라우터의 호출이 토큰을 옮긴다. 두 경우 모두 보증은 라우터에게 가고, 풀은 컨트랙트 간선을 통해 라우터에게서 점수를 받는다. 트랜잭션 단위의 승인에서 지속되는 상태를 얻기 위해, 지갑·컨트랙트·자산마다 EndorseRank의 덮어쓰기 규칙을 적용한다. 가장 최근의 승인 하나만 센다(\ref{sec:method-records}절).
 
-\textbf{Contract to contract: references in code.} A contract's source states which contracts it calls, which traits it implements and uses, and which code it lets act with its own authority. We use two kinds of edges. A \emph{delegation} edge $A\to B$ means that $A$ calls $B$ inside \code{as-contract?}, legacy \code{as-contract} or \code{restrict-assets?}, or that $A$'s governance has enabled $B$ as an extension. In each case $A$'s developer or governance has put assets or authority at $B$'s disposal, which is the contract-level counterpart of an approval. A \emph{dependency} edge $A\to B$ means that $A$ calls $B$ by static dispatch, or that $A$ implements or uses a trait defined in $B$. These are the edges a package registry counts as imports.
+\textbf{컨트랙트→컨트랙트: 코드 안의 참조.} 컨트랙트의 소스에는 그 컨트랙트가 호출하는 컨트랙트, 구현하거나 사용하는 trait, 자기 권한으로 행동하게 하는 코드가 드러난다. 간선은 두 종류를 쓴다. \emph{위임} 간선 $A\to B$는 $A$가 \code{as-contract?}, 옛 \code{as-contract}, \code{restrict-assets?} 안에서 $B$를 호출하거나, $A$의 거버넌스가 $B$를 확장으로 켰다는 뜻이다. 어느 경우든 $A$의 개발자나 거버넌스가 자산이나 권한을 $B$에게 맡긴 것이며, 이것이 승인의 컨트랙트 수준 대응물이다. \emph{의존} 간선 $A\to B$는 $A$가 정적 디스패치로 $B$를 호출하거나, $B$에 정의된 trait을 $A$가 구현하거나 사용한다는 뜻이다. 패키지 레지스트리가 가져오기(import)로 세는 간선이 이것이다.
 
-\textbf{What we leave out.} Under dynamic dispatch the concrete callee is chosen by whoever calls $A$, not by $A$'s developer. If a user passes token $X$ to router $R$, the choice of $X$ is the user's, and the user's post-condition on $X$ already records it as an authorization of $R$. Turning such a run-time binding into an edge $R\to X$ would credit $R$ with an endorsement its developer never made, and it would let anyone create edges out of a popular router by calling it. We therefore do not add edges for run-time trait bindings. Section~\ref{sec:method-toy} shows what happens when they are added.
+\textbf{빼는 것.} 동적 디스패치에서는 구체적인 피호출자를 $A$의 개발자가 아니라 $A$를 호출하는 쪽이 고른다. 사용자가 라우터 $R$에 토큰 $X$를 넘기면 $X$는 사용자가 고른 것이고, $X$에 대한 사용자의 포스트컨디션이 이미 그것을 $R$에 대한 승인으로 기록한다. 이런 실행 시점 바인딩을 간선 $R\to X$로 바꾸면 $R$의 개발자가 한 적 없는 보증을 $R$에게 돌리게 되고, 누구든 인기 있는 라우터를 호출하기만 해서 그 라우터에서 나가는 간선을 만들 수 있게 된다. 그래서 실행 시점 trait 바인딩에는 간선을 더하지 않는다. 이 간선을 더하면 무슨 일이 생기는지는 \ref{sec:method-toy}절에서 본다.
 
-\subsection{Which post-conditions count}
+\subsection{셀 포스트컨디션}
 \label{sec:mapping-rules}
 
-A post-condition counts as an authorization of the entry contract when all of the following hold:
+포스트컨디션은 다음을 모두 만족할 때 진입 컨트랙트에 대한 승인으로 센다.
 
 \begin{itemize}
-\item \textbf{Principal:} it constrains the transaction origin, either through the origin principal type or through a standard principal equal to the origin's address. Post-conditions on other principals do not authorize anything on the origin's behalf. A lower bound on what a pool contract must send, for example, is the user's guard against slippage.
-\item \textbf{Condition:} for STX and fungible tokens it is an upper bound ($=$, $<$ or $\leq$) that permits a positive amount; for a non-fungible token it is \emph{will send} or \emph{may send}. A bound of zero forbids the outflow; it protects the user and authorizes nothing. A lower bound ($>$ or $\geq$) on the origin's own outflow leaves the amount open, and we treat it like an outflow in Allow mode.
-\item \textbf{Outcome:} the transaction succeeded. Failed transactions move no assets.
+\item \textbf{principal:} 트랜잭션 발신자를 제한한다. 발신자(origin) principal 유형을 쓰거나, 발신자 주소와 같은 standard principal을 쓴 경우이다. 다른 principal에 대한 포스트컨디션은 발신자를 대신해 아무것도 승인하지 않는다. 예컨대 풀 컨트랙트가 보내야 할 양의 하한은 사용자의 슬리피지 보호이다.
+\item \textbf{조건:} STX와 대체 가능 토큰에서는 양수를 허용하는 상한($=$, $<$, $\leq$)이고, 대체 불가능 토큰에서는 \emph{will send}나 \emph{may send}이다. 한도가 0이면 유출을 막는 것이므로 사용자를 보호할 뿐 아무것도 승인하지 않는다. 발신자 자신의 유출에 대한 하한($>$, $\geq$)은 양을 열어 두므로 Allow 모드의 유출처럼 다룬다.
+\item \textbf{결과:} 트랜잭션이 성공했다. 실패한 트랜잭션은 자산을 옮기지 않는다.
 \end{itemize}
 
-Transactions in Allow mode let uncovered assets leave the origin's account without limit. We count such outflows as \emph{blanket authorizations} of the entry contract, the counterpart of an unlimited ERC-20 approval, which EndorseRank kept as a strong endorsement \cite{kwon2026endorserank}. They are flagged so that a sensitivity analysis can drop them. Originator mode, available since Epoch~3.4, still requires the origin's outflows to be covered, so it fits the rules above unchanged.
+Allow 모드의 트랜잭션에서는 포스트컨디션이 다루지 않는 자산이 발신자 계정에서 제한 없이 나갈 수 있다. 이런 유출은 진입 컨트랙트에 대한 \emph{포괄 승인}으로 센다. 이것은 무제한 ERC-20 승인에 해당하며, EndorseRank도 무제한 승인을 강한 보증으로 남겼다 \cite{kwon2026endorserank}. 포괄 승인에는 표시를 해 두어 민감도 분석에서 뺄 수 있게 한다. Epoch~3.4부터 쓸 수 있는 Originator 모드도 발신자의 유출에는 포스트컨디션을 요구하므로 위 규칙에 그대로 맞는다.
 
-\subsection{AWP needs no replacement}
+\subsection{AWP는 대체할 필요가 없다}
 
-AWP is built from transfers, and Stacks records every STX, fungible and non-fungible transfer as an event of the transaction that caused it \cite{hiroapi}. AWP can therefore run on Stacks as published: an edge from sender to recipient for each transfer, weighted by value and by the logistic decay $\sigma(\Delta t)=1/(1+\exp(k(\Delta t-t_0)))$ with $k=0.01$ and $t_0=180$ days \cite{do2023awp}. Its graph contains wallets and contracts; we report the scores of contracts only. AWP serves as a baseline in Section~\ref{sec:evaluation}.
+AWP는 전송으로 만든다. Stacks는 STX, 대체 가능 토큰, 대체 불가능 토큰의 모든 전송을 그 전송을 일으킨 트랜잭션의 이벤트로 기록한다 \cite{hiroapi}. 따라서 AWP는 발표된 그대로 Stacks에서 돌릴 수 있다. 전송마다 보내는 쪽에서 받는 쪽으로 간선을 두고, 금액과 로지스틱 감쇠 $\sigma(\Delta t)=1/(1+\exp(k(\Delta t-t_0)))$($k=0.01$, $t_0=180$일)로 가중한다 \cite{do2023awp}. 이 그래프에는 지갑과 컨트랙트가 모두 들어가지만 점수는 컨트랙트에 대해서만 보고한다. AWP는 \ref{sec:evaluation}절에서 기준선으로 쓴다.

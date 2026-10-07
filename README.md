@@ -79,7 +79,7 @@ flowchart TB
 
 ## 폴더 구조
 
-최상위 폴더는 `1-Dissertation-Works/`(논문), `2-Graduation/`(졸업 요건·공문), `3-Roundtable/`(진전 발표), `papers/`(참고 논문)입니다. 논문 폴더 아래 `ERC20-Allowance-PageRank-Wallet-Reputation/`은 지금 논문 제목 *Integrating ERC-20 Allowance Edges into PageRank for Enhanced On-Chain Wallet Reputation Scoring*을 줄인 이름입니다(전체 제목을 쓰면 Windows 경로 길이 제한 260자를 넘음). 그 안의 `proposal/`에는 연구계획서가, `dissertation/`에는 논문 원고·번역본·실험 코드와 데이터가 있습니다. 같은 폴더 아래 `Stacks-PostCondition-PageRank-Clarity-Registry/`는 두 번째 논문(학술지 원고) *Ranking Clarity Smart Contracts for a Package Registry on Stacks: Post-Conditions in Place of ERC-20 Allowances*의 작업 폴더로, EndorseRank와 AWP를 Stacks Clarity 컨트랙트 레지스트리의 순위에 옮겨 씁니다.
+최상위 폴더는 `1-Dissertation-Works/`(논문), `2-Graduation/`(졸업 요건·공문), `3-Roundtable/`(진전 발표), `papers/`(참고 논문)입니다. 논문 폴더 아래 `ERC20-Allowance-PageRank-Wallet-Reputation/`은 지금 논문 제목 *Integrating ERC-20 Allowance Edges into PageRank for Enhanced On-Chain Wallet Reputation Scoring*을 줄인 이름입니다(전체 제목을 쓰면 Windows 경로 길이 제한 260자를 넘음). 그 안의 `proposal/`에는 연구계획서가, `dissertation/`에는 논문 원고·번역본·실험 코드와 데이터가 있습니다. 같은 폴더 아래 `Stacks-PostCondition-PageRank-Clarity-Registry/`는 두 번째 논문 『Stacks 패키지 레지스트리를 위한 Clarity 스마트 컨트랙트 순위 산정: ERC-20 allowance를 대신하는 포스트컨디션』(한국어 원고)의 작업 폴더로, EndorseRank와 AWP를 Stacks Clarity 컨트랙트 레지스트리의 순위에 옮겨 씁니다. 폴더 이름은 영문 제목 *Ranking Clarity Smart Contracts for a Package Registry on Stacks: Post-Conditions in Place of ERC-20 Allowances*를 줄인 것입니다.
 
 | 경로 | 역할 |
 |------|------|
@@ -93,7 +93,7 @@ flowchart TB
 | `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/customized-books/audiobook-ko/` | 쉬운 한국어 번역본을 귀로 듣는 오디오북: 그림과 표를 말로 푼 대본(`script/`), 음성 파일(`audio/`), 대본 기준과 합성 도구 |
 | `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/local-other/sources/supervisor-feedback/` | 지도교수 초안 리뷰 (DOCX·이메일·코멘트 전사) |
 | `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/professor-feedback-summary.md` | 계획서·초안에 받은 교수님·심사위원 피드백 정리, 원고에 반영된 상태, 원고를 고치거나 줄일 때의 체크리스트 |
-| `1-Dissertation-Works/Stacks-PostCondition-PageRank-Clarity-Registry/` | 두 번째 논문 초안: Clarity 컨트랙트 레지스트리(웹)와 `cpm`(CLI), 포스트컨디션으로 allowance를 대신하는 순위 PC-EndorseRank (영문 원고 `manuscript/`, 한국어 설계 메모 `docs/`, 합성 예제 `scripts/`; 설명은 그 폴더의 `README.md`) |
+| `1-Dissertation-Works/Stacks-PostCondition-PageRank-Clarity-Registry/` | 두 번째 논문 초안: Clarity 컨트랙트 레지스트리(웹)와 `cpm`(CLI), 포스트컨디션으로 allowance를 대신하는 순위 PC-EndorseRank (한국어 원고 `manuscript/`, 설계 메모 `docs/`, 합성 예제 `scripts/`; 설명은 그 폴더의 `README.md`) |
 | `2-Graduation/` | 졸업 요건, 인정 학술지 목록, 공문 (`README.md`) |
 | `3-Roundtable/` | Roundtable·진전 발표 (일자별 `pptx` / `html`) |
 | `papers/` | 공유 참고 PDF |

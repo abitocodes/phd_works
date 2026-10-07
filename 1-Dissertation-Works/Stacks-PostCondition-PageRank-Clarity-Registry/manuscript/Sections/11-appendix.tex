@@ -1,66 +1,66 @@
 % !TEX root = ../main.tex
-\section{Extraction rules}
+\section{추출 규칙}
 \label{app:rules}
 
-\subsection{Post-conditions}
+\subsection{포스트컨디션}
 
-Table~\ref{tab:pc-fields} maps the post-condition fields of a transaction, as the Stacks Blockchain API returns them \cite{hiroapi}, to the rules of Section~\ref{sec:mapping-rules}. Field names follow the API schema at the time of writing; the evaluation pins one API version in its configuration file and checks there how Originator mode and the \emph{may send} condition of SIP-040 are encoded.
+표~\ref{tab:pc-fields}는 Stacks Blockchain API가 돌려주는 트랜잭션의 포스트컨디션 필드를 \cite{hiroapi} \ref{sec:mapping-rules}절의 규칙에 대응시킨다. 필드 이름은 이 글을 쓰는 시점의 API 스키마를 따랐다. 평가에서는 설정 파일에 API 버전 하나를 고정하고, Originator 모드와 SIP-040의 \emph{may send} 조건이 어떻게 표현되는지 그 버전에서 확인한다.
 
 \begin{table}[htbp]
 \centering
-\caption{Post-condition fields and how the extraction uses them.}
+\caption{포스트컨디션 필드와 추출에서의 쓰임}
 \label{tab:pc-fields}
 \small
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.3\linewidth}>{\raggedright\arraybackslash}X@{}}
 \toprule
-Field & Use \\
+필드 & 쓰임 \\
 \midrule
-\code{tx\_status} & Authorizations come from successful transactions only; fees count for every transaction the wallet originated, failed ones included. \\
-\code{tx\_type}, \code{contract\_call.contract\_id} & Contract calls only; the contract named here is the entry contract $c(\tau)$. \\
-\code{sender\_address}, \code{sponsored} & The origin $o(\tau)$; fees count for the origin whether or not a sponsor paid them. \\
-\code{fee\_rate} & The fee $f(\tau)$, capped at $f_{\max}$. \\
-\code{post\_condition\_mode} & Deny and Originator: only covered outflows of the origin count as explicit authorizations. Allow: uncovered outflows of the origin count as blanket authorizations and are flagged. \\
-\code{post\_conditions[].principal.type\_id} & \code{principal\_origin}, or \code{principal\_standard} with the origin's address: the condition can authorize. Contract principals: never an authorization. \\
-\code{post\_conditions[].type} & \code{stx}, \code{fungible} or \code{non\_fungible}; with \code{asset}, identifies the asset $a$. \\
-\code{post\_conditions[].condition\_code} & Upper bounds (\code{sent\_equal\_to}, \code{sent\_less\_than}, \code{sent\_less\_than\_or\_equal\_to}) and NFT \code{sent} or \emph{may send}: explicit authorization. Lower bounds on the origin: blanket authorization. \code{not\_sent}: none. \\
-\code{events[]} (asset transfers and burns) & The realized outflow $\mathrm{out}_a(\tau)$: amounts sent or burned by the origin. \\
+\code{tx\_status} & 승인은 성공한 트랜잭션에서만 얻는다. 수수료는 실패한 것을 포함해 지갑이 발신한 모든 트랜잭션에 대해 센다. \\
+\code{tx\_type}, \code{contract\_call.contract\_id} & 컨트랙트 호출만 쓴다. 여기 적힌 컨트랙트가 진입 컨트랙트 $c(\tau)$이다. \\
+\code{sender\_address}, \code{sponsored} & 발신자 $o(\tau)$. 수수료는 대납 여부와 관계없이 발신자의 것으로 센다. \\
+\code{fee\_rate} & 수수료 $f(\tau)$. $f_{\max}$에서 자른다. \\
+\code{post\_condition\_mode} & Deny와 Originator: 포스트컨디션이 다루는 발신자의 유출만 명시적 승인으로 센다. Allow: 포스트컨디션이 다루지 않는 발신자의 유출을 포괄 승인으로 세고 표시해 둔다. \\
+\code{post\_conditions[].principal.type\_id} & \code{principal\_origin}, 또는 발신자 주소와 같은 \code{principal\_standard}: 승인이 될 수 있다. 컨트랙트 principal: 승인이 아니다. \\
+\code{post\_conditions[].type} & \code{stx}, \code{fungible}, \code{non\_fungible}. \code{asset}과 함께 자산 $a$를 식별한다. \\
+\code{post\_conditions[].condition\_code} & 상한(\code{sent\_equal\_to}, \code{sent\_less\_than}, \code{sent\_less\_than\_or\_equal\_to})과 NFT의 \code{sent} 또는 \emph{may send}: 명시적 승인. 발신자에 대한 하한: 포괄 승인. \code{not\_sent}: 승인 아님. \\
+\code{events[]}(자산 전송과 소각) & 실제 유출량 $\mathrm{out}_a(\tau)$: 발신자가 보내거나 소각한 양. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\subsection{Clarity constructs}
+\subsection{Clarity 구문}
 
-Table~\ref{tab:clarity-edges} lists the constructs the analyzer reads and the edges they produce.
+표~\ref{tab:clarity-edges}에 분석기가 읽는 구문과 그 구문이 만드는 간선을 나열했다.
 
 \begin{table}[htbp]
 \centering
-\caption{Clarity constructs and the edges they produce for a contract $A$.}
+\caption{컨트랙트 $A$의 Clarity 구문과 그 구문이 만드는 간선}
 \label{tab:clarity-edges}
 \small
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.42\linewidth}>{\raggedright\arraybackslash}X@{}}
 \toprule
-Construct in $A$ & Edge \\
+$A$ 안의 구문 & 간선 \\
 \midrule
-\code{(contract-call? 'SP\ldots.b f \ldots)} & Dependency $A\to b$ \\
-\code{(contract-call? .b f \ldots)} & Dependency $A\to b$ of the same deployer \\
-\code{(define-constant T 'SP\ldots.b)} with \code{(contract-call? T f \ldots)} (Clarity~5) & Dependency $A\to b$ \\
-\code{(impl-trait 'SP\ldots.d.t)}, \code{(use-trait x 'SP\ldots.d.t)} & Dependency $A\to d$, the contract defining trait $t$ \\
-Any resolved call to $b$ inside \code{as-contract?}, \code{as-contract} or \code{restrict-assets?} & Delegation $A\to b$ \\
-\code{set-extension} in an ExecutorDAO-style $A$, latest call enabling $b$ & Delegation $A\to b$ \\
-\code{(contract-call? x f \ldots)} with \code{x} a trait-typed argument & No edge; recorded as dynamic dispatch \\
-\code{with-all-assets-unsafe}; \code{as-contract} around an external call; trait-typed call inside \code{as-contract?} & Shown as a signal (Table~\ref{tab:signals}), in addition to any edge from the rows above \\
+\code{(contract-call? 'SP\ldots.b f \ldots)} & 의존 $A\to b$ \\
+\code{(contract-call? .b f \ldots)} & 같은 배포자의 $b$로 가는 의존 $A\to b$ \\
+\code{(define-constant T 'SP\ldots.b)}와 \code{(contract-call? T f \ldots)} (Clarity~5) & 의존 $A\to b$ \\
+\code{(impl-trait 'SP\ldots.d.t)}, \code{(use-trait x 'SP\ldots.d.t)} & trait $t$를 정의한 컨트랙트 $d$로 가는 의존 $A\to d$ \\
+\code{as-contract?}, \code{as-contract}, \code{restrict-assets?} 안에서 대상을 알아낸 $b$ 호출 & 위임 $A\to b$ \\
+ExecutorDAO 형태인 $A$에서 $b$를 켠 가장 최근의 \code{set-extension} 호출 & 위임 $A\to b$ \\
+\code{x}가 trait 타입 인자인 \code{(contract-call? x f \ldots)} & 간선 없음. 동적 디스패치로 기록한다. \\
+\code{with-all-assets-unsafe}; 외부 호출을 감싼 \code{as-contract}; \code{as-contract?} 안의 trait 타입 호출 & 위 행들에서 생기는 간선과 별도로 신호로 보여 준다(표~\ref{tab:signals}). \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\section{The synthetic example}
+\section{합성 예제}
 \label{app:toy}
 
-The example of Section~\ref{sec:method-toy} is produced by \code{scripts/toy\_sybil\_example.py} with a fixed random seed. Its \ToyContracts\ honest contracts are a SIP-010 trait, six tokens that implement it, a math library, three pools that each use the trait and the library and pay out their two tokens inside \code{as-contract?}, a router that calls the three pools, a vault that pays out two tokens and uses the library, and a DAO that has enabled the vault and the router as extensions. Each of the \ToyWallets\ honest wallets authorizes one to three entry contracts (router, vault, DAO or a token) with values drawn from a log-normal distribution, and pays fees for $1+\mathrm{Poisson}(8)$ transactions, each costing a log-normal multiple of the minimum fee with median three. Each router user makes one to five router calls, each binding the two tokens of one pool. A deployment costs \ToyDeployFee\ minimum fees. Ranks count the contracts, the attacker's included, whose score is strictly higher than the target's, so ties go in the target's favor and the costs in Table~\ref{tab:toy-cost} can only be too low. PageRank uses the settings of Section~\ref{sec:method}; the fee cap $f_{\max}$ is left out. In the ablation with run-time bindings, the router's binding edges together get the same weight as its static references, split by how often each token was bound. Table~\ref{tab:toy-ranks} gives the target's rank for several attack sizes.
+\ref{sec:method-toy}절의 예제는 난수 시드를 고정한 \code{scripts/toy\_sybil\_example.py}로 만든다. 정직한 컨트랙트 \ToyContracts 개는 SIP-010 trait 하나, 그 trait을 구현하는 토큰 여섯 개, 수학 라이브러리 하나, trait과 라이브러리를 쓰고 \code{as-contract?} 안에서 두 토큰을 내주는 풀 세 개, 세 풀을 호출하는 라우터, 두 토큰을 내주고 라이브러리를 쓰는 볼트, 볼트와 라우터를 확장으로 켠 DAO로 이루어진다. 정직한 지갑 \ToyWallets 개는 저마다 진입 컨트랙트(라우터, 볼트, DAO, 토큰 중) 한 개에서 세 개를 로그정규분포에서 뽑은 값으로 승인하고, $1+\mathrm{Poisson}(8)$개 트랜잭션의 수수료를 낸다. 트랜잭션 하나의 수수료는 최소 수수료에 중앙값이 3인 로그정규분포의 배수를 곱한 값이다. 라우터를 쓰는 지갑은 라우터를 한 번에서 다섯 번 호출하며, 호출마다 풀 하나의 두 토큰을 바인딩한다. 배포 한 번에는 최소 수수료의 \ToyDeployFee 배가 든다. 순위는 공격자의 컨트랙트를 포함해 점수가 대상보다 엄격히 높은 컨트랙트만 세므로, 동점은 대상에게 유리하게 처리되고 표~\ref{tab:toy-cost}의 비용은 실제보다 낮게 나올 수는 있어도 높게 나오지는 않는다. PageRank는 \ref{sec:method}절의 설정을 쓰고, 수수료 상한 $f_{\max}$는 뺐다. 실행 시점 바인딩을 더한 절제 분석에서는 라우터의 바인딩 간선 전체에 라우터의 정적 참조와 같은 가중치를 주고, 그 가중치를 토큰이 바인딩된 횟수에 비례해 나눈다. 표~\ref{tab:toy-ranks}에 공격 크기별 대상의 순위를 적었다.
 
 \begin{table}[htbp]
 \centering
-\caption{Rank of the attacker's token among all contracts in the synthetic example (1 is the top). $k$ is the number of farm contracts (A1), Sybil wallets (A2) or router calls (A4). The columns are the scoring rules of Table~\ref{tab:toy-cost}: distinct callers, dependency PageRank, EndorseRank on Stacks with a uniform restart, \PCER, and \PCER\ with run-time trait bindings.}
+\caption{합성 예제에서 공격자 토큰이 전체 컨트랙트 가운데 차지하는 순위(1이 맨 위). $k$는 농장 컨트랙트(A1), 시빌 지갑(A2), 라우터 호출(A4)의 수이다. 열은 표~\ref{tab:toy-cost}의 순위 규칙으로, 차례로 호출자 수, 의존성 PageRank, 균등 재시작으로 Stacks에 옮긴 EndorseRank, \PCER, 실행 시점 trait 바인딩을 더한 \PCER이다.}
 \label{tab:toy-ranks}
 \small
 \input{tables/toy-sybil-ranks.tex}

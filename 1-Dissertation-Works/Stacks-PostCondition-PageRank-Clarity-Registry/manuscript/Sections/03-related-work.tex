@@ -1,23 +1,23 @@
 % !TEX root = ../main.tex
-\section{Related work}
+\section{관련 연구}
 \label{sec:related}
 
-\subsection{Graph-based ranking on blockchains}
+\subsection{블록체인의 그래프 기반 순위}
 
-Do and Do computed PageRank and HodgeRank scores for Ethereum addresses from the transaction graph, with transferred value as edge weight \cite{do2023hodgerank}. AWP refines this with a logistic decay so that recent transfers count more than old ones \cite{do2023awp}. RiskProp propagates risk labels through a bipartite transaction graph to rate accounts \cite{lin2025riskprop}. Chen et al. built three Ethereum graphs, for money flow, contract creation and contract invocation, and analyzed them with PageRank and other measures; their invocation graph is the closest earlier object to the contract graph we rank, although their aim was measurement rather than recommendation \cite{chen2018ethereum}. EndorseRank replaced transfers with the latest ERC-20 allowance between each owner and spender \cite{kwon2026endorserank}. In that study most spenders turned out to be contracts, so the allowance graph already pointed mostly from wallets to contracts. Address-clustering heuristics, some of them based on approvals, group Ethereum addresses that are likely to share an owner \cite{victor2020clustering}; we return to such heuristics when discussing wallet weights.
+Do와 Do는 전송 금액을 간선 가중치로 한 이더리움 거래 그래프에서 주소마다 PageRank와 HodgeRank 점수를 계산했다 \cite{do2023hodgerank}. AWP는 여기에 로지스틱 감쇠를 더해 최근 전송을 오래된 전송보다 무겁게 센다 \cite{do2023awp}. RiskProp는 이분 거래 그래프를 따라 위험 라벨을 전파해 계정의 등급을 매긴다 \cite{lin2025riskprop}. Chen 등은 자금 흐름, 컨트랙트 생성, 컨트랙트 호출에 대한 세 가지 이더리움 그래프를 만들고 PageRank 등으로 분석했다. 이들의 호출 그래프는 이 논문이 순위를 매기는 컨트랙트 그래프에 가장 가까운 선행 대상이지만, 그 목적은 추천이 아니라 측정이었다 \cite{chen2018ethereum}. EndorseRank는 전송 대신 소유자와 지출자 사이의 최신 ERC-20 allowance를 썼다 \cite{kwon2026endorserank}. 그 연구에서 지출자는 대부분 컨트랙트였으므로, allowance 그래프는 이미 주로 지갑에서 컨트랙트로 향하고 있었다. 주소 군집화 휴리스틱은 같은 소유자의 것일 가능성이 높은 이더리움 주소들을 묶으며, 그중 일부는 승인에 기반한다 \cite{victor2020clustering}. 지갑 가중치를 다룰 때 이런 휴리스틱을 다시 언급한다.
 
-All of these methods rank addresses for credit or risk. None of them asks which contracts a developer should reuse, and none studies what an attacker must pay to move a contract up the ranking.
+이 방법들은 모두 신용이나 위험을 위해 주소의 순위를 매긴다. 개발자가 어떤 컨트랙트를 다시 써야 하는지를 묻는 방법은 없고, 공격자가 컨트랙트를 순위에서 끌어올리는 데 얼마를 내야 하는지를 다룬 연구도 없다.
 
-\subsection{Dependency networks and registry security}
+\subsection{의존성 네트워크와 레지스트리 보안}
 
-Studies of package ecosystems treat dependencies as a directed graph and measure its growth and fragility \cite{kikas2017structure,decan2019empirical}. Mujahid et al. tracked the PageRank of npm packages month by month and used falling centrality to flag packages in decline \cite{mujahid2021centrality}. Registry security work catalogs attacks on open-source supply chains, among them typosquatting, malicious maintainers and account takeover \cite{ohm2020backstabber,ladisa2023sok,vu2020typosquatting}, and shows how far a compromised maintainer account can reach through transitive dependencies \cite{zimmermann2019small}. Signing systems such as Sigstore bind a published artifact to an identity \cite{newman2022sigstore}. On Stacks the binding between a contract and its publisher comes for free, since the deployer's address is part of the contract identifier, but a registry still has to decide how names, versions and scopes relate to that address.
+패키지 생태계 연구는 의존성을 방향 그래프로 보고 그 성장과 취약성을 잰다 \cite{kikas2017structure,decan2019empirical}. Mujahid 등은 npm 패키지의 PageRank를 달마다 추적하고, 중심성이 떨어지는 패키지를 쇠퇴하는 패키지로 표시했다 \cite{mujahid2021centrality}. 레지스트리 보안 연구는 타이포스쿼팅, 악의적 관리자, 계정 탈취 등 오픈소스 공급망 공격을 분류하고 \cite{ohm2020backstabber,ladisa2023sok,vu2020typosquatting}, 탈취된 관리자 계정 하나가 전이 의존성을 거쳐 얼마나 멀리 닿는지 보여 준다 \cite{zimmermann2019small}. Sigstore 같은 서명 시스템은 게시된 산출물을 신원에 묶는다 \cite{newman2022sigstore}. Stacks에서는 배포자 주소가 컨트랙트 식별자의 일부이므로 컨트랙트와 게시자의 결속이 따로 비용 없이 주어진다. 그래도 레지스트리는 이름, 버전, 스코프가 그 주소와 어떻게 이어지는지를 정해야 한다.
 
-\subsection{Code clones in smart contracts}
+\subsection{스마트 컨트랙트의 코드 클론}
 
-Copying is common in smart contracts. Kondo et al. found that 79.2\% of the verified Ethereum contracts they studied were clones \cite{kondo2020cloning}, and He et al. found duplicates for more than 96\% of contracts in a set of about ten million \cite{he2020clones}. Clones also serve fraud: copies of popular tokens are used to trick traders on decentralized exchanges \cite{xia2021scam}. Clone detection techniques range from exact hashes to token- and tree-based similarity \cite{roy2009clones}; near-duplicate detection at scale often uses MinHash over shingles \cite{broder1997resemblance}. A Stacks registry can add an exact on-chain check, because \code{contract-hash?} returns the hash of any contract's code \cite{sip033}.
+스마트 컨트랙트에서는 복제가 흔하다. Kondo 등은 자신들이 살펴본 검증된 이더리움 컨트랙트의 79.2\%가 클론임을 발견했고 \cite{kondo2020cloning}, He 등은 약 천만 개의 컨트랙트 가운데 96\% 이상에서 중복본을 찾았다 \cite{he2020clones}. 클론은 사기에도 쓰인다. 인기 토큰의 복제본으로 탈중앙 거래소의 거래자를 속이는 사례가 있다 \cite{xia2021scam}. 클론 탐지 기법은 정확한 해시부터 토큰 기반·트리 기반 유사도까지 다양하며 \cite{roy2009clones}, 대규모의 근사 중복 탐지에는 슁글 위의 MinHash를 흔히 쓴다 \cite{broder1997resemblance}. Stacks 레지스트리는 여기에 온체인의 정확한 검사를 더할 수 있다. \code{contract-hash?}가 어떤 컨트랙트든 그 코드의 해시를 돌려주기 때문이다 \cite{sip033}.
 
-\subsection{Tools for finding Clarity contracts}
+\subsection{Clarity 컨트랙트를 찾는 도구}
 
-Several pieces of a registry already exist. The Stacks Blockchain API returns source code and ABIs and lists contracts by trait \cite{hiroapi}. Clarinet downloads mainnet contracts as project requirements and remaps their addresses for local networks \cite{clarinet}. A public GitHub repository mirrors the source of deployed contracts \cite{boomcrypto}, and Chainhooks streams chain events to applications \cite{chainhooks2026}. STACY, a static analyzer for Clarity, flags patterns such as calls to other contracts inside \code{as-contract} \cite{stacy}. None of these tools ranks contracts, groups clones, records versions or separates referencing a contract from copying it.
+레지스트리의 몇몇 조각은 이미 있다. Stacks Blockchain API는 소스 코드와 ABI를 돌려주고 trait별로 컨트랙트를 나열한다 \cite{hiroapi}. Clarinet은 메인넷 컨트랙트를 프로젝트 요구 사항으로 내려받고 로컬 네트워크에 맞게 주소를 바꿔 준다 \cite{clarinet}. 공개 GitHub 저장소 하나가 배포된 컨트랙트의 소스를 옮겨 두고 \cite{boomcrypto}, Chainhooks는 체인 이벤트를 애플리케이션에 흘려보낸다 \cite{chainhooks2026}. Clarity 정적 분석기 STACY는 \code{as-contract} 안에서 다른 컨트랙트를 호출하는 것 같은 패턴을 찾아낸다 \cite{stacy}. 그러나 이 도구들 가운데 컨트랙트의 순위를 매기거나, 클론을 묶거나, 버전을 기록하거나, 컨트랙트를 참조하는 일과 복제하는 일을 구분하는 것은 없다.
 
-None of this work ranks deployed contracts for reuse. EndorseRank, the closest method, depends on an allowance relation that Stacks does not have, and its behavior under Sybil attacks was not analyzed.
+이 연구들 가운데 배포된 컨트랙트를 재사용 관점에서 순위 매기는 연구는 없다. 가장 가까운 방법인 EndorseRank는 Stacks에 없는 allowance 관계에 의존하며, 시빌 공격에서 어떻게 행동하는지는 분석되지 않았다.

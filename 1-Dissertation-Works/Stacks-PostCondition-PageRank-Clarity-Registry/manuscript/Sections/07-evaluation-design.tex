@@ -1,87 +1,87 @@
 % !TEX root = ../main.tex
-\section{Evaluation design}
+\section{평가 설계}
 \label{sec:evaluation}
 
-The evaluation is fixed before its label window opens, following the registered replication of the ERC-20 study \cite{kwon2026endorserank}. The configuration file that holds the dates, parameters, random seeds and decision rules below is committed before 1 November 2026, and its hash is reported with the results.
+평가 계획은 ERC-20 연구의 등록 재현을 따라 라벨 기간이 열리기 전에 고정한다 \cite{kwon2026endorserank}. 아래의 날짜, 매개변수, 난수 시드, 결정 규칙을 담은 설정 파일은 2026년 11월 1일 전에 커밋하고, 그 해시를 결과와 함께 보고한다.
 
-\subsection{Research questions}
+\subsection{연구 질문}
 
 \begin{itemize}
-\item \textbf{RQ1 (signal):} How often do Stacks transactions carry authorizing post-conditions, and how often do contracts use asset allowances, legacy \code{as-contract} and extension maps?
-\item \textbf{RQ2 (attacker cost):} How much must an attacker pay to lift a contract into the top of each ranking?
-\item \textbf{RQ3 (adoption):} Does \PCER\ at the freeze time agree with later adoption as well as the best baseline does, and do the edges between contracts add information beyond the restart distribution?
-\item \textbf{RQ4 (noise):} What share of deployed contracts are copies or show no use, and how much does grouping by family change search results?
+\item \textbf{RQ1(신호):} Stacks 트랜잭션은 얼마나 자주 승인 포스트컨디션을 담고 있으며, 컨트랙트는 얼마나 자주 자산 한도, 옛 \code{as-contract}, 확장 맵을 쓰는가?
+\item \textbf{RQ2(공격 비용):} 공격자가 각 순위에서 컨트랙트를 상위로 끌어올리려면 얼마를 내야 하는가?
+\item \textbf{RQ3(채택):} 동결 시점의 \PCER는 이후의 채택과 가장 좋은 기준선만큼 잘 맞는가? 컨트랙트 사이의 간선은 재시작 분포가 주는 것 이상의 정보를 더하는가?
+\item \textbf{RQ4(잡음):} 배포된 컨트랙트 가운데 복제본이거나 쓰인 흔적이 없는 것의 비율은 얼마이며, 묶음 단위로 모으면 검색 결과가 얼마나 달라지는가?
 \end{itemize}
 
-\subsection{Data and windows}
+\subsection{데이터와 기간}
 
-All data come from Stacks mainnet through a self-hosted Stacks node and a self-hosted instance of the Stacks Blockchain API. The ranking is frozen at $T_0=$ 31 October 2026, 23:59:59 UTC. The contract graph uses every contract deployed up to $T_0$. Authorizations and fees use the 180 days before $T_0$. The window begins after Epoch~3.4 (Bitcoin block 943,333, April 2026), so Originator mode is available throughout \cite{sip039,sip040}. Epoch~4.0 (Bitcoin block 960,230, July 2026) falls inside the window; it renames one Clarity allowance and adds another but no new kind of transaction post-condition, so the rules of Section~\ref{sec:mapping-rules} hold for the whole window \cite{sip044}. Labels come from the window $L$ from 1 November 2026 to 31 January 2027. A replication repeats everything with $T_0'=$ 31 January 2027 and labels from 1 February to 30 April 2027. Prices are median daily prices over the 30 days before $T_0$, from a public market source named in the configuration file, so that a short price pump at $T_0$ has little effect.
+모든 데이터는 직접 운영하는 Stacks 노드와 직접 운영하는 Stacks Blockchain API를 통해 Stacks 메인넷에서 얻는다. 순위는 $T_0=$ 2026년 10월 31일 23:59:59 UTC에 동결한다. 컨트랙트 그래프에는 $T_0$까지 배포된 모든 컨트랙트를 쓴다. 승인과 수수료는 $T_0$ 전 180일 동안의 것을 쓴다. 이 창은 Epoch~3.4(비트코인 블록 943,333, 2026년 4월) 뒤에 시작하므로 창 전체에서 Originator 모드를 쓸 수 있다 \cite{sip039,sip040}. Epoch~4.0(비트코인 블록 960,230, 2026년 7월)은 창 안에 있다. 이 에포크는 Clarity 자산 한도 하나의 이름을 바꾸고 하나를 더했지만 새로운 종류의 트랜잭션 포스트컨디션은 더하지 않았으므로, \ref{sec:mapping-rules}절의 규칙은 창 전체에 그대로 적용된다 \cite{sip044}. 라벨은 2026년 11월 1일부터 2027년 1월 31일까지의 기간 $L$에서 얻는다. 재현은 $T_0'=$ 2027년 1월 31일로 모든 것을 반복하고, 라벨은 2027년 2월 1일부터 4월 30일까지에서 얻는다. 가격은 설정 파일에 적은 공개 시장 출처에서 $T_0$ 전 30일 동안의 일별 가격 중앙값을 쓴다. 그래야 $T_0$에 맞춘 짧은 가격 펌핑이 거의 영향을 주지 못한다.
 
-\subsection{Methods compared}
+\subsection{비교하는 방법}
 
-Table~\ref{tab:methods} lists the methods. Raw counts are included for the reason given in Section~\ref{sec:introduction}: a new ranking should be shown to beat them, or to be no worse while costing an attacker more.
+표~\ref{tab:methods}에 방법을 나열했다. 단순 개수를 넣는 까닭은 \ref{sec:introduction}절에서 밝혔다. 새 순위는 단순 개수를 이기거나, 적어도 그보다 나쁘지 않으면서 공격자에게 더 큰 비용을 지운다는 것을 보여야 한다.
 
 \begin{table}[htbp]
 \centering
-\caption{Methods compared. All PageRank variants use $d=0.85$, an $\ell_1$ tolerance of $10^{-8}$ and at most 300 iterations.}
+\caption{비교하는 방법. 모든 PageRank 변형은 $d=0.85$, $\ell_1$ 허용 오차 $10^{-8}$, 최대 300회 반복을 쓴다.}
 \label{tab:methods}
 \small
-\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}>{\raggedright\arraybackslash}X@{}}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}X@{}}
 \toprule
-Method & Definition \\
+방법 & 정의 \\
 \midrule
-\PCER & Section~\ref{sec:method}: contracts as nodes, delegation and dependency edges, restart from fee-weighted authorizations. \\
-B1 Callers & Number of distinct wallets with an authorizing call to the contract in the window. \\
-B2 Dependents & Number of distinct contracts from other deployers with an edge to the contract, the analogue of pkg.go.dev's importer count \cite{pkgsite}. \\
-B3 Dependency PageRank & Contracts as nodes, all references with weight one, uniform restart (the teaRank pattern). \\
-B4 AWP & Transfer graph of wallets and contracts with logistic decay ($k=0.01$, $t_0=180$ days), uniform restart \cite{do2023awp}; contract scores reported. \\
-B5 EndorseRank on Stacks & Wallets and contracts as nodes, edges $u\to c$ weighted by $A(u,c)$ plus contract edges, uniform restart. \\
+\PCER & \ref{sec:method}절. 컨트랙트가 노드이고, 위임 간선과 의존 간선을 쓰며, 수수료로 가중한 승인에서 재시작 분포를 만든다. \\
+B1 호출자 수 & 창 안에서 그 컨트랙트를 승인하며 호출한 서로 다른 지갑의 수. \\
+B2 의존 컨트랙트 수 & 그 컨트랙트로 간선이 있는, 다른 배포자의 서로 다른 컨트랙트 수. pkg.go.dev의 가져오는 패키지 수에 해당한다 \cite{pkgsite}. \\
+B3 의존성 PageRank & 컨트랙트가 노드이고 모든 참조의 가중치가 1이며 재시작이 균등하다(teaRank와 같은 꼴). \\
+B4 AWP & 로지스틱 감쇠($k=0.01$, $t_0=180$일)를 쓰는 지갑·컨트랙트 전송 그래프와 균등 재시작 \cite{do2023awp}. 컨트랙트 점수만 보고한다. \\
+B5 Stacks로 옮긴 EndorseRank & 지갑과 컨트랙트가 노드이고, $A(u,c)$로 가중한 간선 $u\to c$와 컨트랙트 간선을 쓰며, 재시작이 균등하다. \\
 \addlinespace
-Ablations & Score equal to $\boldsymbol{\pi}$ alone (no contract edges); run-time trait bindings added as edges; Allow-mode authorizations dropped; $\omega\equiv1$; $\omega$ from capital-days; raw token units instead of prices; $\beta_{\mathrm{del}}\in\{1,4\}$. \\
+절제 분석 & 점수를 $\boldsymbol{\pi}$로만 매김(컨트랙트 간선 없음); 실행 시점 trait 바인딩을 간선으로 더함; Allow 모드 승인을 뺌; $\omega\equiv1$; 자본-일로 $\omega$를 정함; 가격 대신 원래 토큰 단위를 씀; $\beta_{\mathrm{del}}\in\{1,4\}$. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\subsection{Labels for adoption}
+\subsection{채택 라벨}
 
-No ground truth says which contracts matter. As in the ERC-20 study, we use observable outcomes as labels and report rank agreement with each.
-
-\begin{itemize}
-\item \textbf{Y1 New callers:} wallets whose first authorizing call to the contract falls in $L$. A filtered version counts only wallets that originated transactions on at least three different days in $L$.
-\item \textbf{Y2 New dependents:} contracts deployed in $L$ by other deployers with a delegation or dependency edge to the contract.
-\item \textbf{Y3 Developer adoption:} public GitHub repositories whose \code{Clarinet.toml} lists the contract as a requirement and that first do so in $L$, from code-search snapshots at $T_0$ and at the end of $L$. Used in the hypothesis test only if at least 100 contracts have a non-zero value.
-\item \textbf{Y4 Curated set:} contracts of protocols listed for Stacks by DefiLlama at $T_0$ \cite{defillama} or covered by a public audit report dated before $T_0$, collected by a rule written in the configuration file before scores are computed.
-\end{itemize}
-
-Y1 is close to B1 by construction, as the transfer checks of the ERC-20 study were close to AWP; agreement between them shows consistency rather than independent predictive power. Rank agreement is computed over the evidence set, the contracts with at least one authorization in the window or at least one incoming edge at $T_0$, using Kendall's $\tau_b$ \cite{kendall1938} and Spearman's $\rho$ \cite{spearman1904}. We also report NDCG@100 with Y1 and Y2 as graded gains \cite{jarvelin2002ndcg}, and precision at 100 and the area under the ROC curve for Y4.
-
-\subsection{Attack simulation}
-
-Attacks are injected into a copy of the frozen data, and every method is recomputed on the modified copy.
+어떤 컨트랙트가 중요한지 알려 주는 정답은 없다. ERC-20 연구에서처럼 관측할 수 있는 결과를 라벨로 쓰고, 라벨마다 순위 일치를 보고한다.
 
 \begin{itemize}
-\item \textbf{A1 Contract farm:} $k$ new contracts, each calling the target by static dispatch.
-\item \textbf{A2 Wallet farm:} $k$ new wallets, each sending one authorizing call to the target at the call fee $c_{\mathrm{call}}$ defined below; for AWP each call also transfers the smallest priced amount to the target.
-\item \textbf{A3 Wash flow:} one wallet sends value to the target and receives it back $m$ times, the target being under the attacker's control.
-\item \textbf{A4 Binding injection:} $m$ calls to the highest-scored router that takes a SIP-010 trait argument, with the target as that argument; relevant only to the ablation with run-time bindings.
+\item \textbf{Y1 신규 호출자:} 그 컨트랙트를 처음으로 승인하며 호출한 시점이 $L$ 안에 있는 지갑의 수. 거른 판에서는 $L$ 안에서 서로 다른 날짜 사흘 이상에 트랜잭션을 발신한 지갑만 센다.
+\item \textbf{Y2 신규 의존 컨트랙트:} 다른 배포자가 $L$ 안에 배포했으며 그 컨트랙트로 위임 간선이나 의존 간선이 있는 컨트랙트의 수.
+\item \textbf{Y3 개발자 채택:} \code{Clarinet.toml}에 그 컨트랙트를 요구 사항으로 처음 적은 시점이 $L$ 안에 있는 공개 GitHub 저장소의 수. $T_0$과 $L$의 끝에 찍은 코드 검색 스냅숏으로 구한다. 0이 아닌 값을 가진 컨트랙트가 100개 이상일 때만 가설 검정에 쓴다.
+\item \textbf{Y4 선별 집합:} $T_0$ 시점에 DefiLlama가 Stacks용으로 나열한 프로토콜의 컨트랙트 \cite{defillama}, 또는 $T_0$ 전 날짜의 공개 감사 보고서가 다룬 컨트랙트. 점수를 계산하기 전에 설정 파일에 적어 둔 규칙으로 모은다.
 \end{itemize}
 
-Costs are measured in STX. A deployment costs the median fee of contract deployments under 2\,KB in the window. Every simulated call is sent at, and costs, $c_{\mathrm{call}}$, the 5th percentile of the fees of contract calls included in the window. Capital that returns to the attacker is not counted. For each of 200 targets drawn at random from evidence-set contracts that lie in the lower half of every method's ranking, we find by doubling and bisection the smallest $k$ or $m$ that lifts the target into the top 100 overall (the top 5\% if the evidence set has fewer than 2,000 contracts) and into the top 10 of its trait category. A method that the attack cannot move within a budget of 100,000 STX is assigned that budget, which understates its advantage.
+Y1은 구성상 B1과 가깝다. ERC-20 연구의 전송 점검이 AWP와 가까웠던 것과 같다. 따라서 두 값의 일치는 독립적인 예측력이 아니라 일관성을 보여 준다. 순위 일치는 근거 집합, 곧 창 안에 승인이 한 번 이상 있거나 $T_0$에 들어오는 간선이 하나 이상 있는 컨트랙트에서 Kendall의 $\tau_b$ \cite{kendall1938}와 Spearman의 $\rho$ \cite{spearman1904}로 계산한다. Y1과 Y2를 등급 이득으로 쓴 NDCG@100 \cite{jarvelin2002ndcg}과, Y4에 대한 상위 100개 정밀도와 ROC 곡선 아래 면적도 보고한다.
 
-\subsection{Hypotheses and decision rules}
+\subsection{공격 모의실험}
+
+동결한 데이터의 사본에 공격을 넣고, 바뀐 사본에서 모든 방법을 다시 계산한다.
 
 \begin{itemize}
-\item \textbf{H1 (attacker cost):} the median over targets of the log ratio between the cost under \PCER\ and the cost under a baseline is positive, with the lower bound of its 95\% bootstrap confidence interval above zero, for every pair in which the attack moves the baseline: A1 against B2, B3 and B5, and A2 against B1, B4 and B5. A3 against B4 is reported without a test.
-\item \textbf{H2 (adoption, non-inferiority):} the mean of $\tau_b$ over Y1 and Y2 (and Y3 if eligible) for \PCER\ is at least that of the best baseline minus 0.02, judged by the lower bound of a paired 95\% bootstrap interval of the difference. The margin is the one used in the ERC-20 replication \cite{kwon2026endorserank}.
-\item \textbf{H3 (propagation):} $\tau_b$ with Y2 is higher for \PCER\ than for the ablation that scores contracts by $\boldsymbol{\pi}$ alone, with the lower bound of the paired interval above zero.
+\item \textbf{A1 컨트랙트 농장:} 대상을 정적 디스패치로 호출하는 새 컨트랙트 $k$개.
+\item \textbf{A2 지갑 농장:} 새 지갑 $k$개가 저마다 아래에 정의한 호출 수수료 $c_{\mathrm{call}}$로 대상에 승인 호출을 한 번 보낸다. AWP에 대해서는 호출마다 가격이 있는 가장 작은 양을 대상에게 전송하기도 한다.
+\item \textbf{A3 왕복 송금:} 지갑 하나가 대상에게 자산을 보냈다가 돌려받기를 $m$번 한다. 대상은 공격자가 통제한다.
+\item \textbf{A4 바인딩 주입:} SIP-010 trait 인자를 받는 라우터 가운데 점수가 가장 높은 것을, 대상을 그 인자로 넣어 $m$번 호출한다. 실행 시점 바인딩을 간선으로 더한 절제 분석에만 관련된다.
 \end{itemize}
 
-The paper will claim that \PCER\ raises the cost of manipulation without losing agreement with adoption only if H1 and H2 both hold in the main window. H3 is secondary. All coefficients are reported whatever their direction, together with the replication and the sensitivity analyses. Intervals use 2,000 bootstrap resamples over contracts for agreement and over targets for costs, with percentile limits \cite{efron1979}.
+비용은 STX로 잰다. 배포 한 번의 비용은 창 안에서 2\,KB 미만인 컨트랙트 배포의 수수료 중앙값이다. 모의 호출은 모두 창 안에 포함된 컨트랙트 호출 수수료의 5번째 백분위수인 $c_{\mathrm{call}}$로 보내며, 그 비용도 $c_{\mathrm{call}}$이다. 공격자에게 돌아오는 자본은 비용으로 세지 않는다. 모든 방법의 순위에서 아래쪽 절반에 있는 근거 집합 컨트랙트 가운데 무작위로 고른 대상 200개마다, 대상을 전체 상위 100위(근거 집합이 2,000개 미만이면 상위 5\%)와 그 trait 범주의 상위 10위 안에 올리는 가장 작은 $k$나 $m$을 두 배씩 늘리기와 이분 탐색으로 찾는다. 공격이 100,000 STX 예산 안에서 움직이지 못하는 방법에는 그 예산을 비용으로 준다. 이렇게 하면 그 방법의 이점은 실제보다 작게 잡힌다.
 
-\subsection{Descriptive measures}
+\subsection{가설과 결정 규칙}
 
-For RQ1 we report the share of contract calls in the window by post-condition mode; the share with at least one authorizing post-condition on the origin; the ratio between declared bounds and realized outflows; for each Clarity version, the share of contracts that use \code{as-contract?}, \code{restrict-assets?}, \code{with-all-assets-unsafe}, or legacy \code{as-contract} around external calls; the number of ExecutorDAO-style contracts and enabled extensions; and the share of calls that pass a trait-typed argument. For RQ4 we report the share of contracts with no evidence of use, the distribution of family sizes, the largest families, and, for 50 queries drawn from frequent function and trait names, the share of top-10 results that are not their family's representative with and without grouping, and how often a representative is the earliest deployment of its family. We also report the ratio between the mean fees paid by a wallet active in the window and $c_{\mathrm{call}}$, the factor by which Section~\ref{sec:method-weights} expects fee weights to raise the cost of a wallet farm, and the graph sizes and running time of each method.
+\begin{itemize}
+\item \textbf{H1(공격 비용):} 공격이 기준선을 움직이는 모든 짝, 곧 A1에 대한 B2, B3, B5와 A2에 대한 B1, B4, B5에서, \PCER의 비용과 기준선의 비용 사이의 로그 비의 대상별 중앙값이 양수이고 그 95\% 부트스트랩 신뢰구간의 하한이 0보다 크다. A3에 대한 B4는 검정 없이 보고한다.
+\item \textbf{H2(채택, 비열등성):} \PCER의 Y1과 Y2(조건을 갖추면 Y3도)에 대한 $\tau_b$ 평균이, 가장 좋은 기준선의 평균에서 0.02를 뺀 값 이상이다. 판정은 차이의 짝지은 95\% 부트스트랩 구간의 하한으로 한다. 이 허용 폭은 ERC-20 재현에서 쓴 것과 같다 \cite{kwon2026endorserank}.
+\item \textbf{H3(전파):} Y2에 대한 $\tau_b$가 \PCER에서 $\boldsymbol{\pi}$만으로 점수를 매기는 절제 분석보다 높고, 짝지은 구간의 하한이 0보다 크다.
+\end{itemize}
 
-\subsection{Checks of \cpm}
+이 논문이 \PCER가 채택과의 일치를 잃지 않으면서 조작 비용을 높인다고 주장하는 것은 주 기간에서 H1과 H2가 모두 성립할 때뿐이다. H3은 부차적이다. 모든 계수는 방향과 관계없이 재현 결과와 민감도 분석과 함께 보고한다. 구간은 일치에 대해서는 컨트랙트를, 비용에 대해서는 대상을 2,000번 다시 뽑는 부트스트랩의 백분위 한계로 구한다 \cite{efron1979}.
 
-On a Clarinet devnet we check three cases: \code{cpm add} of a SIP-010 token package and of a pool that depends on it produces requirements under which the project's tests pass; \code{cpm create} from a template produces a contract that deploys; and \code{cpm verify} detects a contract whose source has been altered by a mock API.
+\subsection{기술 통계}
+
+RQ1에 대해서는 창 안의 컨트랙트 호출을 포스트컨디션 모드별로 나눈 비율, 발신자에 대한 승인 포스트컨디션이 하나 이상 있는 비율, 선언한 한도와 실제 유출량의 비, Clarity 버전별로 \code{as-contract?}, \code{restrict-assets?}, \code{with-all-assets-unsafe}, 또는 외부 호출을 감싼 옛 \code{as-contract}를 쓰는 컨트랙트의 비율, ExecutorDAO 형태의 컨트랙트와 켜진 확장의 수, trait 타입 인자를 넘기는 호출의 비율을 보고한다. RQ4에 대해서는 쓰인 근거가 없는 컨트랙트의 비율, 묶음 크기의 분포, 가장 큰 묶음들을 보고한다. 또 자주 나오는 함수 이름과 trait 이름에서 뽑은 질의 50개에 대해, 묶음으로 모을 때와 모으지 않을 때 상위 10개 결과 가운데 자기 묶음의 대표가 아닌 것의 비율과, 대표가 그 묶음에서 가장 먼저 배포된 것인 경우가 얼마나 되는지 보고한다. 이와 함께 창 안에서 활동한 지갑이 낸 평균 수수료와 $c_{\mathrm{call}}$의 비를 보고한다. 이 비는 \ref{sec:method-weights}절에서 수수료 가중치가 지갑 농장의 비용을 몇 배로 높일지 예상한 값이다. 방법마다 그래프 크기와 실행 시간도 보고한다.
+
+\subsection{\cpm\ 점검}
+
+Clarinet devnet에서 세 경우를 점검한다. SIP-010 토큰 패키지와 그에 의존하는 풀을 \code{cpm add}로 추가하면 프로젝트 테스트가 통과하는 요구 사항이 만들어지는가, 템플릿에서 \code{cpm create}로 만든 컨트랙트가 배포되는가, 가짜 API가 소스를 바꾼 컨트랙트를 \code{cpm verify}가 찾아내는가이다.

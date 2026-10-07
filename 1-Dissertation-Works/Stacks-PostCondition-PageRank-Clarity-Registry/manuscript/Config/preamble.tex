@@ -2,10 +2,32 @@
 \documentclass[12pt]{article}
 \usepackage[a4paper,left=1in,right=1in,top=1in,bottom=1in]{geometry}
 \usepackage{fontspec}
-% Times New Roman as in the other manuscripts in this repository. Where it is not
-% installed (Linux), Liberation Serif has the same metrics, so pages break the same way.
+% 로마자는 저장소의 다른 원고처럼 Times New Roman을 쓴다. 이 글꼴이 없는 곳(Linux)에서는
+% 글자 폭이 같은 Liberation Serif를 써서 줄바꿈이 같게 나오도록 한다.
 \IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{%
   \IfFontExistsTF{Liberation Serif}{\setmainfont{Liberation Serif}}{\setmainfont{TeX Gyre Termes}}}
+% 한글 글꼴(xetexko). 본문은 명조, 산세리프는 고딕, 고정폭은 고딕코딩.
+% Linux·Overleaf에는 나눔 글꼴, Windows에는 바탕·맑은 고딕을 쓴다(쉬운 한국어 번역본과 같은 방식).
+\usepackage{kotex}
+\IfFontExistsTF{NanumMyeongjo}{%
+  \setmainhangulfont{NanumMyeongjo}[AutoFakeSlant=0.15]%
+}{%
+  \IfFontExistsTF{Batang}{%
+    \setmainhangulfont{Batang}[AutoFakeSlant=0.15]%
+  }{%
+    \setmainhangulfont{Malgun Gothic}[AutoFakeSlant=0.15]%
+  }%
+}
+\IfFontExistsTF{NanumGothic}{%
+  \setsanshangulfont{NanumGothic}%
+}{%
+  \setsanshangulfont{Malgun Gothic}%
+}
+\IfFontExistsTF{NanumGothicCoding}{%
+  \setmonohangulfont{NanumGothicCoding}[AutoFakeSlant=0.15]%
+}{%
+  \setmonohangulfont{Malgun Gothic}%
+}
 \usepackage{setspace}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -23,7 +45,12 @@
 \usetikzlibrary{arrows.meta,positioning}
 \usepackage{hyperref}
 \usepackage{xurl}
-\hypersetup{hidelinks}
+\hypersetup{
+  hidelinks,
+  pdftitle={Stacks 패키지 레지스트리를 위한 Clarity 스마트 컨트랙트 순위 산정: ERC-20 allowance를 대신하는 포스트컨디션},
+  pdfauthor={권태홍 (Taehong Kwon)},
+  pdfkeywords={Stacks, Clarity, 패키지 레지스트리, PageRank, 시빌 공격, 포스트컨디션}
+}
 
 \setstretch{1.5}
 \setlength{\emergencystretch}{2em}
@@ -32,22 +59,40 @@
 \setlist[itemize]{leftmargin=2.2em,labelsep=0.55em,itemsep=0.15\baselineskip,topsep=0.2\baselineskip,parsep=0pt}
 \setlist[enumerate]{leftmargin=2.4em,labelsep=0.55em,itemsep=0.15\baselineskip,topsep=0.2\baselineskip,parsep=0pt}
 \captionsetup{font=small,labelfont=bf}
-% Let large tables sit on text pages instead of pages of their own.
+% 큰 표가 따로 한 쪽을 차지하지 않고 본문 쪽에 들어가도록 한다.
 \renewcommand{\topfraction}{0.85}
 \renewcommand{\bottomfraction}{0.6}
 \renewcommand{\textfraction}{0.12}
 \renewcommand{\floatpagefraction}{0.7}
 \renewcommand{\arraystretch}{1.15}
 
-\newtheorem{proposition}{Proposition}
-\theoremstyle{definition}
-\newtheorem{definition}{Definition}
+% 한국어 이름표: 그림, 표, 코드, 참고문헌, 부록, 증명, 알고리즘
+\AtBeginDocument{%
+  \renewcommand{\figurename}{그림}%
+  \renewcommand{\tablename}{표}%
+  \renewcommand{\lstlistingname}{코드}%
+  \renewcommand{\refname}{참고문헌}%
+  \renewcommand{\appendixname}{부록}%
+  \renewcommand{\proofname}{증명}%
+}
+\floatname{algorithm}{알고리즘}
+\algrenewcommand\algorithmicrequire{\textbf{입력:}}
+\algrenewcommand\algorithmicensure{\textbf{출력:}}
+\algrenewcommand\algorithmicreturn{\textbf{반환}}
+\algrenewcommand\algorithmicrepeat{\textbf{반복}}
+\algrenewcommand\algorithmicuntil{\textbf{멈춤 조건:}}
+\algrenewtext{For}[1]{\textbf{각각에 대해:} #1}
+\algrenewtext{EndFor}{\textbf{끝}}
 
-% Names used throughout
+\newtheorem{proposition}{명제}
+\theoremstyle{definition}
+\newtheorem{definition}{정의}
+
+% 본문 전체에서 쓰는 이름
 \newcommand{\PCER}{PC-EndorseRank}
 \newcommand{\cpm}{\texttt{cpm}}
-% Inline code. Clarity names are long and full of hyphens, so allow a line break
-% after each hyphen, dot and underscore (no hyphen is added at the break).
+% 본문 안의 코드. Clarity 이름은 길고 하이픈이 많으므로 하이픈, 점, 밑줄 뒤에서
+% 줄을 바꿀 수 있게 한다(줄이 바뀌어도 하이픈을 덧붙이지 않는다).
 \ExplSyntaxOn
 \tl_new:N \l__ms_code_tl
 \NewDocumentCommand{\code}{m}
@@ -61,7 +106,7 @@
 \ExplSyntaxOff
 \newcommand{\R}{\mathbb{R}}
 
-% Clarity listings: plain monospace, keywords in bold
+% Clarity 코드 목록: 고정폭 글꼴, 키워드는 굵게
 \lstdefinelanguage{Clarity}{
   sensitive=true,
   alsoletter={-?!},

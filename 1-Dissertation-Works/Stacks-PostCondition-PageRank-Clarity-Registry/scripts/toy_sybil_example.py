@@ -1,46 +1,44 @@
 #!/usr/bin/env python3
-"""Synthetic illustration of how Sybil attacks move a target contract's rank.
+"""시빌 공격이 대상 컨트랙트의 순위를 얼마나 움직이는지 보여 주는 합성 예제.
 
-Section 5 of the manuscript makes three claims:
+원고 5절은 세 가지를 주장한다.
 
-1. On a wallet-contract graph with a uniform restart, PageRank gives every
-   wallet the same mass, so each added wallet lifts the contract it authorizes
-   by the same amount whatever value it puts at risk (Proposition 1).
-2. When the restart is weighted by fees paid, splitting a fee budget across
-   many wallets gains nothing (Proposition 2).
-3. Contracts with no restart mass and no edges from honest contracts collect
-   no score (Proposition 3). Runtime trait bindings would hand an attacker
-   such edges for the price of a call, so they are not edges.
+1. 지갑-컨트랙트 그래프에 균등 재시작을 쓰면 PageRank는 모든 지갑에 같은 질량을
+   준다. 따라서 지갑을 하나 더할 때마다, 그 지갑이 얼마를 걸든 상관없이, 그 지갑이
+   승인한 컨트랙트가 같은 만큼 올라간다(명제 1).
+2. 재시작을 낸 수수료로 가중하면 수수료 예산을 여러 지갑에 나눠도 얻는 것이 없다
+   (명제 2).
+3. 재시작 질량이 없고 정직한 컨트랙트에서 들어오는 간선도 없는 컨트랙트는 점수를
+   얻지 못한다(명제 3). 실행 시점 trait 바인딩을 간선으로 치면 공격자가 호출 비용만
+   내고 그런 간선을 얻으므로, 바인딩은 간선이 아니다.
 
-This script builds a small made-up graph with honest contracts and wallets,
-adds an attacker's target token, and measures how much the attacker must pay
-(in units of the minimum call fee) to lift the target into the top three
-under each scoring rule. The graph is synthetic. The output illustrates the
-propositions; it says nothing about Stacks mainnet.
+이 스크립트는 정직한 컨트랙트와 지갑으로 된 작은 가짜 그래프를 만들고, 공격자의
+대상 토큰을 더한 뒤, 순위 규칙마다 대상을 상위 3위 안에 올리는 데 공격자가 얼마를
+내야 하는지(최소 호출 수수료 단위)를 잰다. 그래프는 꾸며 낸 것이다. 출력은 명제를
+예시할 뿐 Stacks 메인넷에 대해서는 아무것도 말하지 않는다.
 
-Attacks (numbered as in Section 7 of the manuscript, where A3 is a wash flow
-that only AWP reacts to and is therefore left out here):
-    A1  deploy k contracts that each reference the target (link farm)
-    A2  create k wallets that each authorize the target once (wallet farm)
-    A4  call the honest router k times with the target as the trait argument
+공격(원고 7절의 번호를 따른다. A3 왕복 송금은 AWP에만 통하므로 여기서는 뺐다):
+    A1  대상을 참조하는 컨트랙트 k개 배포(링크 팜)
+    A2  대상을 한 번씩 승인하는 지갑 k개 생성(지갑 농장)
+    A4  대상을 trait 인자로 넣어 정직한 라우터를 k번 호출
 
-Scoring rules:
-    callers      number of distinct wallets that authorized the contract
-    dep-pr       PageRank on contract references, uniform restart
-    er-uniform   EndorseRank moved to Stacks: wallets and contracts as nodes,
-                 latest authorized value on wallet edges, uniform restart
-    pc-er        PC-EndorseRank: contracts only, restart weighted by fees
-    pc-er+bind   pc-er plus run-time trait bindings as router edges (ablation);
-                 the router's binding edges together get the same weight as its
-                 static references, split by how often each token was bound
+순위 규칙:
+    callers      그 컨트랙트를 승인한 서로 다른 지갑의 수
+    dep-pr       컨트랙트 참조 위의 PageRank, 균등 재시작
+    er-uniform   Stacks로 옮긴 EndorseRank: 지갑과 컨트랙트가 노드, 지갑 간선에
+                 최신 승인 값, 균등 재시작
+    pc-er        PC-EndorseRank: 컨트랙트만 노드, 수수료로 가중한 재시작
+    pc-er+bind   pc-er에 실행 시점 trait 바인딩을 라우터 간선으로 더한 절제 분석.
+                 라우터의 바인딩 간선 전체에 라우터의 정적 참조와 같은 가중치를 주고,
+                 토큰이 바인딩된 횟수에 비례해 나눈다.
 
-Ranks count only contracts with a strictly higher score, so ties go in the
-target's favor and the reported costs can only be too low. The fee cap f_max
-of the manuscript is left out.
+순위는 점수가 엄격히 더 높은 컨트랙트만 세므로 동점은 대상에게 유리하고, 보고하는
+비용은 실제보다 낮게 나올 수는 있어도 높게 나오지는 않는다. 원고의 수수료 상한
+f_max는 뺐다.
 
-Usage:
-    python scripts/toy_sybil_example.py           # print tables
-    python scripts/toy_sybil_example.py --latex   # also write the LaTeX tables
+사용법:
+    python scripts/toy_sybil_example.py           # 표를 출력
+    python scripts/toy_sybil_example.py --latex   # LaTeX 표도 씀
 """
 
 from __future__ import annotations
@@ -52,17 +50,17 @@ from pathlib import Path
 
 import numpy as np
 
-D = 0.85  # damping, as in AWP and EndorseRank
-TOL = 1e-8  # l1 tolerance and iteration cap of Section 5.6
+D = 0.85  # 감쇠 계수(AWP, EndorseRank와 같음)
+TOL = 1e-8  # 원고 5.6절의 l1 허용 오차와 반복 상한
 MAX_ITER = 300
 SEED = 20261007
 N_HONEST_WALLETS = 300
-CALL_FEE = 1.0  # one call at the minimum fee is the unit of cost
-DEPLOY_FEE = 10.0  # one small contract deployment
+CALL_FEE = 1.0  # 최소 수수료로 보낸 호출 한 번이 비용의 단위
+DEPLOY_FEE = 10.0  # 작은 컨트랙트 배포 한 번
 BETA_DEP = 1.0
 BETA_DEL = 2.0
 TOP = 3
-K_CAP = 200_000  # largest attack size tried
+K_CAP = 200_000  # 시험하는 가장 큰 공격 크기
 GRID = (0, 10, 100, 1000)
 
 TRAIT = "sip010-trait"
@@ -81,10 +79,10 @@ class World:
     contracts: list[str]
     dep: list[tuple[str, str]]
     dele: list[tuple[str, str]]
-    # wallet -> {contract: latest authorized value}
+    # 지갑 -> {컨트랙트: 최신 승인 값}
     auth: dict[str, dict[str, float]]
     fees: dict[str, float]
-    # runtime trait bindings observed on router calls: token -> count
+    # 라우터 호출에서 본 실행 시점 trait 바인딩: 토큰 -> 횟수
     bindings: dict[str, float] = field(default_factory=dict)
 
 
@@ -93,13 +91,13 @@ def honest_world(rng: np.random.Generator) -> World:
     dep: list[tuple[str, str]] = [(t, TRAIT) for t in TOKENS]  # impl-trait
     dele: list[tuple[str, str]] = []
     for pool, (t1, t2) in POOLS.items():
-        dep += [(pool, TRAIT), (pool, "math-lib")]  # use-trait, library call
-        dele += [(pool, t1), (pool, t2)]  # pays out inside as-contract?
+        dep += [(pool, TRAIT), (pool, "math-lib")]  # use-trait, 라이브러리 호출
+        dele += [(pool, t1), (pool, t2)]  # as-contract? 안에서 토큰을 내줌
     dep += [("router", pool) for pool in POOLS] + [("router", TRAIT)]
     dele += [("vault", "tok-a"), ("vault", "tok-b")]
     dep += [("vault", "math-lib")]
-    dele += [("dao", "vault"), ("dao", "router")]  # enabled extensions
-    dep += [(TARGET, TRAIT)]  # the attacker's token implements SIP-010
+    dele += [("dao", "vault"), ("dao", "router")]  # 켜진 확장
+    dep += [(TARGET, TRAIT)]  # 공격자의 토큰도 SIP-010을 구현함
 
     auth: dict[str, dict[str, float]] = {}
     fees: dict[str, float] = {}
@@ -121,7 +119,7 @@ def honest_world(rng: np.random.Generator) -> World:
 
 
 def attacked(base: World, attack: str, k: int) -> tuple[World, float]:
-    """Return a copy of the world with the attack applied and its cost."""
+    """공격을 적용한 사본과 그 공격의 비용을 돌려준다."""
     w = World(list(base.contracts), list(base.dep), list(base.dele),
               {u: dict(a) for u, a in base.auth.items()}, dict(base.fees), dict(base.bindings))
     cost = 0.0
@@ -151,7 +149,7 @@ def attacked(base: World, attack: str, k: int) -> tuple[World, float]:
 
 
 def pagerank(n: int, src: np.ndarray, dst: np.ndarray, wt: np.ndarray, restart: np.ndarray) -> np.ndarray:
-    """Weighted PageRank; dangling mass returns to the restart distribution."""
+    """가중 PageRank. 댕글링 노드의 질량은 재시작 분포로 돌아간다."""
     out = np.bincount(src, weights=wt, minlength=n)
     p = wt / out[src]
     dangling = out == 0
@@ -172,8 +170,8 @@ def contract_edges(w: World, beta_dep: float, beta_del: float, with_bindings: bo
     for a, b in w.dele:
         edges[(a, b)] = max(edges.get((a, b), 0.0), beta_del)
     if with_bindings:
-        # Ablation: runtime bindings get the same total weight as the router's
-        # static references, split by how often each token was bound.
+        # 절제 분석: 실행 시점 바인딩 전체에 라우터의 정적 참조와 같은 가중치를 주고,
+        # 토큰이 바인딩된 횟수에 비례해 나눈다.
         static = sum(v for (a, _), v in edges.items() if a == "router")
         total = sum(w.bindings.values())
         for tok, cnt in w.bindings.items():
@@ -242,14 +240,14 @@ def rank_of_target(s: dict[str, float]) -> int:
 
 
 def min_cost_to_top(base: World, attack: str, method: str) -> float | None:
-    """Smallest attack cost that puts the target in the top TOP, or None."""
+    """대상을 상위 TOP 안에 넣는 가장 작은 공격 비용. 도달하지 못하면 None."""
     def ok(k: int) -> bool:
         return rank_of_target(score(attacked(base, attack, k)[0], method)) <= TOP
 
     if ok(0):
         return 0.0
-    # Double the attack size up to K_CAP, then narrow down by bisection. This
-    # assumes that a larger attack never lowers the target's rank.
+    # 공격 크기를 K_CAP까지 두 배씩 늘린 뒤 이분 탐색으로 좁힌다. 공격이 커져도
+    # 대상의 순위가 내려가지 않는다고 가정한다.
     lo, hi = 0, 1
     while not ok(hi):
         if hi >= K_CAP:
@@ -266,30 +264,30 @@ def min_cost_to_top(base: World, attack: str, method: str) -> float | None:
 
 METHODS = ["callers", "dep-pr", "er-uniform", "pc-er", "pc-er+bind"]
 METHOD_LABELS = {
-    "callers": "Distinct callers",
-    "dep-pr": "Dependency PageRank, uniform restart",
-    "er-uniform": "EndorseRank on Stacks, uniform restart",
-    "pc-er": "PC-EndorseRank (fee-weighted restart)",
-    "pc-er+bind": "PC-EndorseRank with run-time trait bindings",
+    "callers": "호출자 수",
+    "dep-pr": "의존성 PageRank, 균등 재시작",
+    "er-uniform": "Stacks로 옮긴 EndorseRank, 균등 재시작",
+    "pc-er": "PC-EndorseRank(수수료 가중 재시작)",
+    "pc-er+bind": "PC-EndorseRank + 실행 시점 trait 바인딩",
 }
 ATTACKS = ["A1", "A2", "A4"]
-# LaTeX macro names cannot contain digits or hyphens.
+# LaTeX 매크로 이름에는 숫자와 하이픈을 쓸 수 없다.
 MACRO_NAMES = {"callers": "Callers", "dep-pr": "DepPR", "er-uniform": "ERUniform", "pc-er": "PCER",
                "pc-er+bind": "PCERBind", "A1": "AOne", "A2": "ATwo", "A4": "AFour"}
 
 
 def fmt_cost(c: float | None) -> str:
     if c is None:
-        return "not reached"
+        return "도달 못 함"
     return f"{c:,.0f}"
 
 
 def write_latex(costs: dict, ranks: dict, stats: dict) -> None:
     TABLE_DIR.mkdir(parents=True, exist_ok=True)
-    head = "% Generated by scripts/toy_sybil_example.py. Do not edit by hand.\n"
+    head = "% scripts/toy_sybil_example.py가 만든 파일이다. 손으로 고치지 않는다.\n"
     lines = [head,
              "\\begin{tabular}{@{}lrrr@{}}\n\\toprule\n",
-             "Scoring rule & A1 & A2 & A4 \\\\\n\\midrule\n"]
+             "순위 규칙 & A1 & A2 & A4 \\\\\n\\midrule\n"]
     for m in METHODS:
         cells = " & ".join(fmt_cost(costs[(m, a)]) for a in ATTACKS)
         lines.append(f"{METHOD_LABELS[m]} & {cells} \\\\\n")
@@ -298,7 +296,7 @@ def write_latex(costs: dict, ranks: dict, stats: dict) -> None:
 
     lines = [head,
              "\\begin{tabular}{@{}llrrrrr@{}}\n\\toprule\n",
-             "Attack & $k$ & Callers & Dep-PR & ER-uniform & PC-ER & PC-ER+bind \\\\\n\\midrule\n"]
+             "공격 & $k$ & 호출자 수 & 의존성 PR & ER(균등) & PC-ER & PC-ER+바인딩 \\\\\n\\midrule\n"]
     for a in ATTACKS:
         for k in GRID:
             cells = " & ".join(str(ranks[(a, k, m)]) for m in METHODS)
@@ -313,7 +311,7 @@ def write_latex(costs: dict, ranks: dict, stats: dict) -> None:
         macros.append(f"\\newcommand{{\\Toy{key}}}{{{val}}}\n")
     for (m, a), c in costs.items():
         macros.append(f"\\newcommand{{\\ToyCost{MACRO_NAMES[m]}{MACRO_NAMES[a]}}}{{{fmt_cost(c)}}}\n")
-    # How many times more a wallet farm (A2) costs under fee weights than under a uniform restart.
+    # 지갑 농장(A2)의 비용이 균등 재시작보다 수수료 가중에서 몇 배인지.
     ratio = costs[("pc-er", "A2")] / costs[("er-uniform", "A2")]
     macros.append(f"\\newcommand{{\\ToyRatioATwo}}{{{ratio:.0f}}}\n")
     (TABLE_DIR / "toy-sybil-stats.tex").write_text("".join(macros), encoding="utf-8")
@@ -321,7 +319,7 @@ def write_latex(costs: dict, ranks: dict, stats: dict) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--latex", action="store_true", help="write LaTeX tables to manuscript/tables/")
+    ap.add_argument("--latex", action="store_true", help="manuscript/tables/에 LaTeX 표를 쓴다")
     args = ap.parse_args()
 
     base = honest_world(np.random.default_rng(SEED))
@@ -336,13 +334,13 @@ def main() -> None:
         "Top": str(TOP),
         "DeployFee": f"{DEPLOY_FEE:.0f}",
     }
-    print(f"honest wallets: {N_HONEST_WALLETS}, honest contracts: {n_honest}")
-    print(f"mean fees paid per honest wallet: {honest_fees.mean():.1f} call-fee units")
-    print(f"most callers of an honest contract: {stats['MaxCallers']}")
+    print(f"정직한 지갑: {N_HONEST_WALLETS}개, 정직한 컨트랙트: {n_honest}개")
+    print(f"정직한 지갑 하나가 낸 평균 수수료: 최소 호출 수수료의 {honest_fees.mean():.1f}배")
+    print(f"정직한 컨트랙트의 최대 호출자 수: {stats['MaxCallers']}")
 
-    print("\nRank of the target among contracts (1 = top):")
+    print("\n컨트랙트 가운데 대상의 순위(1 = 맨 위):")
     ranks = {}
-    print(f"{'attack':6} {'k':>6} " + " ".join(f"{m:>11}" for m in METHODS))
+    print(f"{'공격':6} {'k':>6} " + " ".join(f"{m:>11}" for m in METHODS))
     for a in ATTACKS:
         for k in GRID:
             w, _ = attacked(base, a, k)
@@ -351,9 +349,9 @@ def main() -> None:
                 ranks[(a, k, m)] = rk
             print(f"{a:6} {k:>6} " + " ".join(f"{rk:>11}" for rk in row))
 
-    print(f"\nMinimum attack cost to reach the top {TOP} (call-fee units):")
+    print(f"\n상위 {TOP}위 안에 드는 최소 공격 비용(최소 호출 수수료 단위):")
     costs = {}
-    print(f"{'method':12} " + " ".join(f"{a:>12}" for a in ATTACKS))
+    print(f"{'순위 규칙':12} " + " ".join(f"{a:>12}" for a in ATTACKS))
     for m in METHODS:
         row = [min_cost_to_top(base, a, m) for a in ATTACKS]
         for a, c in zip(ATTACKS, row):
@@ -362,7 +360,7 @@ def main() -> None:
 
     if args.latex:
         write_latex(costs, ranks, stats)
-        print(f"\nwrote {TABLE_DIR / 'toy-sybil-cost.tex'}, toy-sybil-ranks.tex, toy-sybil-stats.tex")
+        print(f"\n썼음: {TABLE_DIR / 'toy-sybil-cost.tex'}, toy-sybil-ranks.tex, toy-sybil-stats.tex")
 
 
 if __name__ == "__main__":
