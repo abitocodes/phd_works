@@ -6,6 +6,9 @@
 
 **기여자 및 AI 에이전트를 위한 원칙:** `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/`를 편집하고, 제안서를 명시적으로 변경하라는 요청이 없는 한 `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/proposal/`은 읽기 전용 기준선으로 취급합니다.
 
+
+> **2026-10-09 시작한 새 논문:** 스마트 컨트랙트만 점수 대상으로 삼고 Arbitrum One 3년치(2023-10~2026-09) 데이터를 쓰는 별도 학위논문이 [`1-Dissertation-Works/ERC20-Allowance-PageRank-Contract-Reputation/`](1-Dissertation-Works/ERC20-Allowance-PageRank-Contract-Reputation/README.md)에 있습니다. 그 원고는 이 저장소의 다른 논문을 언급하지 않습니다.
+
 ---
 
 ## 개발 현황

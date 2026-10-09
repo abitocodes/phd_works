@@ -4,11 +4,11 @@ Numbers: take every number from `experiments/data/3-published-results-for-thesis
 
 ## Order of events (true history, use these dates)
 
-1. 9 October 2026: analysis plan and configuration committed (43d8045) before any log of the study was extracted. It fixed the cohort rule, the scores (EndorseRank with uniform restarts, AWP as published with activity restarts, C-PR at λ = 0.5 with 0.25/0.75, S-PR), the proxies, the labels, the statistics and **rule A** (primary part on W0, secondary part in the same window).
+1. 9 October 2026, 13:41:27 UTC: analysis plan and configuration committed (43d8045); the first query of scan A was created ten seconds later (13:41:37 UTC, BigQuery job be81d938), so no log of the study had been extracted when the plan was fixed. State all dates and times in UTC. It fixed the cohort rule, the scores (EndorseRank with uniform restarts, AWP as published with activity restarts, C-PR at λ = 0.5 with 0.25/0.75, S-PR), the proxies, the labels, the statistics and **rule A** (primary part on W0, secondary part in the same window).
 2. 9 October 2026: scan A (observation window 2023-10-01 to 2026-06-30), cohort fixed (27,844 contracts), ego extraction, pair tables, proxies, W0 labels.
 3. Same-window and W0 results computed. Rule A judged.
-4. 10 October 2026 (commit 0d3a057): registration of W1 (`docs/registration_w1.md`): rule B (F1–F3, margin δ = 0.01 from the W0 interval half-width 0.0040), F4–F6, two sensitivity analyses, and the comparison on outcomes built from neither edge type (P, Q, R1–R3) with its wording, **before** scan B. The extraction script refuses to run without the committed registration and records the file hashes.
-5. Scan B (July–September 2026), W1 labels, registered evaluation.
+4. 9 October 2026, 16:49 UTC (commit 0d3a057; 10 October 01:49 in Korea): registration of W1 (`docs/registration_w1.md`): rule B (F1–F3, margin δ = 0.01 from the W0 interval half-width 0.0040), F4–F6, two sensitivity analyses, and the comparison on outcomes built from neither edge type (P, Q, R1–R3) with its wording, **before** scan B. The extraction script refuses to run without the committed registration and records the file hashes.
+5. Scan B (July–September 2026) created at 16:49:40 UTC on 9 October 2026, eight seconds after the registration commit; then W1 labels and the registered evaluation.
 6. After the labels: supplementary contrasts (activity-restart EndorseRank against the in-approve degree; EndorseRank against AWP in W1), robustness checks, Sybil model, benchmark.
 
 ## Main research question (one sentence)
@@ -33,3 +33,6 @@ What do ERC-20 allowance edges add to PageRank as a reputation score for smart c
 - Coverage: 3,753 W0 spenders had no transfer edge at the freeze (AWP scores them zero); restricting to the 29,228 that had received a transfer leaves the degree comparisons in place.
 - The cohort is the set of contracts approved by at least three owners; results apply to such contracts on Arbitrum One in these months.
 - Revocations and the drain heuristic rise with every score and most with the in-approve degree; they track volume and are not offered as evidence.
+
+- Self-destructed contracts: since EIP-6780 (cite ballet2023eip6780; give no activation date for Arbitrum One, which no source in the bib documents) SELFDESTRUCT no longer removes code except in the creating transaction, so a contract that self-destructed before that would read as an EOA at block 513,216,506; this is a small, stated limitation.
+- Amount shares and timing are in describe/describe.json (digest section "Data description"): 99.52% of ego transfers and 99.78% of latest allowances are at least 10 base units; 45.3% of latest allowances are unlimited; 5,798,712 of 13,029,306 owners hold an unlimited allowance and 1,532,301 hold both kinds.

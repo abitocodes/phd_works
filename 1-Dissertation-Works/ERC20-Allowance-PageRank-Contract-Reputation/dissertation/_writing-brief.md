@@ -13,9 +13,9 @@
 | Account type | `eth_getCode` at block 513,216,506 (9 October 2026); bytecode = contract; no code or an EIP-7702 delegation designator = EOA. Of 29,022 candidates: 27,844 contracts, 1,121 EOAs, 57 EIP-7702 EOAs |
 | Extraction | Approvals with a cohort contract as owner or spender; transfers with a cohort contract as sender or recipient (ego network of the cohort). 389,866,882 approval logs and 1,538,404,067 non-zero transfer logs |
 | Holdout W0 | scores frozen 2026-03-31 23:59:59 UTC, labels April–June 2026; spender cohort = contract spenders with a positive latest allowance at the freeze |
-| Registered window W1 | scores frozen 2026-06-30 23:59:59 UTC, labels July–September 2026; rule registered before the July–September logs were extracted |
+| Registered window W1 | scores frozen 2026-06-30 23:59:59 UTC, labels July–September 2026; rule registered on 9 October 2026 at 16:49 UTC (commit 0d3a057), eight seconds before the July–September extraction query |
 | Trader cohort | GMX V2 accounts that are contracts, appear in the freeze-date graph and close at least three positions in the label window |
-| Plan | `experiments/docs/analysis_plan.md`, committed 9 October 2026 (commit 43d8045) before any log was extracted; it fixes the cohorts, scores, labels, statistics and rule A (the rule for the coupled operator) |
+| Plan | `experiments/docs/analysis_plan.md`, committed 9 October 2026 at 13:41 UTC (commit 43d8045), ten seconds before the first extraction query; it fixes the cohorts, scores, labels, statistics and rule A (the rule for the coupled operator) |
 
 Scores: EndorseRank, AWP (Do, Do and Nguyen, 2023), C-PR at λ ∈ {0, 0.25, 0.5, 0.75, 1}, S-PR, raw in-approve degree and raw transfer in-degree. Statistics: Kendall τ_b and Spearman ρ, 400 paired bootstrap resamples (seed 42), paired contrasts.
 
