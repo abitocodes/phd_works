@@ -9,15 +9,16 @@
 | Item | Definition |
 |---|---|
 | Observation window | 2023-10-01 00:00 UTC to 2026-06-30 23:59:59 UTC (33 months); time decay anchored at the end |
-| Matched cohort (main sample) | 27,844 contracts that received a non-zero `Approval` from at least three distinct owners in the observation window; fixed from approval logs and `eth_getCode` before any transfer was aggregated |
+| Matched cohort (main sample) | 15,107 contracts that received a non-zero `Approval` of WETH, USDC, USDT0, ARB or WBTC from at least three distinct owners in the observation window (revised analysis). The plan's cohort, 27,844 contracts approved on any token, is the registered analysis |
 | Account type | `eth_getCode` at block 513,216,506 (9 October 2026); bytecode = contract; no code or an EIP-7702 delegation designator = EOA. Of 29,022 candidates: 27,844 contracts, 1,121 EOAs, 57 EIP-7702 EOAs |
-| Extraction | Approvals with a cohort contract as owner or spender; transfers with a cohort contract as sender or recipient (ego network of the cohort). 389,866,882 approval logs and 1,538,404,067 non-zero transfer logs |
+| Extraction | Approvals with a cohort contract as owner or spender; transfers with a cohort contract as sender or recipient (ego network of the cohort). Registered: 389,866,882 approval logs and 1,538,404,067 non-zero transfer logs of every token. Revised: the subset of the five tokens and the revised cohort (numbers in the revised digest) |
+| Revision (10 October 2026) | After the registered results were known: amounts in USD (DefiLlama daily close; Chainlink low/medium feed rule, five tokens with the most rows: WETH, USDC, USDT0, ARB, WBTC), V with b = ln 3 / m (m_T = 200, m_A = 62 USD), C-PR allowance cap U = 20,000 USD. Commits a897475, 09dfc32, 2705b28 before any revised score. `experiments/docs/revision_price_weighting.md`. The revised analysis is the main analysis; never call its results registered; rules A, B and R1-R3 are applied to it as a re-analysis. The registered results stay in Appendix 8.6 (Table registered-vs-revised) and in the registered digest |
 | Holdout W0 | scores frozen 2026-03-31 23:59:59 UTC, labels April–June 2026; spender cohort = contract spenders with a positive latest allowance at the freeze |
 | Registered window W1 | scores frozen 2026-06-30 23:59:59 UTC, labels July–September 2026; rule registered on 9 October 2026 at 16:49 UTC (commit 0d3a057), eight seconds before the July–September extraction query |
 | Trader cohort | GMX V2 accounts that are contracts, appear in the freeze-date graph and close at least three positions in the label window |
 | Plan | `experiments/docs/analysis_plan.md`, committed 9 October 2026 at 13:41 UTC (commit 43d8045), ten seconds before the first extraction query; it fixes the cohorts, scores, labels, statistics and rule A (the rule for the coupled operator) |
 
-Scores: EndorseRank, AWP (Do, Do and Nguyen, 2023), C-PR at λ ∈ {0, 0.25, 0.5, 0.75, 1}, S-PR, raw in-approve degree and raw transfer in-degree. Statistics: Kendall τ_b and Spearman ρ, 400 paired bootstrap resamples (seed 42), paired contrasts.
+Scores: EndorseRank, AWP (Do, Do and Nguyen, 2023), C-PR at λ ∈ {0, 0.25, 0.5, 0.75, 1}, S-PR, raw in-approve degree and raw transfer in-degree, all on USD amounts of the five tokens in the revised analysis. Statistics: Kendall τ_b and Spearman ρ, 400 paired bootstrap resamples (seed 42), paired contrasts.
 
 ## Rules (from the supervisors' and examiner's comments; codes in brackets)
 
