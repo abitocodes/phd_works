@@ -2,7 +2,7 @@
 
 ## What the thesis is
 
-- Title: *Integrating ERC-20 Allowance Edges into PageRank for On-Chain Smart Contract Reputation Scoring*. Candidate Taehong Kwon (student number 28576810), PhD in Computer Science, University of South Africa. Supervisor Prof. Ernest Mnkandla; co-supervisors Prof. Donatien Koulla Moulla and Dr. David Sena Attipoe.
+- Title: *Integrating ERC-20 Allowance Edges into PageRank for Enhanced On-Chain Wallet Reputation Scoring* (the approved title, kept on the title page, chapter cover, declaration and PDF metadata since 2026-10-11; the working title until then was *… for On-Chain Smart Contract Reputation Scoring*). Candidate Taehong Kwon (student number 28576810), PhD in Computer Science, University of South Africa. Supervisor Prof. Ernest Mnkandla; co-supervisors Prof. Donatien Koulla Moulla and Dr. David Sena Attipoe.
 - The thesis text starts from the earlier manuscript in this folder (copied from another draft) and keeps its structure, methods, section titles and style. Only the data change: every scored and evaluated address is a **smart contract**. Externally owned accounts (EOAs) appear in the graphs only as owners, senders and recipients and are never scored or evaluated.
 - Chain: Arbitrum One. Data: public BigQuery logs, 1 October 2023 to 30 September 2026.
 

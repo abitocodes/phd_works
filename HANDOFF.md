@@ -1,48 +1,36 @@
-# Handoff — dissertation work (2026-10-01)
+# Handoff — dissertation work (2026-10-11)
 
-This is where the thesis work stood at the end of the previous session. Read it before touching the manuscript or the experiments folder.
+This is where the thesis work stands. Read it before touching the manuscript, the experiments or the Korean edition. The handoff of the earlier wallet-reputation study (2026-10-01) is in the git history of this file.
+
+## What changed on 2026-10-11
+
+- The contract-reputation study (started 2026-10-09 in `1-Dissertation-Works/ERC20-Allowance-PageRank-Contract-Reputation/`) replaced the wallet-reputation study. Its content now lives under `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/`; the old Contract folder is gone.
+- The thesis keeps the approved title *Integrating ERC-20 Allowance Edges into PageRank for Enhanced On-Chain Wallet Reputation Scoring* (title page, chapter cover, declaration, PDF metadata). The body still says that only smart contracts are scored; whether a sentence linking the title to contracts is wanted is the user's and the supervisors' decision.
+- Wallet-study material moved, unchanged, to `…/archive/` (see its README).
+
+(`…` = `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation`)
 
 ## Repos
 
-- `phd_works` (this repo). The June–August replication was registered in commit 4085ab9 (merged into master in f701400 on 2026-10-01), extracted in d6d26c4 and evaluated in 1462d76.
-- `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/overleaf-github` is a submodule (`phd-dissertation-draft-en`; its name in `.gitmodules` is still `2-Dissertation-Draft/overleaf-github`, on purpose). Its work branch `claude/sweet-darwin-odfmmv` (latest 8a60745) carries all manuscript changes and is not yet merged into `main`; the submodule pointer here still points at 9459b33. Run `git submodule update --init` if the folder is empty.
-- Experiment code and data live in `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/wallet-reputation-experiments` (until 1 October 2026: `A-Skill-Programs/margin_rank`). All data sit under its `data/`: `1-raw-blockchain-logs/` and `2-processed-tables-and-evaluations/` are tracked (see its `.gitignore` for exclusions), and the summaries behind the thesis tables are copied to `3-published-results-for-thesis/` by `scripts/publish_results.py`. Its `README.md` and `data/README.md` describe every folder and file; `scripts/project_paths.py` holds the folder names and the old-to-new map.
-- After pulling a folder move (1 October, and 7 October: proposal and dissertation work moved under `1-Dissertation-Works/<title>/`), run `scripts/finish_folder_move.py` (dry run, then `--apply`) on each checkout to move what git does not track (the `.venv`, files over 100 MiB, the submodule checkout) out of the old folders.
+- `phd_works` (this repo).
+- `…/dissertation/overleaf-github` is a submodule (`phd-dissertation-draft-en`; its name in `.gitmodules` is still `2-Dissertation-Draft/overleaf-github`, on purpose). Overleaf reads its `main`. It holds the thesis sources, the built `main.pdf` and per-chapter PDFs, the journal manuscripts (`manuscripts/A-plos-one`, `manuscripts/B-ieee-access`) and their supporting analyses (`analysis/`). The wallet-study manuscript, manuscripts and analyses are at its commit `7790f76`. Run `git submodule update --init` if the folder is empty.
+- Experiment code and data: `…/experiments` (moved from the Contract folder; `scripts/export_latex.py` now writes into the submodule). The tests import the archived wallet-study scripts read-only from `…/archive/wallet-reputation-experiments/scripts`.
+- Korean edition: `…/dissertation/overleaf-github-ko` (easy Korean, rules in `TRANSLATION-GUIDE.md`, checks in `scripts/`).
+- Writing rules for the thesis and the papers: `…/dissertation/notes/_writing-brief.md`.
 
-## Central claim, as it now stands
+## The study in one paragraph
 
-- The thesis asked whether adding ERC-20 allowance edges to PageRank improves on AWP, the transfer-only walk.
-- **Spring holdout** (freeze 28 Feb, labels Mar–May): EndorseRank beat AWP on new approvals (+0.435) and on new senders (+0.102), both fixed in advance. The new-sender lead disappears when both walks weight each event once and against AWP in its published form (post hoc).
-- **AWP fidelity:** the AWP of the thesis adapts Do, Do and Nguyen (2023): raw amounts instead of the bounded value transform, uniform restarts instead of activity-weighted ones. The published form is reported as a post hoc check (Table awp-paper-form) and as a registered sensitivity analysis.
-- **C-PR (λ=0.5):** failed the 14 September rule (beat both single layers). Against AWP alone it gained +0.251 on new approvals in the spring, which was exploratory.
-- **Registered replication** (freeze 31 May, labels Jun–Aug; decision needs F1–F3): F1 holds (+0.179 [0.132, 0.225]), F2 fails (−0.011 [−0.025, 0.003], lower bound below −0.02), F3 holds (+0.018 [0.011, 0.024]). **Decision not met**, so the thesis makes no improvement claim. F4 holds, F5 fails, F6 fails. Both sensitivity analyses give the same decision. EndorseRank's lead on new approvals replicated (+0.280); its lead on new senders did not.
-- The cover title says "ENHANCED on-chain wallet reputation scoring". The rule below forbids changing it without the user; whether it still fits the result is the user's and the supervisors' decision.
-
-## Remaining steps
-
-1. The user and the supervisors read the results (Ch4 §4.8.2, Tables fresh-holdout, fresh-contrasts, fresh-traders) and decide on the title.
-2. Merge the manuscript work branch into `main` of `phd-dissertation-draft-en` (Overleaf reads `main`), then update the submodule pointer here if wanted.
-3. Report every coefficient as it came out; do not change λ, the labels, the cohorts, the 0.02 margin or the window (plan §6).
+Smart contracts on Arbitrum One that at least three distinct owners approved are ranked by EndorseRank (PageRank on the latest non-zero allowances), AWP (transfer PageRank), the coupled walk C-PR and S-PR, and compared with the raw degrees and with out-of-window labels in W0 (freeze 2026-03-31) and W1 (freeze 2026-06-30). The registered analysis (raw units, every token, cohort 27,844) was fixed before extraction (plan `43d8045`, W1 registration `0d3a057`). The revised analysis (USD, five priced tokens, cohort 15,107; commits `a897475`, `09dfc32`, `2705b28`, after the registered results were known) is the thesis's main analysis and is never called registered. C-PR at λ = 0.5 met neither rule A nor rule B in either analysis.
 
 ## Rules that must not be broken
 
-- Do not change the cover or the table-of-contents titles. New content goes into unnumbered-in-TOC subsections (3.7.1/3.7.2, 4.8.1/4.8.2).
-- Do not modify `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/proposal`.
-- Dissertation prose must not read as AI-written:
-  - no inflated vocabulary, formulaic triplets or "not only…but also";
-  - no em-dash chains, promotional tone or summary sign-offs;
-  - keep sentences plain and concrete.
+- Do not modify `…/proposal` or `…/archive`.
+- Do not edit numbers by hand in `results/tables/` or `Figures/generated/`; regenerate with `CONTRACT_REP_VARIANT=usd python scripts/export_latex.py` in `…/experiments`.
+- Do not change `experiments/docs/analysis_plan.md` §1–6, `experiments/config/contract_reputation.yaml` or the W1 registration files.
+- Dissertation prose follows `_writing-brief.md` (no mention of earlier theses, drafts or the proposal; contracts, not wallets, as scored objects; plain style).
 - Git:
   - files are CRLF on the user's Windows checkout, so stage with `git -c core.autocrlf=true add`;
   - author is abito <33889084+abitocodes@users.noreply.github.com>;
   - commit messages have a Korean conventional title and one block per hunk, `path[start:end]`, followed by `-` bullets;
   - never commit `.cursor/journey.md`.
-- The registration files (`config/fresh_holdout_2026q3.yaml`, `docs/fresh_holdout_2026q3_plan.md`) are frozen; their hashes are in `data/3-published-results-for-thesis/registered-replication-2026-06-to-2026-08/extraction_manifest.json` (computed on the CRLF checkout). The registration still names the old data folders; `fresh_holdout.load_registration` translates them.
-- Build: 193 pages, 0 errors, 0 undefined references at 8a60745. Check the build again after every edit.
-
-## Other numbers you will need
-
-- Raw degree baselines beat both walks in both windows: in-approve degree 0.711 (spring) and 0.613 (Jun–Aug) on new approvals; transfer in-degree 0.472 and 0.435 on new senders.
-- Spender cohorts: 1,335 at 28 Feb (1,174 contracts, 161 EOAs by eth_getCode), 1,964 at 31 May.
-- Trader cohorts: 4,227 matched wallets in the 28 Feb graph (1,860 with labels); 5,151 in the 31 May graph (1,402 with labels, 789 with a liquidation).
-- June–August extraction: nine queries, about 1.04 TB billed; 163,553 approval logs, 1,013,023 transfer logs, 144,152 GMX closes.
+- After editing the English manuscript, rebuild (xelatex → biber → xelatex ×2; `build.ps1`) and check for 0 errors and 0 undefined references; then re-translate the changed paragraphs in the Korean edition and run its checks.

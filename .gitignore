@@ -7,8 +7,8 @@
 __pycache__/
 _p1_sections.txt
 .DS_Store
-# 실험 코드: .venv·대용량 제외 규칙은 1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/wallet-reputation-experiments/.gitignore 참조
-# (data/1-raw-blockchain-logs·data/2-processed-tables-and-evaluations 산출물은 추적; 100MiB 초과·_chunks·tier2·캐시만 제외)
+# 실험 코드: .venv·대용량 제외 규칙은 1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/experiments/.gitignore 참조
+# (보관한 지갑 평판 실험의 규칙: 같은 폴더의 archive/wallet-reputation-experiments/.gitignore)
 proposal-ko/_spacing_test.*
 # dissertation QA page screenshots (local only)
 **/_qa_pages/
