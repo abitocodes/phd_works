@@ -16,3 +16,5 @@ proposal-ko/_spacing_test.*
 **/_chapter_aux_backup/
 # 컨트랙트 평판 실험을 Wallet-Reputation/experiments로 옮긴 뒤 옛 폴더에 남은 로컬 전용 데이터(그래프 parquet 약 9 GB, data/_work)와 빌드 부산물
 1-Dissertation-Works/ERC20-Allowance-PageRank-Contract-Reputation/
+# 보관한 지갑 평판 데이터의 parquet도 Google Drive에만 둔다(experiments/scripts/drive_sync.py)
+1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/archive/wallet-reputation-experiments/data/**/*.parquet

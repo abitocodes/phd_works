@@ -134,9 +134,9 @@ flowchart TB
 - 결과 요약: `…/experiments/data/2-processed-tables-and-evaluations/` (작업본), `…/experiments/data/3-published-results-for-thesis/` (논문 표의 고정본, `results_digest.md`)
 - 테스트: `cd …/experiments; python -m pytest tests`
 
-### C. 데이터 다시 받기 (Google Cloud 필요)
+### C. 데이터 받기 (Google Drive)
 
-BigQuery 추출은 끝났습니다. 그래프 표를 다시 받으려면 `…/experiments/`에서 `bash scripts/download_graph_tables.sh`(쿼리 비용 없음)를 실행합니다. 자세한 것은 `…/README.md`의 데이터 절을 보세요.
+parquet 데이터는 GitHub에 없고 공개 Google Drive 폴더에 있습니다. `…/experiments/`에서 `python scripts/drive_sync.py pull "*graph-tables-usd/*"`처럼 필요한 파일만 받습니다(`--all`은 전체 약 10 GB). BigQuery에서 새로 받은 데이터는 `python scripts/drive_sync.py push`로 Drive에 올립니다. 자세한 것은 `…/README.md`의 데이터 절을 보세요.
 
 ### D. 제안서 변경 (드묾)
 
@@ -148,10 +148,11 @@ BigQuery 추출은 끝났습니다. 그래프 표를 다시 받으려면 `…/ex
 
 | 항목 | 정책 |
 |------|------|
-| `…/experiments/data/` | GitHub에 올림. 그래프 표 parquet(6.4 GB)은 올리지 않고 `.json` 기록만 올림. 파일은 모두 90 MB 아래로 나눔 |
+| `…/experiments/data/` | parquet은 공개 Google Drive 폴더에만 두고(`…/experiments/drive-manifest.json`에 Drive id·크기·MD5), json·csv·md 같은 작은 파일은 GitHub에도 올림. 파일은 모두 90 MB 아래로 나눔 |
+| `…/archive/wallet-reputation-experiments/data/` | 같은 규칙: parquet은 Drive에만 |
 | `results/tables/*.tex`, `Figures/generated/*.pdf` | `export_latex.py`로 생성; 손으로 고치지 않음 |
 | BigQuery 비용 | `…/experiments/data/bq_ledger.json`에 기록, 전체 상한 USD 50 |
-| 커밋 | LaTeX 소스, 스크립트, export된 표, 데이터 — `.venv/`와 100 MB 넘는 파일은 제외 |
+| 커밋 | LaTeX 소스, 스크립트, export된 표, 작은 데이터 파일 — `.venv/`, parquet, 100 MB 넘는 파일은 제외 |
 
 ---
 
