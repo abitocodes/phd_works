@@ -1,13 +1,14 @@
-"""Rebuild 01-Intro/03-TOC.tex of the Korean edition from the translated headings.
+r"""Rebuild 01-Intro/03-TOC.tex of the Korean edition from the translated headings.
 
 Each \TOCentry{num}{{title}}{label} keeps its number and label; the title is
 taken from the heading in the translated chapter that carries the same label.
 """
+import os
 import re
 from pathlib import Path
 
 KO = Path(__file__).resolve().parent.parent
-EN = KO.parent / "overleaf-github"
+EN = Path(os.environ.get("OVERLEAF_EN", KO.parent / "overleaf-github"))  # English manuscript (submodule)
 BR = r"\{((?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*)\}"
 
 titles = {}

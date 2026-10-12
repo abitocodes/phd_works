@@ -2,7 +2,7 @@
 
 ## 0. 무엇을 하는가
 
-영어 학위 논문(LaTeX)을 **한국어로 번역**한다. 읽는 사람은 **초등학생**이라고 생각하고, 아주 쉬운 말로 옮긴다.
+영어 학위 논문(LaTeX, `../overleaf-github/`, 저장소 `phd-dissertation-draft-en`)을 **한국어로 번역**한다. 읽는 사람은 **초등학생**이라고 생각하고, 아주 쉬운 말로 옮긴다.
 
 - **번역이다. 새로 쓰거나 줄이거나 요약하지 않는다.** 원문의 문장 하나하나에 대응하는 한국어 문장이 있어야 한다. 문단, 목록 항목, 표, 그림, 수식, 각주를 하나도 빼지 않는다. 내용을 덧붙이지도 않는다(예시·비유·의견 추가 금지).
 - 허용되는 것: 긴 영어 문장 하나를 짧은 한국어 문장 두세 개로 나누기, 어려운 낱말 뒤에 괄호로 짧은 풀이 붙이기(그 장에서 처음 나올 때 한 번), 한국어 어순에 맞게 문장 순서를 문단 안에서 조금 바꾸기.
@@ -15,7 +15,7 @@
 - 쉬운 말을 고른다. 한자어보다 쉬운 우리말: "활용하다"→"쓰다", "산출하다"→"계산하다/구하다", "기인하다"→"~때문이다", "상회하다"→"넘다", "도출하다"→"끌어내다", "수행하다"→"하다", "해당하다"→"~이다/~에 들다".
 - 전문 용어는 §5 용어집의 말을 쓰고, **그 장에서 처음 나올 때** 괄호로 아주 짧게 풀이한다. 예: "켄달의 타우($\tau$, 두 줄 세우기가 얼마나 같은 순서인지 나타내는 수)". 두 번째부터는 풀이 없이 쓴다.
 - 영어 고유명사와 약어는 그대로 둔다(GMX V2, ERC-20, BigQuery, Arbitrum One 등). 처음 나올 때만 읽는 법이나 뜻을 괄호로 붙여도 된다: "아비트럼 원(Arbitrum One)".
-- 저자 이름은 라틴 글자 그대로 둔다: "Do와 Do\cend{4}는", "Do, Do, Nguyen\cend{3}이 제안한 AWP". 조사는 읽는 소리에 맞춘다(Do=도 → "Do는", Nguyen=응우옌 → "Nguyen이").
+- 저자 이름은 원문의 인용 명령이 찍어 주는 그대로 둔다(아래 §2의 `\textcite`, `\parencite`). `\textcite{key}`는 "Do, Do, and Nguyen (2023)"처럼 영어로 찍히므로, 바로 뒤에는 **받침과 상관없는 조사**(의, 에서, 에 따르면, 도, 처럼)를 쓴다: "\textcite{do2023awp}의 AWP는", "\textcite{page1999pagerank}에 따르면". 은/는, 이/가, 을/를을 붙여야 하면 "\textcite{x}의 연구는"처럼 바꾼다.
 - "we"는 "이 연구에서는/우리는"으로 자연스럽게. "this thesis"는 "이 논문".
 - 존댓말 일관성: 모든 본문 문장을 해요체로. "~다."로 끝나는 문장을 섞지 않는다.
 - 기호·단위: "95\%"는 그대로 "95\%". "$n=5{,}521$" 그대로. "2.8\,GHz" 그대로.
@@ -25,7 +25,8 @@
 ## 2. 반드시 그대로 두는 것(LaTeX)
 
 - 모든 LaTeX 명령, 환경, 옵션: `\begin{...}`, `\end{...}`, `\item`, `\footnote{...}`, `\emph{...}`, `\textbf{...}`, `\fitwidth{...}`, `\input{...}`, `\includegraphics[...]{...}`, `\caption[짧은]{긴}`, tabular의 열 수와 `&`, `\\`, `\toprule` 등.
-- `\label{...}`, `\ref{...}`, `\eqref{...}`, `\pageref{...}`, `\hyperref[...]`의 키, `\cend{...}`(인용 번호)의 숫자. **인용 \cend{n}은 원문과 같은 개수, 같은 번호**가 남아야 한다. 인용 위치는 그 내용을 담은 한국어 문장 끝에 둔다.
+- `\label{...}`, `\ref{...}`, `\eqref{...}`, `\pageref{...}`, `\hyperref[...]`의 키.
+- 인용 명령 `\textcite{key}`, `\parencite{key}`, `\parencite[p.~3]{key}`(biblatex, APA 7)는 **명령 이름과 키를 원문 그대로**, 같은 개수로 남긴다. `\textcite`를 `\parencite`로 바꾸거나 그 반대로 하지 않는다. `\parencite`는 그 내용을 담은 한국어 문장 끝(마침표 앞)에 둔다. 참고문헌 목록(7장)은 영어 그대로다.
 - 절 제목 명령 `\dissertationSubheading[sec:...]{제목}`, `\dissertationSubsubheading[sub:...]{제목}`, `\chapter{제목}`, `\section{...}`: **[...] 안의 레이블은 그대로**, {...} 안의 제목만 번역한다.
 - 수식(`$...$`, `\[...\]`, `equation`, `align` 환경)은 **그대로**. 수식 안의 영어 낱말만 번역한다: `\text{if } o_i>0` → `\text{만약 } o_i>0 \text{이면}` 처럼. 변수 이름, 첨자(`\mathrm{ER}`, `\text{approve}` 같은 그래프 이름 첨자)는 그대로 둔다.
 - `\texttt{...}` 안(코드 이름, 파일 경로, 이벤트 이름, 설정 키), `\url{...}`, `\href{...}{...}`의 주소, verbatim 블록(SQL)은 **그대로**. SQL 안의 내용도 번역하지 않는다.
@@ -213,13 +214,85 @@
 | ablation, seeded ablation | 빼 보기 실험, 씨앗을 쓰는 빼 보기 실험 |
 | rank divergence | 순위 갈라짐 |
 | glossary | 용어 풀이 |
-| et al. | 등 (예: Lin 등\cend{12}은) |
+| et al. | (인용 명령이 찍어 주는 영어 그대로 둠) |
 | walk / coupled walk | 걷기 / 결합 걷기 |
 | seed set (S-PR) / random seed | 씨앗 집합, 씨앗 지갑 / 시드 |
 | spring holdout / same-window / out-of-window | 봄 홀드아웃 / 같은 기간 / 기간 밖 |
 | protocol (DeFi) | 서비스(프로토콜) |
 | point estimate | 점 추정값 |
 | superiority / non-inferiority / verdict | 우월성 / 비열등성 / 판정 |
+
+## 5b. 이 논문(컨트랙트 평판)에서 더 쓰는 말
+
+이 논문은 **스마트 계약만** 점수를 매기고 평가해요. 일반 지갑(EOA)은 그래프에서 화살표의 출발점과 도착점으로만 나와요. 그래서 점수를 받는 대상은 "지갑"이 아니라 "계약"이라고 옮긴다. 단, **논문 제목**은 원문 제목(…Wallet Reputation Scoring) 그대로 "온체인 지갑 평판 점수"라고 옮긴다.
+
+| 영어 | 한국어 (처음 나올 때 풀이 예) |
+|---|---|
+| (smart) contract | 스마트 계약 → 두 번째부터 계약 |
+| spender contract | 스펜더 계약(허락을 받아 대신 쓰는 계약) |
+| contract trader (GMX V2) | 계약 트레이더(GMX V2에서 거래하는 계약) |
+| owner (approving side) | 주인(허락을 해 주는 쪽) |
+| approval count, number of distinct owners that approve | 허락한 주인 수(서로 다른 주인 수) |
+| wallet software | 지갑 프로그램 |
+| registered analysis | 등록 분석(미리 등록한 그대로 한 분석) |
+| revised analysis | 수정 분석(등록 뒤에 금액을 달러로 바꿔 다시 한 분석) |
+| deviation (from the registration) | 등록에서 벗어난 변경 |
+| re-analysis | 재분석 |
+| analysis plan, the plan | 분석 계획, 계획 |
+| registration, the registration | 등록, 등록 문서 |
+| rule A / rule B / R1–R3 | 규칙 A / 규칙 B / R1–R3 |
+| margin (0.01) | 허용 폭 |
+| Bonferroni (97.5\%) interval | 본페로니 구간(여러 번 비교할 때 넓힌 신뢰구간) |
+| USD, dollar amount | 달러(USD), 달러 금액 |
+| daily close (price) | 하루 종가(그날 마지막 가격) |
+| price feed (Chainlink) | 가격 피드(블록체인에 올라오는 가격 정보) |
+| value weight $V$, slope $b$ | 금액 무게 $V$, 기울기 $b$ |
+| cap $U$ | 상한 $U$(이보다 큰 금액은 이 값으로 자름) |
+| top five tokens | 상위 다섯 토큰 |
+| ego network | 에고 네트워크(코호트 계약에 닿는 화살표만 모은 그래프) |
+| observation window | 관측 기간 |
+| holdout W0 / registered window W1 | 홀드아웃 W0 / 등록 기간 W1 |
+| freeze, frozen | 동결, 동결한 |
+| account type / bytecode | 계정 종류 / 바이트코드(계약 프로그램의 기계어) |
+| EIP-7702 delegation designator | EIP-7702 위임 표시 |
+| warm-up run / timed run | 준비 실행 / 시간 잰 실행 |
+| solve time | 푸는 시간 |
+| colluding addresses | 짜고 움직이는 주소 |
+| percentile | 백분위 |
+| attestation tool | 증명 도구 |
+| by construction | 만든 방식 때문에 저절로 |
+| intended construct | 의도한 구성개념 |
+| value slope, value-slope check | 금액 기울기, 금액 기울기 점검 ("값 기울기"는 쓰지 않음) |
+| raw in-approve degree | 원시 받은 허락 수 ("허락 입차수"는 첫 풀이 안에서만 씀) |
+| revised scores / revised counts | 고친 점수 |
+| revised cohort / revised matched cohort | 수정 코호트 / 수정 매칭 코호트 |
+| the plan's cohort | 계획의 코호트 |
+| registered results | 등록 분석의 결과 |
+| registered verdict(s) | 등록 분석의 판정 |
+| registered test(s) / registered rule(s) | 등록한 시험 / 등록한 규칙 |
+| after the (registered) results were known | (등록 분석의) 결과를 안 뒤 |
+| decision contrasts (P, Q) | 판정 대비 |
+| stratified (by closes) | 층화한, 처음 나올 때 (닫은 횟수로 묶음을 나눈(층화한)) |
+| count-level (lead) | 그냥 센 수의 수준(에서 앞섬) |
+| time decay, decay ($\sigma(\Delta t)$) | 로지스틱 감쇠 (감쇠만 따로 쓰지 않음: 감쇠 계수와 헷갈림) |
+| time weight | 시간 무게 |
+| damping, damping check | 감쇠 계수, 감쇠 계수 점검 (감쇠만 따로 쓰지 않음) |
+| restart rule / restart mass / restart weight / restart vector | 다시 출발 규칙 / 다시 출발 몫 / 다시 출발 무게 / 재시작 벡터 |
+| activity restarts | 활동 재시작(활발한 주소에서 더 자주 다시 출발하기) |
+| family mean | 지표 가족 평균 (이름 붙은 가족은 허락 가족, 송금 가족처럼 줄여 씀) |
+| single-layer (score, method, PageRank) | 한 층 (점수, 방법, 페이지랭크) |
+| approval count / transfer count | 허락한 주인 수 / 송금 수 |
+| profitable share / non-loss share | 이익을 낸 비율 / 손실이 아닌 비율 |
+| profitable closes | 이익을 낸 닫기 (수) |
+| liquidation avoidance | 청산을 피하는 것(데, 일) |
+| no-liquidation indicator / flag | 청산이 없었는지 나타내는 표시 (표 머리글은 청산 없음) |
+| ego tables / ego extraction | 에고 표 / 에고 추출 |
+| daily token prices / daily US-dollar prices | 하루 토큰 가격 / 하루 달러 가격 |
+| US dollars | 달러 ("미국 달러"는 쓰지 않음; 첫 풀이는 달러(USD)) |
+| (RPC) endpoint | 접속 주소(블록체인 노드에 질문을 보내는 주소) |
+| Chainlink, DefiLlama | Chainlink, DefiLlama (영어 그대로; 처음에 체인링크(Chainlink)로 써도 됨) |
+| threshold (cohort) | 기준값 |
+| Kendall coefficient(s) | 켄달의 타우 계수 / 켄달의 $\tau$ 계수 |
 
 ## 6. 예시
 

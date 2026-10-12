@@ -57,7 +57,7 @@ def numbers(s: str):
     s = remove_math(s)
     s = re.sub(r"\\begin\{verbatim\}.*?\\end\{verbatim\}", " ", s, flags=re.S)
     s = re.sub(r"\\begin\{tikzpicture\}.*?\\end\{tikzpicture\}", " ", s, flags=re.S)
-    for cmd in ["label", "ref", "eqref", "pageref", "cend", "input", "include", "texttt", "url",
+    for cmd in ["label", "ref", "eqref", "pageref", "cend", "textcite", "parencite", "cite", "citeauthor", "citeyear", "Textcite", "Parencite", "input", "include", "texttt", "url",
                 "hspace", "vspace", "setlength", "includegraphics", "TOCentry", "hyperref"]:
         s = re.sub(r"\\" + cmd + r"(\[[^\]]*\])*\s*" + BRACE, " ", s)
     s = re.sub(r"\\href" + BRACE, " ", s)
@@ -73,7 +73,7 @@ def english_leftovers(s: str):
     s = strip_comments(s)
     s = remove_math(s)
     s = re.sub(r"\\begin\{verbatim\}.*?\\end\{verbatim\}", " ", s, flags=re.S)
-    for cmd in ["texttt", "url", "label", "ref", "eqref", "cend", "input", "include", "includegraphics", "hyperref"]:
+    for cmd in ["texttt", "url", "label", "ref", "eqref", "cend", "textcite", "parencite", "cite", "citeauthor", "citeyear", "Textcite", "Parencite", "input", "include", "includegraphics", "hyperref"]:
         s = re.sub(r"\\" + cmd + r"(\[[^\]]*\])*\s*" + BRACE, " ", s)
     s = re.sub(r"\\href" + BRACE + BRACE, " ", s)
     s = re.sub(r"\\(node|draw|path|coordinate)\s*\[[^\]]*\]", " ", s)  # TikZ options are code
@@ -110,6 +110,8 @@ def main():
     cmp("hyperref", grab(r"\\hyperref\[([^\]]*)\]", en), grab(r"\\hyperref\[([^\]]*)\]", ko))
     norm_c = lambda xs: [",".join(sorted(x.replace(" ", "").split(","))) for x in xs]
     cmp("cite \\cend", norm_c(grab(r"\\cend\{([^}]*)\}", en)), norm_c(grab(r"\\cend\{([^}]*)\}", ko)))
+    CITE = r"\\(?:[Tt]extcite|[Pp]arencite|cite|citeauthor|citeyear)(?:\[[^\]]*\])*\{([^}]*)\}"
+    cmp("cite keys", norm_c(grab(CITE, en)), norm_c(grab(CITE, ko)))
     cmp("input", grab(r"\\(?:input|include)\{([^}]*)\}", en), grab(r"\\(?:input|include)\{([^}]*)\}", ko))
     cmp("includegraphics", grab(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]*)\}", en), grab(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]*)\}", ko))
     cmp("environment", grab(r"\\begin\{([^}]*)\}", en), grab(r"\\begin\{([^}]*)\}", ko))

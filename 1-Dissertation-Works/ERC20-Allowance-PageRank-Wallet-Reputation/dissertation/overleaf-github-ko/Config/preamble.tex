@@ -70,7 +70,7 @@
   pdftitle={ERC-20 허락 화살표를 페이지랭크에 넣어 온체인 지갑 평판 점수를 더 좋게 만들기 (한국어 쉬운 번역)},
   pdfauthor={권태홍 (Taehong Kwon)},
   pdfsubject={남아프리카대학교(UNISA) 컴퓨터과학 박사 학위 논문의 한국어 번역},
-  pdfkeywords={DeFi, 엔도스랭크, EndorseRank, 페이지랭크, 온체인 평판, Arbitrum}
+  pdfkeywords={DeFi, 스마트 계약, 엔도스랭크, EndorseRank, 페이지랭크, 온체인 평판, ERC-20 허락, Arbitrum}
 }
 % 한국어 이름표: 그림, 표, 목록, 알고리즘
 \AtBeginDocument{%
@@ -101,7 +101,7 @@
 \usepackage{titlesec}
 \usepackage{etoolbox}
 \pretocmd{\chapter}{\phantomsection}{}{}
-% Match the proposal (../proposal) article \section* / \subsection* sizing and spacing.
+% Chapter, section and subsection sizing and spacing.
 \titleformat{\chapter}[block]
   {\normalfont\Large\bfseries}{\thechapter}{0.5em}{}
 \titlespacing*{\chapter}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
@@ -133,36 +133,10 @@
 }
 \newcommand{\figpath}[1]{Figures/generated/#1}
 
-% Citations: superscript [n] in text, hyperlinked to Section 7 References.
-% No page-bottom citation footnotes (媛곸＜); full entries live only in References.
-\ExplSyntaxOn
-\cs_new_protected:Npn \cend_one:n #1
-  {
-    \textsuperscript{\hyperref[ref:#1]{[#1]}}
-  }
-\cs_new_protected:Npn \cend:n #1
-  {
-    \clist_set:Nn \l_tmpa_clist { #1 }
-    \clist_sort:Nn \l_tmpa_clist
-      {
-        \int_compare:nNnTF { ##1 } > { ##2 }
-          { \sort_return_swapped: }
-          { \sort_return_same: }
-      }
-    \clist_clear:N \l_tmpb_clist
-    \clist_map_inline:Nn \l_tmpa_clist
-      {
-        \clist_if_in:NnF \l_tmpb_clist { ##1 }
-          { \clist_put_right:Nn \l_tmpb_clist { ##1 } }
-      }
-    \cs_set_nopar:Npn \cend_sep: {}
-    \clist_map_inline:Nn \l_tmpb_clist
-      {
-        \cend_sep:
-        \cend_one:n { ##1 }
-        \cs_set_nopar:Npn \cend_sep: { \textsuperscript{,} }
-      }
-  }
-\cs_new_eq:NN \cend \cend:n
-\ExplSyntaxOff
+% Citations: APA 7 author-date (biblatex-apa), one alphabetical reference list in
+% Chapter 7. Use \textcite{key} when the authors are part of the sentence and
+% \parencite{key} otherwise; keys are in Config/references.bib.
+\usepackage{csquotes}
+\usepackage[style=apa,backend=biber,uniquename=init]{biblatex}
+\addbibresource{Config/references.bib}
 
