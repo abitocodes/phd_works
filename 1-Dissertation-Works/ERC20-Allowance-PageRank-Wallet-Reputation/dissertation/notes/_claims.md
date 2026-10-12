@@ -4,7 +4,7 @@ Numbers: take every number from the revised digest `experiments/data/3-published
 
 ## Order of events (true history, use these dates; all UTC)
 
-1. 9 October 2026, 13:41:27: analysis plan and configuration committed (43d8045); the first query of scan A was created ten seconds later, so no log had been extracted when the plan was fixed. It fixed the cohort rule, the scores, the proxies, the labels, the statistics and rule A, with amounts in raw base units, every ERC-20 token and b = 1.
+1. 9 October 2026, 13:41:27: analysis plan and configuration committed (43d8045); the first query of scan A was created ten seconds later, so this study had not extracted any log when the plan was fixed. It fixed the cohort rule, the scores, the proxies, the labels, the statistics and rule A, with amounts in raw base units, every ERC-20 token and b = 1.
 2. 9 October: scan A, cohort (27,844 contracts), ego extraction, pair tables, proxies, W0 labels; same-window and W0 results; rule A judged.
 3. 9 October, 16:49:32 (0d3a057): registration of W1 (rule B, F4–F6, two sensitivity analyses, P, Q, R1–R3 with their wording), before scan B.
 4. Scan B (16:49:40), W1 labels, registered evaluation; then supplementary contrasts, robustness, Sybil model, benchmark. These are the **registered analysis** (now Appendix 8.6 and the registered digest).
