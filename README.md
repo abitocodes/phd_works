@@ -18,6 +18,7 @@
 | 저장소 재구조화 | 완료 (2026-10-01: 실험 코드를 논문 폴더 안으로; 2026-10-07: 제안서와 논문 작업을 `1-Dissertation-Works/<논문 제목>/` 아래로; 2026-10-11: 컨트랙트 평판 연구로 교체, 지갑 평판 자료는 `archive/`로) | `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/` |
 | 학위논문 원고 (영문) | **활성** | `…/dissertation/overleaf-github/` (서브모듈 `phd-dissertation-draft-en`, Overleaf) |
 | 학위논문 한국어 번역본 | **활성** | `…/dissertation/overleaf-github-ko/` |
+| 학위논문 발표 자료 (HTML 슬라이드) | **활성** | `…/dissertation/presentation/` |
 | 투고 원고 2편 (PLOS ONE, IEEE Access) | **활성** | `…/dissertation/overleaf-github/manuscripts/` |
 | 실험 파이프라인 | **완료 (등록 분석 + 수정 분석)** | `…/experiments/` — BigQuery 추출, 점수, 평가, 표 내보내기 |
 
@@ -80,6 +81,7 @@ flowchart TB
 | `…/proposal/` | 완료된 연구계획서 (정본 LaTeX: `…/proposal/proposal/`) |
 | `…/dissertation/overleaf-github/` | **활성** 영문 원고 (서브모듈 `phd-dissertation-draft-en`, Overleaf가 `main`을 읽음). `manuscripts/`(투고 원고 A·B), `analysis/`(닫힌 꼴 점검, 중립 라벨 비교의 근거 JSON) 포함 |
 | `…/dissertation/overleaf-github-ko/` | 영문 원고를 초등학생도 읽을 수 있는 쉬운 한국어로 옮긴 번역본 (`main.pdf`, 번역 기준 `TRANSLATION-GUIDE.md`) |
+| `…/dissertation/presentation/` | 학위논문 발표 자료: 한국어 HTML 슬라이드 59장(`index.html`, 오프라인 실행, 3D 데이터 시각화와 수식 유도) |
 | `…/dissertation/notes/` | 원고 작성 규칙(`_writing-brief.md`)과 메모 |
 | `…/experiments/` | 실험 코드와 데이터: `sql/`, `scripts/`, `tests/`, `config/`, `docs/`(분석 계획·등록·수정 계획), `data/` |
 | `…/archive/` | 2026-10-11 이전 지갑 평판 연구 자료 (실험 코드와 데이터, 한국어판, 로컬 원고 자료와 교수님 피드백 원문, 어린이 책·오디오북, 피드백 정리) |
