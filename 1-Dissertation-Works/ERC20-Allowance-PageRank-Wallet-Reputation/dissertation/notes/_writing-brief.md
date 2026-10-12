@@ -1,5 +1,11 @@
 # Writing brief for the contract-reputation thesis (not part of the build)
 
+## Base text (author's decision of 12 October 2026)
+
+- The wording of the thesis is the text of manuscript commit `7790f76` (the earlier wording, 197 pages). Moving to contract accounts and to three years of data changed the numbers and the facts of the data, not the framing: keep the abstract, the chapter structure and the sentences of that text, and change a sentence only where its number or its result no longer holds. Do not rewrite the framing (DeFi credit and collateralization, pseudonymity, on-chain wallet reputation) around contracts.
+- The only added argument is short: in Section 3.2 (data sources and sampling) a few sentences say that user wallets (EOAs) are used in too many different ways to be put in one order, so the scored wallets are contract accounts; Chapter 1 points to it in one sentence. "Wallet" keeps its general meaning (an account); the cohort members are "contracts" or "contract accounts", never "contract wallets".
+- The appendix holds only reference material that the main chapters point to and do not state themselves (no claim map, non-claims list, glossary or limitations repeated from the main text). The whole thesis stays under 200 pages.
+
 ## What the thesis is
 
 - Title: *Integrating ERC-20 Allowance Edges into PageRank for Enhanced On-Chain Wallet Reputation Scoring* (the approved title, used on the title page, chapter cover, declaration and PDF metadata). Candidate Taehong Kwon (student number 28576810), PhD in Computer Science, University of South Africa. Supervisor Prof. Ernest Mnkandla; co-supervisors Prof. Donatien Koulla Moulla and Dr. David Sena Attipoe.
