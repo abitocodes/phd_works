@@ -30,7 +30,7 @@ cd manuscript
 .\build.ps1
 ```
 
-다른 환경에서는 `xelatex main.tex`를 두 번 실행하면 됩니다. 한글은 kotex로 조판하며, 쉬운 한국어 번역본(`../ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/overleaf-github-ko/`)과 같은 글꼴 설정을 씁니다. 로마자는 Times New Roman(없으면 같은 글자 폭의 Liberation Serif), 한글은 Windows에서 바탕·맑은 고딕, Linux에서 나눔명조·나눔고딕·나눔고딕코딩을 씁니다.
+다른 환경에서는 `xelatex main.tex`를 두 번 실행하면 됩니다. 한글은 kotex로 조판합니다. 로마자는 Times New Roman(없으면 같은 글자 폭의 Liberation Serif), 한글은 Windows에서 바탕·맑은 고딕, Linux에서 나눔명조·나눔고딕·나눔고딕코딩을 씁니다.
 
 합성 예제 표를 다시 만들 때:
 

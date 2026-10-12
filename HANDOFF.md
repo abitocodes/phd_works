@@ -15,7 +15,6 @@ This is where the thesis work stands. Read it before touching the manuscript, th
 - `phd_works` (this repo).
 - `…/dissertation/overleaf-github` is a submodule (`phd-dissertation-draft-en`; its name in `.gitmodules` is still `2-Dissertation-Draft/overleaf-github`, on purpose). Overleaf reads its `main`. It holds the thesis sources, the built `main.pdf` and per-chapter PDFs, the journal manuscripts (`manuscripts/A-plos-one`, `manuscripts/B-ieee-access`) and their supporting analyses (`analysis/`). Run `git submodule update --init` if the folder is empty.
 - Experiment code and data: `…/experiments` (moved from the Contract folder; `scripts/export_latex.py` now writes into the submodule). The tests import archived scripts read-only from `…/archive/wallet-reputation-experiments/scripts`.
-- Korean edition: `…/dissertation/overleaf-github-ko` (easy Korean, rules in `TRANSLATION-GUIDE.md`, checks in `scripts/`).
 - Writing rules for the thesis and the papers: `…/dissertation/notes/_writing-brief.md`.
 
 ## The study in one paragraph

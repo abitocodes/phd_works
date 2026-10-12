@@ -2,7 +2,7 @@
 
 **EndorseRank**에 관한 박사 연구: Arbitrum One에서 ERC-20 허락(allowance) 간선을 PageRank에 넣어 스마트 컨트랙트의 온체인 평판을 매기고, 송금 간선의 Adaptive Weighted PageRank(AWP), 두 층을 함께 걷는 C-PR, 원시 차수와 비교합니다.
 
-이 저장소에는 **완료된 연구계획서**(고정 참조), **작업 중인 학위논문**(영문 원고 서브모듈과 한국어 번역본), **실험 코드와 데이터**, 공유 참고 논문이 있습니다.
+이 저장소에는 **완료된 연구계획서**(고정 참조), **작업 중인 학위논문**(영문 원고 서브모듈), **실험 코드와 데이터**, 공유 참고 논문이 있습니다.
 
 **기여자 및 AI 에이전트를 위한 원칙:** `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/`과 `experiments/`를 편집하고, 연구계획서를 바꾸라는 명시적인 요청이 없는 한 `proposal/`은 읽기 전용 기준선으로 취급합니다. `archive/`는 보관 자료라 고치지 않습니다.
 
@@ -17,7 +17,6 @@
 | 연구계획서 | **완료 · 고정** | `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/proposal/proposal/` |
 | 저장소 재구조화 | 완료 (2026-10-01: 실험 코드를 논문 폴더 안으로; 2026-10-07: 제안서와 논문 작업을 `1-Dissertation-Works/<논문 제목>/` 아래로; 2026-10-11: 연구 폴더 정리, 보관 자료는 `archive/`로) | `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/` |
 | 학위논문 원고 (영문) | **활성** | `…/dissertation/overleaf-github/` (서브모듈 `phd-dissertation-draft-en`, Overleaf) |
-| 학위논문 한국어 번역본 | **활성** | `…/dissertation/overleaf-github-ko/` |
 | 학위논문 발표 자료 (HTML 슬라이드) | **활성** | `…/dissertation/presentation/` |
 | 투고 원고 2편 (PLOS ONE, IEEE Access) | **활성** | `…/dissertation/overleaf-github/manuscripts/` |
 | 실험 파이프라인 | **완료 (등록 분석 + 수정 분석)** | `…/experiments/` — BigQuery 추출, 점수, 평가, 표 내보내기 |
@@ -57,13 +56,11 @@ flowchart TB
     pdf[main.pdf]
     ms[manuscripts/ 투고 원고]
   end
-  ko[dissertation/overleaf-github-ko 한국어판]
   sql --> score --> eval --> json --> pub
   json --> export --> tables
   export --> figs
   tables --> pdf
   figs --> pdf
-  pdf --> ko
   pub --> ms
 ```
 
@@ -80,7 +77,6 @@ flowchart TB
 | `…/README.md` | 논문 폴더 안내: 기간, 두 분석, 데이터, 지킬 것 |
 | `…/proposal/` | 완료된 연구계획서 (정본 LaTeX: `…/proposal/proposal/`) |
 | `…/dissertation/overleaf-github/` | **활성** 영문 원고 (서브모듈 `phd-dissertation-draft-en`, Overleaf가 `main`을 읽음). `manuscripts/`(투고 원고 A·B), `analysis/`(닫힌 꼴 점검, 중립 라벨 비교의 근거 JSON) 포함 |
-| `…/dissertation/overleaf-github-ko/` | 영문 원고를 초등학생도 읽을 수 있는 쉬운 한국어로 옮긴 번역본 (`main.pdf`, 번역 기준 `TRANSLATION-GUIDE.md`) |
 | `…/dissertation/presentation/` | 학위논문 발표 자료: 한국어 HTML 슬라이드 59장(`index.html`, 오프라인 실행, 3D 데이터 시각화와 수식 유도) |
 | `…/dissertation/notes/` | 원고 작성 규칙(`_writing-brief.md`)과 메모 |
 | `…/experiments/` | 실험 코드와 데이터: `sql/`, `scripts/`, `tests/`, `config/`, `docs/`(분석 계획·등록·수정 계획), `data/` |
@@ -124,7 +120,7 @@ flowchart TB
 ### A. 원고 본문 편집
 
 1. `…/dissertation/notes/_writing-brief.md`의 규칙을 읽습니다.
-2. `…/dissertation/overleaf-github/Chapter-*/index.tex`를 편집합니다. 바뀐 문단은 한국어판(`…/dissertation/overleaf-github-ko/`)에서도 `TRANSLATION-GUIDE.md`에 따라 다시 옮깁니다.
+2. `…/dissertation/overleaf-github/Chapter-*/index.tex`를 편집합니다.
 3. 빌드: `cd …/dissertation/overleaf-github; .\build.ps1` (또는 Overleaf). 서브모듈에서 커밋·푸시한 뒤 이 저장소에서 서브모듈 포인터를 커밋합니다.
 
 ### B. 실험 결과와 표 갱신
@@ -211,14 +207,11 @@ cd 1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/proposal/prop
 ```powershell
 cd 1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation/dissertation/overleaf-github
 .\build.ps1
-# 한국어판
-cd ..\overleaf-github-ko
-.\build.ps1
 ```
 
-출력: `…/dissertation/overleaf-github/main.pdf`(장별 PDF 포함), `…/dissertation/overleaf-github-ko/main.pdf`
+출력: `…/dissertation/overleaf-github/main.pdf`(장별 PDF 포함)
 
-XeLaTeX와 biber가 필요합니다(영문은 TeX Gyre Termes, 한국어판은 kotex와 나눔 글꼴 또는 Windows의 바탕·맑은 고딕).
+XeLaTeX와 biber가 필요합니다(영문은 TeX Gyre Termes).
 
 ---
 
