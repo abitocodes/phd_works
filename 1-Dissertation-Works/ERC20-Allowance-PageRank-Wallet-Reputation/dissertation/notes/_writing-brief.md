@@ -2,8 +2,8 @@
 
 ## What the thesis is
 
-- Title: *Integrating ERC-20 Allowance Edges into PageRank for Enhanced On-Chain Wallet Reputation Scoring* (the approved title, kept on the title page, chapter cover, declaration and PDF metadata since 2026-10-11; the working title until then was *… for On-Chain Smart Contract Reputation Scoring*). Candidate Taehong Kwon (student number 28576810), PhD in Computer Science, University of South Africa. Supervisor Prof. Ernest Mnkandla; co-supervisors Prof. Donatien Koulla Moulla and Dr. David Sena Attipoe.
-- The thesis text starts from the earlier manuscript in this folder (copied from another draft) and keeps its structure, methods, section titles and style. Only the data change: every scored and evaluated address is a **smart contract**. Externally owned accounts (EOAs) appear in the graphs only as owners, senders and recipients and are never scored or evaluated.
+- Title: *Integrating ERC-20 Allowance Edges into PageRank for Enhanced On-Chain Wallet Reputation Scoring* (the approved title, used on the title page, chapter cover, declaration and PDF metadata). Candidate Taehong Kwon (student number 28576810), PhD in Computer Science, University of South Africa. Supervisor Prof. Ernest Mnkandla; co-supervisors Prof. Donatien Koulla Moulla and Dr. David Sena Attipoe.
+- Every scored and evaluated address is a **smart contract**. Externally owned accounts (EOAs) appear in the graphs only as owners, senders and recipients and are never scored or evaluated.
 - Chain: Arbitrum One. Data: public BigQuery logs, 1 October 2023 to 30 September 2026.
 
 | Item | Definition |
@@ -37,3 +37,4 @@ Scores: EndorseRank, AWP (Do, Do and Nguyen, 2023), C-PR at λ ∈ {0, 0.25, 0.5
 13. Reproducibility: repository URL `https://github.com/abitocodes/phd_works`, versioned configuration, machine-readable summaries, commit hash (D81). Ethics: Unisa clearance number and date as placeholders `[TBD]` with the certificate in the appendix (D264).
 14. Style (P36): plain, concrete sentences. No inflated vocabulary, no formulaic triplets, no "not only … but also", no em-dash chains, no promotional tone, no summary sign-offs. Never write that something was deleted or removed from the manuscript.
 15. Keep chapter and section titles and their order; if a title must change for the contract framing, change `01-Intro/03-TOC.tex` with it (P12). Introduce every figure and table in the text before it appears (P23); never open a section with a list (P24).
+16. Dates and timing (decision of 12 October 2026). Never state a date or time at which anything became public, was pushed to GitHub or appeared in GitHub's records; the plan and the registration were committed to the public repository. Commit times and BigQuery job times stay. A statement that data, logs, labels or outcomes had not yet been extracted, read, seen or known is scoped to this study ("before this study extracted any log"). No sentence explains the title or sets it against the scored contracts.
