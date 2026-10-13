@@ -2,9 +2,11 @@
 
 영문 제목(폴더 이름의 근거): *Ranking Clarity Smart Contracts for a Package Registry on Stacks: Post-Conditions in Place of ERC-20 Allowances*
 
+> **보관 중(2026-10-13부터).** 나중에 다시 작업하려고 `1-Dissertation-Works/archive/` 아래로 옮겨 두었습니다. 아래 내용은 옮기기 전 상태 그대로이고, 상대 경로만 새 위치에 맞췄습니다. 다시 작업할 때는 `../README.md`를 보세요.
+
 Stacks 블록체인에 배포된 Clarity 스마트 컨트랙트를 npmjs.com이나 pkg.go.dev처럼 찾고 쓰는 서비스(웹: Clarity Registry, CLI: `cpm`)와, 그 검색 순위를 시빌 공격에 버티도록 매기는 방법(PC-EndorseRank)에 관한 논문 작업 폴더입니다. 폴더 이름은 영문 제목을 줄인 것입니다(ERC-20 논문 폴더와 같은 규칙: 신호-방법-대상-용도).
 
-ERC-20 논문(`../ERC20-Allowance-PageRank-Wallet-Reputation/`)의 EndorseRank와 AWP를 Stacks로 옮기되, Stacks에는 allowance가 없으므로 포스트컨디션과 Clarity 코드의 참조로 바꿉니다. 왜 그렇게 바꾸는지는 [`docs/allowance-replacement.ko.md`](docs/allowance-replacement.ko.md)에 정리했습니다.
+ERC-20 논문(`../../ERC20-Allowance-PageRank-Wallet-Reputation/`)의 EndorseRank와 AWP를 Stacks로 옮기되, Stacks에는 allowance가 없으므로 포스트컨디션과 Clarity 코드의 참조로 바꿉니다. 왜 그렇게 바꾸는지는 [`docs/allowance-replacement.ko.md`](docs/allowance-replacement.ko.md)에 정리했습니다.
 
 ## 상태
 
@@ -42,7 +44,7 @@ python scripts/toy_sybil_example.py --latex
 
 - 원고 본문, README, 메모, 스크립트의 설명과 출력은 한국어로 씁니다. 폴더 이름과 파일 이름은 영어로 둡니다. 참고문헌 목록은 찾아보기 쉽도록 원어 그대로 둡니다.
 - `manuscript/tables/`의 숫자는 스크립트로만 바꿉니다. 실데이터 결과가 생기면 같은 방식(스크립트 → 표 조각 → `\input`)으로 넣습니다.
-- 문체는 ERC-20 논문의 규칙을 따릅니다(`../../HANDOFF.md`의 "Dissertation prose must not read as AI-written"). 부풀린 말, 틀에 박힌 세 항목 나열, 요약으로 끝맺는 문장을 쓰지 않고, 문장을 짧고 구체적으로 씁니다.
+- 문체는 ERC-20 논문의 규칙을 따릅니다(`../../../HANDOFF.md`의 "Dissertation prose must not read as AI-written"). 부풀린 말, 틀에 박힌 세 항목 나열, 요약으로 끝맺는 문장을 쓰지 않고, 문장을 짧고 구체적으로 씁니다.
 
 ## 다음 단계
 

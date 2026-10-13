@@ -70,18 +70,19 @@ flowchart TB
 
 ## 폴더 구조
 
-최상위 폴더는 `1-Dissertation-Works/`(논문), `2-Graduation/`(졸업 요건·공문), `3-Roundtable/`(진전 발표), `papers/`(참고 논문)입니다. 논문 폴더 아래 `ERC20-Allowance-PageRank-Wallet-Reputation/`은 논문 제목 *Integrating ERC-20 Allowance Edges into PageRank for Enhanced On-Chain Wallet Reputation Scoring*을 줄인 이름입니다(전체 제목을 쓰면 Windows 경로 길이 제한 260자를 넘음). 같은 폴더 아래 `Stacks-PostCondition-PageRank-Clarity-Registry/`는 두 번째 논문 『Stacks 패키지 레지스트리를 위한 Clarity 스마트 컨트랙트 순위 산정: ERC-20 allowance를 대신하는 포스트컨디션』(한국어 원고)의 작업 폴더로, EndorseRank와 AWP를 Stacks Clarity 컨트랙트 레지스트리의 순위에 옮겨 씁니다. 폴더 이름은 영문 제목 *Ranking Clarity Smart Contracts for a Package Registry on Stacks: Post-Conditions in Place of ERC-20 Allowances*를 줄인 것입니다.
+최상위 폴더는 `1-Dissertation-Works/`(논문), `2-Graduation/`(졸업 요건·공문), `3-Roundtable/`(진전 발표), `papers/`(참고 논문)입니다. 논문 폴더 아래 `ERC20-Allowance-PageRank-Wallet-Reputation/`은 논문 제목 *Integrating ERC-20 Allowance Edges into PageRank for Enhanced On-Chain Wallet Reputation Scoring*을 줄인 이름입니다(전체 제목을 쓰면 Windows 경로 길이 제한 260자를 넘음). 같은 폴더의 `archive/` 아래 `Stacks-PostCondition-PageRank-Clarity-Registry/`는 두 번째 논문 『Stacks 패키지 레지스트리를 위한 Clarity 스마트 컨트랙트 순위 산정: ERC-20 allowance를 대신하는 포스트컨디션』(한국어 원고)의 작업 폴더로, EndorseRank와 AWP를 Stacks Clarity 컨트랙트 레지스트리의 순위에 옮겨 씁니다. 나중에 다시 작업하려고 2026-10-13부터 보관해 두었습니다. 폴더 이름은 영문 제목 *Ranking Clarity Smart Contracts for a Package Registry on Stacks: Post-Conditions in Place of ERC-20 Allowances*를 줄인 것입니다.
 
 | 경로 (`…` = `1-Dissertation-Works/ERC20-Allowance-PageRank-Wallet-Reputation`) | 역할 |
 |------|------|
 | `…/README.md` | 논문 폴더 안내: 기간, 두 분석, 데이터, 지킬 것 |
 | `…/proposal/` | 완료된 연구계획서 (정본 LaTeX: `…/proposal/proposal/`) |
 | `…/dissertation/overleaf-github/` | **활성** 영문 원고 (서브모듈 `phd-dissertation-draft-en`, Overleaf가 `main`을 읽음). `manuscripts/`(투고 원고 A·B), `analysis/`(닫힌 꼴 점검, 중립 라벨 비교의 근거 JSON) 포함 |
-| `…/dissertation/presentation/` | 학위논문 발표 자료: 한국어 HTML 슬라이드 59장(`index.html`, 오프라인 실행, 3D 데이터 시각화와 수식 유도) |
+| `…/dissertation/presentation/` | 학위논문 발표 자료: HTML 슬라이드 59장, 한국어판 `index.html`과 영문판 `index.en.html`(오프라인 실행, 3D 데이터 시각화와 수식 유도). `dist/`에 한 파일 판(`presentation-ko.html`, `presentation-en.html`)과 한국어 인쇄판 PDF(`presentation-ko-print.pdf`, 304쪽) |
 | `…/dissertation/notes/` | 원고 작성 규칙(`_writing-brief.md`)과 메모 |
 | `…/experiments/` | 실험 코드와 데이터: `sql/`, `scripts/`, `tests/`, `config/`, `docs/`(분석 계획·등록·수정 계획), `data/` |
 | `…/archive/` | 보관 자료(읽기 전용; 내용은 `archive/README.md`) |
-| `1-Dissertation-Works/Stacks-PostCondition-PageRank-Clarity-Registry/` | 두 번째 논문 초안: Clarity 컨트랙트 레지스트리(웹)와 `cpm`(CLI), 포스트컨디션으로 allowance를 대신하는 순위 PC-EndorseRank (한국어 원고 `manuscript/`, 설계 메모 `docs/`, 합성 예제 `scripts/`; 설명은 그 폴더의 `README.md`) |
+| `1-Dissertation-Works/archive/` | 보관 중인 논문 작업(나중에 다시 작업; 내용은 `archive/README.md`) |
+| `1-Dissertation-Works/archive/Stacks-PostCondition-PageRank-Clarity-Registry/` | (보관 중) 두 번째 논문 초안: Clarity 컨트랙트 레지스트리(웹)와 `cpm`(CLI), 포스트컨디션으로 allowance를 대신하는 순위 PC-EndorseRank (한국어 원고 `manuscript/`, 설계 메모 `docs/`, 합성 예제 `scripts/`; 설명은 그 폴더의 `README.md`) |
 | `2-Graduation/` | 졸업 요건, 인정 학술지 목록, 공문 (`README.md`) |
 | `3-Roundtable/` | Roundtable·진전 발표 (일자별 `pptx` / `html`) |
 | `papers/` | 공유 참고 PDF |
